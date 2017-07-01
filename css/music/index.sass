@@ -1,0 +1,68 @@
+@import "/Users/kh/Documents/Hub/Development/apps/ferrum/web/css/variables.sass"
+main.home-page
+    table.songs
+        margin: 20px
+        border-spacing: 0px
+        font-size: 14px
+        tr.head
+            color: #FFFFFF
+            td
+                font-weight: 500
+                position: relative
+            .col-resizer
+                width: 8px
+                height: 75%
+                position: absolute
+                top: 50%
+                right: 0px
+                transform: translate(50%, -50%)
+                cursor: col-resize
+                z-index: 10
+                div
+                    width: 1px
+                    height: 100%
+                    background-color: rgba(#FFFFFF, 0.3)
+                    margin: auto
+                    top: 50%
+                    pointer-events: none
+        tr
+            border: 1px solid white
+            font-family: "Roboto"
+            color: rgba(#FFFFFF, 0.8)
+            &:not(.head) .time
+                    color: rgba(#FFFFFF, 0.5)
+            width: 100%
+            &:nth-child(n+2) td
+                border-bottom: 1px solid rgba(#FFFFFF, 0.06)
+            &:last-child td
+                border-bottom: none
+        td
+            padding: 10px
+        .no-overflow div
+            white-space: nowrap
+            overflow: hidden
+            text-overflow: ellipsis
+        .name
+            text-align: left
+            div
+                width: 300px
+        .time
+            text-align: right
+            div
+                width: 40px
+        .artist
+            text-align: left
+            div
+                width: 200px
+        .album
+            text-align: left
+            div
+                width: 200px
+        .date-added
+            text-align: left
+            div
+                width: 75px
+        .plays
+            text-align: right
+            div
+                width: 35px

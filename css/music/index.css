@@ -1,0 +1,45 @@
+main.home-page table.songs { margin: 20px; border-spacing: 0px; font-size: 14px; }
+
+main.home-page table.songs tr.head { color: #FFFFFF; }
+
+main.home-page table.songs tr.head td { font-weight: 500; position: relative; }
+
+main.home-page table.songs tr.head .col-resizer { width: 8px; height: 75%; position: absolute; top: 50%; right: 0px; transform: translate(50%, -50%); cursor: col-resize; z-index: 10; }
+
+main.home-page table.songs tr.head .col-resizer div { width: 1px; height: 100%; background-color: rgba(255, 255, 255, 0.3); margin: auto; top: 50%; pointer-events: none; }
+
+main.home-page table.songs tr { border: 1px solid white; font-family: "Roboto"; color: rgba(255, 255, 255, 0.8); width: 100%; }
+
+main.home-page table.songs tr:not(.head) .time { color: rgba(255, 255, 255, 0.5); }
+
+main.home-page table.songs tr:nth-child(n+2) td { border-bottom: 1px solid rgba(255, 255, 255, 0.06); }
+
+main.home-page table.songs tr:last-child td { border-bottom: none; }
+
+main.home-page table.songs td { padding: 10px; }
+
+main.home-page table.songs .no-overflow div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+main.home-page table.songs .name { text-align: left; }
+
+main.home-page table.songs .name div { width: 300px; }
+
+main.home-page table.songs .time { text-align: right; }
+
+main.home-page table.songs .time div { width: 40px; }
+
+main.home-page table.songs .artist { text-align: left; }
+
+main.home-page table.songs .artist div { width: 200px; }
+
+main.home-page table.songs .album { text-align: left; }
+
+main.home-page table.songs .album div { width: 200px; }
+
+main.home-page table.songs .date-added { text-align: left; }
+
+main.home-page table.songs .date-added div { width: 75px; }
+
+main.home-page table.songs .plays { text-align: right; }
+
+main.home-page table.songs .plays div { width: 35px; }

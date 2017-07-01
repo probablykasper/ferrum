@@ -1,0 +1,19 @@
+RewriteEngine On
+
+# Skip existing files or directories
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+# Everything else goes to index.php
+# RewriteRule ^ index.php [L]
+RewriteRule ^(.*)$ /index.php?path=$1 [NC,L,QSA]
+
+# Redirects
+RedirectMatch 301 /includes(.*) /
+RedirectMatch 301 /.sass-cache(.*) /
+
+AddType video/mp4 mp4 m4v
+AddType audio/mp4 m4a
+AddType video/ogg ogv
+AddType video/ogg ogg oga
+AddType video/webm webm
