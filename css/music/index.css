@@ -1,12 +1,12 @@
-main.home-page table.songs { margin: 20px; border-spacing: 0px; font-size: 14px; }
+main.home-page table.songs { margin: 20px auto; border-spacing: 0px; font-size: 14px; }
 
-main.home-page table.songs tr.head { color: #FFFFFF; }
+main.home-page table.songs tr.head { color: #FFFFFF; font-variant-caps: all-small-caps; }
 
 main.home-page table.songs tr.head td { font-weight: 500; position: relative; }
 
 main.home-page table.songs tr.head .col-resizer { width: 8px; height: 75%; position: absolute; top: 50%; right: 0px; transform: translate(50%, -50%); cursor: col-resize; z-index: 10; }
 
-main.home-page table.songs tr.head .col-resizer div { width: 1px; height: 100%; background-color: rgba(255, 255, 255, 0.3); margin: auto; top: 50%; pointer-events: none; }
+main.home-page table.songs tr.head .col-resizer div { width: 1px; height: 100%; background-color: rgba(255, 255, 255, 0.2); margin: auto; top: 50%; pointer-events: none; }
 
 main.home-page table.songs tr { border: 1px solid white; font-family: "Roboto"; color: rgba(255, 255, 255, 0.8); width: 100%; }
 
@@ -15,6 +15,8 @@ main.home-page table.songs tr:not(.head) .time { color: rgba(255, 255, 255, 0.5)
 main.home-page table.songs tr:nth-child(n+2) td { border-bottom: 1px solid rgba(255, 255, 255, 0.06); }
 
 main.home-page table.songs tr:last-child td { border-bottom: none; }
+
+main.home-page table.songs tr:not(.head):hover { background-color: rgba(255, 255, 255, 0.05); }
 
 main.home-page table.songs td { padding: 10px; }
 

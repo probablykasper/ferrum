@@ -1,11 +1,12 @@
 @import "/Users/kh/Documents/Hub/Development/apps/ferrum/web/css/variables.sass"
 main.home-page
     table.songs
-        margin: 20px
+        margin: 20px auto
         border-spacing: 0px
         font-size: 14px
         tr.head
             color: #FFFFFF
+            font-variant-caps: all-small-caps
             td
                 font-weight: 500
                 position: relative
@@ -21,7 +22,7 @@ main.home-page
                 div
                     width: 1px
                     height: 100%
-                    background-color: rgba(#FFFFFF, 0.3)
+                    background-color: rgba(#FFFFFF, 0.2)
                     margin: auto
                     top: 50%
                     pointer-events: none
@@ -36,6 +37,8 @@ main.home-page
                 border-bottom: 1px solid rgba(#FFFFFF, 0.06)
             &:last-child td
                 border-bottom: none
+            &:not(.head):hover
+                background-color: rgba(#FFFFFF, 0.05)
         td
             padding: 10px
         .no-overflow div

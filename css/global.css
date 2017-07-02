@@ -38,7 +38,7 @@ header.app-bar .app-bar-button:hover { cursor: pointer; box-shadow: inset 0px 0p
 
 header.app-bar .app-bar-button:active, header.app-bar .app-bar-button:focus { box-shadow: inset 0px 0px 0px 0px rgba(0, 0, 0, 0.4), 0px 0px 8px 0px rgba(0, 0, 0, 0.4); }
 
-header.app-bar .sidebar-toggle { background-image: url("/img/ic_menu_black_24px.svg"); }
+header.app-bar .sidebar-toggle { background-image: url("/img/ic_menu_white_24px.svg"); }
 
 header.app-bar .account-icon { background-image: url("/img/ic_account_circle_white_24px.svg"); }
 
