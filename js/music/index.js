@@ -94,14 +94,15 @@ function updateUserPref(pref, value) {
         if (mouseDown) {
             widthDifference = mousePosX*2 - mousePosStartX*2;
             var newWidth = oldWidth + widthDifference; // *2 because it's middle centered
-            currentCol.style.width = newWidth+"px";
             newTableMargin = tableMargin - widthDifference;
-            console.log(`${newTableMargin} = ${tableMargin} - ${widthDifference}`);
+
+            currentCol.style.width = newWidth+"px";
             document.querySelector(".music-table").style.width = "calc(100% - "+newTableMargin+"px)"
         }
     });
     document.addEventListener("mouseup", function(e) {
         if (mouseDown) {
             mouseDown = false;
+            tableMargin = newTableMargin;
         }
     });
