@@ -6,7 +6,6 @@
 		<link rel="stylesheet" type="text/css" href="/css/global.css?r=<?=rand(0,999)?>">
 		<link rel="stylesheet" type="text/css" href="/css/music/index.css?r=<?=rand(0,999)?>">
 	</head>
-
 	<body>
         <header class="app-bar">
             <div class="app-bar-button sidebar-toggle ferrum-highlight"></div>
@@ -30,64 +29,66 @@
             <div class="item settings">Trash</div>
         </aside>
         <main class="songs-page home-page">
-            <table class="songs">
-                <tbody>
-                    <tr class="head">
-                        <td class="name flexible-width">
-                            <div>Name</div>
-                            <div class="md width-perc"></div>
-                            <div class="col-resizer"><div class="line"></div></div>
-                        </td>
-                        <td class="time fixed-width">
-                            <div>Time</div>
-                            <div class="md width-perc"></div>
-                            <div class="col-resizer"><div class="line"></div></div>
-                        </td>
-                        <td class="artist flexible-width">
-                            <div>Artist</div>
-                            <div class="md width-perc"></div>
-                            <div class="col-resizer"><div class="line"></div></div>
-                        </td>
-                        <td class="album flexible-width">
-                            <div>Album</div>
-                            <div class="md width-perc"></div>
-                            <div class="col-resizer"><div class="line"></div></div>
-                        </td>
-                        <td class="date-added fixed-width">
-                            <div>Date Added</div>
-                            <div class="md width-perc"></div>
-                            <div class="col-resizer"><div class="line"></div></div>
-                        </td>
-                        <td class="plays fixed-width">
-                            <div>Plays</div>
-                            <div class="md width-perc"></div>
-                            <div class="col-resizer"><div class="line"></div></div>
-                        </td>
-                    </tr>
-                    <? for ($i = 0; $i < 30; $i++) { ?>
-                    <tr>
-                        <td class="name flexible-width">
-                            <div>Close To You (Remix by someone)</div>
-                        </th>
-                        <td class="time">
-                            <div><?=rand(0,12).":".rand(10,59)?></div>
-                        </th>
-                        <td class="artist flexible-width">
-                            <div>Somebody Famous idk</div>
-                        </th>
-                        <td class="album flexible-width">
-                            <div>Lorem Ipsum EP</div>
-                        </th>
-                        <td class="date-added">
-                            <div><?=rand(0,12)."/".rand(0,31)."/".rand(10,99)?></div>
-                        </th>
-                        <td class="plays">
-                            <div><?=rand(0,999)?></div>
-                        </th>
-                    </tr>
+            <div class="music-table">
+                <? $count = 30 ?>
+                <div class="col name flexible-width">
+                    <div class="cell name">
+                        Name
+                        <div class="col-resizer"><div class="line"></div></div>
+                    </div>
+                    <? for ($i = 0; $i < $count; $i++) { ?>
+                        <div class="cell name">Close To You (Remix by someone)</div>
                     <? } ?>
-                </tbody>
-            </table>
+                </div>
+                <div class="col time fixed-width">
+                    <div class="cell time">
+                        Time
+                        <div class="col-resizer"><div class="line"></div></div>
+                    </div>
+                    <? for ($i = 0; $i < $count; $i++) { ?>
+                        <div class="cell time"><?=rand(0,12).":".rand(10,59)?></div>
+                    <? } ?>
+                </div>
+                <div class="col artist flexible-width">
+                    <div class="cell artist">
+                        Artist
+                        <div class="col-resizer"><div class="line"></div></div>
+                    </div>
+                    <? for ($i = 0; $i < $count; $i++) { ?>
+                        <div class="cell artist">
+                            Somebody Famous idk
+                            <div class="col-resizer"><div class="line"></div></div>
+                        </div>
+                    <? } ?>
+                </div>
+                <div class="col album flexible-width">
+                    <div class="cell album">
+                        Album
+                        <div class="col-resizer"><div class="line"></div></div>
+                    </div>
+                    <? for ($i = 0; $i < $count; $i++) { ?>
+                        <div class="cell album">Somebody Famous idk</div>
+                    <? } ?>
+                </div>
+                <div class="col date-added fixed-width">
+                    <div class="cell date-added">
+                        Date Added
+                        <div class="col-resizer"><div class="line"></div></div>
+                    </div>
+                    <? for ($i = 0; $i < $count; $i++) { ?>
+                        <div class="cell album"><?=rand(0,12)."/".rand(0,31)."/".rand(10,99)?></div>
+                    <? } ?>
+                </div>
+                <div class="col plays fixed-width">
+                    <div class="cell plays">
+                        Plays
+                        <div class="col-resizer"><div class="line"></div></div>
+                    </div>
+                    <? for ($i = 0; $i < $count; $i++) { ?>
+                        <div class="cell plays"><?=rand(0,999)?></div>
+                    <? } ?>
+                </div>
+            </div>
         </main>
 		<!--jQuery--> <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 		<!--js.cookie--> <script src="/js/js.cookie-2.1.4.min.js"></script>

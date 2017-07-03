@@ -106,12 +106,86 @@ main.songs-page
     width: calc(100% - 200px)
     left: 200px
     transition: width $transition, left $transition
+div.music-table
+    display: flex
+    justify-content: center
+    font-size: 14px
+    color: rgba(#FFFFFF, 0.8)
+    margin: 20px auto
+    width: calc(100% - 200px)
+    div.col
+        min-width: 0px
+        color: rgba(#FFFFFF, 0.8)
+        &.flexible-width
+            width: 0px
+
+        &.name
+            text-align: left
+            flex-grow: 0.5
+        &.time
+            text-align: right
+            width: 60px
+        &.artist
+            text-align: left
+            flex-grow: 0.25
+        &.album
+            text-align: left
+            flex-grow: 0.25
+        &.date-added
+            text-align: left
+            width: 95px
+        &.plays
+            text-align: right
+            width: 60px
+
+        div.cell:first-child
+            font-weight: 500
+            font-variant-caps: all-small-caps
+            color: #FFFFFF
+            position: relative
+            overflow: visible
+            .col-resizer
+                width: 8px
+                height: 16px
+                position: absolute
+                right: 0px
+                top: 50%
+                cursor: col-resize
+                transform: translate(50%, -50%)
+                z-index: 5
+                div.line
+                    width: 1px
+                    height: 100%
+                    background-color: rgba(#FFFFFF, 0.2)
+                    margin: auto
+                    pointer-events: none
+            // .col-resizer
+            //     width: 8px
+            //     height: 75%
+            //     position: absolute
+            //     top: 50%
+            //     right: 0px
+            //     transform: translate(50%, -50%)
+            //     cursor: col-resize
+            //     z-index: 10
+            //     div
+            //         width: 1px
+            //         height: 100%
+            //         background-color: rgba(#FFFFFF, 0.2)
+            //         margin: auto
+            //         top: 50%
+            //         pointer-events: none
+        div.cell
+            white-space: nowrap
+            overflow: hidden
+            text-overflow: ellipsis
+            padding: 10px
+            &.time:nth-child(n+2)
+                color: rgba(#FFFFFF, 0.4)
 table.songs
     border-spacing: 0px
     font-size: 14px
     margin: 20px auto
-    tbody
-        margin: 20px auto
     tr.head
         color: #FFFFFF
         font-variant-caps: all-small-caps

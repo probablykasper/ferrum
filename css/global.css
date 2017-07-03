@@ -54,9 +54,35 @@ aside.sidebar div.spacer { height: 10px; }
 
 main.songs-page { position: absolute; width: calc(100% - 200px); left: 200px; transition: width 0.15s cubic-bezier(0.4, 0, 0.2, 1), left 0.15s cubic-bezier(0.4, 0, 0.2, 1); }
 
-table.songs { border-spacing: 0px; font-size: 14px; margin: 20px auto; }
+div.music-table { display: flex; justify-content: center; font-size: 14px; color: rgba(255, 255, 255, 0.8); margin: 20px auto; width: calc(100% - 200px); }
 
-table.songs tbody { margin: 20px auto; }
+div.music-table div.col { min-width: 0px; color: rgba(255, 255, 255, 0.8); }
+
+div.music-table div.col.flexible-width { width: 0px; }
+
+div.music-table div.col.name { text-align: left; flex-grow: 0.5; }
+
+div.music-table div.col.time { text-align: right; width: 60px; }
+
+div.music-table div.col.artist { text-align: left; flex-grow: 0.25; }
+
+div.music-table div.col.album { text-align: left; flex-grow: 0.25; }
+
+div.music-table div.col.date-added { text-align: left; width: 95px; }
+
+div.music-table div.col.plays { text-align: right; width: 60px; }
+
+div.music-table div.col div.cell:first-child { font-weight: 500; font-variant-caps: all-small-caps; color: #FFFFFF; position: relative; overflow: visible; }
+
+div.music-table div.col div.cell:first-child .col-resizer { width: 8px; height: 16px; position: absolute; right: 0px; top: 50%; cursor: col-resize; transform: translate(50%, -50%); z-index: 5; }
+
+div.music-table div.col div.cell:first-child .col-resizer div.line { width: 1px; height: 100%; background-color: rgba(255, 255, 255, 0.2); margin: auto; pointer-events: none; }
+
+div.music-table div.col div.cell { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 10px; }
+
+div.music-table div.col div.cell.time:nth-child(n+2) { color: rgba(255, 255, 255, 0.4); }
+
+table.songs { border-spacing: 0px; font-size: 14px; margin: 20px auto; }
 
 table.songs tr.head { color: #FFFFFF; font-variant-caps: all-small-caps; }
 
