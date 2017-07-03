@@ -45,3 +45,61 @@ header.app-bar .account-icon { background-image: url("/img/ic_account_circle_whi
 header.app-bar .search-bar { padding: 12px 12px 12px calc(10px + 24px + 10px); width: 50%; max-width: 500px; background-image: url("/img/ic_search_white_24px.svg"); background-repeat: no-repeat; background-position: 12px 50%; background-color: rgba(255, 255, 255, 0.06); transition: box-shadow 0.15s cubic-bezier(0.4, 0, 0.2, 1); }
 
 header.app-bar .search-bar:active, header.app-bar .search-bar:focus { box-shadow: inset 0px 0px 0px 0px rgba(0, 0, 0, 0.4), 0px 0px 8px 0px rgba(0, 0, 0, 0.4); }
+
+aside.sidebar { transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1); background-color: rgba(255, 255, 255, 0.04); width: 200px; height: calc(100% - 64px); position: absolute; }
+
+aside.sidebar div.item { height: 30px; }
+
+aside.sidebar div.spacer { height: 10px; }
+
+main.songs-page { position: absolute; width: calc(100% - 200px); left: 200px; transition: width 0.15s cubic-bezier(0.4, 0, 0.2, 1), left 0.15s cubic-bezier(0.4, 0, 0.2, 1); }
+
+table.songs { border-spacing: 0px; font-size: 14px; margin: 20px auto; }
+
+table.songs tbody { margin: 20px auto; }
+
+table.songs tr.head { color: #FFFFFF; font-variant-caps: all-small-caps; }
+
+table.songs tr.head td { font-weight: 500; position: relative; }
+
+table.songs tr.head .col-resizer { width: 8px; height: 75%; position: absolute; top: 50%; right: 0px; transform: translate(50%, -50%); cursor: col-resize; z-index: 10; }
+
+table.songs tr.head .col-resizer div { width: 1px; height: 100%; background-color: rgba(255, 255, 255, 0.2); margin: auto; top: 50%; pointer-events: none; }
+
+table.songs tr { border: 1px solid white; font-family: "Roboto"; color: rgba(255, 255, 255, 0.8); width: 100%; }
+
+table.songs tr:not(.head) .time { color: rgba(255, 255, 255, 0.5); }
+
+table.songs tr:nth-child(n+2) td { border-bottom: 1px solid rgba(255, 255, 255, 0.06); }
+
+table.songs tr:last-child td { border-bottom: none; }
+
+table.songs tr:not(.head):hover { background-color: rgba(255, 255, 255, 0.05); }
+
+table.songs td { padding: 10px; }
+
+table.songs .flexible-width div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+table.songs .name { text-align: left; }
+
+table.songs .name div { width: 300px; }
+
+table.songs .time { text-align: right; }
+
+table.songs .time div { width: 40px; }
+
+table.songs .artist { text-align: left; }
+
+table.songs .artist div { width: 200px; }
+
+table.songs .album { text-align: left; }
+
+table.songs .album div { width: 200px; }
+
+table.songs .date-added { text-align: left; }
+
+table.songs .date-added div { width: 75px; }
+
+table.songs .plays { text-align: right; }
+
+table.songs .plays div { width: 35px; }

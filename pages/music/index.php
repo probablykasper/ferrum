@@ -13,7 +13,23 @@
             <input class="search-bar ferrum-highlight" placeholder="Search"></input>
             <div class="app-bar-button account-icon ferrum-highlight"></div>
         </header>
-        <main class="home-page">
+        <aside class="sidebar">
+            <div class="item home">Home?</div>
+            <div class="item library">Library</div>
+            <div class="item discover">Discovery</div>
+            <div class="item podcasts">Podcasts</div>
+            <div class="spacer"></div>
+            <div class="item playlist">Favs</div>
+            <div class="item playlist">Relax</div>
+            <div class="item playlist">Last added</div>
+            <div class="item playlist">Random</div>
+            <div class="item playlist">New playlist</div>
+            <div class="spacer"></div>
+            <div class="item import">Import</div>
+            <div class="item settings">Settings</div>
+            <div class="item settings">Trash</div>
+        </aside>
+        <main class="songs-page home-page">
             <table class="songs">
                 <tbody>
                     <tr class="head">
@@ -50,16 +66,16 @@
                     </tr>
                     <? for ($i = 0; $i < 30; $i++) { ?>
                     <tr>
-                        <td class="name no-overflow">
+                        <td class="name flexible-width">
                             <div>Close To You (Remix by someone)</div>
                         </th>
                         <td class="time">
                             <div><?=rand(0,12).":".rand(10,59)?></div>
                         </th>
-                        <td class="artist no-overflow">
+                        <td class="artist flexible-width">
                             <div>Somebody Famous idk</div>
                         </th>
-                        <td class="album no-overflow">
+                        <td class="album flexible-width">
                             <div>Lorem Ipsum EP</div>
                         </th>
                         <td class="date-added">
