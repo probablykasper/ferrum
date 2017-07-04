@@ -139,7 +139,7 @@ var main = document.querySelector("main.songs-page");
             // TOO WIDE TABLE
             if (newTableMargin < 20) {
                 var otherCols = document.querySelectorAll(".music-table .col:not(."+currentColClass+")");
-                var otherColsWidth;
+                var otherColsWidth = 0;
                 for (var i = 0; i < otherCols.length; i++) {
                     otherColsWidth += otherCols[i].clientWidth;
                 }
@@ -156,7 +156,7 @@ var main = document.querySelector("main.songs-page");
             mouseDown = false;
             tableMargin = newTableMargin;
 
-            if (currentCol.classList[2] == "flexible-width") {
+            if (currentCol.classList[2] == "flexible-widthh") {
 
                 flexibleCols = document.querySelectorAll(".music-table .col.flexible-width");
                 flexibleColsWidths = [];
