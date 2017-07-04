@@ -99,7 +99,6 @@ var main = document.querySelector("main.songs-page");
     var colResizer = document.querySelectorAll(".music-table .col-resizer");
     var mouseDown, mouseStartPosX, oldWidth, mousePosX, mousePosOldX;
     for (var i = 0; i < colCount; i++) {
-        console.log({a:colResizer[i]});
         colResizer[i].addEventListener("mousedown", function(e) {
             e.preventDefault();
             mouseDown = true;
@@ -158,6 +157,13 @@ var main = document.querySelector("main.songs-page");
             tableMargin = newTableMargin;
 
             if (currentCol.classList[2] == "flexible-width") {
+
+                flexibleCols = document.querySelectorAll(".music-table .col.flexible-width");
+                flexibleColsWidths = [];
+                for (var i = 0; i < flexibleCols.length; i++) {
+                    flexibleColsWidths.push(flexibleCols[i].clientWidth);
+                }
+
                 var availWidth = 0;
                 for (var i = 0; i < flexibleCols.length; i++) {
                     availWidth += flexibleColsWidths[i];
@@ -165,6 +171,7 @@ var main = document.querySelector("main.songs-page");
                 for (var i = 0; i < flexibleCols.length; i++) {
                     var width = flexibleColsWidths[i];
                     var perc = width / availWidth;
+                    console.log(`${perc} = ${width} / ${availWidth}`);
                     flexibleCols[i].style.flexGrow = perc;
                     flexibleCols[i].style.width = "";
                 }
