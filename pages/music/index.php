@@ -57,7 +57,6 @@
                     <? for ($i = 0; $i < $count; $i++) { ?>
                         <div class="cell artist">
                             Somebody Famous idk
-                            <div class="col-resizer"><div class="line"></div></div>
                         </div>
                     <? } ?>
                 </div>
