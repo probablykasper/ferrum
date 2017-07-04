@@ -101,10 +101,19 @@ aside.sidebar
         height: 30px
     div.spacer
         height: 10px
+    div.sidebar-resizer
+        position: absolute
+        height: 100%
+        width: 8px
+        top: 0px
+        right: 0px
+        transform: translateX(50%)
+        cursor: col-resize
+        z-index: 5
 main.songs-page
     position: absolute
     width: calc(100% - 200px)
-    left: 200px
+    right: 0px
     transition: width $transition, left $transition
 div.music-table
     display: flex
@@ -112,7 +121,7 @@ div.music-table
     font-size: 14px
     color: rgba(#FFFFFF, 0.8)
     margin: 20px auto
-    width: calc(100% - 200px)
+    width: calc(100% - 20px)
     div.col
         min-width: 0px
         color: rgba(#FFFFFF, 0.8)
@@ -159,22 +168,6 @@ div.music-table
                     background-color: rgba(#FFFFFF, 0.2)
                     margin: auto
                     pointer-events: none
-            // .col-resizer
-            //     width: 8px
-            //     height: 75%
-            //     position: absolute
-            //     top: 50%
-            //     right: 0px
-            //     transform: translate(50%, -50%)
-            //     cursor: col-resize
-            //     z-index: 10
-            //     div
-            //         width: 1px
-            //         height: 100%
-            //         background-color: rgba(#FFFFFF, 0.2)
-            //         margin: auto
-            //         top: 50%
-            //         pointer-events: none
         div.cell
             white-space: nowrap
             overflow: hidden

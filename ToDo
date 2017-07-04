@@ -1,4 +1,5 @@
-- Switch the HTML of columns and rows
+- When sidebar changes width, change the width and padding/margin of .music-table instead of the parent (main)
+
 - Column sorting (sort by name)
 - Column organizing (move col to left)
 - Sidebar

@@ -12,22 +12,6 @@
             <input class="search-bar ferrum-highlight" placeholder="Search"></input>
             <div class="app-bar-button account-icon ferrum-highlight"></div>
         </header>
-        <aside class="sidebar">
-            <div class="item home">Home?</div>
-            <div class="item library">Library</div>
-            <div class="item discover">Discovery</div>
-            <div class="item podcasts">Podcasts</div>
-            <div class="spacer"></div>
-            <div class="item playlist">Favs</div>
-            <div class="item playlist">Relax</div>
-            <div class="item playlist">Last added</div>
-            <div class="item playlist">Random</div>
-            <div class="item playlist">New playlist</div>
-            <div class="spacer"></div>
-            <div class="item import">Import</div>
-            <div class="item settings">Settings</div>
-            <div class="item settings">Trash</div>
-        </aside>
         <main class="songs-page home-page">
             <div class="music-table">
                 <? $count = 30 ?>
@@ -89,6 +73,23 @@
                 </div>
             </div>
         </main>
+        <aside class="sidebar">
+            <div class="item home">Home?</div>
+            <div class="item library">Library</div>
+            <div class="item discover">Discovery</div>
+            <div class="item podcasts">Podcasts</div>
+            <div class="spacer"></div>
+            <div class="item playlist">Favs</div>
+            <div class="item playlist">Relax</div>
+            <div class="item playlist">Last added</div>
+            <div class="item playlist">Random</div>
+            <div class="item playlist">New playlist</div>
+            <div class="spacer"></div>
+            <div class="item import">Import</div>
+            <div class="item settings">Settings</div>
+            <div class="item settings">Trash</div>
+            <div class="sidebar-resizer"></div>
+        </aside>
 		<!--jQuery--> <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 		<!--js.cookie--> <script src="/js/js.cookie-2.1.4.min.js"></script>
 		<!--rangeSlider--> <script src="/js/rangeSlider-0.3.11.min.js"></script>

@@ -52,9 +52,11 @@ aside.sidebar div.item { height: 30px; }
 
 aside.sidebar div.spacer { height: 10px; }
 
-main.songs-page { position: absolute; width: calc(100% - 200px); left: 200px; transition: width 0.15s cubic-bezier(0.4, 0, 0.2, 1), left 0.15s cubic-bezier(0.4, 0, 0.2, 1); }
+aside.sidebar div.sidebar-resizer { position: absolute; height: 100%; width: 8px; top: 0px; right: 0px; transform: translateX(50%); cursor: col-resize; z-index: 5; }
 
-div.music-table { display: flex; justify-content: center; font-size: 14px; color: rgba(255, 255, 255, 0.8); margin: 20px auto; width: calc(100% - 200px); }
+main.songs-page { position: absolute; width: calc(100% - 200px); right: 0px; transition: width 0.15s cubic-bezier(0.4, 0, 0.2, 1), left 0.15s cubic-bezier(0.4, 0, 0.2, 1); }
+
+div.music-table { display: flex; justify-content: center; font-size: 14px; color: rgba(255, 255, 255, 0.8); margin: 20px auto; width: calc(100% - 20px); }
 
 div.music-table div.col { min-width: 0px; color: rgba(255, 255, 255, 0.8); }
 
