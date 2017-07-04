@@ -113,16 +113,14 @@ var main = document.querySelector("main.songs-page");
     document.addEventListener("mousemove", function(e) {
         mousePosX = e.clientX;
         if (mouseDown) {
-            if (currentCol.classList[2] == "fixed-width") {
+            if (currentCol.classList[2] == "fixed-width") { // FIXED WIDTH
                 widthDifference = mousePosX*2 - mousePosStartX*2;
                 var newWidth = oldWidth + widthDifference; // *2 because it's middle centered
-                newTableMargin = tableMargin - widthDifference;
-
-                if (newWidth < colMinWidths[currentColClass]) {
+                if (newWidth < colMinWidths[currentColClass]) { // enforce min widths
                     newWidth = colMinWidths[currentColClass];
-                    newTableMargin = tableMargin;
+                } else {
+                    newTableMargin = tableMargin - widthDifference;
                 }
-
                 if (newTableMargin < 20) { // if table is too wide
                     var otherCols = document.querySelectorAll(".music-table .col:not(."+currentColClass+")");
                     var otherColsWidth;
@@ -131,6 +129,8 @@ var main = document.querySelector("main.songs-page");
                     }
                     newWidth = main.clientWidth - 20 - otherColsWidth;
                     newTableMargin = 20;
+                } else { // FLEXIBLE WIDTH
+
                 }
 
                 currentCol.style.width = newWidth+"px";
