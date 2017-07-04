@@ -108,39 +108,66 @@ var main = document.querySelector("main.songs-page");
             currentCol = e.target.parentElement.parentElement;
             currentColClass = cssClassToJS(currentCol.classList[1]);
             oldWidth = currentCol.clientWidth;
+
+            flexibleCols = document.querySelectorAll(".music-table .col.flexible-width");
+            flexibleColsWidths = [];
+            for (var i = 0; i < flexibleCols.length; i++) {
+                flexibleColsWidths.push(flexibleCols[i].clientWidth);
+            }
+            if (currentCol.classList[2] == "flexible-width") {
+                for (var i = 0; i < flexibleCols.length; i++) {
+                    var width = flexibleColsWidths[i];
+                    flexibleCols[i].style.flexGrow = "initial";
+                    flexibleCols[i].style.width = width+"px";
+                }
+            }
         });
     }
     document.addEventListener("mousemove", function(e) {
         mousePosX = e.clientX;
         if (mouseDown) {
-            if (currentCol.classList[2] == "fixed-width") { // FIXED WIDTH
-                widthDifference = mousePosX*2 - mousePosStartX*2;
-                var newWidth = oldWidth + widthDifference; // *2 because it's middle centered
-                if (newWidth < colMinWidths[currentColClass]) { // enforce min widths
-                    newWidth = colMinWidths[currentColClass];
-                } else {
-                    newTableMargin = tableMargin - widthDifference;
-                }
-                if (newTableMargin < 20) { // if table is too wide
-                    var otherCols = document.querySelectorAll(".music-table .col:not(."+currentColClass+")");
-                    var otherColsWidth;
-                    for (var i = 0; i < otherCols.length; i++) {
-                        otherColsWidth += otherCols[i].clientWidth;
-                    }
-                    newWidth = main.clientWidth - 20 - otherColsWidth;
-                    newTableMargin = 20;
-                } else { // FLEXIBLE WIDTH
+            widthDifference = mousePosX*2 - mousePosStartX*2;
+            // *2 because it's middle centered
+            var newWidth = oldWidth + widthDifference;
 
-                }
-
-                currentCol.style.width = newWidth+"px";
-                document.querySelector(".music-table").style.width = "calc(100% - "+newTableMargin+"px)"
+            // MAX WIDTHS
+            if (newWidth < colMinWidths[currentColClass]) {
+                newWidth = colMinWidths[currentColClass];
+            } else {
+                newTableMargin = tableMargin - widthDifference;
             }
+
+            // TOO WIDE TABLE
+            if (newTableMargin < 20) {
+                var otherCols = document.querySelectorAll(".music-table .col:not(."+currentColClass+")");
+                var otherColsWidth;
+                for (var i = 0; i < otherCols.length; i++) {
+                    otherColsWidth += otherCols[i].clientWidth;
+                }
+                newWidth = main.clientWidth - 20 - otherColsWidth;
+                newTableMargin = 20;
+            }
+
+            currentCol.style.width = newWidth+"px";
+            document.querySelector(".music-table").style.width = "calc(100% - "+newTableMargin+"px)"
         }
     });
     document.addEventListener("mouseup", function(e) {
         if (mouseDown) {
             mouseDown = false;
             tableMargin = newTableMargin;
+
+            if (currentCol.classList[2] == "flexible-width") {
+                var availWidth = 0;
+                for (var i = 0; i < flexibleCols.length; i++) {
+                    availWidth += flexibleColsWidths[i];
+                }
+                for (var i = 0; i < flexibleCols.length; i++) {
+                    var width = flexibleColsWidths[i];
+                    var perc = width / availWidth;
+                    flexibleCols[i].style.flexGrow = perc;
+                    flexibleCols[i].style.width = "";
+                }
+            }
         }
     });
