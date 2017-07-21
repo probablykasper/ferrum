@@ -29,7 +29,6 @@ var userPref = {
         },
         dateAdded: {
             visible: true,
-            widthTypeChangable: true,
             widthType: "fixedOnly",
             widthPerc: 50,
             widthPx: 95
@@ -42,27 +41,30 @@ var userPref = {
     }
 }
 
-var colMinWidths = {
-    name: 100,
-    time: 60,
-    artist: 100,
-    album: 100,
-    dateAdded: 95,
-    plays: 60
+var serverPref = {
+    colMinWidths: {
+        name: 100,
+        time: 60,
+        artist: 100,
+        album: 100,
+        dateAdded: 95,
+        plays: 60
+    },
+    sidebarDefaultWidth: 200
 }
 
 function updateUserPref(pref, value) {
-    userPref[pref] = value;
+    eval(`userPref.${pref} = ${value}`);
 }
 
 var main = document.querySelector("main.songs-page");
 
 // SIDEBAR
     // TOGGLE
-    var sidebarWidth = userPref.sidebar.width;
     var sidebarVisible = userPref.sidebar.visible;
     var sidebar = document.querySelector("aside.sidebar");
-    var sidebarToggle = document.querySelector("div.sidebar-toggle");
+    var sidebarResizer = document.querySelector(".sidebar-resizer");
+    var sidebarToggle = document.querySelector(".sidebar-toggle");
     if (!sidebarVisible) hideSidebar(); // setup
     sidebarToggle.addEventListener("click", function() {
         toggleSidebar();
@@ -75,17 +77,24 @@ var main = document.querySelector("main.songs-page");
         sidebar.style.transform = "translateX(0px)";
         main.style.width = "calc(100% - "+userPref.sidebar.width+"px)";
         sidebarVisible = true;
+        updateUserPref("sidebar.visible", true);
         sidebarResizer.style.right = "0px";
     }
     function hideSidebar() {
         sidebar.style.transform = "translateX(-"+userPref.sidebar.width+"px)";
         main.style.width = "100%";
         sidebarVisible = false;
+        updateUserPref("sidebar.visible", false);
         sidebarResizer.style.right = "4px";
     }
+    // DOUBLE-CLICK RESET
+    sidebarResizer.addEventListener("dblclick", function() {
+        updateUserPref("sidebar.width", serverPref.sidebarDefaultWidth);
+        sidebar.style.width = serverPref.sidebarDefaultWidth+"px";
+        main.style.width = "calc(100% - "+serverPref.sidebarDefaultWidth+"px)";
+    });
     // RESIZE
-    var sidebarResizer = document.querySelector(".sidebar-resizer");
-    var sidebarMouseDown, mousePosX, mousePosStartX, sidebar, oldSidebarWidth, initialTransition;
+    var sidebarMouseDown, mousePosX, mousePosStartX, sidebar, oldSidebarWidth, initialTransition, newSidebarWidth;
     sidebarResizer.addEventListener("mousedown", function(e) {
         e.preventDefault();
         sidebarMouseDown = true;
@@ -94,14 +103,14 @@ var main = document.querySelector("main.songs-page");
         sidebar = document.querySelector("aside.sidebar");
         oldSidebarWidth = sidebar.clientWidth;
 
-        // initialTransition = window.getComputedStyle(document.querySelector(".songs-page"), null).getPropertyValue("transition");
         document.querySelector(".songs-page").style.transition = "none";
+        sidebar.style.transition = "none";
     });
     document.addEventListener("mousemove", function(e) {
         if (sidebarMouseDown) {
             mousePosX = e.clientX;
             var widthDifference = mousePosX - mousePosStartX;
-            var newSidebarWidth = oldSidebarWidth + widthDifference;
+            newSidebarWidth = oldSidebarWidth + widthDifference;
 
             // MIN WIDTH
             if (newSidebarWidth < 100) newSidebarWidth = 100;
@@ -109,13 +118,16 @@ var main = document.querySelector("main.songs-page");
             if (newSidebarWidth > 500) newSidebarWidth = 500;
 
             sidebar.style.width = newSidebarWidth+"px";
-            userPref.sidebar.width = newSidebarWidth;
             main.style.width = "calc(100% - "+newSidebarWidth+"px";
         }
     });
     document.addEventListener("mouseup", function() {
-        sidebarMouseDown = false;
-        document.querySelector(".songs-page").style.transition = "";
+        if (sidebarMouseDown) {
+            sidebarMouseDown = false;
+            updateUserPref("sidebar.width", newSidebarWidth);
+            document.querySelector(".songs-page").style.transition = "";
+            sidebar.style.transition = "";
+        }
     });
 
 
@@ -166,8 +178,8 @@ var main = document.querySelector("main.songs-page");
             var newWidth = oldWidth + widthDifference;
 
             // MAX WIDTHS
-            if (newWidth < colMinWidths[currentColClass]) {
-                newWidth = colMinWidths[currentColClass];
+            if (newWidth < serverPref.colMinWidths[currentColClass]) {
+                newWidth = serverPref.colMinWidths[currentColClass];
             } else {
                 newTableMargin = tableMargin - widthDifference;
             }

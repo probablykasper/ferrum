@@ -46,7 +46,7 @@ header.app-bar .search-bar { padding: 12px 12px 12px calc(10px + 24px + 10px); w
 
 header.app-bar .search-bar:active, header.app-bar .search-bar:focus { box-shadow: inset 0px 0px 0px 0px rgba(0, 0, 0, 0.4), 0px 0px 8px 0px rgba(0, 0, 0, 0.4); }
 
-aside.sidebar { transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1); background-color: rgba(255, 255, 255, 0.04); width: 200px; height: calc(100% - 64px); position: absolute; }
+aside.sidebar { transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), width 0.15s cubic-bezier(0.4, 0, 0.2, 1); background-color: rgba(255, 255, 255, 0.04); width: 200px; height: calc(100% - 64px); position: absolute; }
 
 aside.sidebar div.item { height: 30px; }
 
