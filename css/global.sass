@@ -57,7 +57,7 @@ header.app-bar
     height: $headerheight
     display: flex
     justify-content: space-between
-    background-color: rgba(#FFFFFF, 0.04)
+    background-color: $c-bg-lv1
     align-items: center
     box-shadow: $shadow-1
     .app-bar-button
@@ -84,7 +84,7 @@ header.app-bar
         background-image: url("/img/ic_search_white_24px.svg")
         background-repeat: no-repeat
         background-position: 12px 50%
-        background-color: rgba(#FFFFFF, 0.06)
+        background-color: $c-bg-lv2
 
         transition: box-shadow $transition
         &:hover
@@ -93,7 +93,7 @@ header.app-bar
             box-shadow: inset 0px 0px 0px 0px rgba(#000000, 0.4), 0px 0px 8px 0px rgba(#000000, 0.4)
 aside.sidebar
     transition: transform $transition, width $transition
-    background-color: rgba(#FFFFFF, 0.04)
+    background-color: $c-bg-lv1
     width: 200px
     height: calc(100% - #{$headerheight})
     position: absolute
@@ -165,7 +165,7 @@ div.music-table
                 div.line
                     width: 1px
                     height: 100%
-                    background-color: rgba(#FFFFFF, 0.2)
+                    background-color: $c-col-resizer
                     margin: auto
                     pointer-events: none
         div.cell
@@ -175,72 +175,3 @@ div.music-table
             padding: 10px
             &.time:nth-child(n+2)
                 color: rgba(#FFFFFF, 0.4)
-table.songs
-    border-spacing: 0px
-    font-size: 14px
-    margin: 20px auto
-    tr.head
-        color: #FFFFFF
-        font-variant-caps: all-small-caps
-        td
-            font-weight: 500
-            position: relative
-        .col-resizer
-            width: 8px
-            height: 75%
-            position: absolute
-            top: 50%
-            right: 0px
-            transform: translate(50%, -50%)
-            cursor: col-resize
-            z-index: 10
-            div
-                width: 1px
-                height: 100%
-                background-color: rgba(#FFFFFF, 0.2)
-                margin: auto
-                top: 50%
-                pointer-events: none
-    tr
-        border: 1px solid white
-        font-family: "Roboto"
-        color: rgba(#FFFFFF, 0.8)
-        &:not(.head) .time
-                color: rgba(#FFFFFF, 0.5)
-        width: 100%
-        &:nth-child(n+2) td
-            border-bottom: 1px solid rgba(#FFFFFF, 0.06)
-        &:last-child td
-            border-bottom: none
-        &:not(.head):hover
-            background-color: rgba(#FFFFFF, 0.05)
-    td
-        padding: 10px
-    .flexible-width div
-        white-space: nowrap
-        overflow: hidden
-        text-overflow: ellipsis
-    .name
-        text-align: left
-        div
-            width: 300px
-    .time
-        text-align: right
-        div
-            width: 40px
-    .artist
-        text-align: left
-        div
-            width: 200px
-    .album
-        text-align: left
-        div
-            width: 200px
-    .date-added
-        text-align: left
-        div
-            width: 75px
-    .plays
-        text-align: right
-        div
-            width: 35px

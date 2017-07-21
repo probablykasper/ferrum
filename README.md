@@ -9,6 +9,7 @@ Some (to-be) web/desktop/mobile application for your music library.
 - [ ] Column organizing (move col to left)
 - [ ] Sidebar
 
+
 - [ ] Auto-Playlists like iTunes
 - [ ] Import tool
     - [ ] Upload/YouTube/SoundCloud/Spotify by YT/SC search
