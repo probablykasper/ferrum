@@ -30,7 +30,7 @@ html .flex-col { display: flex; justify-content: center; flex-direction: column;
 
 html .invisible { visibility: none; }
 
-header.app-bar { height: 64px; display: flex; justify-content: space-between; background-color: #2D313B; align-items: center; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24); }
+header.app-bar { height: 64px; display: flex; justify-content: space-between; background-color: #2D313B; align-items: center; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24); position: fixed; width: 100%; }
 
 header.app-bar .app-bar-button { width: 44px; height: 44px; margin: 10px; background-repeat: no-repeat; background-position: center; transition: box-shadow 0.15s cubic-bezier(0.4, 0, 0.2, 1); }
 
@@ -46,19 +46,25 @@ header.app-bar .search-bar { padding: 12px 12px 12px calc(10px + 24px + 10px); w
 
 header.app-bar .search-bar:active, header.app-bar .search-bar:focus { box-shadow: inset 0px 0px 0px 0px rgba(0, 0, 0, 0.4), 0px 0px 8px 0px rgba(0, 0, 0, 0.4); }
 
-aside.sidebar { transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), width 0.15s cubic-bezier(0.4, 0, 0.2, 1); background-color: #2D313B; width: 200px; height: calc(100% - 64px); position: absolute; }
+aside.sidebar { position: absolute; bottom: 0px; height: calc(100% - 64px); width: 200px; transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), width 0.15s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24); background-color: #2D313B; }
 
-aside.sidebar div.item { height: 30px; }
+aside.sidebar::after { content: ""; position: absolute; width: 100%; height: 6px; top: -3px; background-color: inherit; }
 
-aside.sidebar div.spacer { height: 10px; }
+aside.sidebar .sidebar-container { width: 100%; height: 100%; overflow-y: scroll; }
 
-aside.sidebar div.sidebar-resizer { position: absolute; height: 100%; width: 8px; top: 0px; right: 0px; transform: translateX(50%); cursor: col-resize; z-index: 5; }
+aside.sidebar .sidebar-container .item { font-size: 15px; font-weight: 500; height: 30px; line-height: 30px; vertical-align: middle; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-main.songs-page { position: absolute; width: calc(100% - 200px); right: 0px; transition: width 0.15s cubic-bezier(0.4, 0, 0.2, 1), left 0.15s cubic-bezier(0.4, 0, 0.2, 1); }
+aside.sidebar .sidebar-container .item:hover { background-color: #393D47; cursor: pointer; }
+
+aside.sidebar .sidebar-container .spacer { height: 10px; }
+
+aside.sidebar .sidebar-resizer { position: absolute; height: 100%; width: 8px; top: 0px; right: 0px; transform: translateX(50%); cursor: col-resize; }
+
+main.songs-page { position: absolute; height: calc(100% - 64px); overflow: scroll; width: calc(100% - 200px); right: 0px; transition: width 0.15s cubic-bezier(0.4, 0, 0.2, 1), left 0.15s cubic-bezier(0.4, 0, 0.2, 1); margin-top: 64px; z-index: -1; }
 
 div.music-table { display: flex; justify-content: center; font-size: 14px; color: rgba(255, 255, 255, 0.8); margin: 20px auto; width: calc(100% - 20px); }
 
-div.music-table div.col { min-width: 0px; color: rgba(255, 255, 255, 0.8); }
+div.music-table div.col { display: flex; flex-direction: column; min-width: 0px; color: rgba(255, 255, 255, 0.8); }
 
 div.music-table div.col.flexible-width { width: 0px; }
 

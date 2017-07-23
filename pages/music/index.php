@@ -20,18 +20,28 @@
                         Name
                         <div class="col-resizer"><div class="line"></div></div>
                     </div>
-                    <? for ($i = 0; $i < $count; $i++) { ?>
-                        <div class="cell name">Close To You (Remix by someone)</div>
-                    <? } ?>
+                    <!-- <? for ($i = 0; $i < $count; $i++) { ?>
+                        <div class="cell name"><?=md5(uniqid())?></div>
+                    <? } ?> -->
+                    <div class="cell name">e</div>
+                    <div class="cell name">c</div>
+                    <div class="cell name">b</div>
+                    <div class="cell name">a</div>
+                    <div class="cell name">d</div>
                 </div>
                 <div class="col time fixed-width">
                     <div class="cell time">
                         Time
                         <div class="col-resizer"><div class="line"></div></div>
                     </div>
-                    <? for ($i = 0; $i < $count; $i++) { ?>
+                    <!-- <? for ($i = 0; $i < $count; $i++) { ?>
                         <div class="cell time"><?=rand(0,12).":".rand(10,59)?></div>
-                    <? } ?>
+                    <? } ?> -->
+                    <div class="cell time">1:00</div>
+                    <div class="cell time">2:00</div>
+                    <div class="cell time">3:00</div>
+                    <div class="cell time">4:00</div>
+                    <div class="cell time">5:00</div>
                 </div>
                 <div class="col artist flexible-width">
                     <div class="cell artist">
@@ -74,21 +84,23 @@
             </div>
         </main>
         <aside class="sidebar">
-            <div class="item home">Home?</div>
-            <div class="item library">Library</div>
-            <div class="item discover">Discovery</div>
-            <div class="item podcasts">Podcasts</div>
-            <div class="spacer"></div>
-            <div class="item playlist">Favs</div>
-            <div class="item playlist">Relax</div>
-            <div class="item playlist">Last added</div>
-            <div class="item playlist">Random</div>
-            <div class="item playlist">New playlist</div>
-            <div class="spacer"></div>
-            <div class="item import">Import</div>
-            <div class="item settings">Settings</div>
-            <div class="item settings">Trash</div>
-            <div class="sidebar-resizer"></div>
+            <div class="sidebar-container">
+                <div class="item home">Home?</div>
+                <div class="item library">Library</div>
+                <div class="item discover">Discovery</div>
+                <div class="item podcasts">Podcasts</div>
+                <div class="spacer"></div>
+                <div class="item playlist">Favs</div>
+                <div class="item playlist">Relax</div>
+                <div class="item playlist">Last added</div>
+                <div class="item playlist">Random</div>
+                <div class="item playlist">New playlistttttttttt</div>
+                <div class="spacer"></div>
+                <div class="item import">Import</div>
+                <div class="item settings">Settings</div>
+                <div class="item settings">Trash</div>
+                <div class="sidebar-resizer"></div>
+            </div>
         </aside>
 		<!--jQuery--> <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 		<!--js.cookie--> <script src="/js/js.cookie-2.1.4.min.js"></script>

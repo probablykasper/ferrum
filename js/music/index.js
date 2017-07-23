@@ -3,6 +3,10 @@ var userPref = {
         visible: true,
         width: 200
     },
+    tableSort: {
+        column: "name",
+        reverse: false
+    },
     tableCols: {
         name: {
             visible: true,
@@ -59,7 +63,7 @@ function updateUserPref(pref, value) {
 
 var main = document.querySelector("main.songs-page");
 
-// SIDEBAR
+/// SIDEBAR
     // TOGGLE
     var sidebarVisible = userPref.sidebar.visible;
     var sidebar = document.querySelector("aside.sidebar");
@@ -130,8 +134,9 @@ var main = document.querySelector("main.songs-page");
         }
     });
 
+///
 
-// COL RESIZE
+/// COL RESIZE
 
     function cssClassToJS(string) {
         while (string.indexOf("-") != -1) {
@@ -219,10 +224,44 @@ var main = document.querySelector("main.songs-page");
                 for (var i = 0; i < flexibleCols.length; i++) {
                     var width = flexibleColsWidths[i];
                     var perc = width / availWidth;
-                    console.log(`${perc} = ${width} / ${availWidth}`);
                     flexibleCols[i].style.flexGrow = perc;
                     flexibleCols[i].style.width = "";
                 }
             }
         }
     });
+
+///
+
+// SORT
+    function sort(clickedColIndex) {
+        // sort clicked column
+        var cols = document.querySelectorAll(".music-table .col");
+        clickedCol = cols[clickedColIndex].children;
+        clickedCol = Array.prototype.slice.call(clickedCol, 0).slice(1); // NodeList -> Array
+        var posChange = { from: [], to: [] };
+        for (var i = 0; i < clickedCol.length; i++) { // posChange.from
+            posChange.from[i] = i;
+            clickedCol[i].index = i;
+        }
+        clickedCol.sort(function(a, b) {
+            if (a.innerHTML < b.innerHTML) return -1;
+            if (a.innerHTML > b.innerHTML) return 1;
+            return 0;
+        });
+
+        for (var i = 0; i < clickedCol.length; i++) { // posChange.to
+            posChange.to[clickedCol[i].index] = i;
+        }
+
+        // sort other columns
+        for (var i = 0; i < cols.length; i++) {
+            if (i == clickedColIndex) i++; // skip clicked col
+            var currentCol = cols[i].children;
+            var nthChild = i+1;
+            var currentCol = document.querySelectorAll(".music-table .col:nth-child("+i+") .cell:not(:first-child)");
+            for (var cci = 0; cci < clickedCol.length; cci++) {
+                currentCol[cci].style.order = posChange.to[cci];
+            }
+        }
+    }
