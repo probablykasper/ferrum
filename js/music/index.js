@@ -1,62 +1,65 @@
-var userPref = {
-    sidebar: {
-        visible: true,
-        width: 200
-    },
-    tableSort: {
-        column: "name",
-        reverse: false
-    },
-    tableCols: {
-        name: {
-        },
-        time: {
-        },
-        artist: {
-        },
-        album: {
-        },
-        dateAdded: {
-        },
-        plays: {
-        },
-    }
-}
+/// SETUP THINGS
 
-var serverPref = {
-    colMinWidths: {
-        name: 100,
-        time: 60,
-        artist: 100,
-        album: 100,
-        "date-added": 95,
-        plays: 60
-    },
-    sidebarDefaultWidth: 200
-}
-
-function updateUserPref(pref, value) {
-    eval(`userPref.${pref} = ${value}`);
-}
-function hasClass(el, cls) {
-    cls = cls.split(","); // or
-    for (var i = 0; i < cls.length; i++) {
-        if ( (" "+el.className+" ").indexOf(" "+cls[i]+" ") > -1 ) {
-            return true;
+    var userPref = {
+        sidebar: {
+            visible: true,
+            width: 200
+        },
+        tableSort: {
+            column: "name",
+            reverse: false
+        },
+        tableCols: {
+            name: {
+            },
+            time: {
+            },
+            artist: {
+            },
+            album: {
+            },
+            dateAdded: {
+            },
+            plays: {
+            },
         }
     }
-    return false;
-}
-function timeToSec(str) {
-    var p = str.split(':'), s = 0, m = 1;
-    while (p.length > 0) {
-        s += m * parseInt(p.pop(), 10);
-        m *= 60;
-    }
-    return s;
-}
 
-var main = document.querySelector("main.songs-page");
+    var serverPref = {
+        colMinWidths: {
+            name: 100,
+            time: 60,
+            artist: 100,
+            album: 100,
+            "date-added": 95,
+            plays: 60
+        },
+        sidebarDefaultWidth: 200
+    }
+
+    function updateUserPref(pref, value) {
+        eval(`userPref.${pref} = ${value}`);
+    }
+    function hasClass(el, cls) {
+        cls = cls.split(","); // or
+        for (var i = 0; i < cls.length; i++) {
+            if ( (" "+el.className+" ").indexOf(" "+cls[i]+" ") > -1 ) {
+                return true;
+            }
+        }
+        return false;
+    }
+    function timeToSec(str) {
+        var p = str.split(':'), s = 0, m = 1;
+        while (p.length > 0) {
+            s += m * parseInt(p.pop(), 10);
+            m *= 60;
+        }
+        return s;
+    }
+
+    var main = document.querySelector("main.songs-page");
+///
 
 /// SIDEBAR
     // TOGGLE
@@ -233,9 +236,11 @@ var main = document.querySelector("main.songs-page");
             if (cols[i].style.flexDirection == "column-reverse") {
                 cols[i].style.flexDirection = "column";
                 cols[i].children[0].style.order = "";
+                updateUserPref("tableSort.reverse", false);
             } else {
                 cols[i].style.flexDirection = "column-reverse";
                 cols[i].children[0].style.order = 100000;
+                updateUserPref("tableSort.reverse", true);
             }
         }
     }
@@ -282,5 +287,6 @@ var main = document.querySelector("main.songs-page");
                 currentCol[cci].style.order = posChange[cci];
             }
         }
+        updateUserPref("tableSort.column", JSON.stringify(cols[clickedColIndex].classList[1]));
     }
 ///
