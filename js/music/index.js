@@ -29,7 +29,7 @@ var serverPref = {
         time: 60,
         artist: 100,
         album: 100,
-        dateAdded: 95,
+        "date-added": 95,
         plays: 60
     },
     sidebarDefaultWidth: 200
@@ -152,7 +152,7 @@ var main = document.querySelector("main.songs-page");
             mousePosX = e.clientX;
             mousePosStartX = mousePosX;
             currentCol = e.target.parentElement.parentElement;
-            currentColClass = cssClassToJS(currentCol.classList[1]);
+            currentColClass = currentCol.classList[1];
             oldWidth = currentCol.clientWidth;
 
             flexibleCols = document.querySelectorAll(".music-table .col.flexible-width");
