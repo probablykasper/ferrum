@@ -9,38 +9,16 @@ var userPref = {
     },
     tableCols: {
         name: {
-            visible: true,
-            widthType: "flexible",
-            widthPerc: 50,
-            widthPx: 300
         },
         time: {
-            visible: true,
-            widthType: "fixedOnly",
-            widthPx: 60
         },
         artist: {
-            visible: true,
-            widthType: "flexible",
-            widthPerc: 25,
-            widthPx: 150
         },
         album: {
-            visible: true,
-            widthType: "flexible",
-            widthPerc: 25,
-            widthPx: 150
         },
         dateAdded: {
-            visible: true,
-            widthType: "fixedOnly",
-            widthPerc: 50,
-            widthPx: 95
         },
         plays: {
-            visible: true,
-            widthType: "fixed",
-            widthPx: 60
         },
     }
 }
@@ -59,6 +37,23 @@ var serverPref = {
 
 function updateUserPref(pref, value) {
     eval(`userPref.${pref} = ${value}`);
+}
+function hasClass(el, cls) {
+    cls = cls.split(","); // or
+    for (var i = 0; i < cls.length; i++) {
+        if ( (" "+el.className+" ").indexOf(" "+cls[i]+" ") > -1 ) {
+            return true;
+        }
+    }
+    return false;
+}
+function timeToSec(str) {
+    var p = str.split(':'), s = 0, m = 1;
+    while (p.length > 0) {
+        s += m * parseInt(p.pop(), 10);
+        m *= 60;
+    }
+    return s;
 }
 
 var main = document.querySelector("main.songs-page");
@@ -133,7 +128,6 @@ var main = document.querySelector("main.songs-page");
             sidebar.style.transition = "";
         }
     });
-
 ///
 
 /// COL RESIZE
@@ -230,38 +224,63 @@ var main = document.querySelector("main.songs-page");
             }
         }
     });
-
 ///
 
-// SORT
+/// SORT
+    function sortReverse() {
+        var cols = document.querySelectorAll(".music-table .col");
+        for (var i = 0; i < cols.length; i++) {
+            if (cols[i].style.flexDirection == "column-reverse") {
+                cols[i].style.flexDirection = "column";
+                cols[i].children[0].style.order = "";
+            } else {
+                cols[i].style.flexDirection = "column-reverse";
+                cols[i].children[0].style.order = 100000;
+            }
+        }
+    }
     function sort(clickedColIndex) {
         // sort clicked column
         var cols = document.querySelectorAll(".music-table .col");
         clickedCol = cols[clickedColIndex].children;
         clickedCol = Array.prototype.slice.call(clickedCol, 0).slice(1); // NodeList -> Array
-        var posChange = { from: [], to: [] };
-        for (var i = 0; i < clickedCol.length; i++) { // posChange.from
-            posChange.from[i] = i;
+        for (var i = 0; i < clickedCol.length; i++) { // save original pos
             clickedCol[i].index = i;
         }
+
         clickedCol.sort(function(a, b) {
-            if (a.innerHTML < b.innerHTML) return -1;
-            if (a.innerHTML > b.innerHTML) return 1;
-            return 0;
+            switch (cols[clickedColIndex].classList[1]) {
+                case "name":
+                case "artist":
+                case "album":
+                    if (a.innerHTML < b.innerHTML) return -1;
+                    if (a.innerHTML > b.innerHTML) return 1;
+                    return 0;
+                case "time":
+                    return timeToSec(a.innerHTML)-timeToSec(b.innerHTML);
+                case "date-added":
+                    return new Date(a.innerHTML) - new Date(b.innerHTML);
+                case "plays":
+                    return Number(a.innerHTML)-Number(b.innerHTML);
+                default:
+                    console.log("OMG HOW DID THIS HAPPEN");
+                    return 0;
+            }
         });
 
-        for (var i = 0; i < clickedCol.length; i++) { // posChange.to
-            posChange.to[clickedCol[i].index] = i;
+        var posChange = [];
+        for (var i = 0; i < clickedCol.length; i++) { // save new pos
+            posChange[clickedCol[i].index] = i;
         }
 
         // sort other columns
         for (var i = 0; i < cols.length; i++) {
-            if (i == clickedColIndex) i++; // skip clicked col
             var currentCol = cols[i].children;
             var nthChild = i+1;
-            var currentCol = document.querySelectorAll(".music-table .col:nth-child("+i+") .cell:not(:first-child)");
+            var currentCol = document.querySelectorAll(".music-table .col:nth-child("+nthChild+") .cell:not(:first-child)");
             for (var cci = 0; cci < clickedCol.length; cci++) {
-                currentCol[cci].style.order = posChange.to[cci];
+                currentCol[cci].style.order = posChange[cci];
             }
         }
     }
+///

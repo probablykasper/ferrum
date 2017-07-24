@@ -20,66 +20,66 @@
                         Name
                         <div class="col-resizer"><div class="line"></div></div>
                     </div>
-                    <!-- <? for ($i = 0; $i < $count; $i++) { ?>
-                        <div class="cell name"><?=md5(uniqid())?></div>
-                    <? } ?> -->
-                    <div class="cell name">e</div>
-                    <div class="cell name">c</div>
-                    <div class="cell name">b</div>
-                    <div class="cell name">a</div>
-                    <div class="cell name">d</div>
+                    <div class="cell name">Honesty</div>
+                    <div class="cell name">Lion's Den</div>
+                    <div class="cell name">Broken Pieces (feat. Nihils)</div>
+                    <div class="cell name">Want You</div>
+                    <div class="cell name">Marshmello</div>
                 </div>
                 <div class="col time fixed-width">
                     <div class="cell time">
                         Time
                         <div class="col-resizer"><div class="line"></div></div>
                     </div>
-                    <!-- <? for ($i = 0; $i < $count; $i++) { ?>
-                        <div class="cell time"><?=rand(0,12).":".rand(10,59)?></div>
-                    <? } ?> -->
-                    <div class="cell time">1:00</div>
-                    <div class="cell time">2:00</div>
+                    <div class="cell time">4:03</div>
+                    <div class="cell time">5:54</div>
+                    <div class="cell time">3:24</div>
+                    <div class="cell time">3:23</div>
                     <div class="cell time">3:00</div>
-                    <div class="cell time">4:00</div>
-                    <div class="cell time">5:00</div>
                 </div>
                 <div class="col artist flexible-width">
                     <div class="cell artist">
                         Artist
                         <div class="col-resizer"><div class="line"></div></div>
                     </div>
-                    <? for ($i = 0; $i < $count; $i++) { ?>
-                        <div class="cell artist">
-                            Somebody Famous idk
-                        </div>
-                    <? } ?>
+                    <div class="cell artist">Camo &amp; Krooked</div>
+                    <div class="cell artist">Teminite &amp; PsoGnar</div>
+                    <div class="cell artist">Camo &amp; Krooked</div>
+                    <div class="cell artist">Orbiter</div>
+                    <div class="cell artist">Moving On</div>
                 </div>
                 <div class="col album flexible-width">
                     <div class="cell album">
                         Album
                         <div class="col-resizer"><div class="line"></div></div>
                     </div>
-                    <? for ($i = 0; $i < $count; $i++) { ?>
-                        <div class="cell album">Somebody Famous idk</div>
-                    <? } ?>
+                    <div class="cell album">Mosaik</div>
+                    <div class="cell album"></div>
+                    <div class="cell album">Mosaik</div>
+                    <div class="cell album">We Do</div>
+                    <div class="cell album"></div>
                 </div>
                 <div class="col date-added fixed-width">
                     <div class="cell date-added">
                         Date Added
                         <div class="col-resizer"><div class="line"></div></div>
                     </div>
-                    <? for ($i = 0; $i < $count; $i++) { ?>
-                        <div class="cell album"><?=rand(0,12)."/".rand(0,31)."/".rand(10,99)?></div>
-                    <? } ?>
+                    <div class="cell date-added">6/26/17</div>
+                    <div class="cell date-added">6/28/17</div>
+                    <div class="cell date-added">6/26/17</div>
+                    <div class="cell date-added">4/24/17</div>
+                    <div class="cell date-added">5/5/17</div>
                 </div>
                 <div class="col plays fixed-width">
                     <div class="cell plays">
                         Plays
                         <div class="col-resizer"><div class="line"></div></div>
                     </div>
-                    <? for ($i = 0; $i < $count; $i++) { ?>
-                        <div class="cell plays"><?=rand(0,999)?></div>
-                    <? } ?>
+                    <div class="cell plays">14</div>
+                    <div class="cell plays">5</div>
+                    <div class="cell plays">7</div>
+                    <div class="cell plays">10</div>
+                    <div class="cell plays">9</div>
                 </div>
             </div>
         </main>
