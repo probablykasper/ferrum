@@ -1,0 +1,16 @@
+{
+    "name": "ferrum-api",
+    "version": "1.0.0",
+    "description": "Ferrum RESTful JSON API",
+    "author": "KH kasperkh.kh@gmail.com",
+    "main": "server.js",
+
+    "scripts": {
+        "start": "nodemon server.js"
+    },
+    "dependencies": {
+        "nodemon": "1.11.0",
+        "mysql": "2.14.0",
+        "restify": "5.0.1"
+    }
+}

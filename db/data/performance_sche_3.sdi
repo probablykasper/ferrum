@@ -1,0 +1,12 @@
+{
+    "mysqld_version_id": 80002,
+    "dd_version": 1,
+    "sdi_version": 1,
+    "dd_object_type": "Schema",
+    "dd_object": {
+        "name": "performance_schema",
+        "default_collation_id": 33,
+        "created": 0,
+        "last_altered": 0
+    }
+}
