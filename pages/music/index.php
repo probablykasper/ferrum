@@ -17,7 +17,7 @@
                 <? $count = 30 ?>
                 <div class="col name flexible-width">
                     <div class="cell name">
-                        Name
+                        <span>Name</span>
                         <div class="col-resizer"><div class="line"></div></div>
                     </div>
                     <div class="cell name">Honesty</div>
@@ -28,7 +28,7 @@
                 </div>
                 <div class="col time fixed-width">
                     <div class="cell time">
-                        Time
+                        <span>Time</span>
                         <div class="col-resizer"><div class="line"></div></div>
                     </div>
                     <div class="cell time">4:03</div>
@@ -39,7 +39,7 @@
                 </div>
                 <div class="col artist flexible-width">
                     <div class="cell artist">
-                        Artist
+                        <span>Artist</span>
                         <div class="col-resizer"><div class="line"></div></div>
                     </div>
                     <div class="cell artist">Camo &amp; Krooked</div>
@@ -50,7 +50,7 @@
                 </div>
                 <div class="col album flexible-width">
                     <div class="cell album">
-                        Album
+                        <span>Album</span>
                         <div class="col-resizer"><div class="line"></div></div>
                     </div>
                     <div class="cell album">Mosaik</div>
@@ -61,7 +61,7 @@
                 </div>
                 <div class="col date-added fixed-width">
                     <div class="cell date-added">
-                        Date Added
+                        <span>Date Added</span>
                         <div class="col-resizer"><div class="line"></div></div>
                     </div>
                     <div class="cell date-added">6/26/17</div>
@@ -72,7 +72,7 @@
                 </div>
                 <div class="col plays fixed-width">
                     <div class="cell plays">
-                        Plays
+                        <span>Plays</span>
                         <div class="col-resizer"><div class="line"></div></div>
                     </div>
                     <div class="cell plays">14</div>

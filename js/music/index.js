@@ -59,6 +59,7 @@
     }
 
     var main = document.querySelector("main.songs-page");
+    var cols = document.querySelectorAll(".music-table .col");
 ///
 
 /// SIDEBAR
@@ -134,7 +135,6 @@
 ///
 
 /// COL RESIZE
-
     function cssClassToJS(string) {
         while (string.indexOf("-") != -1) {
             var i = string.indexOf("-");
@@ -145,10 +145,9 @@
 
     var tableMargin = 20;
 
-    var colCount = document.querySelectorAll(".music-table .col").length;
     var colResizer = document.querySelectorAll(".music-table .col-resizer");
     var mouseDown, mouseStartPosX, oldWidth, mousePosX, mousePosOldX;
-    for (var i = 0; i < colCount; i++) {
+    for (var i = 0; i < cols.length; i++) {
         colResizer[i].addEventListener("mousedown", function(e) {
             e.preventDefault();
             mouseDown = true;
@@ -230,23 +229,39 @@
 ///
 
 /// SORT
-    function sortReverse() {
-        var cols = document.querySelectorAll(".music-table .col");
+    document.querySelector(".music-table .col."+userPref.tableSort.column).classList.add("sort");
+    for (var i = 0; i < cols.length; i++) {
+        var span = cols[i].children[0].querySelector("span");
+        span.colClass = span.parentElement.parentElement.classList[1];
+        span.colIndex = i;
+        span.addEventListener("click", function(e) {
+            e.preventDefault();
+            var col = document.querySelector(".music-table .col."+this.colClass);
+            if (hasClass(col, "sort")) sortReverse();
+            else sort(this.colIndex);
+        });
+        span.addEventListener("mousedown", function(e) {
+            e.preventDefault(); // prevent text select on doubleclick
+        });
+    }
+    function sortReverse(reset = false) {
         for (var i = 0; i < cols.length; i++) {
-            if (cols[i].style.flexDirection == "column-reverse") {
-                cols[i].style.flexDirection = "column";
-                cols[i].children[0].style.order = "";
-                updateUserPref("tableSort.reverse", false);
-            } else {
+            if (cols[i].style.flexDirection != "column-reverse" && !reset) {
                 cols[i].style.flexDirection = "column-reverse";
                 cols[i].children[0].style.order = 100000;
                 updateUserPref("tableSort.reverse", true);
+                document.querySelector(".music-table .col.sort").classList.add("reverse");
+            } else if (cols[i].style.flexDirection == "column-reverse" || reset) {
+                cols[i].style.flexDirection = "column";
+                cols[i].children[0].style.order = "";
+                updateUserPref("tableSort.reverse", false);
+                document.querySelector(".music-table .col.sort").classList.remove("reverse");
             }
         }
     }
     function sort(clickedColIndex) {
+        sortReverse(true);
         // sort clicked column
-        var cols = document.querySelectorAll(".music-table .col");
         clickedCol = cols[clickedColIndex].children;
         clickedCol = Array.prototype.slice.call(clickedCol, 0).slice(1); // NodeList -> Array
         for (var i = 0; i < clickedCol.length; i++) { // save original pos
@@ -288,5 +303,7 @@
             }
         }
         updateUserPref("tableSort.column", JSON.stringify(cols[clickedColIndex].classList[1]));
+        document.querySelector(".music-table .col.sort").classList.remove("sort");
+        document.querySelector(".music-table .col."+userPref.tableSort.column).classList.add("sort");
     }
 ///

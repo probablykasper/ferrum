@@ -38,11 +38,11 @@ header.app-bar .app-bar-button:hover { cursor: pointer; box-shadow: inset 0px 0p
 
 header.app-bar .app-bar-button:active, header.app-bar .app-bar-button:focus { box-shadow: inset 0px 0px 0px 0px rgba(0, 0, 0, 0.4), 0px 0px 8px 0px rgba(0, 0, 0, 0.4); }
 
-header.app-bar .sidebar-toggle { background-image: url("/img/ic_menu_white_24px.svg"); }
+header.app-bar .sidebar-toggle { background-image: url("/img/icons/ic_menu_white_24px.svg"); }
 
-header.app-bar .account-icon { background-image: url("/img/ic_account_circle_white_24px.svg"); }
+header.app-bar .account-icon { background-image: url("/img/icons/ic_account_circle_white_24px.svg"); }
 
-header.app-bar .search-bar { padding: 12px 12px 12px calc(10px + 24px + 10px); width: 50%; max-width: 500px; background-image: url("/img/ic_search_white_24px.svg"); background-repeat: no-repeat; background-position: 12px 50%; background-color: #393D47; transition: box-shadow 0.15s cubic-bezier(0.4, 0, 0.2, 1); }
+header.app-bar .search-bar { padding: 12px 12px 12px calc(10px + 24px + 10px); width: 50%; max-width: 500px; background-image: url("/img/icons/ic_search_white_24px.svg"); background-repeat: no-repeat; background-position: 12px 50%; background-color: #393D47; transition: box-shadow 0.15s cubic-bezier(0.4, 0, 0.2, 1); }
 
 header.app-bar .search-bar:active, header.app-bar .search-bar:focus { box-shadow: inset 0px 0px 0px 0px rgba(0, 0, 0, 0.4), 0px 0px 8px 0px rgba(0, 0, 0, 0.4); }
 
@@ -80,7 +80,13 @@ div.music-table div.col.date-added { text-align: left; width: 95px; }
 
 div.music-table div.col.plays { text-align: right; width: 60px; }
 
-div.music-table div.col div.cell:first-child { font-weight: 500; font-variant-caps: all-small-caps; color: #FFFFFF; position: relative; overflow: visible; }
+div.music-table div.col.sort div.cell:first-child::after { position: absolute; transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1); transform: translateY(-50%); top: 50%; right: 2px; width: 20px; height: 20px; content: ""; background-image: url('data:image/svg+xml;utf8,<svg class="sort-icon" fill="#FFFFFF" width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/><path d="M0 0h24v24H0z" fill="none"/></svg>'); }
+
+div.music-table div.col.reverse div.cell:first-child::after { transform: translateY(-50%) rotate(-180deg); }
+
+div.music-table div.col div.cell:first-child { font-weight: 500; font-variant-caps: all-small-caps; color: #FFFFFF; position: relative; overflow: visible; cursor: move; }
+
+div.music-table div.col div.cell:first-child span { cursor: pointer; }
 
 div.music-table div.col div.cell:first-child .col-resizer { width: 8px; height: 16px; position: absolute; right: 0px; top: 50%; cursor: col-resize; transform: translate(50%, -50%); z-index: 5; }
 
