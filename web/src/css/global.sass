@@ -151,10 +151,17 @@ div.music-table
     margin: 20px auto
     width: calc(100% - 20px)
     div.col
+        background-color: $c-bg
+        transition: left $transition, box-shadow $transition
+        position: relative
         display: flex
         flex-direction: column
         min-width: 0px
         color: rgba(#FFFFFF, 0.8)
+        &.reorganizing
+            transition: box-shadow $transition-short
+            z-index: 10
+            box-shadow: $shadow-3
         &.flexible-width
             width: 0px
 

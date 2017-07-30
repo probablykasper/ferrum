@@ -197,7 +197,7 @@
             }
 
             currentCol.style.width = newWidth+"px";
-            document.querySelector(".music-table").style.width = "calc(100% - "+newTableMargin+"px)"
+            document.querySelector(".music-table").style.width = "calc(100% - "+newTableMargin+"px)";
         }
     });
     document.addEventListener("mouseup", function(e) {
@@ -306,4 +306,35 @@
         document.querySelector(".music-table .col.sort").classList.remove("sort");
         document.querySelector(".music-table .col."+userPref.tableSort.column).classList.add("sort");
     }
+///
+
+/// COLUMN ORGANIZING
+
+    // var mouseDown, coMousePosX, oldWidth, mousePosX, mousePosOldX;
+    var coMouseDown, coMousePosX, coMousePosStartX, coCurrentCol;
+    for (var i = 0; i < cols.length; i++) {
+        cols[i].addEventListener("mousedown", function(e) {
+            e.preventDefault();
+            coMouseDown = true;
+            coMousePosX = e.clientX;
+            coMousePosStartX = coMousePosX;
+            coCurrentCol = e.target.parentElement;
+            coCurrentCol.classList.add("reorganizing");
+        });
+    }
+    document.addEventListener("mousemove", function(e) {
+        if (coMouseDown) {
+            coMousePosX = e.clientX;
+            var left = coMousePosX - coMousePosStartX;
+            coCurrentCol.style.left = left+"px";
+        }
+    });
+    document.addEventListener("mouseup", function(e) {
+        if (coMouseDown) {
+            coMouseDown = false;
+            coCurrentCol.classList.remove("reorganizing");
+            coCurrentCol.style.left = "0px";
+        }
+    });
+
 ///
