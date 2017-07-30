@@ -1,4 +1,4 @@
-version: "2"
+version: "3.3"
 services:
     api:
         build: ./api
@@ -23,6 +23,8 @@ services:
             - 80:80
         volumes:
             - ./web/src:/var/www/html
+            - ./web/mods-enabled:/etc/apache2/mods-enabled
+            - ./web/mods-available:/etc/apache2/mods-available
         depends_on:
             - api
     phpmyadmin:
