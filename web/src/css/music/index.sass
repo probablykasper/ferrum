@@ -51,8 +51,10 @@ div.music-table
             text-align: right
             width: 60px
 
-
-        &.sort div.cell:first-child::after
+        div.cell:first-child .sort-icon
+            display: none
+        &.sort div.cell:first-child .sort-icon
+            display: block
             position: absolute
             transition: transform $transition
             transform: translateY(-50%)
@@ -62,7 +64,7 @@ div.music-table
             height: 20px
             content: ""
             background-image: url('data:image/svg+xml;utf8,<svg class="sort-icon" fill="#FFFFFF" width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/><path d="M0 0h24v24H0z" fill="none"/></svg>')
-        &.reverse div.cell:first-child::after
+        &.reverse div.cell:first-child .sort-icon
             transform: translateY(-50%) rotate(-180deg)
         div.cell:first-child
             font-weight: 500

@@ -236,19 +236,33 @@
 
 /// SORT
     document.querySelector(".music-table .col."+userPref.tableSort.column).classList.add("sort");
-    for (var i = 0; i < cols.length; i++) {
-        var span = cols[i].children[0].querySelector("span");
-        span.colClass = span.parentElement.parentElement.classList[1];
-        span.colIndex = i;
-        span.addEventListener("click", function(e) {
-            e.preventDefault();
-            var col = document.querySelector(".music-table .col."+this.colClass);
-            if (hasClass(col, "sort")) sortReverse();
-            else sort(this.colIndex);
-        });
-        span.addEventListener("mousedown", function(e) {
-            e.preventDefault(); // prevent text select on doubleclick
-        });
+    function spanClick(e) { // event handler
+        e.preventDefault();
+        var col = document.querySelector(".music-table .col."+this.colClass);
+        if (hasClass(col, "sort")) sortReverse();
+        else sort(this.colIndex);
+    }
+    function spanMouseDown(e) {
+        e.preventDefault(); // prevent text select on doubleclick
+    }
+    function sortInit() {
+        for (var i = 0; i < cols.length; i++) {
+            var span = cols[i].children[0].querySelector("span");
+            span.colClass = span.parentElement.parentElement.classList[1];
+            span.colIndex = i;
+            span.addEventListener("click", spanClick);
+            span.addEventListener("mousedown", spanMouseDown);
+        }
+    }
+    sortInit();
+    function sortUnInit() {
+        for (var i = 0; i < cols.length; i++) {
+            var span = cols[i].children[0].querySelector("span");
+            span.colClass = span.parentElement.parentElement.classList[1];
+            span.colIndex = i;
+            span.removeEventListener("click", spanClick);
+            span.removeEventListener("mousedown", spanMouseDown);
+        }
     }
     function sortReverse(reset = false) {
         for (var i = 0; i < cols.length; i++) {
@@ -315,25 +329,26 @@
 ///
 
 /// COLUMN ORGANIZING
-
-    var coMouseDown, coMousePosX, coMousePosStartX, coCurrentCol;
+colOrg();
+function colOrg() {
+    var mouseDown, mousePosX, mousePosStartX, currentCol;
     for (var i = 0; i < cols.length; i++) {
         cols[i].addEventListener("mousedown", function(e) {
             if (hasClass(e.target, "cell") && e.target.previousElementSibling == null) {
                 e.preventDefault();
-                coMouseDown = true;
-                coMousePosX = e.clientX;
-                coMousePosStartX = coMousePosX;
-                coCurrentCol = e.target.parentElement;
-                coCurrentCol.classList.add("reorganizing");
+                mouseDown = true;
+                mousePosX = e.clientX;
+                mousePosStartX = mousePosX;
+                currentCol = e.target.parentElement;
+                currentCol.classList.add("reorganizing");
             }
         });
     }
     var moveCount = 0;
     document.addEventListener("mousemove", function(e) {
-        if (coMouseDown) {
-            coMousePosX = e.clientX;
-            var left = coMousePosX - coMousePosStartX;
+        if (mouseDown) {
+            mousePosX = e.clientX;
+            var left = mousePosX - mousePosStartX;
 
             var end = false, remainding = left, moveEnd = false;
             var reverse = remainding < 0 ? true : false;
@@ -346,11 +361,11 @@
                     if (!moveEnd) {
                         if (remainding > next.clientWidth/2 && !reverse) {
                             remainding -= next.clientWidth;
-                            next.style.right = coCurrentCol.clientWidth+"px";
+                            next.style.right = currentCol.clientWidth+"px";
                             moveCount++;
                         } else if (remainding < -next.clientWidth/2 && reverse) {
                             remainding += next.clientWidth;
-                            next.style.right = -coCurrentCol.clientWidth+"px";
+                            next.style.right = -currentCol.clientWidth+"px";
                             moveCount--;
                         } else {
                             moveEnd = true;
@@ -360,24 +375,25 @@
                     moveOtherCols(next);
                 }
             }
-            moveOtherCols(coCurrentCol);
+            moveOtherCols(currentCol);
             left -= remainding;
-            coCurrentCol.style.left = left+"px";
+            currentCol.style.left = left+"px";
         }
     });
     document.addEventListener("mouseup", function(e) {
-        if (coMouseDown) {
-            coMouseDown = false;
-            coCurrentCol.classList.remove("reorganizing");
+        if (mouseDown) {
+            sortUnInit();
+            mouseDown = false;
+            currentCol.classList.remove("reorganizing");
             cols = document.querySelectorAll(".music-table .col");
             for (var i = 0; i < cols.length; i++) {
                 cols[i].style.right = "";
-                if (cols[i] == coCurrentCol) var newPos = moveCount + i;
+                if (cols[i] == currentCol) var newPos = moveCount + i;
             }
             var table = document.querySelector(".music-table");
-            if (moveCount > 0) table.insertBefore(coCurrentCol, table.children[newPos+1]);
-            if (moveCount < 0) table.insertBefore(coCurrentCol, table.children[newPos]);
-            coCurrentCol.style.left = "";
+            if (moveCount > 0) table.insertBefore(currentCol, table.children[newPos+1]);
+            if (moveCount < 0) table.insertBefore(currentCol, table.children[newPos]);
+            currentCol.style.left = "";
 
             cols = document.querySelectorAll(".music-table .col");
             for (var i = 0; i < cols.length; i++) {
@@ -385,7 +401,9 @@
                 updateUserPref(`tableCols["${cls}"].pos`, i);
                 cols[i].classList[1];
             }
+            sortInit();
         }
     });
+}
 
 ///

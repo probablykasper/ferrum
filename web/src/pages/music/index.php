@@ -11,6 +11,7 @@
                 <div class="cell name">
                     <span>Name</span>
                     <div class="col-resizer"><div class="line"></div></div>
+                    <div class="sort-icon"></div>
                 </div>
                 <div class="cell name">Honesty</div>
                 <div class="cell name">Lion's Den</div>
@@ -22,6 +23,7 @@
                 <div class="cell time">
                     <span>Time</span>
                     <div class="col-resizer"><div class="line"></div></div>
+                    <div class="sort-icon"></div>
                 </div>
                 <div class="cell time">4:03</div>
                 <div class="cell time">5:54</div>
@@ -33,6 +35,7 @@
                 <div class="cell artist">
                     <span>Artist</span>
                     <div class="col-resizer"><div class="line"></div></div>
+                    <div class="sort-icon"></div>
                 </div>
                 <div class="cell artist">Camo &amp; Krooked</div>
                 <div class="cell artist">Teminite &amp; PsoGnar</div>
@@ -44,6 +47,7 @@
                 <div class="cell album">
                     <span>Album</span>
                     <div class="col-resizer"><div class="line"></div></div>
+                    <div class="sort-icon"></div>
                 </div>
                 <div class="cell album">Mosaik</div>
                 <div class="cell album"></div>
@@ -55,6 +59,7 @@
                 <div class="cell date-added">
                     <span>Date Added</span>
                     <div class="col-resizer"><div class="line"></div></div>
+                    <div class="sort-icon"></div>
                 </div>
                 <div class="cell date-added">6/26/17</div>
                 <div class="cell date-added">6/28/17</div>
@@ -66,6 +71,7 @@
                 <div class="cell plays">
                     <span>Plays</span>
                     <div class="col-resizer"><div class="line"></div></div>
+                    <div class="sort-icon"></div>
                 </div>
                 <div class="cell plays">14</div>
                 <div class="cell plays">5</div>
