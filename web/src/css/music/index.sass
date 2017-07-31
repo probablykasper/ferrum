@@ -51,10 +51,15 @@ div.music-table
             text-align: right
             width: 60px
 
+        // div.cell:first-child
+        //     transition: padding $transition-short
         div.cell:first-child .sort-icon
             display: none
+        &.sort div.cell:first-child
+            padding-right: 22px
         &.sort div.cell:first-child .sort-icon
             display: block
+            cursor: pointer
             position: absolute
             transition: transform $transition
             transform: translateY(-50%)
@@ -66,32 +71,33 @@ div.music-table
             background-image: url('data:image/svg+xml;utf8,<svg class="sort-icon" fill="#FFFFFF" width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/><path d="M0 0h24v24H0z" fill="none"/></svg>')
         &.reverse div.cell:first-child .sort-icon
             transform: translateY(-50%) rotate(-180deg)
-        div.cell:first-child
+        .cell:first-child
             font-weight: 500
             font-variant-caps: all-small-caps
             color: #FFFFFF
             position: relative
             overflow: visible
             cursor: move
-            // user-select: none
+            user-select: none
             span
                 cursor: pointer
             .col-resizer
-                width: 8px
+                width: 9px
                 height: 16px
+                padding: 10px 0px
                 position: absolute
                 right: 0px
                 top: 50%
                 cursor: col-resize
-                transform: translate(50%, -50%)
+                transform: translate(3px, -50%)
                 z-index: 5
-                div.line
+                .line
                     width: 1px
                     height: 100%
                     background-color: $c-col-resizer
                     margin: auto
                     pointer-events: none
-        div.cell
+        .cell
             height: 16px
             white-space: nowrap
             overflow: hidden

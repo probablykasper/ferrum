@@ -1,40 +1,43 @@
 /// SETUP THINGS
 
-    var userPref = {
+    var pref = {
         "sidebar": {
             "visible": true,
             "width": 200
         },
-        "tableSort": {
-            "column": "date-added",
-            "reverse": false
+        "table": {
+            "margin": 20,
+            "sort": {
+                "col": "date-added",
+                "reverse": false
+            },
+            "cols": {
+                "name": {
+                    "pos": 0
+                },
+                "time": {
+                    "pos": 1
+                },
+                "artist": {
+                    "pos": 2
+                },
+                "album": {
+                    "pos": 3
+                },
+                "date-added": {
+                    "pos": 4
+                },
+                "plays": {
+                    "pos": 5
+                },
+            }
         },
-        "tableCols": {
-            "name": {
-                "pos": 0
-            },
-            "time": {
-                "pos": 1
-            },
-            "artist": {
-                "pos": 2
-            },
-            "album": {
-                "pos": 3
-            },
-            "date-added": {
-                "pos": 4
-            },
-            "plays": {
-                "pos": 5
-            },
-        }
     }
 
     var serverPref = {
         "colMinWidths": {
             "name": 100,
-            "time": 60,
+            "time": 50,
             "artist": 100,
             "album": 100,
             "date-added": 95,
@@ -43,8 +46,8 @@
         "sidebarDefaultWidth": 200
     }
 
-    function updateUserPref(pref, value) {
-        eval(`userPref.${pref} = ${value}`);
+    function updatePref(preference, value) {
+        eval(`pref.${preference} = ${value}`);
     }
     function hasClass(el, cls) {
         cls = cls.split(","); // or
@@ -70,7 +73,7 @@
 
 /// SIDEBAR
     // TOGGLE
-    var sidebarVisible = userPref.sidebar.visible;
+    var sidebarVisible = pref.sidebar.visible;
     var sidebar = document.querySelector("aside.sidebar");
     var sidebarResizer = document.querySelector(".sidebar-resizer");
     var sidebarToggle = document.querySelector(".sidebar-toggle");
@@ -84,21 +87,21 @@
     }
     function showSidebar() {
         sidebar.style.transform = "translateX(0px)";
-        main.style.width = "calc(100% - "+userPref.sidebar.width+"px)";
+        main.style.width = "calc(100% - "+pref.sidebar.width+"px)";
         sidebarVisible = true;
-        updateUserPref("sidebar.visible", true);
+        updatePref("sidebar.visible", true);
         sidebarResizer.style.right = "0px";
     }
     function hideSidebar() {
-        sidebar.style.transform = "translateX(-"+userPref.sidebar.width+"px)";
+        sidebar.style.transform = "translateX(-"+pref.sidebar.width+"px)";
         main.style.width = "100%";
         sidebarVisible = false;
-        updateUserPref("sidebar.visible", false);
+        updatePref("sidebar.visible", false);
         sidebarResizer.style.right = "4px";
     }
     // DOUBLE-CLICK RESET
     sidebarResizer.addEventListener("dblclick", function() {
-        updateUserPref("sidebar.width", serverPref.sidebarDefaultWidth);
+        updatePref("sidebar.width", serverPref.sidebarDefaultWidth);
         sidebar.style.width = serverPref.sidebarDefaultWidth+"px";
         main.style.width = "calc(100% - "+serverPref.sidebarDefaultWidth+"px)";
     });
@@ -133,7 +136,7 @@
     document.addEventListener("mouseup", function() {
         if (sidebarMouseDown) {
             sidebarMouseDown = false;
-            updateUserPref("sidebar.width", newSidebarWidth);
+            updatePref("sidebar.width", newSidebarWidth);
             document.querySelector(".songs-page").style.transition = "";
             sidebar.style.transition = "";
         }
@@ -149,7 +152,9 @@
         return string;
     }
 
-    var tableMargin = 20;
+    var tableMargin = pref.table.margin;
+    var newTableMargin = tableMargin;
+    document.querySelector(".music-table").style.width = `calc(100% - ${tableMargin*2})`;
 
     var colResizer = document.querySelectorAll(".music-table .col-resizer");
     var mouseDown, mouseStartPosX, oldWidth, mousePosX, mousePosOldX;
@@ -167,6 +172,8 @@
             flexibleColsWidths = [];
             for (var i = 0; i < flexibleCols.length; i++) {
                 flexibleColsWidths.push(flexibleCols[i].clientWidth);
+                // var currentWidth = window.getComputedStyle(flexibleCols[i]).width;
+                // flexibleColsWidths.push(Number(currentWidth.substr(0, currentWidth.length-2)));
             }
             if (currentCol.classList[2] == "flexible-width") {
                 for (var i = 0; i < flexibleCols.length; i++) {
@@ -235,32 +242,51 @@
 ///
 
 /// SORT
-    document.querySelector(".music-table .col."+userPref.tableSort.column).classList.add("sort");
+    document.querySelector(".music-table .col."+pref.table.sort.col).classList.add("sort");
     function spanClick(e) { // event handler
         e.preventDefault();
         var col = document.querySelector(".music-table .col."+this.colClass);
         if (hasClass(col, "sort")) sortReverse();
         else sort(this.colIndex);
     }
-    function spanMouseDown(e) {
+    function sortIconClick(e) { // event handler
+        // e.preventDefault();
+        sortReverse();
+    }
+    function spanMouseDown(e) { // event handler
         e.preventDefault(); // prevent text select on doubleclick
     }
     function sortInit() {
         for (var i = 0; i < cols.length; i++) {
             var span = cols[i].children[0].querySelector("span");
+            var sortIcon = cols[i].children[0].querySelector(".sort-icon");
             span.colClass = span.parentElement.parentElement.classList[1];
             span.colIndex = i;
             span.addEventListener("click", spanClick);
+            sortIcon.addEventListener("click", sortIconClick);
             span.addEventListener("mousedown", spanMouseDown);
         }
+
+        var sortCol = document.querySelector(".music-table .col.sort");
+        var header = sortCol.querySelector(".cell:first-child");
+        var sortIcon = header.querySelector(".sort-icon");
+        var usedWidth  = Number(window.getComputedStyle(header).paddingLeft.substring(0,2));
+            usedWidth += header.querySelector("span").offsetWidth;
+            usedWidth += sortIcon.clientWidth;
+            usedWidth += Number(window.getComputedStyle(sortIcon).right.substring(0,1));
+        var leftoverWidth = header.clientWidth - usedWidth;
+        if (leftoverWidth < 0) sortCol.style.width = sortCol.clientWidth - leftoverWidth+"px";
+
     }
     sortInit();
     function sortUnInit() {
         for (var i = 0; i < cols.length; i++) {
             var span = cols[i].children[0].querySelector("span");
+            var sortIcon = cols[i].children[0].querySelector(".sort-icon");
             span.colClass = span.parentElement.parentElement.classList[1];
             span.colIndex = i;
             span.removeEventListener("click", spanClick);
+            sortIcon.addEventListener("click", sortIconClick);
             span.removeEventListener("mousedown", spanMouseDown);
         }
     }
@@ -269,12 +295,12 @@
             if (cols[i].style.flexDirection != "column-reverse" && !reset) {
                 cols[i].style.flexDirection = "column-reverse";
                 cols[i].children[0].style.order = 100000;
-                updateUserPref("tableSort.reverse", true);
+                updatePref("table.sort.reverse", true);
                 document.querySelector(".music-table .col.sort").classList.add("reverse");
             } else if (cols[i].style.flexDirection == "column-reverse" || reset) {
                 cols[i].style.flexDirection = "column";
                 cols[i].children[0].style.order = "";
-                updateUserPref("tableSort.reverse", false);
+                updatePref("table.sort.reverse", false);
                 document.querySelector(".music-table .col.sort").classList.remove("reverse");
             }
         }
@@ -322,9 +348,19 @@
                 currentCol[cci].style.order = posChange[cci];
             }
         }
-        updateUserPref("tableSort.column", JSON.stringify(cols[clickedColIndex].classList[1]));
+        updatePref("table.sort.col", JSON.stringify(cols[clickedColIndex].classList[1]));
         document.querySelector(".music-table .col.sort").classList.remove("sort");
-        document.querySelector(".music-table .col."+userPref.tableSort.column).classList.add("sort");
+        document.querySelector(".music-table .col."+pref.table.sort.col).classList.add("sort");
+
+        var header = cols[clickedColIndex].children[0];
+        var sortIcon = header.querySelector(".sort-icon");
+        var usedWidth  = Number(window.getComputedStyle(header).paddingLeft.substring(0,2));
+            usedWidth += header.querySelector("span").offsetWidth;
+            usedWidth += sortIcon.clientWidth;
+            usedWidth += Number(window.getComputedStyle(sortIcon).right.substring(0,1));
+        var leftoverWidth = header.clientWidth - usedWidth;
+        if (leftoverWidth < 0) cols[clickedColIndex].style.width = cols[clickedColIndex].clientWidth - leftoverWidth+"px";
+
     }
 ///
 
@@ -340,13 +376,16 @@ function colOrg() {
                 mousePosX = e.clientX;
                 mousePosStartX = mousePosX;
                 currentCol = e.target.parentElement;
-                currentCol.classList.add("reorganizing");
             }
+        });
+        cols[i].addEventListener("contextmenu", function(e) {
+            mouseDown = false;
         });
     }
     var moveCount = 0;
     document.addEventListener("mousemove", function(e) {
         if (mouseDown) {
+            currentCol.classList.add("reorganizing");
             mousePosX = e.clientX;
             var left = mousePosX - mousePosStartX;
 
@@ -398,7 +437,7 @@ function colOrg() {
             cols = document.querySelectorAll(".music-table .col");
             for (var i = 0; i < cols.length; i++) {
                 var cls = cols[i].classList[1];
-                updateUserPref(`tableCols["${cls}"].pos`, i);
+                updatePref(`table.cols["${cls}"].pos`, i);
                 cols[i].classList[1];
             }
             sortInit();
@@ -406,4 +445,34 @@ function colOrg() {
     });
 }
 
+///
+
+/// CONTEXT MENUS
+    for (var i = 0; i < cols.length; i++) {
+        cols[i].querySelector(".cell:first-child").addEventListener("contextmenu", function(e) {
+            openContextMenu(e.clientX, e.clientY, "table-header");
+            e.preventDefault();
+        });
+    }
+    document.addEventListener("mousedown", function(e) {
+        if (!hasClass(e.target, "context-menu,context-item")) {
+            closeContextMenu();
+        }
+    });
+    function openContextMenu(x, y, type) {
+        if (type == "table-header") {
+            var ctx = document.querySelector(".context-menu.table-header");
+            ctx.style.left = 4 + x+"px";
+            ctx.style.top = 4 + y+"px";
+            ctx.style.display = "block";
+            // make it not clip at the bottom of the page
+        }
+    }
+    function closeContextMenu() {
+        var ctx = document.querySelector(".context-menu.table-header");
+        var ctx = document.querySelectorAll(".context-menu");
+        for (var i = 0; i < ctx.length; i++) {
+            ctx[i].style.display = "none";
+        }
+    }
 ///

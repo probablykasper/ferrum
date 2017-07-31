@@ -1,4 +1,15 @@
 <?= get_head("Ferrum"); ?>
+    <div class="context-menu table-header">
+        <div class="context-item">Name</div>
+        <div class="context-item">Time</div>
+        <div class="context-spacer"></div>
+        <div class="context-item">Artist</div>
+        <div class="context-item">Date added</div>
+        <div class="context-item">Plays</div>
+    </div>
+    <!-- <div class="context-menu table-item">
+
+    </div> -->
     <header class="app-bar">
         <div class="app-bar-button sidebar-toggle ferrum-highlight"></div>
         <input class="search-bar ferrum-highlight" placeholder="Search"></input>

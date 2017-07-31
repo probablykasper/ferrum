@@ -22,18 +22,20 @@ div.music-table div.col.plays { text-align: right; width: 60px; }
 
 div.music-table div.col div.cell:first-child .sort-icon { display: none; }
 
-div.music-table div.col.sort div.cell:first-child .sort-icon { display: block; position: absolute; transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1); transform: translateY(-50%); top: 50%; right: 2px; width: 20px; height: 20px; content: ""; background-image: url('data:image/svg+xml;utf8,<svg class="sort-icon" fill="#FFFFFF" width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/><path d="M0 0h24v24H0z" fill="none"/></svg>'); }
+div.music-table div.col.sort div.cell:first-child { padding-right: 22px; }
+
+div.music-table div.col.sort div.cell:first-child .sort-icon { display: block; cursor: pointer; position: absolute; transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1); transform: translateY(-50%); top: 50%; right: 2px; width: 20px; height: 20px; content: ""; background-image: url('data:image/svg+xml;utf8,<svg class="sort-icon" fill="#FFFFFF" width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/><path d="M0 0h24v24H0z" fill="none"/></svg>'); }
 
 div.music-table div.col.reverse div.cell:first-child .sort-icon { transform: translateY(-50%) rotate(-180deg); }
 
-div.music-table div.col div.cell:first-child { font-weight: 500; font-variant-caps: all-small-caps; color: #FFFFFF; position: relative; overflow: visible; cursor: move; }
+div.music-table div.col .cell:first-child { font-weight: 500; font-variant-caps: all-small-caps; color: #FFFFFF; position: relative; overflow: visible; cursor: move; user-select: none; }
 
-div.music-table div.col div.cell:first-child span { cursor: pointer; }
+div.music-table div.col .cell:first-child span { cursor: pointer; }
 
-div.music-table div.col div.cell:first-child .col-resizer { width: 8px; height: 16px; position: absolute; right: 0px; top: 50%; cursor: col-resize; transform: translate(50%, -50%); z-index: 5; }
+div.music-table div.col .cell:first-child .col-resizer { width: 9px; height: 16px; padding: 10px 0px; position: absolute; right: 0px; top: 50%; cursor: col-resize; transform: translate(3px, -50%); z-index: 5; }
 
-div.music-table div.col div.cell:first-child .col-resizer div.line { width: 1px; height: 100%; background-color: #4F535B; margin: auto; pointer-events: none; }
+div.music-table div.col .cell:first-child .col-resizer .line { width: 1px; height: 100%; background-color: #4F535B; margin: auto; pointer-events: none; }
 
-div.music-table div.col div.cell { height: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 10px; }
+div.music-table div.col .cell { height: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 10px; }
 
-div.music-table div.col div.cell.time:nth-child(n+2) { color: rgba(255, 255, 255, 0.4); }
+div.music-table div.col .cell.time:nth-child(n+2) { color: rgba(255, 255, 255, 0.4); }

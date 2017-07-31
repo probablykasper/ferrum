@@ -53,6 +53,25 @@ html
 
 
 $headerheight: 64px
+
+.context-menu
+    display: none
+    z-index: 100
+    position: absolute
+    min-width: 120px
+    border-radius: 2px
+    background-color: $c-bg
+    box-shadow: $shadow-2
+    font-size: 14px
+    .context-item
+        padding: 10px 15px
+        &:hover
+            background-color: $c-bg-lv1
+    .context-spacer
+        margin: 4px 0px
+        height: 1px
+        background-color: $c-bg-lv1
+
 header.app-bar
     height: $headerheight
     display: flex

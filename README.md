@@ -5,7 +5,8 @@ Some (to-be) web/desktop/mobile application for your music library.
 - [x] Disable transition of main when sidebar is resized.
 - [x] Double-click to reset column/sidebar sizes
 - [x] Column sorting (sort by name)
-- [ ] Column organizing (move col to left)
+- [x] Column organizing (move col to left)
+- [ ] Custom context menu
 - [ ] Sidebar
     - [ ] Double-click to resize to min width
 - [ ] Auto-Playlists like iTunes
