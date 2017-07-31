@@ -1,0 +1,37 @@
+main.songs-page { position: absolute; height: calc(100% - 64px); overflow: scroll; width: calc(100% - 200px); right: 0px; transition: width 0.15s cubic-bezier(0.4, 0, 0.2, 1), left 0.15s cubic-bezier(0.4, 0, 0.2, 1); margin-top: 64px; z-index: -1; }
+
+div.music-table { display: flex; justify-content: center; font-size: 14px; color: rgba(255, 255, 255, 0.8); margin: 20px auto; width: calc(100% - 20px); }
+
+div.music-table div.col { background-color: #242933; transition: left 0.15s cubic-bezier(0.4, 0, 0.2, 1), right 0.15s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.15s cubic-bezier(0.4, 0, 0.2, 1); position: relative; display: flex; flex-direction: column; min-width: 0px; color: rgba(255, 255, 255, 0.8); }
+
+div.music-table div.col.reorganizing { transition: box-shadow 0.1s cubic-bezier(0.4, 0, 0.2, 1), left 0.15s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 10px 20px rgba(0, 0, 0, 0.19), 0 6px 6px rgba(0, 0, 0, 0.23); z-index: 10; }
+
+div.music-table div.col.flexible-width { width: 0px; }
+
+div.music-table div.col.name { text-align: left; flex-grow: 0.5; }
+
+div.music-table div.col.time { text-align: right; width: 60px; }
+
+div.music-table div.col.artist { text-align: left; flex-grow: 0.25; }
+
+div.music-table div.col.album { text-align: left; flex-grow: 0.25; }
+
+div.music-table div.col.date-added { text-align: left; width: 95px; }
+
+div.music-table div.col.plays { text-align: right; width: 60px; }
+
+div.music-table div.col.sort div.cell:first-child::after { position: absolute; transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1); transform: translateY(-50%); top: 50%; right: 2px; width: 20px; height: 20px; content: ""; background-image: url('data:image/svg+xml;utf8,<svg class="sort-icon" fill="#FFFFFF" width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/><path d="M0 0h24v24H0z" fill="none"/></svg>'); }
+
+div.music-table div.col.reverse div.cell:first-child::after { transform: translateY(-50%) rotate(-180deg); }
+
+div.music-table div.col div.cell:first-child { font-weight: 500; font-variant-caps: all-small-caps; color: #FFFFFF; position: relative; overflow: visible; cursor: move; }
+
+div.music-table div.col div.cell:first-child span { cursor: pointer; }
+
+div.music-table div.col div.cell:first-child .col-resizer { width: 8px; height: 16px; position: absolute; right: 0px; top: 50%; cursor: col-resize; transform: translate(50%, -50%); z-index: 5; }
+
+div.music-table div.col div.cell:first-child .col-resizer div.line { width: 1px; height: 100%; background-color: #4F535B; margin: auto; pointer-events: none; }
+
+div.music-table div.col div.cell { height: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 10px; }
+
+div.music-table div.col div.cell.time:nth-child(n+2) { color: rgba(255, 255, 255, 0.4); }

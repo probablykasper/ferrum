@@ -1,40 +1,46 @@
 /// SETUP THINGS
 
     var userPref = {
-        sidebar: {
-            visible: true,
-            width: 200
+        "sidebar": {
+            "visible": true,
+            "width": 200
         },
-        tableSort: {
-            column: "name",
-            reverse: false
+        "tableSort": {
+            "column": "date-added",
+            "reverse": false
         },
-        tableCols: {
-            name: {
+        "tableCols": {
+            "name": {
+                "pos": 0
             },
-            time: {
+            "time": {
+                "pos": 1
             },
-            artist: {
+            "artist": {
+                "pos": 2
             },
-            album: {
+            "album": {
+                "pos": 3
             },
-            dateAdded: {
+            "date-added": {
+                "pos": 4
             },
-            plays: {
+            "plays": {
+                "pos": 5
             },
         }
     }
 
     var serverPref = {
-        colMinWidths: {
-            name: 100,
-            time: 60,
-            artist: 100,
-            album: 100,
+        "colMinWidths": {
+            "name": 100,
+            "time": 60,
+            "artist": 100,
+            "album": 100,
             "date-added": 95,
-            plays: 60
+            "plays": 60
         },
-        sidebarDefaultWidth: 200
+        "sidebarDefaultWidth": 200
     }
 
     function updateUserPref(pref, value) {
@@ -310,22 +316,52 @@
 
 /// COLUMN ORGANIZING
 
-    // var mouseDown, coMousePosX, oldWidth, mousePosX, mousePosOldX;
     var coMouseDown, coMousePosX, coMousePosStartX, coCurrentCol;
     for (var i = 0; i < cols.length; i++) {
         cols[i].addEventListener("mousedown", function(e) {
-            e.preventDefault();
-            coMouseDown = true;
-            coMousePosX = e.clientX;
-            coMousePosStartX = coMousePosX;
-            coCurrentCol = e.target.parentElement;
-            coCurrentCol.classList.add("reorganizing");
+            if (hasClass(e.target, "cell") && e.target.previousElementSibling == null) {
+                e.preventDefault();
+                coMouseDown = true;
+                coMousePosX = e.clientX;
+                coMousePosStartX = coMousePosX;
+                coCurrentCol = e.target.parentElement;
+                coCurrentCol.classList.add("reorganizing");
+            }
         });
     }
+    var moveCount = 0;
     document.addEventListener("mousemove", function(e) {
         if (coMouseDown) {
             coMousePosX = e.clientX;
             var left = coMousePosX - coMousePosStartX;
+
+            var end = false, remainding = left, moveEnd = false;
+            var reverse = remainding < 0 ? true : false;
+            moveCount = 0;
+            function moveOtherCols(col) {
+                var next = col.nextElementSibling;
+                if (reverse) next = col.previousElementSibling;
+                if (next == null) end = true;
+                if (!end) {
+                    if (!moveEnd) {
+                        if (remainding > next.clientWidth/2 && !reverse) {
+                            remainding -= next.clientWidth;
+                            next.style.right = coCurrentCol.clientWidth+"px";
+                            moveCount++;
+                        } else if (remainding < -next.clientWidth/2 && reverse) {
+                            remainding += next.clientWidth;
+                            next.style.right = -coCurrentCol.clientWidth+"px";
+                            moveCount--;
+                        } else {
+                            moveEnd = true;
+                            next.style.right = "0px";
+                        }
+                    } else next.style.right = "0px";
+                    moveOtherCols(next);
+                }
+            }
+            moveOtherCols(coCurrentCol);
+            left -= remainding;
             coCurrentCol.style.left = left+"px";
         }
     });
@@ -333,7 +369,22 @@
         if (coMouseDown) {
             coMouseDown = false;
             coCurrentCol.classList.remove("reorganizing");
-            coCurrentCol.style.left = "0px";
+            cols = document.querySelectorAll(".music-table .col");
+            for (var i = 0; i < cols.length; i++) {
+                cols[i].style.right = "";
+                if (cols[i] == coCurrentCol) var newPos = moveCount + i;
+            }
+            var table = document.querySelector(".music-table");
+            if (moveCount > 0) table.insertBefore(coCurrentCol, table.children[newPos+1]);
+            if (moveCount < 0) table.insertBefore(coCurrentCol, table.children[newPos]);
+            coCurrentCol.style.left = "";
+
+            cols = document.querySelectorAll(".music-table .col");
+            for (var i = 0; i < cols.length; i++) {
+                var cls = cols[i].classList[1];
+                updateUserPref(`tableCols["${cls}"].pos`, i);
+                cols[i].classList[1];
+            }
         }
     });
 
