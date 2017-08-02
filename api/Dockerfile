@@ -1,7 +1,8 @@
 FROM node:6.11.1
 RUN npm install -g  nodemon@1.11.0
-RUN npm install     mysql@2.14.0
-RUN npm install     restify@5.0.1
+RUN npm install     node-sass@4.5.3
+RUN npm install     mkdirp@0.5.1
+RUN npm install     string@4.5.3
 
 WORKDIR /usr/src/app
 

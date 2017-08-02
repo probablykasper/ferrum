@@ -27,17 +27,17 @@ services:
         container_name: db
         volumes:
             - ./db/data:/var/lib/mysql
-    webold:
-        build: ./webold
-        container_name: webold
-        ports:
-            - 5001:80
-        volumes:
-            - ./webold/src:/var/www/html
-            - ./webold/mods-enabled:/etc/apache2/mods-enabled
-            - ./webold/mods-available:/etc/apache2/mods-available
-        depends_on:
-            - api
+    # webold:
+    #     build: ./webold
+    #     container_name: webold
+    #     ports:
+    #         - 5001:80
+    #     volumes:
+    #         - ./webold/src:/var/www/html
+    #         - ./webold/mods-enabled:/etc/apache2/mods-enabled
+    #         - ./webold/mods-available:/etc/apache2/mods-available
+    #     depends_on:
+    #         - api
     phpmyadmin:
         image: phpmyadmin/phpmyadmin:4.7
         container_name: phpmyadmin
