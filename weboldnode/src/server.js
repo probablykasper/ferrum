@@ -12,7 +12,7 @@ var sassErr = "\x1b[41m[Node-Sass]\x1b[0m ";
 var sassSuc = "\x1b[42m[Node-Sass]\x1b[0m ";
 sass.render({
     file: "sass/index.sass",
-    includePaths: ["sass/includes"],
+    includePaths: ["sass-includes"],
     outputStyle: "compressed"
 }, function(error, result) {
     if (error) console.error(sassErr+error);

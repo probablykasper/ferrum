@@ -1,52 +1,52 @@
 "use strict";
 var production = false;
-
-var sass = require("node-sass");
-var http = require("http");
 var fs = require("fs");
-var mkdirp = require("mkdirp");
-var getDirName = require("path").dirname;
 var S = require("string");
+var fsPath = require("fs-path");
 const ferrumSuc = "\x1b[42m[Ferrum]\x1b[0m ";
 const ferrumInf = "\x1b[46m[Ferrum]\x1b[0m ";
 const sassErr = "\x1b[41m[Node-Sass]\x1b[0m ";
 const sassSuc = "\x1b[42m[Node-Sass]\x1b[0m ";
 
-processDir("pages");
-function processDir(dir) {
-	var files = fs.readdirSync(dir);
-	for (var i = 0; i < files.length; i++) {
-		var file = dir+"/"+files[i];
-		var stat = fs.statSync(file);
-		if (stat.isDirectory()) processDir(file);
-		if (stat.isFile()) {
-			if (S(file).endsWith(".sass")) renderSass(file);
-		}
-	}
-}
-function write(path, contents, cb) {
-	mkdirp(getDirName(path), function(err) {
-		if (err) return cb(err);
-		fs.writeFile(path, contents, cb);
-	});
-}
+
 function renderSass(file) {
+	var sass = require("node-sass");
 	sass.render({
 		file: file,
 		includePaths: ["sass-includes"],
-		outputStyle: "compressed"
+		outputStyle: "nested"
 	}, function(err, result) {
-		if (err) return console.log(sassErr+err);
+		if (err) return console.log(sassErr+err.file);
 		else {
 			console.log(sassSuc+`rendered file ${file} successfully`);
-			fs.writeFile("css/index.css", result.css, function(err) {
+			var newFilePath = "css"+file.substr(5, file.length-5-4)+"css";
+			fsPath.writeFile(newFilePath, result.css, function(err) {
 				if (err) console.log(sassErr+`written file ${file} could not be written`);
 				else console.log(sassSuc+`written file ${file} successfully`);
 			});
 		}
 	});
 }
-
+function processDir(dir) {
+	var files = fs.readdirSync(dir);
+	for (var i = 0; i < files.length; i++) {
+		var file = dir+"/"+files[i];
+		var stat = fs.statSync(file);
+		if (stat.isDirectory()) processDir(file);
+		else if (stat.isFile()) {
+			if (S(file).endsWith(".sass")) {
+                var currentFile = file;
+                renderSass(currentFile);
+                if (!production) {
+                    fs.watch(file, function(eventType, filename, filePath = currentFile) {
+                        renderSass(filePath);
+                    });
+                }
+            }
+		}
+	}
+}
+processDir("pages");
 
 function exists(filepath) {
 	return fs.existsSync(filepath) ? true : false;
@@ -57,19 +57,21 @@ function getHead(title) {
 	var a = `\n    <title>${title}</title>`;
 	var b = `\n    <link href=\"https://fonts.googleapis.com/css?family=Roboto:400,500\" rel=\"stylesheet\">`;
 	var c = `\n    <link rel=\"stylesheet\" type=\"text/css\" href=\"/${path}.css${r}\">`;
-	if (!exists(`css/${path}.css`)) c = "";
+	if (!exists(`css/${path}.css`) && !exists(`css/${path}/index.css`)) c = "";
 	return `<html>\n<head>`+a+b+c+`\n</head>\n<body>\n`;
 }
 function getJS(a = "", b = "", c = "") {
 	var r = production ? "" : "?r="+Math.trunc(Math.random()*1000);
-	var scripts = [a, b, c];
-	var html = "";
+	var html = "", scripts = [a, b, c];
 	for (var i = 0; i < scripts.length; i++) {
 		var toAdd = "";
 		if (scripts[i] == "jquery")      toAdd = `https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js`;
 		if (scripts[i] == "jscookie")    toAdd = `/js/js.cookie-2.1.4.min.js`;
 		if (scripts[i] == "rangeslider") toAdd = `/js/rangeSlider-0.3.11.min.js`;
-		if (toAdd != "") html += `<script src="${toAdd}${r}"></script>\n`;
+		if (toAdd != "") html += `<script src="${toAdd}"></script>\n`;
+	}
+	if (exists(`pages/${path}.js`) || exists(`pages/${path}/index.js`)) {
+		html += `<script src="${path}.js${r}"></script>\n`;
 	}
 	return `\n${html}</body>\n</html>\n`;
 }
@@ -88,24 +90,40 @@ function extractJS(file) {
 }
 
 var path;
+var http = require("http");
 http.createServer(function(req, res) {
 	path = S(req.url).split("?")[0].substr(1); // remove GET queries and starting slash
 
-	if (S(path).startsWith("sass-includes") || S(path).startsWith("server.js")) {
-		respond404();
-	}
-
-	if (S(path).endsWith(".css")) {
-		if (exists(path)) respond(`css/${path}`, "text/css");
-		else respond404();
-	} else if (S(path).endsWith(".js")) {
-		if (exists(path)) respond(path, "text/css");
-		else respond404();
-	} else {
+	// Forbidden directories
+	if      (S(path).startsWith("sass-includes")) respond404();
+	else if (S(path).startsWith("server.js")) respond404();
+	// Allowed filestypes
+	else if (checkCSS());
+	else if (checkJS());
+	// HTML
+	else {
 		if (path == "")                                 respond("pages/index.html", "text/html");
 		else if (exists(`pages/${path}/index.html`))    respond(`pages/${path}/index.html`, "text/html");
 		else if (exists(`pages/${path}.html`))          respond(`pages/${path}.html`, "text/html");
 		else                                            respond404();
+	}
+	function checkCSS() {
+		if (S(path).endsWith(".css")) {
+			var pathWE = path.substr(0, path.length-4); // without extension
+			if      (exists(`css/${pathWE}.css`)) respond(`css/${pathWE}.css`, "text/css");
+			else if (exists(`css/${pathWE}/index.css`)) respond(`css/${pathWE}/index.css`, "text/css");
+			else respond404();
+			return true;
+		} else return false
+	}
+	function checkJS() {
+		if (S(path).endsWith(".js")) {
+			var pathWE = path.substr(0, path.length-3); // without extension
+			if      (exists(`pages/${pathWE}.js`)) respond(`pages/${pathWE}.js`, "text/css");
+			else if (exists(`pages/${pathWE}/index.js`)) respond(`pages/${pathWE}/index.js`, "text/css");
+			else respond404();
+			return true;
+		} else return false
 	}
 
 	function respond404() {

@@ -11,7 +11,7 @@
     "dependencies": {
         "nodemon": "1.11.0",
         "node-sass": "4.5.3",
-        "mkdirp": "0.5.1",
-        "string": "3.3.3"
+        "string": "3.3.3",
+        "fs-path": "0.0.23"
     }
 }

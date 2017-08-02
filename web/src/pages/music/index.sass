@@ -1,4 +1,4 @@
-@import "variables.sass"
+@import "global.sass"
 main.home-page
 
 main.songs-page
@@ -10,7 +10,7 @@ main.songs-page
     transition: width $transition, left $transition
     margin-top: 64px
     z-index: -1
-div.music-table
+.music-table
     display: flex
     justify-content: center
     font-size: 14px
@@ -18,7 +18,7 @@ div.music-table
     margin: 20px auto
     width: calc(100% - 20px)
     // min-height: calc(100% - 40px)
-    div.col
+    .col
         background-color: $c-bg
         transition: left $transition, right $transition, box-shadow $transition
         position: relative
