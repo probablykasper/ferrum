@@ -73,7 +73,7 @@ http.createServer(function (req, res) {
     } else {
         if (path == "") {
             respond("pages/index.html", "text/html");
-        } if (exists(`pages/${path}/index.html`)) {
+        } else if (exists(`pages/${path}/index.html`)) {
             respond(`pages/${path}/index.html`, "text/html");
         } else if (exists(`pages/${path}.html`)) {
             respond(`pages/${path}.html`, "text/html");

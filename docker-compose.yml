@@ -11,20 +11,31 @@ services:
             - db
         environment:
             - DATABASE_HOST=db
-    db:
-        build: ./db
-        container_name: db
-        volumes:
-            - ./db/data:/var/lib/mysql
     web:
         build: ./web
         container_name: web
         ports:
             - 80:80
         volumes:
-            - ./web/src:/var/www/html
-            - ./web/mods-enabled:/etc/apache2/mods-enabled
-            - ./web/mods-available:/etc/apache2/mods-available
+            - ./web/src:/usr/src/app
+        depends_on:
+            - db
+        environment:
+            - DATABASE_HOST=db
+    db:
+        build: ./db
+        container_name: db
+        volumes:
+            - ./db/data:/var/lib/mysql
+    webold:
+        build: ./webold
+        container_name: webold
+        ports:
+            - 5001:80
+        volumes:
+            - ./webold/src:/var/www/html
+            - ./webold/mods-enabled:/etc/apache2/mods-enabled
+            - ./webold/mods-available:/etc/apache2/mods-available
         depends_on:
             - api
     phpmyadmin:

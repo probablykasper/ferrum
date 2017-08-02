@@ -1,5 +1,13 @@
-FROM php:7.1-apache
+FROM node:6.11.1
+RUN npm install -g  nodemon@1.11.0
+RUN npm install     mysql@2.14.0
+RUN npm install     node-sass@4.5.3
+RUN npm install     string@3.3.3
 
-COPY src var/www/html
+WORKDIR /usr/src/app
 
-EXPOSE 80
+COPY package.json .
+COPY src .
+
+EXPOSE 3000
+CMD ["nodemon", "server.js"]
