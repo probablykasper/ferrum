@@ -27,26 +27,32 @@ function renderSass(file) {
 		}
 	});
 }
-function processDir(dir) {
+function sassWatch(file, rerenderAll = false) {
+    fs.watch(file, function(eventType, filename) {
+        if (rerenderAll) processDir("pages");
+        else renderSass(file);
+    });
+}
+function processDir(dir, options = {}) {
 	var files = fs.readdirSync(dir);
 	for (var i = 0; i < files.length; i++) {
 		var file = dir+"/"+files[i];
 		var stat = fs.statSync(file);
 		if (stat.isDirectory()) processDir(file);
 		else if (stat.isFile()) {
-			if (S(file).endsWith(".sass")) {
-                var currentFile = file;
-                renderSass(currentFile);
-                if (!production) {
-                    fs.watch(file, function(eventType, filename, filePath = currentFile) {
-                        renderSass(filePath);
-                    });
-                }
+			if (options.isSassIncludesDir && S(file).endsWith(".sass")) {
+                sassWatch(file, true);
+            } else if (S(file).endsWith(".sass")) {
+                renderSass(file);
+                sassWatch(file);
             }
 		}
 	}
 }
 processDir("pages");
+processDir("sass-includes", {
+    isSassIncludesDir: true
+});
 
 function exists(filepath) {
 	return fs.existsSync(filepath) ? true : false;
@@ -100,6 +106,7 @@ http.createServer(function(req, res) {
 	// Allowed filestypes
 	else if (checkCSS());
 	else if (checkJS());
+	else if (checkImg());
 	// HTML
 	else {
 		if (path == "")                                 respond("pages/index.html", "text/html");
@@ -121,6 +128,15 @@ http.createServer(function(req, res) {
 			var pathWE = path.substr(0, path.length-3); // without extension
 			if      (exists(`pages/${pathWE}.js`)) respond(`pages/${pathWE}.js`, "text/css");
 			else if (exists(`pages/${pathWE}/index.js`)) respond(`pages/${pathWE}/index.js`, "text/css");
+			else respond404();
+			return true;
+		} else return false
+	}
+	function checkImg() {
+		if (S(path).endsWith(".jpg") && S(path).startsWith("cdn/")) {
+			var pathWE = path.substr(0, path.length-4); // without extension
+            console.log(pathWE);
+			if      (exists(`${pathWE}.jpg`)) respond(`${pathWE}.jpg`, "image/jpg");
 			else respond404();
 			return true;
 		} else return false

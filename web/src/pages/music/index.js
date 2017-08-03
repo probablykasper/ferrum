@@ -370,6 +370,7 @@ function colOrg() {
     var mouseDown, mousePosX, mousePosStartX, currentCol;
     for (var i = 0; i < cols.length; i++) {
         cols[i].addEventListener("mousedown", function(e) {
+            console.log(5);
             if (hasClass(e.target, "cell") && e.target.previousElementSibling == null) {
                 e.preventDefault();
                 mouseDown = true;
