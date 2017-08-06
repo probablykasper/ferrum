@@ -1,0 +1,28 @@
+body
+    margin: 0px
+main.container
+    display: grid
+    height: 100%
+    grid-template-columns: 1fr 1fr 1fr
+    grid-template-rows: auto 1fr 1fr
+    grid-template-areas: "title title title" "main header header" "main sidebar footer"
+    .title
+        background: red
+        grid-area: title
+        height: 100px
+    .main
+        background: orange
+        grid-area: main
+    .header
+        background: green
+        grid-area: header
+    .sidebar
+        background: black
+        grid-area: sidebar
+    .footer
+        background: blue
+        grid-area: footer
+
+@media (max-width: 1000px)
+    main.container
+        grid-template-areas: "title title title" "main main main" "header sidebar footer"
