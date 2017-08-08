@@ -14,5 +14,6 @@
         "string": "3.3.3",
         "fs-path": "0.0.23",
         "pug": "2.0.0-rc.3",
+        "google-closure-compiler-js": "20170626.0.0",
     }
 }

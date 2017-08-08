@@ -5,12 +5,12 @@ header.app-bar
     .icons
 main.home-page
     header.playlist-header
-        img.image(src="cdn/cover.jpg")
+        img.image(src="/cdn/cover.jpg")
     div.music-table
-        .col.name.flexible-width(style="")
+        .col.name.flexible-width(style="flex-grow:0.5")
             .cell.name
                 span Name
-                .col-resizer
+                .col-resizer.name
                     .line
                 .sort-icon
             .cell.name-track-1 Honesty
@@ -21,7 +21,7 @@ main.home-page
         .col.time.fixed-width(style="")
             .cell.time
                 span Time
-                .col-resizer
+                .col-resizer.time
                     .line
                 .sort-icon
             .cell.time-track-1 4:03
@@ -29,10 +29,10 @@ main.home-page
             .cell.time-track-3 3:24
             .cell.time-track-4 3:23
             .cell.time-track-5 3:00
-        .col.artist.flexible-width(style="")
+        .col.artist.flexible-width(style="flex-grow:0.25")
             .cell.artist
                 span Artist
-                .col-resizer
+                .col-resizer.artist
                     .line
                 .sort-icon
             .cell.artist-track-1 Camo & Krooked
@@ -40,10 +40,10 @@ main.home-page
             .cell.artist-track-3 Camo & Krooked
             .cell.artist-track-4 Orbiter
             .cell.artist-track-5 Moving On
-        .col.album.flexible-width(style="")
+        .col.album.flexible-width(style="flex-grow:0.25")
             .cell.album
                 span Album
-                .col-resizer
+                .col-resizer.album
                     .line
                 .sort-icon
             .cell.album-track-1 Mosaik
@@ -54,7 +54,7 @@ main.home-page
         .col.date-added.fixed-width(style="")
             .cell.date-added
                 span Date Added
-                .col-resizer
+                .col-resizer.date-added
                     .line
                 .sort-icon
             .cell.date-added-track-1 6/26/17
@@ -65,7 +65,7 @@ main.home-page
         .col.plays.fixed-width(style="")
             .cell.plays
                 span Plays
-                .col-resizer
+                .col-resizer.plays
                     .line
                 .sort-icon
             .cell.plays-track-1 14

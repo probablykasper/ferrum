@@ -5,6 +5,7 @@ const fs = require("fs");
 const sass = require("node-sass");
 const fsPath = require("fs-path");
 const pug = require("pug");
+const compile = require("google-closure-compiler-js");
 
 const production = false;
 
@@ -41,7 +42,7 @@ function pugRender(path) {
         var pageCSS = `<link rel="stylesheet" type="text/css" href="/${cssPath}${r}">`;
 
         if (exists(`css/${cssPath}`)) html += pageCSS;
-        return `${html}</head><body>`;
+        return `${html}</head><body><div class="bg"></div>`;
     }
     function pugJS(text, options) {
         var html = "";
@@ -51,9 +52,14 @@ function pugRender(path) {
 
         // page js
         var r = production ? "" : "?r="+Math.trunc(Math.random()*1000);
-        var jsPath = path.replace("pages/", "js/");
+        var jsPath = path.replace("pages/", "").replace(".pug", ".js");
         var pageJS = `<script src="/${jsPath}${r}"></script>`;
-        if (exists(`css/${jsPath}`)) html += pageCSS;
+        if (exists(`js/${jsPath}`)) {
+            console.log("yeha");
+            html += pageJS;
+        } else {
+            console.log(jsPath);
+        }
 
         html += "</body></html>";
         return html;
@@ -90,7 +96,7 @@ function sassRender(path) {
     sass.render({
         file: path,
         includePaths: ["sass-includes"],
-        outputStyle: "nested"
+        outputStyle: "compressed"
     }, function(err, result) {
         if (err) console.log(sassErr+err.message);
         else {
@@ -211,8 +217,9 @@ function read(path, callback) {
     });
 }
 function respond(req, res) {
-    // Remove GET query and slash
-    var path = S(req.url).split("?")[0].substr(1);
+    // Remove GET query and trim slashes
+    var path = S(req.url).split("?")[0].slice(1);
+    if (path.slice(-1) == "/") path = path.slice(0, -1);
 
     read(path, function(fileContent, contentType, stat) {
         res.writeHead(stat, {"Content-Type": contentType});

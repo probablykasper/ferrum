@@ -1,8 +1,13 @@
-@import "defaults.sass"
-@import "variables.sass"
-body
+@import "global.sass"
+.bg
     background: linear-gradient(to bottom right, #192A3D, #181D28)
+    width: 100%
+    height: 100%
+    position: fixed
+    z-index: 5
 header.app-bar
+    position: relative
+    z-index: 50
     width: calc(100% - 28px)
     height: 36px
     padding: 14px
@@ -38,6 +43,8 @@ header.app-bar
         padding: 0px 20px
 
 main.home-page
+    position: relative
+    z-index: 20
     width: calc(100% - 40px)
     padding: 20px
     header.playlist-header
@@ -57,6 +64,22 @@ main.home-page
         background-color: rgba(#FFFFFF, 0.05)
         border-radius: 3px
         .col
+            &.flexible-width
+                width: 0px
+            &.name
+                flex-grow: 0.5
+            &.artist
+                flex-grow: 0.25
+            &.album
+                flex-grow: 0.25
+            &:first-child .cell
+                padding-left: 24px
+                &:first-child
+                    border-top-left-radius: 3px
+            &:last-child .cell
+                padding-right: 24px
+                &:first-child
+                    border-top-right-radius: 3px
             .cell
                 &.hover
                     background-color: rgba(#F7F7F7, 0.03)
@@ -84,7 +107,7 @@ main.home-page
                         height: 100%
                         padding: 0px 2px
                         position: absolute
-                        right: 0px
+                        right: -2px
                         top: 50%
                         cursor: col-resize
                         transform: translate(3px, -50%)
@@ -94,13 +117,3 @@ main.home-page
                             background-color: rgba(#FFFFFF, 0.05)
                             margin: auto
                             pointer-events: none
-        .col:first-child .cell
-            padding-left: 24px
-            &:first-child
-                border-top-left-radius: 3px
-        .col:last-child .cell
-            padding-right: 24px
-            &:first-child
-                border-top-right-radius: 3px
-        .col.artist
-            width: 1000px
