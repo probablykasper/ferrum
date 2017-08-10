@@ -42,7 +42,7 @@ function pugRender(path) {
         var pageCSS = `<link rel="stylesheet" type="text/css" href="/${cssPath}${r}">`;
 
         if (exists(`css/${cssPath}`)) html += pageCSS;
-        return `${html}</head><body><div class="bg"></div>`;
+        return `${html}</head><body><div class="bg"></div><div class="fg"></div>`;
     }
     function pugJS(text, options) {
         var html = "";

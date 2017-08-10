@@ -5,6 +5,12 @@
     height: 100%
     position: fixed
     z-index: 5
+.fg
+    width: 100%
+    height: 100%
+    position: fixed
+    pointer-events: none
+    z-index: 80
 header.app-bar
     position: relative
     z-index: 50
@@ -66,12 +72,6 @@ main.home-page
         .col
             &.flexible-width
                 width: 0px
-            &.name
-                flex-grow: 0.5
-            &.artist
-                flex-grow: 0.25
-            &.album
-                flex-grow: 0.25
             &:first-child .cell
                 padding-left: 24px
                 &:first-child
@@ -102,18 +102,19 @@ main.home-page
                     position: relative
                     span
                         cursor: pointer
-                    .col-resizer
-                        width: 9px
+            &.flexible-width:not(.last-non-auto), &.fixed-width:not(.last-non-auto)
+                .cell:first-child .col-resizer
+                    width: 9px
+                    height: 100%
+                    padding: 0px 2px
+                    position: absolute
+                    right: -2px
+                    top: 50%
+                    cursor: col-resize
+                    transform: translate(3px, -50%)
+                    .line
+                        width: 2px
                         height: 100%
-                        padding: 0px 2px
-                        position: absolute
-                        right: -2px
-                        top: 50%
-                        cursor: col-resize
-                        transform: translate(3px, -50%)
-                        .line
-                            width: 2px
-                            height: 100%
-                            background-color: rgba(#FFFFFF, 0.05)
-                            margin: auto
-                            pointer-events: none
+                        background-color: rgba(#FFFFFF, 0.05)
+                        margin: auto
+                        pointer-events: none

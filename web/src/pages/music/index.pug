@@ -7,7 +7,7 @@ main.home-page
     header.playlist-header
         img.image(src="/cdn/cover.jpg")
     div.music-table
-        .col.name.flexible-width(style="flex-grow:0.5")
+        .col.name.flexible-width(style="flex-grow:500000")
             .cell.name
                 span Name
                 .col-resizer.name
@@ -18,7 +18,7 @@ main.home-page
             .cell.name-track-3 Broken Pieces (feat. Nihils)
             .cell.name-track-4 Want You
             .cell.name-track-5 Marshmello
-        .col.time.fixed-width(style="")
+        .col.time.auto-width(style="")
             .cell.time
                 span Time
                 .col-resizer.time
@@ -29,7 +29,7 @@ main.home-page
             .cell.time-track-3 3:24
             .cell.time-track-4 3:23
             .cell.time-track-5 3:00
-        .col.artist.flexible-width(style="flex-grow:0.25")
+        .col.artist.flexible-width(style="flex-grow:250000")
             .cell.artist
                 span Artist
                 .col-resizer.artist
@@ -40,7 +40,7 @@ main.home-page
             .cell.artist-track-3 Camo & Krooked
             .cell.artist-track-4 Orbiter
             .cell.artist-track-5 Moving On
-        .col.album.flexible-width(style="flex-grow:0.25")
+        .col.album.flexible-width.last-non-auto(style="flex-grow:250000")
             .cell.album
                 span Album
                 .col-resizer.album
@@ -51,7 +51,7 @@ main.home-page
             .cell.album-track-3 Mosaik
             .cell.album-track-4 We Do
             .cell.album-track-5 
-        .col.date-added.fixed-width(style="")
+        .col.date-added.auto-width(style="")
             .cell.date-added
                 span Date Added
                 .col-resizer.date-added
@@ -62,11 +62,9 @@ main.home-page
             .cell.date-added-track-3 6/26/17
             .cell.date-added-track-4 4/24/17
             .cell.date-added-track-5 5/5/17
-        .col.plays.fixed-width(style="")
+        .col.plays.auto-width(style="")
             .cell.plays
                 span Plays
-                .col-resizer.plays
-                    .line
                 .sort-icon
             .cell.plays-track-1 14
             .cell.plays-track-2 5
