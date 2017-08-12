@@ -11,6 +11,11 @@
     "dependencies": {
         "nodemon": "1.11.0",
         "mysql": "2.14.0",
-        "restify": "5.0.1"
+
+        "express": "4.15.4",
+        "body-parser": "1.17.2",
+        "apollo-server-express": "1.1.0",
+        "graphql-tools": "1.1.0",
+        "graphql": "0.10.5"
     }
 }

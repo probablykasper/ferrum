@@ -61,28 +61,46 @@ main.home-page
             background-size: cover
             width: 200px
             height: 200px
+    .music-table.rearranging .col .cell.hover
+        background-color: transparent
     .music-table
         font-family: "Nunito", sans-serif
         font-size: 14px
         display: flex
         justify-content: center
-        color: #d0d2d5
-        background-color: rgba(#FFFFFF, 0.05)
+        color: rgba(#FFFFFF, 0.75)
         border-radius: 3px
+        padding: 0px 14px
+        background: linear-gradient(to bottom, rgba(#FFFFFF, 0.10) 48px, rgba(#FFFFFF, 0.05) 48px)
+        box-shadow: $shadow-1
         .col
+            position: relative
+            transition: left $transition-short
+            left: 0px
+            &.no-transition
+                transition: none
             &.flexible-width
                 width: 0px
-            &:first-child .cell
-                padding-left: 24px
-                &:first-child
+            &:first-child
+                .cell:first-child
                     border-top-left-radius: 3px
-            &:last-child .cell
-                padding-right: 24px
-                &:first-child
+                .cell.hover
+                    position: relative
+                    left: -14px
+                    padding-left: 24px
+                    width: calc(100% - 20px)
+            &:last-child
+                .cell:first-child
                     border-top-right-radius: 3px
+                .cell.hover
+                    position: relative
+                    padding-right: 24px
+                    width: calc(100% - 20px)
+            &.rearranging
+                box-shadow: $shadow-3
             .cell
                 &.hover
-                    background-color: rgba(#F7F7F7, 0.03)
+                    background-color: rgba(#FFFFFF, 0.025)
                 height: 16px
                 white-space: nowrap
                 overflow: hidden
@@ -94,13 +112,13 @@ main.home-page
                     margin-bottom: 12px
                 &:first-child
                     padding-top: 22px
-                    background-color: rgba(#F7F7F7, 0.05)
                     font-family: "Roboto", sans-serif
                     font-size: 14px
                     font-variant-caps: all-small-caps
                     color: #FFFFFF
                     position: relative
-                    span
+                    cursor: move
+                    span.col-span
                         cursor: pointer
             &.flexible-width:not(.last-non-auto), &.fixed-width:not(.last-non-auto)
                 .cell:first-child .col-resizer
@@ -108,7 +126,7 @@ main.home-page
                     height: 100%
                     padding: 0px 2px
                     position: absolute
-                    right: -2px
+                    right: -3px
                     top: 50%
                     cursor: col-resize
                     transform: translate(3px, -50%)

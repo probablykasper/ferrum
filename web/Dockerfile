@@ -11,5 +11,4 @@ WORKDIR /usr/src/app
 COPY package.json .
 COPY src .
 
-EXPOSE 3000
 CMD ["nodemon", "server.js"]

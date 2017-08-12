@@ -4,14 +4,23 @@
         "table": {
             "cols": {
                 "name": {
+                    "width": 500000
                 },
                 "time": {
                     "width": "auto"
                 },
-                "artist": {},
-                "album": {},
-                "date-added": {},
-                "plays": {}
+                "artist": {
+                    "width": 250000
+                },
+                "album": {
+                    "width": 250000
+                },
+                "date-added": {
+                    "width": "auto"
+                },
+                "plays": {
+                    "width": "auto"
+                }
             }
         }
     }
@@ -69,10 +78,9 @@ function colResize() {
         if (hasClass(col, "auto-width")) col = findNextCol(col, reverse);
         return col;
     }
-    var cols = document.querySelectorAll(".music-table .col-resizer");
     var colResizers = document.querySelectorAll(".music-table .col-resizer");
     var mouseDown, mousePosX, mouseStartPosX, oldWidth, oldWidthNext, flexibleCols, availWidth, nextColClass;
-    for (var i = 0; i < cols.length; i++) {
+    for (var i = 0; i < colResizers.length; i++) {
         colResizers[i].addEventListener("mousedown", function(e) {
             e.preventDefault();
             mouseDown = true;
@@ -113,7 +121,7 @@ function colResize() {
                 newWidthNext -= differenceFix;
             }
             if (newWidthNext < colMinWidths[nextColClass]) {
-                var differenceFix = colMinWidths[currentColClass] - newWidthNext;
+                var differenceFix = colMinWidths[nextColClass] - newWidthNext;
                 newWidth -= differenceFix;
                 newWidthNext += differenceFix;
             }
@@ -128,13 +136,87 @@ function colResize() {
             document.querySelector(".fg").style.pointerEvents = "";
 
             for (var i = 0; i < flexibleCols.length; i++) {
-                flexibleCols[i].style.flexGrow = flexibleCols[i].clientWidth / availWidth;
+                var newFlexWidth = flexibleCols[i].clientWidth*1000000;
+                flexibleCols[i].style.flexGrow = newFlexWidth / availWidth;
             }
         }
     });
 }
 
-columnReorganizing();
-function columnReorganizing() {
+columnRearrange();
+function columnRearrange() {
+    var musicTable = document.querySelector(".music-table");
+    var mouseDown, mousePosX, mouseStartPosX, currentCol, nextCol, moveCount;
+    musicTable.addEventListener("mousedown", function(e) {
+        if (hasClass(e.target, "cell") && e.target.previousElementSibling == null) {
+            e.preventDefault();
+            mouseDown = true;
+            mousePosX = e.clientX;
+            mousePosStartX = mousePosX;
+            currentCol = e.target.parentElement;
+            nextCol = currentCol.nextElementSibling;
+            prevCol = currentCol.previousElementSibling;
+            currentCol.classList.add("rearranging");
+            musicTable.classList.add("rearranging");
+            document.querySelector(".fg").style.pointerEvents = "auto";
+            document.querySelector(".fg").style.cursor = "move";
+        }
+    });
+    document.addEventListener("mousemove", function(e) {
+        if (mouseDown) {
+            mousePosX = e.clientX;
+            var difference = mousePosX - mousePosStartX;
 
+            var remainding = difference, end = false, moveEnd = false;
+            var reverse = remainding < 0 ? true : false;
+            moveCount = 0;
+            function moveOtherCols(col) {
+                var next = col.nextElementSibling;
+                if (reverse) next = col.previousElementSibling;
+                if (next == null) end = true;
+                if (!end) {
+                    if (moveEnd) next.style.left = "0px";
+                    else {
+                        if (!reverse && remainding > next.clientWidth/2) {
+                            remainding -= next.clientWidth;
+                            next.style.left = -currentCol.clientWidth+"px";
+                            moveCount++;
+                        } else if (reverse && remainding < -next.clientWidth/2) {
+                            remainding += next.clientWidth;
+                            next.style.left = currentCol.clientWidth+"px";
+                            moveCount--;
+                        } else {
+                            moveEnd = true;
+                            next.style.left = "0px";
+                        }
+                    }
+                    moveOtherCols(next);
+                }
+            }
+            moveOtherCols(currentCol);
+            currentCol.style.left = difference - remainding+"px";
+        }
+    });
+    document.addEventListener("mouseup", function() {
+        if (mouseDown) {
+            mouseDown = false;
+            currentCol.classList.remove("rearranging");
+            musicTable.classList.remove("rearranging");
+            document.querySelector(".fg").style.pointerEvents = "";
+            var cols = document.querySelectorAll(".music-table .col");
+            for (var i = 0; i < cols.length; i++) {
+                cols[i].classList.add("no-transition");
+                cols[i].style.left = "";
+                if (cols[i] == currentCol) var newPos = i + moveCount;
+            }
+            var table = document.querySelector(".music-table");
+            if      (moveCount > 0) table.insertBefore(currentCol, table.children[newPos+1]);
+            else if (moveCount < 0) table.insertBefore(currentCol, table.children[newPos]);
+            setTimeout(function() {
+                for (var i = 0; i < cols.length; i++) {
+                    cols[i].classList.remove("no-transition");
+                }
+            }, 10);
+        }
+    });
 }
