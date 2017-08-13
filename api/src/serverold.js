@@ -14,22 +14,37 @@ connection.connect(function(err) {
 });
 
 var schema = buildSchema(`
+    type RandomDie {
+        numSides: Int!
+        rollOnce: Int!
+        roll(numRolls: Int!): [Int]
+    }
     type Query {
-        user: String
+        getDie(numSides: Int): RandomDie
     }
 `);
 
-let promiseData = () => {
-    return new Promise((resolve, reject) => {
-        connection.query("SELECT * FROM users WHERE id = 4", function(err, result, fields) {
-            resolve(result);
-        });
-    });
+class RandomDie {
+    constructor(numSides) {
+        this.numSides = numSides;
+    }
+
+    rollOnce() {
+        return 1 + Math.floor(Math.random() * this.numSides);
+    }
+
+    roll({numRolls}) {
+        var output = [];
+        for (var i = 0; i < numRolls; i++) {
+            output.push(this.rollOnce());
+        }
+        return output;
+    }
 }
 
 var root = {
-    user: () => {
-        return promiseData();
+    getDie: function({numSides}) {
+        return new RandomDie(numSides || 6);
     }
 }
 
