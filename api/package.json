@@ -13,9 +13,7 @@
         "mysql": "2.14.0",
 
         "express": "4.15.4",
-        "body-parser": "1.17.2",
-        "apollo-server-express": "1.1.0",
-        "graphql-tools": "1.1.0",
-        "graphql": "0.10.5"
+        "graphql": "0.10.5",
+        "express-graphql": "0.6.7"
     }
 }
