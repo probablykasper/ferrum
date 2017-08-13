@@ -14,22 +14,29 @@ connection.connect(function(err) {
 });
 
 var schema = buildSchema(`
+    type User {
+        username: String
+    }
     type Query {
-        user: String
+        user: User
     }
 `);
 
-let promiseData = () => {
-    return new Promise((resolve, reject) => {
-        connection.query("SELECT * FROM users WHERE id = 4", function(err, result, fields) {
-            resolve(result);
+class User {
+    constructor(id) {
+        this.id = id;
+    }
+    username() {
+        return new Promise((resolve, reject) => {
+            connection.query("SELECT * FROM users WHERE id = 4", function(err, result, fields) {
+                resolve(result[0].username);
+            });
         });
-    });
+    }
 }
-
 var root = {
-    user: () => {
-        return promiseData();
+    user: function() {
+        return new User();
     }
 }
 
