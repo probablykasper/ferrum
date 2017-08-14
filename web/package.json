@@ -10,10 +10,19 @@
     },
     "dependencies": {
         "nodemon": "1.11.0",
-        "node-sass": "4.5.3",
-        "string": "3.3.3",
-        "fs-path": "0.0.23",
-        "pug": "2.0.0-rc.3",
-        "google-closure-compiler-js": "20170626.0.0",
+        "mysql": "2.14.0",
+
+        "bcryptjs": "2.4.3",
+        "body-parser": "1.17.2",
+        "connect-flash": "0.1.1",
+        "cookie-parser": "1.4.3",
+        "express": "4.15.4",
+        "express-handlebars": "4.15.4",
+        "express-messages": "4.15.4",
+        "express-session": "4.15.4",
+        "express-validator": "4.15.4",
+        "passport": "0.4.0",
+        "passport-http": "0.3.0",
+        "passport-local": "1.0.0",
     }
 }
