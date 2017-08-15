@@ -1,44 +1,47 @@
 var db = require("./db");
 
 class Track {
-    constructor(tracks) {
-        this.tracks = tracks;
+    constructor(track) {
+        this.track = track;
+    }
+    owner() {
+        return new User(this.track.userID);
     }
     trackID() {
-        return this.tracks.trackID;
+        return this.track.trackID;
     }
     name() {
-        return this.tracks.name;
+        return this.track.name;
     }
     artist() {
-        return this.tracks.artist;
+        return this.track.artist;
     }
     time() {
-        return this.tracks.time;
+        return this.track.time;
     }
     album() {
-        return this.tracks.album;
+        return this.track.album;
     }
     dateAdded() {
-        return this.tracks.dateAdded;
+        return this.track.dateAdded;
     }
     plays() {
-        return this.tracks.plays;
+        return this.track.plays;
     }
     genre() {
-        return this.tracks.genre;
+        return this.track.genre;
     }
     tags() {
-        return this.tracks.tags;
+        return this.track.tags;
     }
     bitrate() {
-        return this.tracks.bitrate;
+        return this.track.bitrate;
     }
     sourcePlatform() {
-        return this.tracks.sourcePlatform;
+        return this.track.sourcePlatform;
     }
     appearsOn() {
-        return this.tracks.appearsOn;
+        return this.track.appearsOn;
     }
 }
 class Playlist {
@@ -46,6 +49,9 @@ class Playlist {
         this.playlist = playlist;
         this.userID = this.playlist.userID;
         this.playlistID = this.playlist.playlistID;
+    }
+    owner() {
+        return new User(this.userID);
     }
     name() {
         return this.playlist.name;

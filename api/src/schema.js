@@ -2,12 +2,14 @@ var { buildSchema } = require("graphql");
 
 var schema = buildSchema(`
     type Playlist {
+        owner: User
         name: String
         description: String
         isAuto: Boolean
         tracks: [Track]
     }
     type Track {
+        owner: User
         trackID: Int
         name: String
         artist: String

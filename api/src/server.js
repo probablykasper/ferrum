@@ -11,12 +11,3 @@ app.use("/graphql", graphqlHTTP({
 }));
 app.listen(80);
 console.log("Running GQL API server");
-
-var http = require('http');
-var options = {method: 'HEAD', host: 'fav.me', port: 80, path: '/dbfuzbv'};
-var req = http.request(options, function(res) {
-    console.log(err);
-    console.log(JSON.stringify(res.headers));
-}
-);
-req.end();
