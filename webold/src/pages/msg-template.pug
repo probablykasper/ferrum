@@ -1,0 +1,9 @@
+//- .messages
+//-   each type in Object.keys(messages)
+//-     ul(class="#{type}")
+//-       each message in messages[type]
+//-         li= message
+.messages
+    each type in Object.keys(messages)
+        each message in messages[type]
+            div(class="flash-msg "+type) #{message}

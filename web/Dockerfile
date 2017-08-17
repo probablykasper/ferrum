@@ -5,9 +5,10 @@ RUN npm install     mysql@2.14.1
 RUN npm install     fs-path@0.0.23
 RUN npm install     string@3.3.3
 RUN npm install     node-sass@4.5.3
+RUN npm install     body-parser@1.17.2
+RUN npm install     validator@8.0.0
 
 RUN npm install     bcryptjs@2.4.3
-RUN npm install     body-parser@1.17.2
 RUN npm install     connect-flash@0.1.1
 RUN npm install     cookie-parser@1.4.3
 RUN npm install     express@4.15.4

@@ -1,0 +1,74 @@
+:head() Music
+header.app-bar
+    .logo Ferrum
+    input.search-bar(placeholder="Search")
+    .icons
+main.music-page
+    header.playlist-header
+        img.image(src="/cdn/cover.jpg")
+    div.music-table
+        .col.name.flexible-width(style="flex-grow:500000")
+            .cell.name
+                span.col-span Name
+                .col-resizer.name
+                    .line
+                .sort-icon
+            .cell.name.track-1 Honesty
+            .cell.name.track-2 Lion's Den
+            .cell.name.track-3 Broken Pieces (feat. Nihils)
+            .cell.name.track-4 Want You
+            .cell.name.track-5 Marshmello
+        .col.time.auto-width(style="width:60px")
+            .cell.time
+                span.col-span Time
+                .col-resizer.time
+                    .line
+                .sort-icon
+            .cell.time.track-1 4:03
+            .cell.time.track-2 5:54
+            .cell.time.track-3 3:24
+            .cell.time.track-4 3:23
+            .cell.time.track-5 3:00
+        .col.artist.flexible-width(style="flex-grow:250000")
+            .cell.artist
+                span.col-span Artist
+                .col-resizer.artist
+                    .line
+                .sort-icon
+            .cell.artist.track-1 Camo & Krooked
+            .cell.artist.track-2 Teminite & PsoGnar
+            .cell.artist.track-3 Camo & Krooked
+            .cell.artist.track-4 Orbiter
+            .cell.artist.track-5 Moving On
+        .col.album.flexible-width.last-non-auto(style="flex-grow:250000")
+            .cell.album
+                span.col-span Album
+                .col-resizer.album
+                    .line
+                .sort-icon
+            .cell.album.track-1 Mosaik
+            .cell.album.track-2 
+            .cell.album.track-3 Mosaik
+            .cell.album.track-4 We Do
+            .cell.album.track-5 
+        .col.date-added.auto-width(style="width:95px")
+            .cell.date-added
+                span.col-span Date Added
+                .col-resizer.date-added
+                    .line
+                .sort-icon
+            .cell.date-added.track-1 6/26/17
+            .cell.date-added.track-2 6/28/17
+            .cell.date-added.track-3 6/26/17
+            .cell.date-added.track-4 4/24/17
+            .cell.date-added.track-5 5/5/17
+        .col.plays.auto-width(style="width:60px")
+            .cell.plays
+                span.col-span Plays
+                .sort-icon
+            .cell.plays.track-1 14
+            .cell.plays.track-2 5
+            .cell.plays.track-3 7
+            .cell.plays.track-4 10
+            .cell.plays.track-5 9
+:js()
