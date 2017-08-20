@@ -1,0 +1,16 @@
+main.home-page
+    p.logo Ferrum
+    .form
+        .fields
+            .success
+            .error.username
+            input.for-login.for-register(type="text", name="username", placeholder="Username", tabIndex="-1")
+            .error.email
+            input.for-register(type="text", name="email", placeholder="Email", tabIndex="-1")
+            .error.password
+            input.for-login.for-register(type="password", name="password", placeholder="Password", tabIndex="-1")
+            .error.password2
+            input.for-register(type="password", name="password2", placeholder="Confirm Password", tabIndex="-1")
+        .buttons
+            input.login(type="submit", value="Login", tabIndex="1")
+            input.register(type="submit", value="Register", tabIndex="2")
