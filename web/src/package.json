@@ -22,13 +22,15 @@
         "validator": "8.0.0",
         "express-session": "1.15.5",
         "express-messages": "1.0.1",
+        "express-mysql-session": "1.2.2",
 
+        "passport": "0.4.0",
+        "passport-local": "1.0.0",
         "bcryptjs": "2.4.3",
+
         "connect-flash": "0.1.1",
         "cookie-parser": "1.4.3",
         "express-handlebars": "3.0.0",
-        "passport": "0.4.0",
         "passport-http": "0.3.0",
-        "passport-local": "1.0.0",
     }
 }

@@ -2,209 +2,221 @@ function xhr(reqContent, url, callback, type = "POST") {
     var xhr = new XMLHttpRequest();
     xhr.open(type, url, true);
     xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-    if (reqContent) xhr.send(reqContent);
+    xhr.send(reqContent);
     xhr.onreadystatechange = function() {
         if (this.readyState == 4 && this.status == 200) callback(this.responseText);
     }
 }
 
-function init(link) {
-    var init = link.substr(1);
+function changePage(link, noPushState = false) {
     var main = document.querySelector("main.container");
-    if (main.classList.contains("ready")) {
-        main.classList.remove("ready");
-        xhr("type=page", link, function(res) {
-            main.innerHTML = res;
-            eval("init"+init+"();");
-        });
-    }
+    main.classList.remove("ready");
+    xhr("type=page", link, function(res) {
+        res = JSON.parse(res);
+        main.innerHTML = res.html;
+        eval(res.initFunc);
+        if (noPushState) history.replaceState({path: link}, "exampletitle");
+        else history.pushState({path: link}, "sampletitle", link);
+        document.title = res.title;
+    });
 }
+window.addEventListener("popstate", function(e) {
+    changePage(e.state.path, true);
+});
 
-eval("init('"+path+"')");
+eval("changePage('"+path+"', true)");
 
 function updatePref(preference, value) {
     // eval(`pref.${preference} = ${value}`);
     eval("pref."+preference+" = "+value);
 }
 
-function inithome() {
-    var login = document.querySelector("input.login");
-    var register = document.querySelector("input.register");
-    var form = document.querySelector(".form");
+function initHome(loggedOut) {
+    if (loggedOut) {
+        var login = document.querySelector("input.login");
+        var register = document.querySelector("input.register");
+        var form = document.querySelector(".form");
 
-    var username = document.querySelector("input[name='username']");
-    var email = document.querySelector("input[name='email']");
-    var password = document.querySelector("input[name='password']");
-    var password2 = document.querySelector("input[name='password2']");
-    var success = document.querySelector(".form .success");
+        var username = document.querySelector("input[name='username']");
+        var email = document.querySelector("input[name='email']");
+        var password = document.querySelector("input[name='password']");
+        var password2 = document.querySelector("input[name='password2']");
+        var success = document.querySelector(".form .success");
 
-    function empty(e, el, msg) {
-        if (el.value == "") {
-            el.previousElementSibling.innerHTML = msg;
-            el.previousElementSibling.classList.add("visible");
-            return true;
-        } else {
-            el.previousElementSibling.classList.remove("visible");
-            return false;
-        }
-    }
-    function noMatch(e, el, el2, msg) {
-        if (el.value != el2.value) {
-            el.previousElementSibling.innerHTML = msg;
-            el.previousElementSibling.classList.add("visible");
-            return true;
-        } else {
-            el.previousElementSibling.classList.remove("visible");
-            return false;
-        }
-    }
-    function shorterThan(e, el, num, msg) {
-        if (el.value.length < num) {
-            el.previousElementSibling.innerHTML = msg;
-            el.previousElementSibling.classList.add("visible");
-            return true;
-        } else {
-            el.previousElementSibling.classList.remove("visible");
-            return false;
-        }
-    }
-    function longerThan(e, el, num, msg) {
-        if (el.value.length > num) {
-            el.previousElementSibling.innerHTML = msg;
-            el.previousElementSibling.classList.add("visible");
-            return true;
-        } else {
-            el.previousElementSibling.classList.remove("visible");
-            return false;
-        }
-    }
-    function notEmail(e, el, msg) {
-        if (!el.value.match(
-            "[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?")) {
-            el.previousElementSibling.innerHTML = msg;
-            el.previousElementSibling.classList.add("visible");
-            return true;
-        } else {
-            el.previousElementSibling.classList.remove("visible");
-            return false;
-        }
-    }
-
-    function resetMsgs() {
-        success.classList.remove("visible");
-        username. previousElementSibling.classList.remove("visible");
-        email.    previousElementSibling.classList.remove("visible");
-        password. previousElementSibling.classList.remove("visible");
-        password2.previousElementSibling.classList.remove("visible");
-    }
-
-    function displayErr(field, msg) {
-        if (field == "username") field = username;
-        if (field == "email") field = email;
-        if (field == "password") field = password;
-        if (field == "password2") field = password2;
-        field.previousElementSibling.innerHTML = msg;
-        field.previousElementSibling.classList.add("visible");
-    }
-
-    login.addEventListener("click", function(e) {
-        resetMsgs();
-        if (!form.classList.contains("login")) {
-            email.setAttribute("tabIndex", "-1");
-            password2.setAttribute("tabIndex", "-1");
-            username.setAttribute("tabIndex", "1");
-            password.setAttribute("tabIndex", "2");
-            login.setAttribute("tabIndex", "3");
-            register.setAttribute("tabIndex", "4");
-
-            form.classList.remove("register");
-            form.classList.add("login");
-            form.classList.add("expanded");
-            form.classList.add("has-been-expanded");
-        } else {
-            var a = false, b = false;
-            if (!a) a = empty(e, username, "You should fill this in");
-            if (!a) a = longerThan(e, username, 30, "Keep it below 30");
-            if (!b) b = shorterThan(e, password, 8, "That's a bit short... Try 8 characters");
-            if (!b) b = longerThan(e, password, 100, "You crossed the 100 characters line");
-
-            if (!a && !b) {
-                var req =
-                    "type=login"+
-                    "&username="+username.value+
-                    "&password="+password.value;
-                xhr(req, "/login", function(res) {
-                    var errors = JSON.parse(res).errors;
-                    if (errors) {
-                        if (errors.username == "empty") displayErr("username", "You should fill this in");
-                        if (errors.username == "long") displayErr("username", "Keep it below 30");
-                        if (errors.username == "exist") displayErr("username", "Had trouble finding that user");
-                        if (errors.password == "short") displayErr("password", "That's a bit short... Try 8 characters");
-                        if (errors.password == "long") displayErr("password", "You crossed the 100 characters line");
-                    } else {
-                        success.innerHTML = "Login complete";
-                        success.classList.add("visible");
-                    }
-                });
+        function empty(e, el, msg) {
+            if (el.value == "") {
+                el.previousElementSibling.innerHTML = msg;
+                el.previousElementSibling.classList.add("visible");
+                return true;
+            } else {
+                el.previousElementSibling.classList.remove("visible");
+                return false;
             }
         }
-    });
-    register.addEventListener("click", function(e) {
-        resetMsgs();
-        if (!form.classList.contains("register")) {
-            username.setAttribute("tabIndex", "1");
-            email.setAttribute("tabIndex", "2");
-            password.setAttribute("tabIndex", "3");
-            password2.setAttribute("tabIndex", "4");
-            login.setAttribute("tabIndex", "5");
-            register.setAttribute("tabIndex", "6");
-
-            form.classList.remove("login");
-            form.classList.add("register");
-            form.classList.add("expanded");
-            form.classList.add("has-been-expanded");
-        } else {
-            var a = false, b = false, c = false, d = false;
-            if (!a) a = empty(e, username, "You should fill this in");
-            if (!a) a = longerThan(e, username, 30, "Keep it below 30");
-            if (!b) b = empty(e, email, "We need your email", "emailErr");
-            if (!b) b = longerThan(e, email, 60, "Maximum 60 characters :/");
-            if (!b) b = notEmail(e, email, "That's email isn't valid");
-            if (!c) c = shorterThan(e, password, 8, "That's a bit short... Try 8 characters");
-            if (!c) c = longerThan(e, password, 100, "You crossed the 100 characters line");
-            if (!d) d = noMatch(e, password2, password, "The passwords do not match");
-
-            if (!a && !b && !c && !d) {
-                var req =
-                    "type=register"+
-                    "&username="+username.value+
-                    "&email="+email.value+
-                    "&password="+password.value+
-                    "&password2="+password2.value;
-
-                xhr(req, "/register", function(res) {
-                    var errors = JSON.parse(res).errors;
-                    if (errors) {
-                        if (errors.username == "empty") displayErr("username", "You should fill this in");
-                        if (errors.username == "long") displayErr("username", "Keep it below 30");
-                        if (errors.username == "exist") displayErr("username", "Unavailable username");
-                        if (errors.email == "invalid") displayErr("email", "That email isn't valid");
-                        if (errors.email == "empty") displayErr("email", "We need your email");
-                        if (errors.email == "long") displayErr("email", "Maximum 60 characters :/");
-                        if (errors.password == "short") displayErr("password", "That's a bit short... Try 8 characters");
-                        if (errors.password == "long") displayErr("password", "You crossed the 100 characters line");
-                        if (errors.password2 == "match") displayErr("password2", "The passwords do not match");
-                    } else {
-                        success.innerHTML = "Registration complete";
-                        success.classList.add("visible");
-                    }
-                });
+        function noMatch(e, el, el2, msg) {
+            if (el.value != el2.value) {
+                el.previousElementSibling.innerHTML = msg;
+                el.previousElementSibling.classList.add("visible");
+                return true;
+            } else {
+                el.previousElementSibling.classList.remove("visible");
+                return false;
             }
         }
-    });
+        function shorterThan(e, el, num, msg) {
+            if (el.value.length < num) {
+                el.previousElementSibling.innerHTML = msg;
+                el.previousElementSibling.classList.add("visible");
+                return true;
+            } else {
+                el.previousElementSibling.classList.remove("visible");
+                return false;
+            }
+        }
+        function longerThan(e, el, num, msg) {
+            if (el.value.length > num) {
+                el.previousElementSibling.innerHTML = msg;
+                el.previousElementSibling.classList.add("visible");
+                return true;
+            } else {
+                el.previousElementSibling.classList.remove("visible");
+                return false;
+            }
+        }
+        function notEmail(e, el, msg) {
+            if (!el.value.match(
+                "[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?")) {
+                    el.previousElementSibling.innerHTML = msg;
+                    el.previousElementSibling.classList.add("visible");
+                    return true;
+                } else {
+                    el.previousElementSibling.classList.remove("visible");
+                    return false;
+                }
+            }
+
+            function resetMsgs() {
+                success.classList.remove("visible");
+                username. previousElementSibling.classList.remove("visible");
+                email.    previousElementSibling.classList.remove("visible");
+                password. previousElementSibling.classList.remove("visible");
+                password2.previousElementSibling.classList.remove("visible");
+            }
+
+            function displayErr(field, msg) {
+                if (field == "username") field = username;
+                if (field == "email") field = email;
+                if (field == "password") field = password;
+                if (field == "password2") field = password2;
+                field.previousElementSibling.innerHTML = msg;
+                field.previousElementSibling.classList.add("visible");
+            }
+
+            function clickLogin(e) {
+                resetMsgs();
+                if (!form.classList.contains("login")) {
+                    email.setAttribute("tabIndex", "-1");
+                    password2.setAttribute("tabIndex", "-1");
+                    username.setAttribute("tabIndex", "1");
+                    password.setAttribute("tabIndex", "2");
+                    login.setAttribute("tabIndex", "3");
+                    register.setAttribute("tabIndex", "4");
+
+                    form.classList.remove("register");
+                    form.classList.add("login");
+                    form.classList.add("expanded");
+                    form.classList.add("has-been-expanded");
+                } else {
+                    var a = false, b = false;
+                    if (!a) a = empty(e, username, "You should fill this in");
+                    if (!a) a = longerThan(e, username, 30, "Keep it below 30");
+                    if (!b) b = shorterThan(e, password, 8, "That's a bit short... Try 8 characters");
+                    if (!b) b = longerThan(e, password, 100, "You crossed the 100 characters line");
+
+                    if (!a && !b) {
+                        var req =
+                        "type=login"+
+                        "&username="+username.value+
+                        "&password="+password.value;
+                        xhr(req, "/login", function(res) {
+                            var errors = JSON.parse(res).errors;
+                            if (errors) {
+                                if (errors.username == "empty") displayErr("username", "You should fill this in");
+                                if (errors.username == "long") displayErr("username", "Keep it below 30");
+                                if (errors.username == "exist") displayErr("username", "Had trouble finding that user");
+                                if (errors.password == "short") displayErr("password", "That's a bit short... Try 8 characters");
+                                if (errors.password == "long") displayErr("password", "You crossed the 100 characters line");
+                                if (errors.password == "incorrect") displayErr("password", "You guessed the wrong password");
+                            } else {
+                                changePage("/music");
+                            }
+                        });
+                    }
+                }
+            }
+            login.addEventListener("click", clickLogin);
+
+            function clickRegister(e) {
+                resetMsgs();
+                if (!form.classList.contains("register")) {
+                    username.setAttribute("tabIndex", "1");
+                    email.setAttribute("tabIndex", "2");
+                    password.setAttribute("tabIndex", "3");
+                    password2.setAttribute("tabIndex", "4");
+                    login.setAttribute("tabIndex", "5");
+                    register.setAttribute("tabIndex", "6");
+
+                    form.classList.remove("login");
+                    form.classList.add("register");
+                    form.classList.add("expanded");
+                    form.classList.add("has-been-expanded");
+                } else {
+                    var a = false, b = false, c = false, d = false;
+                    if (!a) a = empty(e, username, "You should fill this in");
+                    if (!a) a = longerThan(e, username, 30, "Keep it below 30");
+                    if (!b) b = empty(e, email, "We need your email", "emailErr");
+                    if (!b) b = longerThan(e, email, 60, "Maximum 60 characters :/");
+                    if (!b) b = notEmail(e, email, "That's email isn't valid");
+                    if (!c) c = shorterThan(e, password, 8, "That's a bit short... Try 8 characters");
+                    if (!c) c = longerThan(e, password, 100, "You crossed the 100 characters line");
+                    if (!d) d = noMatch(e, password2, password, "The passwords do not match");
+
+                    if (!a && !b && !c && !d) {
+                        var req =
+                        "type=register"+
+                        "&username="+username.value+
+                        "&email="+email.value+
+                        "&password="+password.value+
+                        "&password2="+password2.value;
+
+                        xhr(req, "/register", function(res) {
+                            var errors = JSON.parse(res).errors;
+                            if (errors) {
+                                if (errors.username == "empty") displayErr("username", "You should fill this in");
+                                if (errors.username == "long") displayErr("username", "Keep it below 30");
+                                if (errors.username == "exist") displayErr("username", "Unavailable username");
+                                if (errors.email == "invalid") displayErr("email", "That email isn't valid");
+                                if (errors.email == "empty") displayErr("email", "We need your email");
+                                if (errors.email == "long") displayErr("email", "Maximum 60 characters :/");
+                                if (errors.email == "exist") displayErr("email", "Email already exists");
+                                if (errors.password == "short") displayErr("password", "That's a bit short... Try 8 characters");
+                                if (errors.password == "long") displayErr("password", "You crossed the 100 characters line");
+                                if (errors.password2 == "match") displayErr("password2", "The passwords do not match");
+                            } else {
+                                success.innerHTML = "Registration complete";
+                                success.classList.add("visible");
+                            }
+                        });
+                    }
+                }
+            }
+            register.addEventListener("click", clickRegister);
+    } else {
+        // code for logged in homepage
+    }
 }
 
-function initmusic() {
+function initMusic() {
     function hasClass(el, cls, startsWith = false) {
         classes = cls.split(","); // or
         for (var ci = 0; ci < classes.length; ci++) { // classIndex
@@ -397,4 +409,22 @@ function initmusic() {
             }
         });
     }
+
+    var logout = document.querySelector(".logout");
+    function clickLogout() {
+        xhr("", "/logout", function(res) {
+            var errors = JSON.parse(res).errors;
+            if (errors) console.log(errors);
+            else {
+                changePage("/");
+            }
+        });
+    }
+    logout.addEventListener("click", clickLogout);
+
+    var logo = document.querySelector(".logo");
+    function clickLogo() {
+        changePage("/");
+    }
+    logo.addEventListener("click", clickLogo);
 }
