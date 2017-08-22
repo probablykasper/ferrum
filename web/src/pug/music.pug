@@ -1,5 +1,5 @@
 header.app-bar
-    .logo Ferrum
+    .logo.link(data-href="/") Ferrum
     input.search-bar(placeholder="Search")
     .icons
         .logout Logout
@@ -40,7 +40,7 @@ main.music-page
             .cell.artist.track-3 Camo & Krooked
             .cell.artist.track-4 Orbiter
             .cell.artist.track-5 Moving On
-        .col.album.flexible-width.last-non-auto(style="flex-grow:250000")
+        .col.album.flexible-width(style="flex-grow:250000")
             .cell.album
                 span.col-span Album
                 .col-resizer.album

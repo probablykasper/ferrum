@@ -146,24 +146,30 @@ app.post("/register", (req, res) => {
 // -------------------- pages --------------------
 
 app.post("/", (req, res) => {
-    if (req.body.type == "page") {
-        res.render("home", function(err, html) {
-            res.send({
-                html: html,
-                title: "Ferrum",
-                initFunc: "initHome(true);"
-            });
+    res.render("home", function(err, html) {
+        res.send({
+            html: html,
+            title: "Ferrum",
+            initFunc: `initHome(${res.locals.loggedIn});`
         });
-    }
+    });
 });
 
 app.post("/music", (req, res) => {
-    if (req.body.type == "page") {
+    if (res.locals.loggedIn) {
         res.render("music", function(err, html) {
             res.send({
                 html: html,
                 title: "Music",
                 initFunc: "initMusic();"
+            });
+        });
+    } else {
+        res.render("home", function(err, html) {
+            res.send({
+                html: html,
+                title: "Ferrum",
+                initFunc: `initHome(${res.locals.loggedIn});`
             });
         });
     }
