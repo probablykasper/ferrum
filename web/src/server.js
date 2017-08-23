@@ -53,20 +53,30 @@ app.use(session({
 app.use(passport.initialize());
 
 app.get("*", (req, res) => {
+    res.locals.loggedIn = req.session.passport.user ? true : false;
+    if (res.locals.loggedIn) res.locals.userID = req.session.passport.user;
+
     var path = req.path;
-    db.query("SELECT users.pref FROM users WHERE username = ?", ["kh"], function(err, result) {
+    if (res.locals.loggedIn) {
+        db.query("SELECT users.pref FROM users WHERE userID = ?", [res.locals.userID], function(err, result) {
+            res.render("template", {
+                pref: result[0].pref,
+                path: path
+            });
+        });
+    } else {
         res.render("template", {
-            pref: result[0].pref,
+            pref: `""`,
             path: path
         });
-    });
+    }
 });
 
 // -------------------- POSTs --------------------
 
 app.post("*", (req, res, next) => {
     res.locals.loggedIn = req.session.passport.user ? true : false;
-    res.locals.userID = req.session.passport.user;
+    if (res.locals.loggedIn) res.locals.userID = req.session.passport.user;
     next();
 });
 
@@ -131,7 +141,7 @@ app.post("/register", (req, res) => {
                         username: username,
                         email: email,
                         password: hashedPassword,
-                        pref: `{"table":{"cols":{"name":{"width":500000},"time":{"width":"auto"},"artist":{"width":250000},"album": {"width":250000},"date-added":{"width":"auto"},"plays":{"width":"auto"}}}}`
+                        pref: `{"table":{"cols":{"name":{"width":500000},"time":{"width":"auto"},"artist":{"width":250000},"album": {"width":250000},"dateAdded":{"width":"auto"},"plays":{"width":"auto"}}}}`
                     };
                     db.query("INSERT INTO users SET ?", values, function(err, result) {
                         if (err) console.log(err);
@@ -163,11 +173,17 @@ app.post("/", (req, res) => {
 
 app.post("/music", (req, res) => {
     if (res.locals.loggedIn) {
-        res.render("music", function(err, html) {
-            res.send({
-                html: html,
-                title: "Music",
-                initFunc: "initMusic();"
+        var cols = `name, artist, time, album, DATE_FORMAT(dateAdded, "%e/%c/%y") AS dateAdded, plays`;
+        db.query(`SELECT ${cols} FROM tracks WHERE userID = ?`, [res.locals.userID], function(err, result) {
+            console.log(result);
+            res.render("music", {
+                tracks: result
+            }, function(err, html) {
+                res.send({
+                    html: html,
+                    title: "Music",
+                    initFunc: "initMusic();"
+                });
             });
         });
     } else {

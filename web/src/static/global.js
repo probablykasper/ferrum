@@ -380,6 +380,7 @@ function initMusic() {
         musicTable.addEventListener("mousedown", function(e) {
             if (hasClass(e.target, "cell") && e.target.previousElementSibling == null) {
                 e.preventDefault();
+                moveCount = 0;
                 mouseDown = true;
                 mousePosX = e.clientX;
                 mousePosStartX = mousePosX;
@@ -476,8 +477,7 @@ function initMusic() {
     logout.addEventListener("click", clickLogout);
 }
 
-var prefDefault =
-{
+var prefDefault = {
     "table": {
         "cols": {
             "name": {

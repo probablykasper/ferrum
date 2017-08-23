@@ -68,21 +68,24 @@ main.music-page
                 transition: none
             &.flexible-width
                 width: 0px
+            &:first-child, &:last-child
+                .cell.hover::after
+                        content: ""
+                        position: absolute
+                        height: 36px
+                        width: 14px
+                        transform: translateY(-10px)
+                        background-color: rgba(#FFFFFF, 0.025)
             &:first-child
                 .cell:first-child
                     border-top-left-radius: 3px
-                .cell.hover
-                    position: relative
-                    left: -14px
-                    padding-left: 24px
-                    width: calc(100% - 20px)
+                .cell.hover::after
+                    right: 100%
             &:last-child
                 .cell:first-child
                     border-top-right-radius: 3px
-                .cell.hover
-                    position: relative
-                    padding-right: 24px
-                    width: calc(100% - 20px)
+                .cell.hover::after
+                    left: 100%
             &.rearranging
                 box-shadow: $shadow-3
             .cell
