@@ -1,8 +1,10 @@
 header.app-bar
-    .logo.link(data-href="/") Ferrum
-    input.search-bar(placeholder="Search")
-    .icons
-        .logout Logout
+    .left
+        .logo.link(data-href="/", tabindex="1") Ferrum
+    input.search-bar(placeholder="Search", tabindex="2")
+    .right
+        //- .logout Logout
+        .playlists(tabindex="3")
 main.music-page
     header.playlist-header
         img.image(src="/cdn/cover.jpg")
@@ -16,11 +18,6 @@ main.music-page
                     .sort-icon
                 each track, index in tracks
                     div(class=`cell ${colName} track-${index+1}`)= track[colName]
-                //- .cell(class=colName).track-1 Honesty
-                //- .cell(class=colName).track-2 Lion's Den
-                //- .cell(class=colName).track-3 Broken Pieces (feat. Nihils)
-                //- .cell(class=colName).track-4 Want You
-                //- .cell(class=colName).track-5 Marshmello
             
         +column("flexible-width", "name", "Name")
         +column("auto-width", "time", "Time")

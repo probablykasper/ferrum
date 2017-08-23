@@ -134,9 +134,4 @@ main.home-page-logged-out
                 margin-right: 0px
             input
                 margin: 10px
-                cursor: pointer
-                transition: background-color $transition
-                &:hover
-                    background-color: rgba(#FFFFFF, 0.10)
-                &:focus
-                    background-color: rgba(#FFFFFF, 0.10)
+                @include button-highlight

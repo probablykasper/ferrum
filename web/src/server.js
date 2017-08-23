@@ -53,30 +53,23 @@ app.use(session({
 app.use(passport.initialize());
 
 app.get("*", (req, res) => {
-    res.locals.loggedIn = req.session.passport.user ? true : false;
-    if (res.locals.loggedIn) res.locals.userID = req.session.passport.user;
-
+    if (req.session && req.session.passport && req.session.passport.user) {
+        res.locals.loggedIn = true;
+        res.locals.userID = req.session.passport.user;
+    } else res.locals.loggedIn = false;
     var path = req.path;
-    if (res.locals.loggedIn) {
-        db.query("SELECT users.pref FROM users WHERE userID = ?", [res.locals.userID], function(err, result) {
-            res.render("template", {
-                pref: result[0].pref,
-                path: path
-            });
-        });
-    } else {
-        res.render("template", {
-            pref: `""`,
-            path: path
-        });
-    }
+    res.render("template", {
+        path: path
+    });
 });
 
 // -------------------- POSTs --------------------
 
 app.post("*", (req, res, next) => {
-    res.locals.loggedIn = req.session.passport.user ? true : false;
-    if (res.locals.loggedIn) res.locals.userID = req.session.passport.user;
+    if (req.session && req.session.passport && req.session.passport.user) {
+        res.locals.loggedIn = true;
+        res.locals.userID = req.session.passport.user;
+    } else res.locals.loggedIn = false;
     next();
 });
 
@@ -153,11 +146,11 @@ app.post("/register", (req, res) => {
     });
 });
 
-app.post("/updatepref", (req, res) => {
-    db.query("UPDATE users SET pref=? WHERE userID = ?", [req.body.pref, res.locals.userID], function(err, result) {
-        res.json({ "errors": null });
-    });
-});
+// app.post("/updatepref", (req, res) => {
+//     db.query("UPDATE users SET pref=? WHERE userID = ?", [req.body.pref, res.locals.userID], function(err, result) {
+//         res.json({ "errors": null });
+//     });
+// });
 
 // -------------------- pages --------------------
 
@@ -175,7 +168,6 @@ app.post("/music", (req, res) => {
     if (res.locals.loggedIn) {
         var cols = `name, artist, time, album, DATE_FORMAT(dateAdded, "%e/%c/%y") AS dateAdded, plays`;
         db.query(`SELECT ${cols} FROM tracks WHERE userID = ?`, [res.locals.userID], function(err, result) {
-            console.log(result);
             res.render("music", {
                 tracks: result
             }, function(err, html) {

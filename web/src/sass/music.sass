@@ -3,18 +3,26 @@ header.app-bar
     z-index: 50
     width: calc(100% - 28px)
     height: 36px
-    padding: 14px
+    padding: 14px 20px
     display: flex
     justify-content: space-between
     align-items: center
-    .logo
-        font-family: "Nunito", sans-serif
-        font-size: 23px
-
+    .left
         width: 100px
-        background-color: rgba(#FFFFFF, 0.1)
-        padding: 0px 20px
-
+        margin-right: 20px
+        .logo
+            font-family: "Nunito", sans-serif
+            font-size: 23px
+            display: inline-block
+            border-radius: 3px
+            height: 36px
+            line-height: 36px
+            padding: 0px 6px
+            vertical-align: middle
+            transition: background-color $transition
+            cursor: pointer
+            &:focus
+                background-color: rgba(#FFFFFF, 0.10)
     input.search-bar
         font-size: 15px
         font-family: "Nunito", sans-serif
@@ -26,14 +34,20 @@ header.app-bar
         width: 50%
         max-width: 500px
         background-color: rgba(#FFFFFF, 0.05)
-
-    .icons
-        font-family: "Nunito", sans-serif
-        font-size: 23px
-
+    .right
         width: 100px
-        background-color: rgba(#FFFFFF, 0.1)
-        padding: 0px 20px
+        margin-left: 20px
+        .playlists
+            @include button-highlight
+            width: 36px
+            height: 36px
+            border-radius: 3px
+            background-color: rgba(#FFFFFF, 0.05)
+            background-size: 24px
+            background-repeat: no-repeat
+            background-position: center
+            background-image: url('data:image/svg+xml;utf8,<svg fill="#ffffff" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" enable-background="new 0 0 24 24" height="24" id="Layer_1" version="1.1" viewBox="0 0 24 24" width="24" x="0px" xml:space="preserve" y="0px"><g id="XMLID_1_"><path d="M0,0h24v24H0V0z" fill="none"/><g id="XMLID_2_"><rect height="2" id="XMLID_3_" width="12" x="4" y="10"/><rect height="2" id="XMLID_4_" width="12" x="4" y="6"/><rect height="2" id="XMLID_5_" width="8" x="4" y="14"/><polygon id="XMLID_6_" points="14,14 14,20 19,17   "/></g></g></svg>')
+            transition: background-color $transition
 
 main.music-page
     position: relative

@@ -1,3 +1,43 @@
+if (!localStorage.getItem("localPref")) {
+    localStorage.setItem("localPref", JSON.stringify({
+        "table": {
+            "cols": {
+                "name": {
+                    "width": 500000,
+                    "index": 0,
+                    "visible": true
+                },
+                "time": {
+                    "width": "auto",
+                    "index": 1,
+                    "visible": true
+                },
+                "artist": {
+                    "width": 250000,
+                    "index": 2,
+                    "visible": true
+                },
+                "album": {
+                    "width": 250000,
+                    "index": 3,
+                    "visible": true
+                },
+                "dateAdded": {
+                    "width": "auto",
+                    "index": 4,
+                    "visible": true
+                },
+                "plays": {
+                    "width": "auto",
+                    "index": 5,
+                    "visible": true
+                }
+            },
+            colOrder: ["name", "time", "artist", "album", "dateAdded", "plays"]
+        }
+    }));
+}
+localPref = JSON.parse(localStorage.getItem("localPref"));
 function xhr(reqContent, url, callback, type = "POST") {
     var xhr = new XMLHttpRequest();
     xhr.open(type, url, true);
@@ -26,12 +66,8 @@ window.addEventListener("popstate", function(e) {
 
 eval("changePage('"+path+"', true)");
 
-function updatePref() {
-    xhr("pref="+JSON.stringify(pref), "/updatepref", function(res) {
-        var errors = JSON.parse(res).errors;
-        if (errors) console.log(errors);
-        else console.log("pref updated");
-    });
+function updateLocalPref() {
+    localStorage.setItem("localPref", JSON.stringify(localPref));
 }
 
 document.addEventListener("click", clickLink);
@@ -256,6 +292,16 @@ function initMusic() {
         "date-added": 95,
         "plays": 60
     }
+    initColPos();
+    function initColPos() {
+        var cols = localPref.table.cols;
+        var colOrder = localPref.table.colOrder;
+        var html = "";
+        for (var i = 0; i < colOrder.length; i++) {
+            html += document.querySelector(".music-table .col."+colOrder[i]).outerHTML;
+        }
+        document.querySelector(".music-table").innerHTML = html;
+    }
 
     // ROW HOVER
         document.querySelector(".music-table").addEventListener("mouseover", function(e) {
@@ -365,10 +411,10 @@ function initMusic() {
             var flexibleCols = document.querySelectorAll(".music-table > .col.flexible-width");
             for (var i = 0; i < flexibleCols.length; i++) {
                 var colName = flexibleCols[i].classList[1];
-                if (grab) flexibleCols[i].style.flexGrow = pref.table.cols[colName].width;
-                else             pref.table.cols[colName].width = flexibleCols[i].style.flexGrow;
+                if (grab) flexibleCols[i].style.flexGrow = localPref.table.cols[colName].width;
+                else             localPref.table.cols[colName].width = flexibleCols[i].style.flexGrow;
             }
-            if (!grab) updatePref();
+            if (!grab) updateLocalPref();
         }
         updateColWitdthPref(true);
     }
@@ -458,52 +504,22 @@ function initMusic() {
             var cols = document.querySelectorAll(".music-table > .col");
             for (var i = 0; i < cols.length; i++) {
                 var colName = cols[i].classList[1];
-                pref.table.cols[colName].index = i;
+                localPref.table.colOrder[i] = colName;
+                localPref.table.cols[colName].index = i;
             }
-            updatePref();
+            updateLocalPref();
         }
     }
 
-    var logout = document.querySelector(".logout");
-    function clickLogout() {
-        xhr("", "/logout", function(res) {
-            var errors = JSON.parse(res).errors;
-            if (errors) console.log(errors);
-            else {
-                changePage("/");
-            }
-        });
-    }
-    logout.addEventListener("click", clickLogout);
-}
-
-var prefDefault = {
-    "table": {
-        "cols": {
-            "name": {
-                "width": 500000,
-                "width": 0
-            },
-            "time": {
-                "width": "auto",
-                "width": 1
-            },
-            "artist": {
-                "width": 250000,
-                "width": 2
-            },
-            "album": {
-                "width": 250000,
-                "width": 3
-            },
-            "date-added": {
-                "width": "auto",
-                "width": 4
-            },
-            "plays": {
-                "width": "auto",
-                "width": 5
-            }
-        }
-    }
+    // var logout = document.querySelector(".logout");
+    // function clickLogout() {
+    //     xhr("", "/logout", function(res) {
+    //         var errors = JSON.parse(res).errors;
+    //         if (errors) console.log(errors);
+    //         else {
+    //             changePage("/");
+    //         }
+    //     });
+    // }
+    // logout.addEventListener("click", clickLogout);
 }
