@@ -131,7 +131,7 @@ app.post("/register", (req, res) => {
                         username: username,
                         email: email,
                         password: hashedPassword,
-                        pref: `{"table":{"cols": {"name": {"width": 500000},"time": {"width": "auto"},"artist": {"width": 250000},"album": {"width": 250000},"date-added": {"width": "auto"},"plays": {"width": "auto"}}}}`
+                        pref: `{"table":{"cols":{"name":{"width":500000},"time":{"width":"auto"},"artist":{"width":250000},"album": {"width":250000},"date-added":{"width":"auto"},"plays":{"width":"auto"}}}}`
                     };
                     db.query("INSERT INTO users SET ?", values, function(err, result) {
                         if (err) console.log(err);
@@ -140,6 +140,12 @@ app.post("/register", (req, res) => {
                 });
             });
         } else res.json({ "errors": errors });
+    });
+});
+
+app.post("/updatepref", (req, res) => {
+    db.query("UPDATE users SET pref=? WHERE userID = ?", [req.body.pref, res.locals.userID], function(err, result) {
+        res.json({ "errors": null });
     });
 });
 

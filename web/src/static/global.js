@@ -26,9 +26,12 @@ window.addEventListener("popstate", function(e) {
 
 eval("changePage('"+path+"', true)");
 
-function updatePref(preference, value) {
-    // eval(`pref.${preference} = ${value}`);
-    eval("pref."+preference+" = "+value);
+function updatePref() {
+    xhr("pref="+JSON.stringify(pref), "/updatepref", function(res) {
+        var errors = JSON.parse(res).errors;
+        if (errors) console.log(errors);
+        else console.log("pref updated");
+    });
 }
 
 document.addEventListener("click", clickLink);
@@ -352,8 +355,22 @@ function initMusic() {
                     var newFlexWidth = flexibleCols[i].clientWidth*1000000;
                     flexibleCols[i].style.flexGrow = newFlexWidth / availWidth;
                 }
+                for (var i = 0; i < flexibleCols.length; i++) {
+                    flexibleCols[i].style.width = "";
+                }
+                updateColWitdthPref();
             }
         });
+        function updateColWitdthPref(grab = false) { // grab or set preference?
+            var flexibleCols = document.querySelectorAll(".music-table > .col.flexible-width");
+            for (var i = 0; i < flexibleCols.length; i++) {
+                var colName = flexibleCols[i].classList[1];
+                if (grab) flexibleCols[i].style.flexGrow = pref.table.cols[colName].width;
+                else             pref.table.cols[colName].width = flexibleCols[i].style.flexGrow;
+            }
+            if (!grab) updatePref();
+        }
+        updateColWitdthPref(true);
     }
 
     columnRearrange();
@@ -430,9 +447,20 @@ function initMusic() {
                         cols[i].classList.remove("no-transition");
                     }
                 }, 10);
-                updateLastNonAuto();
+                if (moveCount != 0) {
+                    updateLastNonAuto();
+                    updateColPosPref();
+                }
             }
         });
+        function updateColPosPref() {
+            var cols = document.querySelectorAll(".music-table > .col");
+            for (var i = 0; i < cols.length; i++) {
+                var colName = cols[i].classList[1];
+                pref.table.cols[colName].index = i;
+            }
+            updatePref();
+        }
     }
 
     var logout = document.querySelector(".logout");
@@ -446,4 +474,36 @@ function initMusic() {
         });
     }
     logout.addEventListener("click", clickLogout);
+}
+
+var prefDefault =
+{
+    "table": {
+        "cols": {
+            "name": {
+                "width": 500000,
+                "width": 0
+            },
+            "time": {
+                "width": "auto",
+                "width": 1
+            },
+            "artist": {
+                "width": 250000,
+                "width": 2
+            },
+            "album": {
+                "width": 250000,
+                "width": 3
+            },
+            "date-added": {
+                "width": "auto",
+                "width": 4
+            },
+            "plays": {
+                "width": "auto",
+                "width": 5
+            }
+        }
+    }
 }

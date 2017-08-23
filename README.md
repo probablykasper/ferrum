@@ -3,8 +3,9 @@ Some (to-be) web/desktop/mobile application for your music library. Oh, and it's
 
 ## ToDo
 - [ ] Double-click to reset column/sidebar sizes
-- [x] Column sorting (sort by name)
-- [x] Column organizing (move col to left)
+- [x] Column sorting
+- [x] Column organizing
+- [ ] Figure out how to display account/settings/playlists
 - [ ] Custom context menu
 - [ ] Sidebar
     - [ ] Double-click to resize to min width
