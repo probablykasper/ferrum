@@ -4,24 +4,26 @@ header.app-bar
     input.search-bar(placeholder="Search", tabindex="2")
     .right
         //- .logout Logout
-        .playlists(tabindex="3")
-main.music-page
-    header.playlist-header
-        img.image(src="/cdn/cover.jpg")
-    div.music-table
-        mixin column(colType, colName, colTitle)
-            div(class=`col ${colName} ${colType}`)
-                div(class="cell "+colName)
-                    span.col-span= colTitle
-                    div(class="col-resizer "+colName)
-                        .line
-                    .sort-icon
-                each track, index in tracks
-                    div(class=`cell ${colName} track-${index+1}`)= track[colName]
-            
-        +column("flexible-width", "name", "Name")
-        +column("auto-width", "time", "Time")
-        +column("flexible-width", "artist", "Artist")
-        +column("flexible-width", "album", "Album")
-        +column("auto-width", "dateAdded", "Date Added")
-        +column("auto-width", "plays", "Plays")
+        .playlists.button-highlight(tabindex="3")
+        .account.button-highlight(tabIndex="4")
+main.content
+    main.music-page
+        header.playlist-header
+            img.image(src="/cdn/cover.jpg")
+            .music-table
+                mixin column(colType, colName, colTitle)
+                    div(class=`col ${colName} ${colType}`)
+                        div(class="cell "+colName)
+                            span.col-span= colTitle
+                            div(class="col-resizer "+colName)
+                                .line
+                            .sort-icon
+                        each track, index in tracks
+                            div(class=`cell ${colName} track-${index+1}`)= track[colName]
+                +column("flexible-width", "name", "Name")
+                +column("auto-width", "time", "Time")
+                +column("flexible-width", "artist", "Artist")
+                +column("flexible-width", "album", "Album")
+                +column("auto-width", "dateAdded", "Date Added")
+                +column("auto-width", "plays", "Plays")
+    .sidebar
