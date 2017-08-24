@@ -1,41 +1,42 @@
-if (!localStorage.getItem("localPref")) {
-    localStorage.setItem("localPref", JSON.stringify({
-        "table": {
-            "cols": {
-                "name": {
-                    "width": 500000,
-                    "index": 0,
-                    "visible": true
-                },
-                "time": {
-                    "width": "auto",
-                    "index": 1,
-                    "visible": true
-                },
-                "artist": {
-                    "width": 250000,
-                    "index": 2,
-                    "visible": true
-                },
-                "album": {
-                    "width": 250000,
-                    "index": 3,
-                    "visible": true
-                },
-                "dateAdded": {
-                    "width": "auto",
-                    "index": 4,
-                    "visible": true
-                },
-                "plays": {
-                    "width": "auto",
-                    "index": 5,
-                    "visible": true
-                }
+var localPrefDefault = {
+    "table": {
+        "cols": {
+            "name": {
+                "width": 500000,
+                "index": 0,
+                "visible": true
             },
-            "colOrder": ["name", "time", "artist", "album", "dateAdded", "plays"]
-        }
-    }));
+            "time": {
+                "width": "auto",
+                "index": 1,
+                "visible": true
+            },
+            "artist": {
+                "width": 250000,
+                "index": 2,
+                "visible": true
+            },
+            "album": {
+                "width": 250000,
+                "index": 3,
+                "visible": true
+            },
+            "dateAdded": {
+                "width": "auto",
+                "index": 4,
+                "visible": true
+            },
+            "plays": {
+                "width": "auto",
+                "index": 5,
+                "visible": true
+            }
+        },
+        "colOrder": ["name", "time", "artist", "album", "dateAdded", "plays"]
+    }
+}
+if (!localStorage.getItem("localPref")) {
+    localStorage.setItem("localPref", JSON.stringify(localPrefDefault));
 }
 localPref = JSON.parse(localStorage.getItem("localPref"));
 function xhr(reqContent, url, callback, type = "POST") {
@@ -331,6 +332,16 @@ function initMusic() {
         flexibleCols[flexibleCols.length-1].classList.add("last-non-auto");
     }
 
+    function updateColWitdthPref(grab = false) {
+        // grab or set preference?
+        var flexibleCols = document.querySelectorAll(".music-table > .col.flexible-width");
+        for (var i = 0; i < flexibleCols.length; i++) {
+            var colName = flexibleCols[i].classList[1];
+            if (grab) flexibleCols[i].style.flexGrow = localPref.table.cols[colName].width;
+            else             localPref.table.cols[colName].width = flexibleCols[i].style.flexGrow;
+        }
+        if (!grab) updateLocalPref();
+    }
     colResize();
     function colResize() {
         function findNextCol(col, reverse) {
@@ -409,15 +420,6 @@ function initMusic() {
                 updateColWitdthPref();
             }
         });
-        function updateColWitdthPref(grab = false) { // grab or set preference?
-            var flexibleCols = document.querySelectorAll(".music-table > .col.flexible-width");
-            for (var i = 0; i < flexibleCols.length; i++) {
-                var colName = flexibleCols[i].classList[1];
-                if (grab) flexibleCols[i].style.flexGrow = localPref.table.cols[colName].width;
-                else             localPref.table.cols[colName].width = flexibleCols[i].style.flexGrow;
-            }
-            if (!grab) updateLocalPref();
-        }
         updateColWitdthPref(true);
     }
 
@@ -529,6 +531,7 @@ function initMusic() {
             }
         }
     }
+
     function contextItemClick(context, element) {
         var item = element.innerHTML;
         var attr = element.dataset;
@@ -544,9 +547,17 @@ function initMusic() {
                 }
                 updateColVisibility();
                 updateLocalPref();
+            } else if (attr.type == "reset") {
+                for (var i = 0; i < localPref.table.colOrder.length; i++) {
+                    var col = localPref.table.colOrder[i];
+                    localPref.table.cols[col].width = localPrefDefault.table.cols[col].width
+                }
+                updateColWitdthPref(true);
+                updateColWitdthPref();
             }
         }
     }
+
     contextMenu();
     function contextMenu() {
         var currentContextMenu = undefined;
@@ -566,6 +577,7 @@ function initMusic() {
         document.addEventListener("click", function(e) {
             if (e.target.classList.contains("context-item") && !e.target.classList.contains("arrow")) {
                 contextItemClick(currentContextMenu, e.target);
+                closeContextMenu();
             }
         });
         document.addEventListener("mousedown", function(e) {
