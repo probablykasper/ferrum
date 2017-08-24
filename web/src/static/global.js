@@ -33,7 +33,7 @@ if (!localStorage.getItem("localPref")) {
                     "visible": true
                 }
             },
-            colOrder: ["name", "time", "artist", "album", "dateAdded", "plays"]
+            "colOrder": ["name", "time", "artist", "album", "dateAdded", "plays"]
         }
     }));
 }
@@ -289,7 +289,7 @@ function initMusic() {
         "time": 50,
         "artist": 100,
         "album": 100,
-        "date-added": 95,
+        "dateAdded": 95,
         "plays": 60
     }
     initColPos();
@@ -344,27 +344,29 @@ function initMusic() {
         var mouseDown, mousePosX, mouseStartPosX, oldWidth, oldWidthNext, flexibleCols, availWidth, nextColClass;
         for (var i = 0; i < colResizers.length; i++) {
             colResizers[i].addEventListener("mousedown", function(e) {
-                e.preventDefault();
-                mouseDown = true;
-                mousePosX = e.clientX;
-                mousePosStartX = mousePosX;
-                currentColClass = e.target.classList[1];
-                currentCol = document.querySelector(".music-table .col."+currentColClass);
-                nextCol = currentCol.nextElementSibling;
-                nextCol = findNextCol(currentCol);
-                if (nextCol == null) nextCol = findNextCol(currentCol, true);
-                nextColClass = nextCol.classList[1];
-                oldWidth = currentCol.clientWidth;
-                oldWidthNext = nextCol.clientWidth;
-                document.querySelector(".fg").style.pointerEvents = "auto";
-                document.querySelector(".fg").style.cursor = "col-resize";
+                if (e.button == 0) {
+                    e.preventDefault();
+                    mouseDown = true;
+                    mousePosX = e.clientX;
+                    mousePosStartX = mousePosX;
+                    currentColClass = e.target.classList[1];
+                    currentCol = document.querySelector(".music-table .col."+currentColClass);
+                    nextCol = currentCol.nextElementSibling;
+                    nextCol = findNextCol(currentCol);
+                    if (nextCol == null) nextCol = findNextCol(currentCol, true);
+                    nextColClass = nextCol.classList[1];
+                    oldWidth = currentCol.clientWidth;
+                    oldWidthNext = nextCol.clientWidth;
+                    document.querySelector(".fg").style.pointerEvents = "auto";
+                    document.querySelector(".fg").style.cursor = "col-resize";
 
-                flexibleCols = document.querySelectorAll(".music-table .col.flexible-width");
-                availWidth = 0;
-                for (var i = 0; i < flexibleCols.length; i++) {
-                    availWidth += flexibleCols[i].clientWidth;
-                    flexibleCols[i].style.width = flexibleCols[i].clientWidth+"px";
-                    flexibleCols[i].style.flexGrow = "";
+                    flexibleCols = document.querySelectorAll(".music-table .col.flexible-width");
+                    availWidth = 0;
+                    for (var i = 0; i < flexibleCols.length; i++) {
+                        availWidth += flexibleCols[i].clientWidth;
+                        flexibleCols[i].style.width = flexibleCols[i].clientWidth+"px";
+                        flexibleCols[i].style.flexGrow = "";
+                    }
                 }
             });
         }
@@ -424,7 +426,7 @@ function initMusic() {
         var musicTable = document.querySelector(".music-table");
         var mouseDown, mousePosX, mouseStartPosX, currentCol, nextCol, moveCount;
         musicTable.addEventListener("mousedown", function(e) {
-            if (hasClass(e.target, "cell") && e.target.previousElementSibling == null) {
+            if (e.button == 0 && hasClass(e.target, "cell") && e.target.previousElementSibling == null) {
                 e.preventDefault();
                 moveCount = 0;
                 mouseDown = true;
@@ -435,12 +437,13 @@ function initMusic() {
                 prevCol = currentCol.previousElementSibling;
                 currentCol.classList.add("rearranging");
                 musicTable.classList.add("rearranging");
-                document.querySelector(".fg").style.pointerEvents = "auto";
-                document.querySelector(".fg").style.cursor = "move";
             }
         });
         document.addEventListener("mousemove", function(e) {
             if (mouseDown) {
+                document.querySelector(".fg").style.pointerEvents = "auto";
+                document.querySelector(".fg").style.cursor = "move";
+
                 mousePosX = e.clientX;
                 var difference = mousePosX - mousePosStartX;
 
@@ -508,6 +511,141 @@ function initMusic() {
                 localPref.table.cols[colName].index = i;
             }
             updateLocalPref();
+        }
+    }
+
+    updateColVisibility();
+    function updateColVisibility() {
+        for (var i = 0; i < localPref.table.colOrder.length; i++) {
+            var col = localPref.table.colOrder[i];
+            var colEl = document.querySelector(".music-table .col."+col);
+            var ctxItem = document.querySelector('.context-menu .context-item[data-col="'+col+'"]');
+            if (localPref.table.cols[col].visible) {
+                colEl.style.display = "";
+                ctxItem.classList.add("checked");
+            } else {
+                colEl.style.display = "none";
+                ctxItem.classList.remove("checked");
+            }
+        }
+    }
+    function contextItemClick(context, element) {
+        var item = element.innerHTML;
+        var attr = element.dataset;
+        var cl = element.classList;
+        if (context == "table-header") {
+            if (attr.col) {
+                if (localPref.table.cols[attr.col].visible) {
+                    localPref.table.cols[attr.col].visible = false;
+                    console.log("*makes invisible*");
+                } else {
+                    localPref.table.cols[attr.col].visible = true;
+                    console.log("*makes visible*");
+                }
+                updateColVisibility();
+                updateLocalPref();
+            }
+        }
+    }
+    contextMenu();
+    function contextMenu() {
+        var currentContextMenu = undefined;
+        function insideElement(e, cls) {
+            var el = e.target;
+            if (el.classList && el.classList.contains(cls)) {
+                return true;
+            } else {
+                while (el = el.parentElement) {
+                    if (el.classList && el.classList.contains(cls)) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+        document.addEventListener("click", function(e) {
+            if (e.target.classList.contains("context-item") && !e.target.classList.contains("arrow")) {
+                contextItemClick(currentContextMenu, e.target);
+            }
+        });
+        document.addEventListener("mousedown", function(e) {
+            if (!insideElement(e, "context-menu")) {
+                closeContextMenu();
+            }
+        });
+        window.addEventListener("keydown", function(e) {
+            if (e.keyCode == 27) { // escape
+                closeContextMenu();
+            }
+        });
+        window.addEventListener("blur", function(e) {
+            closeContextMenu();
+        });
+        document.addEventListener("scroll", function(e) {
+            closeContextMenu();
+        });
+        document.addEventListener("contextmenu", function(e) {
+            if (e.target.previousElementSibling == null && insideElement(e, "cell")) {
+                e.preventDefault();
+                openContextMenu("table-header", e.clientX, e.clientY);
+            } else if (insideElement(e, "context-menu")) {
+                e.preventDefault();
+            } else {
+                closeContextMenu();
+            }
+        });
+        function closeSubmenus() {
+            var submenus = document.querySelectorAll(".context-menu .arrow");
+            for (var i = 0; i < submenus.length; i++) {
+                submenus[i].classList.remove("hover");
+            }
+        }
+        function openContextMenu(type, x, y) {
+            currentContextMenu = type;
+            var ctx = document.querySelector(".context-menu."+type);
+            x += 1;
+            y -= 4;
+            ctx.style.display = "block";
+            if (ctx.clientHeight + y + 10 > window.innerHeight) y = window.innerHeight - 10 - ctx.clientHeight;
+            if (ctx.clientWidth + x + 10 > window.innerWidth) x = window.innerWidth - 10 - ctx.clientWidth;
+            ctx.style.left = x+"px";
+            ctx.style.top = y+"px";
+            var ctxItemPos = 0;
+            document.addEventListener("mouseover", function(e) {
+                if (e.target.parentElement && e.target.parentElement.classList && e.target.parentElement.classList.contains("context-submenu")) {
+                    e.target.parentElement.parentElement.classList.add("hover");
+                } else if (!insideElement(e, "context-submenu") && insideElement(e, "context-menu")) {
+                    closeSubmenus();
+                }
+            });
+            for (var i = 0; i < ctx.children.length; i++) {
+                var itemHeight = ctx.children[i].clientHeight;
+                ctxItemPos += itemHeight;
+                if (ctx.children[i].classList.contains("arrow")) {
+                    var padding = window.getComputedStyle(ctx).paddingTop;
+                    padding = Number(padding.substr(0, padding.length-2));
+                    var submenu = ctx.children[i].children[0];
+                    if (y + ctxItemPos - itemHeight + submenu.clientHeight > window.innerHeight) {
+                        var submenuEndPos = y + ctxItemPos - itemHeight + submenu.clientHeight;
+                        submenu.style.top = window.innerHeight - submenuEndPos - padding - 10+"px";
+                    }
+
+                    if (ctx.clientWidth + ctx.children[i].clientWidth + x + 10 > window.innerWidth) {
+                        ctx.children[i].children[0].style.left = "";
+                        ctx.children[i].children[0].style.right = "100%";
+                    } else {
+                        ctx.children[i].children[0].style.left = "100%";
+                        ctx.children[i].children[0].style.right = "";
+                    }
+                }
+            }
+        }
+        function closeContextMenu() {
+            var ctxs = document.querySelectorAll(".context-menu");
+            for (var i = 0; i < ctxs.length; i++) {
+                ctxs[i].style.display = "none";
+            }
+            closeSubmenus();
         }
     }
 

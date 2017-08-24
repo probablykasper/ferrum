@@ -16,6 +16,16 @@ html
     link(rel='stylesheet', type='text/css', href='/global.css')
   body
     .bg
+    .context-menu.table-header
+        .context-item(data-type="reset") Reset Column Sizes
+        .context-item.arrow Toggle Columns
+            .context-submenu
+                .context-item.checked(data-col="name") Name
+                .context-item.checked(data-col="time") Time
+                .context-item.checked(data-col="artist") Artist
+                .context-item.checked(data-col="album") Album
+                .context-item.checked(data-col="dateAdded") Date Added
+                .context-item.checked(data-col="plays") Plays
     .fg
     main.container.ready
     script(src='/js.cookie-2.1.4.min.js')
