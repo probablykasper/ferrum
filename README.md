@@ -6,7 +6,7 @@ Some (to-be) web/desktop/mobile application for your music library. Oh, and it's
 - [x] Column sorting
 - [x] Column organizing
 - [ ] Figure out how to display account/settings/playlists
-- [ ] Custom context menu
+- [x] Custom context menu
 - [ ] Sidebar
     - [ ] Double-click to resize to min width
 - [ ] Auto-Playlists like iTunes
