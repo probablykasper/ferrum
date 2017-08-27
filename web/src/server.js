@@ -133,8 +133,7 @@ app.post("/register", (req, res) => {
                     var values = {
                         username: username,
                         email: email,
-                        password: hashedPassword,
-                        pref: `{"table":{"cols":{"name":{"width":500000},"time":{"width":"auto"},"artist":{"width":250000},"album": {"width":250000},"dateAdded":{"width":"auto"},"plays":{"width":"auto"}}}}`
+                        password: hashedPassword
                     };
                     db.query("INSERT INTO users SET ?", values, function(err, result) {
                         if (err) console.log(err);
@@ -145,6 +144,25 @@ app.post("/register", (req, res) => {
         } else res.json({ "errors": errors });
     });
 });
+
+app.post("/new-playlist", (req, res) => {
+    if (res.locals.loggedIn) {
+        let name = req.body.name;
+        let description = req.body.description;
+        let errors = {};
+        if (!errors.name && !errors.description) {
+            var values = {
+                userID: res.locals.userID,
+                name: name,
+                description: description
+            }
+            db.query("INSERT INTO playlists SET ?", values, function(err, result) {
+                if (err) console.log(err);
+                else res.json({ "errors": null });
+            });
+        }
+    }
+})
 
 // app.post("/updatepref", (req, res) => {
 //     db.query("UPDATE users SET pref=? WHERE userID = ?", [req.body.pref, res.locals.userID], function(err, result) {

@@ -2,12 +2,12 @@
 Some (to-be) web/desktop/mobile application for your music library. Oh, and it's my first project with Docker. My first project with Node.js as well. Oh, also the first project using GitLab. And the first one where I use Jade. The first one where I build a RESTful API too, in fact.
 
 ## ToDo
-- [ ] Double-click to reset column/sidebar sizes
+- [x] Double-click to reset column/sidebar sizes
 - [x] Column sorting
 - [x] Column organizing
 - [ ] Figure out how to display account/settings/playlists
 - [x] Custom context menu
-- [ ] Sidebar
+- [x] Sidebar
     - [ ] Double-click to resize to min width
 - [ ] Auto-Playlists like iTunes
 - [ ] Import tool

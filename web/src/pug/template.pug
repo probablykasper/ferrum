@@ -27,6 +27,14 @@ html
                 .context-item.checked(data-col="dateAdded") Date Added
                 .context-item.checked(data-col="plays") Plays
     .fg
+        .dialog
+            .createPlaylist
+                .title New Playlist
+                input.name(placeholder="Name")
+                textarea.description(placeholder="Description")
+                .buttons
+                    button.cancel.button-highlight.secondary Cancel
+                    button.create.button-highlight Create
     main.container.ready
     script(src='/js.cookie-2.1.4.min.js')
     script(src='/rangeSlider-0.3.11.min.js')

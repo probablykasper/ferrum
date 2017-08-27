@@ -4,8 +4,8 @@ header.app-bar
     input.search-bar(placeholder="Search", tabindex="0")
     .right
         //- .logout Logout
-        .playlists.button-highlight(tabindex="0")
-        .account.button-highlight(tabindex="0")
+        button.playlists.button-highlight
+        button.account.button-highlight
 main.content
     main.music-page
         header.playlist-header
@@ -35,7 +35,7 @@ aside.sidebar
     .item.category Albums
     .item.category Genres
     .item.category Tags
-    .create-playlist-button(tabindex="0")
+    button.create-playlist
     .header Playlists
     .item.playlist One
     .item.playlist Two
