@@ -23,8 +23,8 @@ services:
             - 80:80
         volumes:
             - ./web/src:/usr/src/app
-        # depends_on:
-        #     - api
+        depends_on:
+            - db
         environment:
             - DATABASE_HOST=db
     phpmyadmin:
@@ -37,3 +37,5 @@ services:
             - 8080:80
         volumes:
             - /sessions
+        depends_on:
+            - db

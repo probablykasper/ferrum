@@ -69,15 +69,16 @@ main.home-page-logged-out
         flex-direction: column
         justify-content: center
         padding: 0px 15px
-        input
+        input, button
             box-sizing: border-box
             width: 100%
             padding: 12px 12px
             background-color: rgba(#FFFFFF, 0.05)
-            box-shadow: $shadow-1
             font-size: 15px
             border-radius: 3px
             height: 42px
+        input
+            box-shadow: $shadow-1
         &.expanded.login .fields input.for-login,
         &.expanded.register .fields input.for-register
             opacity: 1
@@ -117,7 +118,7 @@ main.home-page-logged-out
                     opacity: 1
                     height: 14px
                     padding-top: 4px
-            input
+            input, button
                 animation-name: hide-fields
                 animation-duration: 0s
                 pointer-events: none
@@ -128,9 +129,9 @@ main.home-page-logged-out
                 width: 0px
         .buttons
             display: flex
-            input.login
+            button.login
                 margin-left: 0px
-            input.register
+            button.register
                 margin-right: 0px
-            input
+            button
                 margin: 10px

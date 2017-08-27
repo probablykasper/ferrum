@@ -166,8 +166,11 @@ app.post("/", (req, res) => {
 
 app.post("/music", (req, res) => {
     if (res.locals.loggedIn) {
-        var cols = `name, artist, time, album, DATE_FORMAT(dateAdded, "%e/%c/%y") AS dateAdded, plays`;
-        db.query(`SELECT ${cols} FROM tracks WHERE userID = ?`, [res.locals.userID], function(err, result) {
+        var query = `SELECT name, artist, TIME_FORMAT(SEC_TO_TIME(time), "%i:%S") AS time, album, DATE_FORMAT(dateAdded, "%e/%c/%y") AS dateAdded, plays FROM tracks WHERE userID = ?`;
+        db.query(query, [res.locals.userID], function(err, result) {
+            for (let i = 0; i < result.length; i++) {
+                if (result[i].time.indexOf(0) == "0") result[i].time = result[i].time.substr(1);
+            }
             res.render("music", {
                 tracks: result
             }, function(err, html) {

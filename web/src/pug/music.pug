@@ -1,11 +1,11 @@
 header.app-bar
     .left
-        .logo.link(data-href="/", tabindex="1") Ferrum
-    input.search-bar(placeholder="Search", tabindex="2")
+        .logo.link(data-href="/", tabindex="0") Ferrum
+    input.search-bar(placeholder="Search", tabindex="0")
     .right
         //- .logout Logout
-        .playlists.button-highlight(tabindex="3")
-        .account.button-highlight(tabIndex="4")
+        .playlists.button-highlight(tabindex="0")
+        .account.button-highlight(tabindex="0")
 main.content
     main.music-page
         header.playlist-header
@@ -26,5 +26,17 @@ main.content
             +column("flexible-width", "album", "Album")
             +column("auto-width", "dateAdded", "Date Added")
             +column("auto-width", "plays", "Plays")
-    .sidebar
-        
+aside.sidebar
+    .sidebar-resizer
+    .header Library
+    .item.category Home
+    .item.category Tracks
+    .item.category Artists
+    .item.category Albums
+    .item.category Genres
+    .item.category Tags
+    .create-playlist-button(tabindex="0")
+    .header Playlists
+    .item.playlist One
+    .item.playlist Two
+    .item.playlist Pac

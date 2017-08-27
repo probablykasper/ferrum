@@ -33,6 +33,9 @@ var localPrefDefault = {
             }
         },
         "colOrder": ["name", "time", "artist", "album", "dateAdded", "plays"]
+    },
+    "sidebar": {
+        "width": 200
     }
 }
 if (!localStorage.getItem("localPref")) {
@@ -80,8 +83,8 @@ function clickLink(e) {
 
 function initHome(loggedIn = true) {
     if (!loggedIn) {
-        var login = document.querySelector("input.login");
-        var register = document.querySelector("input.register");
+        var login = document.querySelector("button.login");
+        var register = document.querySelector("button.register");
         var form = document.querySelector(".form");
 
         var username = document.querySelector("input[name='username']");
@@ -173,12 +176,12 @@ function initHome(loggedIn = true) {
         function clickLogin() {
             resetMsgs();
             if (!form.classList.contains("login")) {
-                email.setAttribute("tabIndex", "-1");
-                password2.setAttribute("tabIndex", "-1");
-                username.setAttribute("tabIndex", "1");
-                password.setAttribute("tabIndex", "2");
-                login.setAttribute("tabIndex", "3");
-                register.setAttribute("tabIndex", "4");
+                email.setAttribute("tabindex", "-1");
+                password2.setAttribute("tabindex", "-1");
+                username.setAttribute("tabindex", "0");
+                password.setAttribute("tabindex", "0");
+                login.setAttribute("tabindex", "0");
+                register.setAttribute("tabindex", "0");
 
                 form.classList.remove("register");
                 form.classList.add("login");
@@ -217,12 +220,12 @@ function initHome(loggedIn = true) {
         function clickRegister() {
             resetMsgs();
             if (!form.classList.contains("register")) {
-                username.setAttribute("tabIndex", "1");
-                email.setAttribute("tabIndex", "2");
-                password.setAttribute("tabIndex", "3");
-                password2.setAttribute("tabIndex", "4");
-                login.setAttribute("tabIndex", "5");
-                register.setAttribute("tabIndex", "6");
+                username.setAttribute("tabindex", "0");
+                email.setAttribute("tabindex", "0");
+                password.setAttribute("tabindex", "0");
+                password2.setAttribute("tabindex", "0");
+                login.setAttribute("tabindex", "0");
+                register.setAttribute("tabindex", "0");
 
                 form.classList.remove("login");
                 form.classList.add("register");
@@ -659,6 +662,60 @@ function initMusic() {
             }
             closeSubmenus();
         }
+    }
+
+    sidebar();
+    function sidebar() {
+        var sidebar = document.querySelector("aside.sidebar");
+        var resizer = document.querySelector("aside.sidebar .sidebar-resizer");
+        var mainContent = document.querySelector("main.content");
+        sidebar.style.width = localPref.sidebar.width+"px";
+        mainContent.style.width = "calc(100% - "+localPref.sidebar.width+"px)";
+        var mouseDown, mousePosX, mousePosStartX, oldWidth;
+        resizer.addEventListener("mousedown", function(e) {
+            e.preventDefault();
+            mouseDown = true;
+            mousePosX = e.clientX;
+            mousePosStartX = mousePosX;
+            oldWidth = sidebar.clientWidth;
+        });
+        document.addEventListener("mousemove", function(e) {
+            if (mouseDown) {
+                mousePosX = e.clientX;
+                var widthDifference = mousePosStartX - mousePosX;
+                var newWidth = oldWidth + widthDifference;
+                if (newWidth < 150) newWidth = 150;
+                if (newWidth > window.innerWidth/2) newWidth = Math.floor(window.innerWidth/2);
+                mainContent.style.width = "calc(100% - "+newWidth+"px)";
+                sidebar.style.width = newWidth+"px";
+            }
+        });
+        document.addEventListener("mouseup", function() {
+            if (mouseDown) {
+                mouseDown = false;
+                localPref.sidebar.width = sidebar.clientWidth;
+                updateLocalPref();
+            }
+        });
+        var button = document.querySelector("header.app-bar .playlists");
+        button.addEventListener("click", function() {
+            mainContent.classList.add("transitioning");
+            if (sidebar.classList.contains("hidden")) {
+                mainContent.style.width = "calc(100% - "+localPref.sidebar.width+"px)";
+            } else mainContent.style.width = "calc(100%)";
+            sidebar.classList.toggle("hidden");
+            setTimeout(function() {
+                mainContent.classList.remove("transitioning");
+            }, 150);
+        });
+        // createPlaylistButton
+        var cpb = document.querySelector(".sidebar .create-playlist-button");
+        cpb.addEventListener("click", createPlaylist);
+    }
+    function createPlaylist() {
+        var fg = document.querySelector(".fg");
+        fg.style.backgroundColor = "#000000";
+        fg.style.opacity = "0.3";
     }
 
     // var logout = document.querySelector(".logout");

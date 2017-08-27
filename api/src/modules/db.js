@@ -1,5 +1,4 @@
-var mysql = require("mysql");
-var db = mysql.createConnection({
+var db = require("mysql").createConnection({
     host     : "db",
     port     : "3306",
     user     : "api",

@@ -7,13 +7,13 @@ else
             .fields
                 .success
                 .error.username
-                input.for-login.for-register(type="text", name="username", placeholder="Username", tabIndex="-1")
+                input.for-login.for-register(type="text", name="username", placeholder="Username", tabindex="-1")
                 .error.email
-                input.for-register(type="text", name="email", placeholder="Email", tabIndex="-1")
+                input.for-register(type="text", name="email", placeholder="Email", tabindex="-1")
                 .error.password
-                input.for-login.for-register(type="password", name="password", placeholder="Password", tabIndex="-1")
+                input.for-login.for-register(type="password", name="password", placeholder="Password", tabindex="-1")
                 .error.password2
-                input.for-register(type="password", name="password2", placeholder="Confirm Password", tabIndex="-1")
+                input.for-register(type="password", name="password2", placeholder="Confirm Password", tabindex="-1")
             .buttons
-                input.login(type="submit", value="Login", tabIndex="1")
-                input.register(type="submit", value="Register", tabIndex="2")
+                button.button-highlight.login(tabindex="0") Login
+                button.button-highlight.register(tabindex="0") Register

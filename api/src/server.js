@@ -2,8 +2,8 @@ var express = require("express");
 var app = express();
 
 var graphqlHTTP = require("express-graphql");
-var schema = require("./schema");
-var resolvers = require("./resolvers");
+var schema = require("./modules/schema");
+var resolvers = require("./modules/resolvers");
 app.use("/graphql", graphqlHTTP({
     schema: schema,
     rootValue: resolvers,
