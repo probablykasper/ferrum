@@ -52,6 +52,15 @@ app.use(session({
 // passport
 app.use(passport.initialize());
 
+function extend(obj, src) {
+    for (var key in src) {
+        if (src.hasOwnProperty(key)) obj[key] = src[key];
+    }
+    return obj;
+}
+
+// --------------------- GET ---------------------
+
 app.get("*", (req, res) => {
     if (req.session && req.session.passport && req.session.passport.user) {
         res.locals.loggedIn = true;
@@ -204,29 +213,19 @@ app.post("/add-track-to-playlist", (req, res) => {
 
 // -------------------- pages --------------------
 
-app.post("/", (req, res) => {
-    res.render("home", function(err, html) {
-        res.send({
-            html: html,
-            title: "Ferrum",
-            initFunc: `initHome(${res.locals.loggedIn});`
-        });
-    });
-});
-
-app.post("/music", (req, res) => {
+function resMusicPage(query, queryParams, req, res, pageType, options = {}) {
     if (res.locals.loggedIn) {
-        let query = `SELECT trackID, name, artist, TIME_FORMAT(SEC_TO_TIME(time), "%i:%S") AS time, album, DATE_FORMAT(dateAdded, "%e/%c/%y") AS dateAdded, plays FROM tracks WHERE userID = ?`;
-        db.query(query, [res.locals.userID], function(err, tracks) {
+        db.query(query, queryParams, function(err, tracks) {
             for (let i = 0; i < tracks.length; i++) {
                 if (tracks[i].time.indexOf(0) == "0") tracks[i].time = tracks[i].time.substr(1);
             }
             let query = "SELECT playlistID, name FROM playlists WHERE userID = ?";
             db.query(query, [res.locals.userID], function(err, playlists) {
-                res.render("music", {
+                res.render("music", extend(options, {
                     tracks: tracks,
-                    playlists: playlists
-                }, function(err, html) {
+                    playlists: playlists,
+                    pageType: pageType
+                }), function(err, html) {
                     res.send({
                         html: html,
                         title: "Music",
@@ -244,6 +243,41 @@ app.post("/music", (req, res) => {
             });
         });
     }
+}
+
+app.post("/", (req, res) => {
+    let query = `
+        SELECT
+            trackID,
+            name,
+            artist,
+            TIME_FORMAT(SEC_TO_TIME(time), "%i:%S")
+                AS time,
+            album, DATE_FORMAT(dateAdded, "%e/%c/%y")
+                AS dateAdded,
+            plays
+        FROM tracks
+        WHERE userID = ?`;
+    resMusicPage(query, [res.locals.userID], req, res, "tracks");
+});
+
+app.post("/playlist/:playlistID", (req, res) => {
+    let query = `
+        SELECT
+            tracks.trackID,
+            name,
+            artist,
+            TIME_FORMAT(SEC_TO_TIME(time), "%i:%S")
+                AS time,
+            album,
+            DATE_FORMAT(dateAdded, "%e/%c/%y")
+                AS dateAdded,
+            plays
+        FROM playlistTracks
+        RIGHT JOIN tracks
+            ON playlistTracks.trackID = tracks.trackID
+        WHERE playlistID = ? AND userID = ?`;
+    resMusicPage(query, [req.params.playlistID, res.locals.userID], req, res, "playlist");
 });
 
 // start server

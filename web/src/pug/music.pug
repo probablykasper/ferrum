@@ -21,7 +21,7 @@
     .context-item(data-type="delete") Delete
 header.app-bar
     .left
-        .logo.link(data-href="/", tabindex="0") Ferrum
+        .logo(data-href="/", tabindex="0") Ferrum
     input.search-bar(placeholder="Search", tabindex="0")
     .right
         //- .logout Logout
@@ -29,8 +29,12 @@ header.app-bar
         button.account.button-highlight
 main.content
     main.music-page
-        header.playlist-header
-            img.image(src="/cdn/cover.jpg")
+        if pageType == "playlist"
+            header.playlist-header
+                img.image(src="/cdn/cover.jpg")
+                .playlist-info
+                    p.playlist-name Name
+                    p.playlist-description Description decscriptondecscripton decscriptondecscripton lorem ipsum
         .music-table
             mixin column(colType, colName, colTitle)
                 div(class=`col ${colName} ${colType}`)
@@ -59,4 +63,4 @@ aside.sidebar
     button.create-playlist
     .header Playlists
     each playlist in playlists
-        .item.playlist(data-playlist-id=playlist.playlistID)= playlist.name
+        .item.playlist(data-playlist-id=playlist.playlistID, data-href=`/playlist/${playlist.playlistID}`)= playlist.name

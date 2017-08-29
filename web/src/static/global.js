@@ -75,12 +75,11 @@ function updateLocalPref() {
     localStorage.setItem("localPref", JSON.stringify(localPref));
 }
 
-document.addEventListener("click", clickLink);
-function clickLink(e) {
-    if (e.target.classList.contains("link")) {
+document.addEventListener("click", function(e) {
+    if (e.button == 0 && e.target.dataset.href) {
         changePage(e.target.dataset.href);
     }
-}
+});
 
 function initHome(loggedIn = true) {
     if (!loggedIn) {
@@ -210,7 +209,7 @@ function initHome(loggedIn = true) {
                             if (errors.password == "long") displayErr("password", "You crossed the 100 characters line");
                             if (errors.password == "incorrect") displayErr("password", "You guessed the wrong password");
                         } else {
-                            changePage("/music");
+                            changePage("/");
                         }
                     });
                 }

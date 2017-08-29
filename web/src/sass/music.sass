@@ -121,7 +121,8 @@ aside.sidebar
 main.content
     display: flex
     width: calc(100% - 200px)
-    height: calc(100% - 64px)
+    height: calc(100% - 64px - 20px)
+    padding-top: 20px
     position: absolute
     top: 64px
     z-index: 20
@@ -135,12 +136,23 @@ main.music-page
     overflow-y: scroll
     header.playlist-header
         width: 100%
-        margin: 20px 0px
+        margin-bottom: 20px
+        display: flex
         .image
             background-repeat: no-repeat
             background-size: cover
             width: 200px
             height: 200px
+        .playlist-info
+            display: flex
+            flex-direction: column
+            justify-content: center
+            margin-left: 20px
+            p.playlist-name
+                font-size: 35px
+            p.playlist-description
+                font-size: 15px
+                color: rgba(#FFFFFF, 0.75)
     .music-table.rearranging .col .cell.hover
         background-color: transparent
     .music-table
