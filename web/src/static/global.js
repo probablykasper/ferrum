@@ -310,18 +310,18 @@ function initMusic() {
 
     // ROW HOVER
         document.querySelector(".music-table").addEventListener("mouseover", function(e) {
-            var hasCls = hasClass(e.target, "track-", true);
-            if (hasCls) {
-                var hoveredTrack = document.querySelectorAll(`.music-table .cell.${hasCls}`);
+            if (e.target.dataset.trackId) {
+                var id = e.target.dataset.trackId;
+                var hoveredTrack = document.querySelectorAll('.music-table .cell[data-track-id="'+id+'"]');
                 for (var i = 0; i < hoveredTrack.length; i++) {
                     hoveredTrack[i].classList.add("hover");
                 }
             }
         });
         document.querySelector(".music-table").addEventListener("mouseout", function(e) {
-            var hasCls = hasClass(e.target, "track-", true);
-            if (hasCls) {
-                var hoveredTrack = document.querySelectorAll(`.music-table .cell.${hasCls}`);
+            if (e.target.dataset.trackId) {
+                var id = e.target.dataset.trackId;
+                var hoveredTrack = document.querySelectorAll('.music-table .cell[data-track-id="'+id+'"]');
                 for (var i = 0; i < hoveredTrack.length; i++) {
                     hoveredTrack[i].classList.remove("hover");
                 }
@@ -536,10 +536,10 @@ function initMusic() {
         }
     }
 
-    function contextItemClick(context, element) {
-        var item = element.innerHTML;
-        var attr = element.dataset;
-        var cl = element.classList;
+    function contextItemClick(context, ctxElement, element) {
+        var item = ctxElement.innerHTML;
+        var attr = ctxElement.dataset;
+        var cl = ctxElement.classList;
         if (context == "table-header") {
             if (attr.col) {
                 if (localPref.table.cols[attr.col].visible) {
@@ -559,12 +559,32 @@ function initMusic() {
                 updateColWitdthPref(true);
                 updateColWitdthPref();
             }
+        } else if (context == "track") {
+            if (attr.type == "play") {
+                console.log("play");
+            } else if (attr.type == "play-next") {
+                console.log("play next");
+            } else if (attr.playlistId) {
+                var req =
+                "trackID="+element.dataset.trackId+
+                "&playlistID="+ctxElement.dataset.playlistId;
+                xhr(req, "/add-track-to-playlist", function(res) {
+                    var res = JSON.parse(res);
+                    if (res.errors) {
+                        console.log(res.errors);
+                    } else {
+                        console.log("added");
+                        closeDialog();
+                    }
+                });
+            }
         }
     }
 
     contextMenu();
     function contextMenu() {
         var currentContextMenu = undefined;
+        var clickedContextElement = undefined;
         function insideElement(e, cls) {
             var el = e.target;
             if (el.classList && el.classList.contains(cls)) {
@@ -578,9 +598,22 @@ function initMusic() {
             }
             return false;
         }
+
+        document.addEventListener("contextmenu", function(e) {
+            var prevent = true;
+            if (e.target.previousElementSibling == null && insideElement(e, "cell")) {
+                openContextMenu("table-header", e.clientX, e.clientY, e.target);
+            } else if (insideElement(e, "cell")) {
+                openContextMenu("track", e.clientX, e.clientY, e.target);
+            } else if (!insideElement(e, "context-menu")) {
+                prevent = false;
+                closeContextMenu();
+            }
+            if (prevent) e.preventDefault();
+        });
         document.addEventListener("click", function(e) {
             if (e.target.classList.contains("context-item") && !e.target.classList.contains("arrow")) {
-                contextItemClick(currentContextMenu, e.target);
+                contextItemClick(currentContextMenu, e.target, clickedContextElement);
                 closeContextMenu();
             }
         });
@@ -600,24 +633,15 @@ function initMusic() {
         document.addEventListener("scroll", function(e) {
             closeContextMenu();
         });
-        document.addEventListener("contextmenu", function(e) {
-            if (e.target.previousElementSibling == null && insideElement(e, "cell")) {
-                e.preventDefault();
-                openContextMenu("table-header", e.clientX, e.clientY);
-            } else if (insideElement(e, "context-menu")) {
-                e.preventDefault();
-            } else {
-                closeContextMenu();
-            }
-        });
         function closeSubmenus() {
             var submenus = document.querySelectorAll(".context-menu .arrow");
             for (var i = 0; i < submenus.length; i++) {
                 submenus[i].classList.remove("hover");
             }
         }
-        function openContextMenu(type, x, y) {
+        function openContextMenu(type, x, y, element) {
             currentContextMenu = type;
+            clickedContextElement = element;
             var ctx = document.querySelector(".context-menu."+type);
             x += 1;
             y -= 4;
@@ -737,10 +761,22 @@ function initMusic() {
             "name="+cpName.value+
             "&description="+cpDescription.value;
             xhr(req, "/new-playlist", function(res) {
-                var errors = JSON.parse(res).errors;
-                if (errors) {
-                    console.log(errors);
+                var res = JSON.parse(res);
+                if (res.errors) {
+                    console.log(res.errors);
                 } else {
+                    var sidebarItem = document.createElement("div");
+                    sidebarItem.classList.add("item", "playlist");
+                    sidebarItem.setAttribute("data-playlist-id", res.playlistID);
+                    sidebarItem.innerHTML = cpName.value;
+                    document.querySelector("aside.sidebar").append(sidebarItem);
+
+                    var ctxItem = document.createElement("div");
+                    ctxItem.classList.add("context-item");
+                    ctxItem.setAttribute("data-playlist-id", res.playlistID);
+                    ctxItem.innerHTML = cpName.value;
+                    document.querySelector('.context-menu.track [data-type="add-to-playlist"]').append(ctxItem);
+
                     closeDialog();
                 }
             });

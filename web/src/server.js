@@ -151,24 +151,56 @@ app.post("/new-playlist", (req, res) => {
         let description = req.body.description;
         let errors = {};
         if (!errors.name && !errors.description) {
-            var values = {
+            let values = {
                 userID: res.locals.userID,
                 name: name,
                 description: description
             }
-            db.query("INSERT INTO playlists SET ?", values, function(err, result) {
+            db.query("INSERT INTO playlists SET ?", [values], function(err, result) {
                 if (err) console.log(err);
-                else res.json({ "errors": null });
+                else res.json({ "errors": null, "playlistID": result.insertId });
             });
         }
     }
-})
+});
 
-// app.post("/updatepref", (req, res) => {
-//     db.query("UPDATE users SET pref=? WHERE userID = ?", [req.body.pref, res.locals.userID], function(err, result) {
-//         res.json({ "errors": null });
-//     });
-// });
+app.post("/add-track-to-playlist", (req, res) => {
+    if (res.locals.loggedIn) {
+        let trackID = req.body.trackID;
+        let playlistID = req.body.playlistID;
+        let errors = {};
+        if (!errors.trackID && !errors.description) {
+            let values = {
+                playlistID: playlistID,
+                trackID: trackID
+            }
+            let checkTrackOwner = new Promise((resolve, reject) => {
+                let query = "SELECT * FROM tracks WHERE userID = ? AND trackID = ?";
+                db.query(query, [res.locals.userID, trackID], function(err, result) {
+                    if (err) reject(err);
+                    else if (result.length == 1) resolve();
+                    else if (result.length == 0) reject("noPlaylistResponse");
+                });
+            });
+            let checkPlaylistOwner = new Promise((resolve, reject) => {
+                let query = "SELECT * FROM playlists WHERE userID = ? AND playlistID = ?";
+                db.query(query, [res.locals.userID, playlistID], function(err, result) {
+                    if (err) reject(err);
+                    else if (result.length == 1) resolve();
+                    else if (result.length == 0) reject("noPlaylistResponse");
+                });
+            });
+            Promise.all([checkTrackOwner, checkPlaylistOwner]).then(() => {
+                db.query("INSERT INTO playlistTracks SET ?", [values], function(err, result) {
+                    if (err) console.log(err);
+                    res.json({ "errors": null });
+                });
+            }).catch((err) => {
+                res.json({ "errors": true });
+            });
+        }
+    }
+});
 
 // -------------------- pages --------------------
 
@@ -184,18 +216,22 @@ app.post("/", (req, res) => {
 
 app.post("/music", (req, res) => {
     if (res.locals.loggedIn) {
-        var query = `SELECT name, artist, TIME_FORMAT(SEC_TO_TIME(time), "%i:%S") AS time, album, DATE_FORMAT(dateAdded, "%e/%c/%y") AS dateAdded, plays FROM tracks WHERE userID = ?`;
-        db.query(query, [res.locals.userID], function(err, result) {
-            for (let i = 0; i < result.length; i++) {
-                if (result[i].time.indexOf(0) == "0") result[i].time = result[i].time.substr(1);
+        let query = `SELECT trackID, name, artist, TIME_FORMAT(SEC_TO_TIME(time), "%i:%S") AS time, album, DATE_FORMAT(dateAdded, "%e/%c/%y") AS dateAdded, plays FROM tracks WHERE userID = ?`;
+        db.query(query, [res.locals.userID], function(err, tracks) {
+            for (let i = 0; i < tracks.length; i++) {
+                if (tracks[i].time.indexOf(0) == "0") tracks[i].time = tracks[i].time.substr(1);
             }
-            res.render("music", {
-                tracks: result
-            }, function(err, html) {
-                res.send({
-                    html: html,
-                    title: "Music",
-                    initFunc: "initMusic();"
+            let query = "SELECT playlistID, name FROM playlists WHERE userID = ?";
+            db.query(query, [res.locals.userID], function(err, playlists) {
+                res.render("music", {
+                    tracks: tracks,
+                    playlists: playlists
+                }, function(err, html) {
+                    res.send({
+                        html: html,
+                        title: "Music",
+                        initFunc: "initMusic();"
+                    });
                 });
             });
         });

@@ -4,15 +4,22 @@
     box-shadow: $shadow-3
     padding: 8px 0px
     min-width: 140px
+    max-width: 350px
 .context-menu
     @include context-menu
+    white-space: nowrap
     user-select: none
     display: none
     z-index: 70
     position: fixed
     font-size: 14px
+    .context-item:not(.arrow)
+        overflow: hidden
+        text-overflow: ellipsis
     .context-item
-        padding: 10px 30px
+        padding: 0px 30px
+        height: 36px
+        line-height: 36px
         cursor: default
         &.hover, &:hover
             background-color: rgba(#FFFFFF, 0.05)
@@ -41,4 +48,4 @@
     .context-spacer
         margin: 6px 0px
         height: 1px
-        background-color: rgba(#FFFFFF, 0.10)
+        background-color: rgba(#FFFFFF, 0.05)
