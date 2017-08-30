@@ -543,10 +543,8 @@ function initMusic() {
             if (attr.col) {
                 if (localPref.table.cols[attr.col].visible) {
                     localPref.table.cols[attr.col].visible = false;
-                    console.log("*makes invisible*");
                 } else {
-                    localPref.table.cols[attr.col].visible = true;
-                    console.log("*makes visible*");
+                    localPref.table.cols[attr.col].visible = true;''
                 }
                 updateColVisibility();
                 updateLocalPref();
