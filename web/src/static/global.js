@@ -557,11 +557,7 @@ function initMusic() {
                 updateColWitdthPref();
             }
         } else if (context == "track") {
-            if (attr.type == "play") {
-                console.log("play");
-            } else if (attr.type == "play-next") {
-                console.log("play next");
-            } else if (attr.playlistId) {
+            if (attr.playlistId) {
                 var req =
                 "trackID="+element.dataset.trackId+
                 "&playlistID="+ctxElement.dataset.playlistId;
@@ -571,6 +567,19 @@ function initMusic() {
                         console.log(res.errors);
                     } else {
                         console.log("added");
+                        closeDialog();
+                    }
+                });
+            }
+        } else if (context == "playlist") {
+            if (attr.type == "delete") {
+                var req = "playlistID="+ctxElement.dataset.playlistId;
+                xhr(req, "/delete-playlist", function(res) {
+                    var res = JSON.parse(res);
+                    if (res.errors) {
+                        console.log(res.errors);
+                    } else {
+                        changePage("/");
                         closeDialog();
                     }
                 });
@@ -595,18 +604,28 @@ function initMusic() {
             }
             return false;
         }
+        function insideDataset(e, dataset) {
+            var el = e.target;
+            if (el.dataset && el.dataset.hasOwnProperty(dataset)) {
+                return el.dataset[dataset];
+            } else {
+                while (el = el.parentElement) {
+                    if (el.dataset && el.dataset.hasOwnProperty(dataset)) {
+                        return el.dataset[dataset];
+                    }
+                }
+            }
+            return false;
+        }
 
         document.addEventListener("contextmenu", function(e) {
-            var prevent = true;
-            if (e.target.previousElementSibling == null && insideElement(e, "cell")) {
-                openContextMenu("table-header", e.clientX, e.clientY, e.target);
-            } else if (insideElement(e, "cell")) {
-                openContextMenu("track", e.clientX, e.clientY, e.target);
-            } else if (!insideElement(e, "context-menu")) {
-                prevent = false;
+            var contextMenu = insideDataset(e, "contextMenu");
+            if (contextMenu) {
+                e.preventDefault();
+                openContextMenu(contextMenu, e.clientX, e.clientY, e.target);
+            } else {
                 closeContextMenu();
             }
-            if (prevent) e.preventDefault();
         });
         document.addEventListener("click", function(e) {
             if (e.target.classList.contains("context-item") && !e.target.classList.contains("arrow")) {
@@ -614,22 +633,22 @@ function initMusic() {
                 closeContextMenu();
             }
         });
-        document.addEventListener("mousedown", function(e) {
-            if (!insideElement(e, "context-menu")) {
+        (function() { // triggers to close context menu
+            document.addEventListener("mousedown", function(e) {
+                if (!insideElement(e, "context-menu")) closeContextMenu();
+            });
+            window.addEventListener("keydown", function(e) {
+                if (e.keyCode == 27) { // escape
+                    closeContextMenu();
+                }
+            });
+            window.addEventListener("blur", function(e) {
                 closeContextMenu();
-            }
-        });
-        window.addEventListener("keydown", function(e) {
-            if (e.keyCode == 27) { // escape
+            });
+            document.addEventListener("scroll", function(e) {
                 closeContextMenu();
-            }
-        });
-        window.addEventListener("blur", function(e) {
-            closeContextMenu();
-        });
-        document.addEventListener("scroll", function(e) {
-            closeContextMenu();
-        });
+            });
+        })();
         function closeSubmenus() {
             var submenus = document.querySelectorAll(".context-menu .arrow");
             for (var i = 0; i < submenus.length; i++) {
@@ -768,11 +787,14 @@ function initMusic() {
                     sidebarItem.innerHTML = cpName.value;
                     document.querySelector("aside.sidebar").append(sidebarItem);
 
-                    var ctxItem = document.createElement("div");
-                    ctxItem.classList.add("context-item");
-                    ctxItem.setAttribute("data-playlist-id", res.playlistID);
-                    ctxItem.innerHTML = cpName.value;
-                    document.querySelector('.context-menu.track [data-type="add-to-playlist"]').append(ctxItem);
+                    var ctxMenus = document.querySelectorAll('.context-menu [data-type="add-to-playlist"]');
+                    for (var i = 0; i < ctxMenus.length; i++) {
+                        var ctxItem = document.createElement("div");
+                        ctxItem.classList.add("context-item");
+                        ctxItem.setAttribute("data-playlist-id", res.playlistID);
+                        ctxItem.innerHTML = cpName.value;
+                        ctxMenus[i].append(ctxItem);
+                    }
 
                     closeDialog();
                 }

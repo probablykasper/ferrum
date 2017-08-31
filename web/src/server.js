@@ -59,7 +59,7 @@ function extend(obj, src) {
     return obj;
 }
 
-// --------------------- GET ---------------------
+// --------------------- SETUP ---------------------
 
 app.get("*", (req, res) => {
     if (req.session && req.session.passport && req.session.passport.user) {
@@ -72,8 +72,6 @@ app.get("*", (req, res) => {
     });
 });
 
-// -------------------- POSTs --------------------
-
 app.post("*", (req, res, next) => {
     if (req.session && req.session.passport && req.session.passport.user) {
         res.locals.loggedIn = true;
@@ -81,6 +79,8 @@ app.post("*", (req, res, next) => {
     } else res.locals.loggedIn = false;
     next();
 });
+
+// -------------------- POSTs --------------------
 
 app.post("/login", (req, res) => {
     let username = req.body.username;
@@ -170,7 +170,28 @@ app.post("/new-playlist", (req, res) => {
                 else res.json({ "errors": null, "playlistID": result.insertId });
             });
         }
-    }
+    } else res.json({ "errors": 83623 });
+});
+
+app.post("/delete-playlist", (req, res) => {
+    if (res.locals.loggedIn) {
+        let playlistID = req.body.playlistID;
+        console.log(req.body);
+        let errors = {};
+        if (!errors.playlistID) {
+            let query = "DELETE FROM playlists WHERE playlistID = ? AND userID = ?";
+            db.query(query, [playlistID, res.locals.userID], function(err, result) {
+                if (err) {
+                    res.json({ "errors": true });
+                    console.log(err);
+                } else if (result[0]) {
+                    res.json({ "errors": true });
+                } else {
+                    res.json({ "errors": null });
+                }
+            });
+        }
+    } else res.json({ "errors": 49102 });
 });
 
 app.post("/add-track-to-playlist", (req, res) => {
@@ -213,23 +234,25 @@ app.post("/add-track-to-playlist", (req, res) => {
 
 // -------------------- pages --------------------
 
-function resMusicPage(query, queryParams, req, res, pageType, options = {}) {
+function resMusicPage(req, res, query, queryParams, optionsCallback) {
     if (res.locals.loggedIn) {
-        db.query(query, queryParams, function(err, tracks) {
-            for (let i = 0; i < tracks.length; i++) {
-                if (tracks[i].time.indexOf(0) == "0") tracks[i].time = tracks[i].time.substr(1);
+        db.query(query, queryParams, function(err, tracks, columns) {
+            if (tracks[0] && tracks[0].time != undefined) {
+                for (let i = 0; i < tracks.length; i++) {
+                    if (tracks[i].time.indexOf(0) == "0") tracks[i].time = tracks[i].time.substr(1);
+                }
             }
             let query = "SELECT playlistID, name FROM playlists WHERE userID = ?";
-            db.query(query, [res.locals.userID], function(err, playlists) {
-                res.render("music", extend(options, {
-                    tracks: tracks,
-                    playlists: playlists,
-                    pageType: pageType
-                }), function(err, html) {
-                    res.send({
-                        html: html,
-                        title: "Music",
-                        initFunc: "initMusic();"
+            db.query(query, res.locals.userID, function(err, playlists) {
+                if (err) console.log(err);
+                optionsCallback(req, res, tracks, playlists, (variables) => {
+                    res.render("music", variables, function(err, html) {
+                        if (err) console.log(err);
+                        res.send({
+                            html: html,
+                            title: "Music",
+                            initFunc: "initMusic();"
+                        });
                     });
                 });
             });
@@ -258,7 +281,13 @@ app.post("/", (req, res) => {
             plays
         FROM tracks
         WHERE userID = ?`;
-    resMusicPage(query, [res.locals.userID], req, res, "tracks");
+    resMusicPage(req, res, query, res.locals.userID, (req, res, tracks, playlists, callback) => {
+        callback({
+            tracks: tracks,
+            playlists: playlists,
+            pageType: "music"
+        });
+    });
 });
 
 app.post("/playlist/:playlistID", (req, res) => {
@@ -277,7 +306,17 @@ app.post("/playlist/:playlistID", (req, res) => {
         RIGHT JOIN tracks
             ON playlistTracks.trackID = tracks.trackID
         WHERE playlistID = ? AND userID = ?`;
-    resMusicPage(query, [req.params.playlistID, res.locals.userID], req, res, "playlist");
+    resMusicPage(req, res, query, [req.params.playlistID, res.locals.userID], (req, res, tracks, playlists, callback) => {
+        let query = "SELECT playlistID, name, description FROM playlists WHERE playlistID = ? AND userID = ?";
+        db.query(query, [req.params.playlistID, res.locals.userID], function(err, playlist) {
+            callback({
+                tracks: tracks,
+                playlists: playlists,
+                pageType: "playlist",
+                playlist: playlist[0]
+            });
+        });
+    });
 });
 
 // start server
