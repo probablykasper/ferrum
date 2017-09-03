@@ -176,7 +176,6 @@ app.post("/new-playlist", (req, res) => {
 app.post("/delete-playlist", (req, res) => {
     if (res.locals.loggedIn) {
         let playlistID = req.body.playlistID;
-        console.log(req.body);
         let errors = {};
         if (!errors.playlistID) {
             let query = "DELETE FROM playlists WHERE playlistID = ? AND userID = ?";

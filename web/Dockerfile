@@ -1,4 +1,4 @@
-FROM node:6.11.2
+FROM node:8.4
 RUN npm install -g  nodemon@1.11.0
 RUN npm install     pug@2.0.0-rc.3
 RUN npm install     mysql@2.14.1
