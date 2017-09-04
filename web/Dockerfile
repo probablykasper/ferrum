@@ -25,4 +25,4 @@ WORKDIR /usr/src/app
 
 COPY src .
 
-CMD ["nodemon", "server.js"]
+CMD ["npm", "run", "start"]

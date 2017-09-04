@@ -6,7 +6,9 @@
     "main": "server.js",
 
     "scripts": {
-        "start": "nodemon server.js"
+        "start": "npm run nodemon && npm run gulp",
+        "nodemon": "nodemon server.js",
+        "gulp": "gulp"
     },
     "dependencies": {
         "nodemon": "1.11.0",
@@ -31,6 +33,6 @@
         "connect-flash": "0.1.1",
         "cookie-parser": "1.4.3",
         "express-handlebars": "3.0.0",
-        "passport-http": "0.3.0",
+        "passport-http": "0.3.0"
     }
 }

@@ -1,0 +1,33 @@
+doctype html
+html
+  head
+    title Ferrum
+    link(href='https://fonts.googleapis.com/css?family=Nunito:400,500', rel='stylesheet')
+    // favicons
+    link(rel='apple-touch-icon', sizes='180x180', href='/apple-touch-icon.png')
+    link(rel='icon', type='image/png', sizes='32x32', href='/favicon-32x32.png')
+    link(rel='icon', type='image/png', sizes='16x16', href='/favicon-16x16.png')
+    link(rel='manifest', href='/manifest.json')
+    link(rel='mask-icon', href='/safari-pinned-tab.svg', color='#5bbad5')
+    link(rel='shortcut icon', href='/favicon.ico')
+    meta(name='msapplication-config', content='/browserconfig.xml')
+    meta(name='theme-color', content='#ffffff')
+    // page css
+    link(rel='stylesheet', type='text/css', href='/global.css')
+  body
+    .bg
+    .fg
+        .dialog
+            .createPlaylist
+                .title New Playlist
+                input.name(placeholder="Name")
+                textarea.description(placeholder="Description")
+                .buttons
+                    button.cancel.button-highlight.secondary Cancel
+                    button.create.button-highlight Create
+    main.container.ready
+    script(src='/js.cookie-2.1.4.min.js')
+    script(src='/rangeSlider-0.3.11.min.js')
+    script
+        | var path = "!{path}";
+    script(src='/global.js')

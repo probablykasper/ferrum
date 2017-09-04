@@ -1,0 +1,19 @@
+if loggedIn
+    main.home-page
+else
+    main.home-page-logged-out
+        p.logo Ferrum
+        .form
+            .fields
+                .success
+                .error.username
+                input.for-login.for-register(type="text", name="username", placeholder="Username", tabindex="-1")
+                .error.email
+                input.for-register(type="text", name="email", placeholder="Email", tabindex="-1")
+                .error.password
+                input.for-login.for-register(type="password", name="password", placeholder="Password", tabindex="-1")
+                .error.password2
+                input.for-register(type="password", name="password2", placeholder="Confirm Password", tabindex="-1")
+            .buttons
+                button.button-highlight.login(tabindex="0") Login
+                button.button-highlight.register(tabindex="0") Register
