@@ -50,7 +50,15 @@ app.use(session({
 app.use(passport.initialize());
 
 // set up routes
-routes(app);
+    // SETUP
+    app.get("*", routes.getSetup);
+    app.post("*", routes.postSetup);
+    // PAGES
+    app.post("/", routes.home);
+    // POSTs
+    app.post("/login", routes.login);
+    app.post("/register", routes.register);
+    app.post("/logout", routes.logout);
 
 // start server
 app.listen(80, function() {

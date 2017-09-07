@@ -1,0 +1,71 @@
+.context-menu.table-header
+    .context-item(data-type="reset") Reset Column Widths
+    .context-item.arrow Toggle Columns
+        .context-submenu
+            .context-item.checked(data-col="name") Name
+            .context-item.checked(data-col="time") Time
+            .context-item.checked(data-col="artist") Artist
+            .context-item.checked(data-col="album") Album
+            .context-item.checked(data-col="dateAdded") Date Added
+            .context-item.checked(data-col="plays") Plays
+.context-menu.track
+    .context-item(data-type="play") Play
+    .context-item(data-type="play-next") Play Next
+    .context-spacer
+    .context-item.arrow Add to Playlist
+        .context-submenu(data-type="add-to-playlist")
+            //- each playlist in playlists
+            //-     .context-item(data-playlist-id=playlist.playlistID)= playlist.name
+    .context-spacer
+    .context-item(data-type="edit") Edit
+    .context-item(data-type="delete") Delete
+if pageType == "playlist"
+    .context-menu.playlist
+        .context-item(data-type="play") Play
+        .context-item(data-type="play-next") Play Next
+        .context-spacer
+        .context-item.arrow Add to Playlist
+            .context-submenu(data-type="add-to-playlist")
+                //- each playlist in playlists
+                //-     .context-item(data-playlist-id=playlist.playlistID)= playlist.name
+        .context-spacer
+        .context-item(data-type="edit") Edit
+        .context-item(data-type="delete", data-playlist-id=playlist.playlistID) Delete
+header.app-bar
+    .left
+        .logo(data-href="/", tabindex="0") Ferrum
+    input.search-bar(placeholder="Search", tabindex="0")
+    .right
+        //- .logout Logout
+        button.playlists.button-highlight
+        button.account.button-highlight
+main.content
+    main.music-page
+        if pageType == "playlist"
+            header.playlist-header(data-context-menu="playlist")
+                img.image(src="/cdn/cover.jpg")
+                .playlist-info
+                    p.playlist-name= playlist.name
+                    p.playlist-description= playlist.description
+        .music-table
+            //- mixin column(colType, colName, colTitle)
+            //-     div(class=`col ${colName} ${colType}`)
+            //-         div(class="cell "+colName, data-context-menu="table-header")
+            //-             span.col-span= colTitle
+            //-             div(class="col-resizer "+colName)
+            //-                 .line
+            //-             .sort-icon
+            //-         each track, index in tracks
+            //-             div(class=`cell ${colName} track-${index+1}`, data-track-id=track.trackID, data-context-menu="track")= track[colName]
+            //- +column("flexible-width", "name", "Name")
+            //- +column("auto-width", "time", "Time")
+            //- +column("flexible-width", "artist", "Artist")
+            //- +column("flexible-width", "album", "Album")
+            //- +column("auto-width", "dateAdded", "Date Added")
+            //- +column("auto-width", "plays", "Plays")
+aside.sidebar
+    .sidebar-resizer
+    button.create-playlist
+    .header Playlists
+    //- each playlist in playlists
+    //-     .item.playlist(data-playlist-id=playlist.playlistID, data-href=`/playlist/${playlist.playlistID}`)= playlist.name

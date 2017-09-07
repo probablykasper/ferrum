@@ -1,0 +1,132 @@
+html
+    body
+        margin: 0px
+        font-family: "Nunito", Arial, sans-serif
+        color: #FFFFFF
+        font-size: 18px
+    p, h1, h2, h3, h4, h5, h6
+        margin: 0px
+        font-weight: normal
+    .metadata, .md
+        display: none
+    h1
+        font-size: 50px
+    h2
+        font-size: 35px
+    h3
+        font-size: 30px
+    h4
+        font-size: 25px
+    h5
+        font-size: 20px
+    a, a:link, a:visited, a:link:active, a:visited:active
+        text-decoration: none
+        outline: none
+        color: white
+    img
+        display: block
+    input:focus, button:focus, textarea:focus, div, p
+        outline: none
+    input, textarea, button
+        color: #FFFFFF
+        font-family: "Roboto", Arial, sans-serif
+        border: none
+        font-size: 15px
+    input[type="range"]
+        display: none
+    .flex-row
+        display: flex
+        justify-content: center
+        flex-direction: row
+        width: 100%
+    .flex-col
+        display: flex
+        justify-content: center
+        flex-direction: column
+        height: 100%
+    .invisible
+        visibility: none
+.bg
+    background: linear-gradient(to bottom right, #192A3D, #181D28)
+    width: 100%
+    height: 100%
+    position: fixed
+    z-index: 5
+.fg
+    width: 100%
+    height: 100%
+    position: fixed
+    z-index: 80
+    transition: background-color $transition-long-out, opacity $transition-long-out
+    background-color: transparent
+    pointer-events: none
+    opacity: 0
+    &.visible
+        transition: background-color $transition-long-in, opacity $transition-long-in
+        background-color: rgba(#000000, 0.30)
+        pointer-events: all
+        opacity: 1
+        .dialog
+            transition: transform $transition-long-in
+            transform: translate(-50%, -50%)
+    .dialog
+        position: absolute
+        top: 50%
+        left: 50%
+        background-color: #182432
+        box-shadow: $shadow-4
+        border-radius: 3px
+        transform: translate(-50%, 101%)
+        transition: transform $transition-long-out
+        transform: translate(-50%, 0%)
+        > div
+            display: none
+            padding: 20px
+        .createPlaylist
+            width: 500px
+            .title
+                margin-bottom: 20px
+            input, textarea, button
+                box-sizing: border-box
+                width: 100%
+                padding: 12px 12px
+                font-size: 15px
+                border-radius: 3px
+                margin-bottom: 20px
+            input.name
+                height: 42px
+                box-shadow: $shadow-1
+                background-color: rgba(#FFFFFF, 0.05)
+            textarea.description
+                height: calc(42px * 3)
+                resize: none
+                display: block
+                box-shadow: $shadow-1
+                background-color: rgba(#FFFFFF, 0.05)
+            .buttons
+                display: flex
+                justify-content: flex-end
+            button
+                margin-bottom: 0px
+                width: 100px
+                margin-left: 20px
+.button-highlight
+    cursor: pointer
+    border-radius: 3px
+    background-color: rgba(#FFFFFF, 0.05)
+    box-shadow: $shadow-1
+    width: 100px
+    transition: background-color $transition-short, box-shadow $transition-short
+    &.secondary:focus
+        box-shadow: $shadow-4
+        &:active
+            background-color: rgba(#FFFFFF, 0.025)
+    &:focus
+        box-shadow: $shadow-4
+        &:active
+            background-color: rgba(#FFFFFF, 0.10)
+            box-shadow: $shadow-4
+    &.secondary
+        background-color: transparent
+        box-shadow: none
+        width: auto
