@@ -453,10 +453,16 @@ function contextMenu() {
 // MUSIC PAGES
 function insertPlaylists(playlists, deleteOld) {
     if (deleteOld) {
-        items = document.querySelectorAll("aside.sidebar .item.playlist");
+        var items = document.querySelectorAll('aside.sidebar .item.playlist');
         for (var i = 0; i < items.length; i++) {
             items[i].parentElement.removeChild(items[i]);
         }
+        var selector = '[data-type="add-to-playlist"]';
+        var contextItems = document.querySelectorAll(selector);
+        for (var i = 0; i < contextItems.length; i++) {
+            contextItems[i].innerHTML = "";
+        }
+
     }
     var sidebar = document.querySelector("aside.sidebar");
     var ctxMenus = document.querySelectorAll('.context-menu [data-type="add-to-playlist"]');
