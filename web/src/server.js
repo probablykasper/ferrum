@@ -55,11 +55,13 @@ app.use(passport.initialize());
     app.post("*", routes.postSetup);
     // PAGES
     app.post("/", routes.home);
+    app.post("/playlist/:playlistId", routes.playlist);
     // POSTs
     app.post("/login", routes.login);
     app.post("/register", routes.register);
     app.post("/logout", routes.logout);
     app.post("/add-track-to-playlist", routes.addTrackToPlaylist);
+    app.post("/remove-track-from-playlist", routes.removeTrackFromPlaylist);
 
 // start server
 app.listen(80, function() {

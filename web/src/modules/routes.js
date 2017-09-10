@@ -66,6 +66,52 @@ module.exports.home = (req, res) => {
     }
 }
 
+module.exports.playlist = (req, res) => {
+    if (res.locals.loggedIn) {
+        let playlistQuery = `
+            SELECT
+                playlistId,
+                name
+            FROM playlists
+            WHERE userId = ?`;
+        db.query(playlistQuery, res.locals.userId, (err, playlists) => {
+            let tracksQuery = `
+                SELECT
+                    tracks.trackId,
+                    name,
+                    artist,
+                    TIME_FORMAT(SEC_TO_TIME(time), "%i:%S")
+                        AS time,
+                    album,
+                    DATE_FORMAT(dateAdded, "%e/%c/%y")
+                        AS dateAdded,
+                    plays
+                FROM playlistTracks
+                RIGHT JOIN tracks
+                    ON playlistTracks.trackId = tracks.trackId
+                WHERE playlistId = ? AND userId = ?`;
+            db.query(tracksQuery, [req.params.playlistId, res.locals.userId], (err, tracks) => {
+                let query = `
+                    SELECT
+                        playlistId,
+                        name,
+                        description
+                    FROM
+                        playlists
+                    WHERE playlistId = ? AND userId = ?`;
+                db.query(query, [req.params.playlistId, res.locals.userId], function(err, playlist) {
+                    let response = {
+                        playlists: playlists,
+                        tracks: tracks,
+                        playlist: playlist[0]
+                    }
+                    res.send(JSON.stringify(response));
+                });
+            });
+        });
+    }
+}
+
 // -------------------- POSTs --------------------
 
 module.exports.login = (req, res) => {
@@ -174,6 +220,38 @@ module.exports.addTrackToPlaylist = (req, res) => {
                     } else {
                         res.json({ "errors": null });
                     }
+                });
+            }).catch((err) => {
+                console.log(err);
+                res.json({ "errors": true });
+            });
+        }
+    }
+}
+
+module.exports.removeTrackFromPlaylist = (req, res) => {
+    if (res.locals.loggedIn) {
+        let trackId = req.body.trackId;
+        let playlistId = req.body.playlistId;
+        let errors = {};
+        if (!errors.trackId && !errors.description) {
+            let checkPlaylistOwner = new Promise((resolve, reject) => {
+                let query = "SELECT * FROM playlists WHERE userId = ? AND playlistId = ?";
+                db.query(query, [res.locals.userId, playlistId], function(err, result) {
+                    if (err) reject(err);
+                    else if (result.length == 1) resolve();
+                    else if (result.length == 0) reject("noTrackResponse");
+                });
+            });
+            let values = {
+                playlistId: playlistId,
+                trackId: trackId
+            };
+            Promise.all([checkPlaylistOwner]).then(() => {
+                let deleteQuery = "DELETE FROM playlistTracks WHERE playlistId = ? AND trackId = ?";
+                db.query(deleteQuery, [playlistId, trackId], function(err, result) {
+                    if (err) console.log(err);
+                    else res.json({ "errors": null });
                 });
             }).catch((err) => {
                 console.log(err);

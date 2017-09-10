@@ -88,9 +88,12 @@ function changePage(path, pushState = true) {
 }
 function initPage(path, res) {
     window.trackCount = 0;
-    if      (path == "/") initHome(res);
-    // else if (path == "/404") init404();
-
+    page = path;
+    if (loggedIn && (path == "/" || path.startsWith("/playlist/"))) {
+        insertPlaylists(res.playlists, true);
+        insertTracks(res.tracks, true);
+        page = "/";
+    }
     // turn off active pages
     var activePages = document.querySelectorAll(".page-container.active");
     for (var i = 0; i < activePages.length; i++) {
@@ -98,9 +101,9 @@ function initPage(path, res) {
     }
     // turn on new page
     if (loggedIn) {
-        var selector = ".page-container.logged-in[data-page='"+path+"']";
+        var selector = ".page-container.logged-in[data-page='"+page+"']";
     } else {
-        var selector = ".page-container.logged-out[data-page='"+path+"']";
+        var selector = ".page-container.logged-out[data-page='"+page+"']";
     }
     var container = document.querySelector(selector);
     container.classList.add("active");
@@ -203,9 +206,73 @@ function commonFunctions() {
         if (!grab) updateLocalPref();
     }
 
-    window.notifications = document.querySelector(".fg > .notifications");
-    window.notify = function(message, buttonMsg, buttonCallback) {
+    var notifications = document.querySelector(".notifications");
+    window.notify = function(message, two, buttonMsg, buttonCallback) {
+        // two is optional, can be error boolean or lifespan number
+        var lifespan = 10000;
+        var error = two;
+        if (typeof error != "boolean" && typeof error != "number") {
+            buttonCallback = buttonMsg;
+            buttonMsg = error;
+        } else if (typeof error == "number") {
+            lifespan = error;
+            error = false;
+        }
+        // create element
         var notification = document.createElement("div");
+        notification.classList.add("notification");
+        if (error) notification.classList.add("err");
+        var innerHTML = '<p class="msg">'+message+'</p>';
+        if (buttonMsg) innerHTML += '<button>'+buttonMsg+'</button>';
+        innerHTML = '<div class="container">'+innerHTML+'</div>';
+        notification.innerHTML = innerHTML;
+        notifications.append(notification);
+
+        // button
+        if (buttonMsg) {
+            var button = notification.querySelector("button");
+            function buttonClick() {
+                hideNotification();
+                buttonCallback();
+            }
+            button.addEventListener("click", buttonClick);
+        }
+
+        // fade in
+        setTimeout(function() {
+            notification.classList.add("fade-in");
+        }, 10);
+
+        // fade out
+        var hidden = false;
+        function hideNotification() {
+            if (!hidden) {
+                hidden = true;
+                if (buttonMsg) button.removeEventListener("click", buttonClick);
+                notification.classList.add("faded-in");
+                notification.classList.add("fade-out");
+                setTimeout(function() {
+                    console.log(notifications);
+                    console.log(notification);
+                    notifications.removeChild(notification);
+                }, 1000);
+            }
+        }
+        setTimeout(hideNotification, lifespan);
+    }
+}
+POSTs();
+function POSTs() {
+    window.addTrackToPlaylist = function(trackId, playlistId, reverse = false, callback) {
+        var req =
+        "trackId="+trackId+
+        "&playlistId="+playlistId;
+        if (reverse) var url = "/remove-track-from-playlist";
+        else var url = "/add-track-to-playlist";
+        xhr(req, url, function(res) {
+            var res = JSON.parse(res);
+            callback(res.errors);
+        });
     }
 }
 
@@ -233,17 +300,21 @@ function contextItemClick(context, ctxElement, element) {
         }
     } else if (context == "track") {
         if (data.playlistId) {
-            var req =
-            "trackId="+element.dataset.trackId+
-            "&playlistId="+data.playlistId;
-            xhr(req, "/add-track-to-playlist", function(res) {
-                console.log(res);
-                var res = JSON.parse(res);
-                if (res.errors) {
-                    console.log(res.errors);
+            addTrackToPlaylist(element.dataset.trackId, data.playlistId, false, function(errors) {
+                if (errors) {
+                    if (errors.duplicate) {
+                        notify("The track is already in that playlist", true);
+                    } else {
+                        console.log(res.errors);
+                        notify("An unknown error occured while adding the track to that playlist", true);
+                    }
                 } else {
-                    console.log("added");
-                    notify();
+                    notify("Added to playlist", "UNDO", function() {
+                        addTrackToPlaylist(element.dataset.trackId, data.playlistId, true, function(errors) {
+                            if (errors) notify("An unknown error occured while undoing", true);
+                            else notify("Undo successful", 3000);
+                        });
+                    });
                 }
             });
         }
@@ -754,15 +825,5 @@ function clickRegister() {
                 }
             });
         }
-    }
-}
-
-function initHome(res) {
-    if (loggedIn) {
-        insertPlaylists(res.playlists, true);
-        insertTracks(res.tracks, true);
-        document.title = "Ferrum";
-    } else {
-        document.title = "Ferrum";
     }
 }
