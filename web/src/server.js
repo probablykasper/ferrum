@@ -59,6 +59,7 @@ app.use(passport.initialize());
     app.post("/login", routes.login);
     app.post("/register", routes.register);
     app.post("/logout", routes.logout);
+    app.post("/add-track-to-playlist", routes.addTrackToPlaylist);
 
 // start server
 app.listen(80, function() {

@@ -10,10 +10,10 @@ require("./passport")(passport);
 module.exports.getSetup = (req, res) => {
     if (req.session && req.session.passport && req.session.passport.user) {
         res.locals.loggedIn = true;
-        res.locals.userID = req.session.passport.user;
+        res.locals.userId = req.session.passport.user;
     } else {
         res.locals.loggedIn = false;
-        res.locals.userID = null;
+        res.locals.userId = null;
     }
     res.render("template", {
         path: req.path,
@@ -24,10 +24,10 @@ module.exports.getSetup = (req, res) => {
 module.exports.postSetup = (req, res, next) => {
     if (req.session && req.session.passport && req.session.passport.user) {
         res.locals.loggedIn = true;
-        res.locals.userID = req.session.passport.user;
+        res.locals.userId = req.session.passport.user;
     } else {
         res.locals.loggedIn = false;
-        res.locals.userID = null;
+        res.locals.userId = null;
     }
     next();
 }
@@ -36,9 +36,33 @@ module.exports.postSetup = (req, res, next) => {
 
 module.exports.home = (req, res) => {
     if (res.locals.loggedIn) {
-        res.send("{}");
-    } else {
-        res.send("");
+        let playlistQuery = `
+            SELECT
+                playlistId,
+                name
+            FROM playlists
+            WHERE userId = ?`;
+        db.query(playlistQuery, res.locals.userId, (err, playlists) => {
+            let tracksQuery = `
+                SELECT
+                    trackId,
+                    name,
+                    artist,
+                    TIME_FORMAT(SEC_TO_TIME(time), "%i:%S")
+                        AS time,
+                    album, DATE_FORMAT(dateAdded, "%e/%c/%y")
+                        AS dateAdded,
+                    plays
+                FROM tracks
+                WHERE userId = ?`
+            db.query(tracksQuery, res.locals.userId, (err, tracks) => {
+                let response = {
+                    playlists: playlists,
+                    tracks: tracks
+                }
+                res.send(JSON.stringify(response));
+            });
+        });
     }
 }
 
@@ -96,7 +120,7 @@ module.exports.register = (req, res) => {
                 if (err) console.log(err);
                 bcrypt.hash(password, salt, function(err, hashedPassword) {
                     if (err) console.log(err);
-                    var values = {
+                    let values = {
                         username: username,
                         email: email,
                         password: hashedPassword
@@ -114,4 +138,47 @@ module.exports.register = (req, res) => {
 module.exports.logout = (req, res) => {
     req.logout();
     res.json({ "errors": null });
+}
+
+module.exports.addTrackToPlaylist = (req, res) => {
+    if (res.locals.loggedIn) {
+        let trackId = req.body.trackId;
+        let playlistId = req.body.playlistId;
+        let errors = {};
+        if (!errors.trackId && !errors.description) {
+            let checkTrackOwner = new Promise((resolve, reject) => {
+                let query = "SELECT * FROM tracks WHERE userId = ? AND trackId = ?";
+                db.query(query, [res.locals.userId, trackId], function(err, result) {
+                    if (err) reject(err);
+                    else if (result.length == 1) resolve();
+                    else if (result.length == 0) reject("noTrackResponse");
+                });
+            });
+            let checkPlaylistOwner = new Promise((resolve, reject) => {
+                let query = "SELECT * FROM playlists WHERE userId = ? AND playlistId = ?";
+                db.query(query, [res.locals.userId, playlistId], function(err, result) {
+                    if (err) reject(err);
+                    else if (result.length == 1) resolve();
+                    else if (result.length == 0) reject("noPlaylistResponse");
+                });
+            });
+            let values = {
+                playlistId: playlistId,
+                trackId: trackId
+            };
+            Promise.all([checkTrackOwner, checkPlaylistOwner]).then(() => {
+                db.query("INSERT INTO playlistTracks SET ?", [values], function(err, result) {
+                    if (err) {
+                        if (err.errno = 1062) res.json({ "errors": {duplicate: true} });
+                        else console.log(err);
+                    } else {
+                        res.json({ "errors": null });
+                    }
+                });
+            }).catch((err) => {
+                console.log(err);
+                res.json({ "errors": true });
+            });
+        }
+    }
 }

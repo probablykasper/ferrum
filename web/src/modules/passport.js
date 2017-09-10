@@ -20,11 +20,11 @@ module.exports = function(passport) {
     }));
 
     passport.serializeUser(function(user, done) {
-        done(null, user.userID);
+        done(null, user.userId);
     });
-    
-    passport.deserializeUser(function(userID, done) {
-        db.query("SELECT * FROM users WHERE userID = ?", [userID], function(err, result) {
+
+    passport.deserializeUser(function(userId, done) {
+        db.query("SELECT * FROM users WHERE userId = ?", [userId], function(err, result) {
             done(err, result[0]);
         });
     });
