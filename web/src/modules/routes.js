@@ -186,6 +186,30 @@ module.exports.logout = (req, res) => {
     res.json({ "errors": null });
 }
 
+module.exports.deletePlaylist = (req, res) => {
+    if (res.locals.loggedIn) {
+        let playlistId = req.body.playlistId;
+        let errors = {};
+        if (!errors.playlistId) {
+            let query = "DELETE FROM playlists WHERE playlistId = ? AND userId = ?";
+            db.query(query, [playlistId, res.locals.userId], function(err, result) {
+                console.log(query);
+                console.log(playlistId);
+                console.log(res.locals.userId);
+                console.log(result);
+                if (err) {
+                    res.json({ "errors": true });
+                    console.log(err);
+                } else if (result[0]) {
+                    res.json({ "errors": true });
+                } else {
+                    res.json({ "errors": null });
+                }
+            });
+        }
+    } else res.json({ "errors": 49102 });
+}
+
 module.exports.addTrackToPlaylist = (req, res) => {
     if (res.locals.loggedIn) {
         let trackId = req.body.trackId;

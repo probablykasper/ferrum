@@ -87,12 +87,23 @@ function changePage(path, pushState = true) {
     }
 }
 function initPage(path, res) {
+    // reset stuff from last page
+    playlistHeader.style.display = "none";
+    window.pagePlaylistId = null;
+
     window.trackCount = 0;
     page = path;
-    if (loggedIn && (path == "/" || path.startsWith("/playlist/"))) {
-        insertPlaylists(res.playlists, true);
-        insertTracks(res.tracks, true);
-        page = "/";
+    if (loggedIn) {
+        if (path == "/") {
+            insertPlaylists(res.playlists, true);
+            insertTracks(res.tracks, true);
+        } else if (path.startsWith("/playlist/")) {
+            insertPlaylists(res.playlists, true);
+            insertTracks(res.tracks, true);
+            setPlaylistHeader(res.playlist);
+            pagePlaylistId = res.playlist.playlistId;
+            page = "/";
+        }
     }
     // turn off active pages
     var activePages = document.querySelectorAll(".page-container.active");
@@ -274,6 +285,16 @@ function POSTs() {
             callback(res.errors);
         });
     }
+    window.deletePlaylist = function(playlistId, callback) {
+        var req = "playlistId="+playlistId;
+        xhr(req, "/delete-playlist", function(res) {
+            var res = JSON.parse(res);
+            var selector = 'aside.sidebar .playlist[data-playlist-id="'+playlistId+'"]';
+            var sidebarItem = document.querySelector(selector);
+            sidebarItem.parentElement.removeChild(sidebarItem);
+            callback(res.errors);
+        });
+    }
 }
 
 // Context menus
@@ -320,15 +341,10 @@ function contextItemClick(context, ctxElement, element) {
         }
     } else if (context == "playlist") {
         if (data.type == "delete") {
-            var req = "playlistId="+ctxElement.dataset.playlistId;
-            xhr(req, "/delete-playlist", function(res) {
-                var res = JSON.parse(res);
-                if (res.errors) {
-                    console.log(res.errors);
-                } else {
-                    changePage("/");
-                    closeDialog();
-                }
+            deletePlaylist(pagePlaylistId, function(errors) {
+                changePage("/");
+                if (errors) notify("An unknown error occured while deleting the playlist", true);
+                else notify("Deleted playlist");
             });
         }
     }
@@ -435,7 +451,13 @@ function contextMenu() {
 }
 
 // MUSIC PAGES
-function insertPlaylists(playlists) {
+function insertPlaylists(playlists, deleteOld) {
+    if (deleteOld) {
+        items = document.querySelectorAll("aside.sidebar .item.playlist");
+        for (var i = 0; i < items.length; i++) {
+            items[i].parentElement.removeChild(items[i]);
+        }
+    }
     var sidebar = document.querySelector("aside.sidebar");
     var ctxMenus = document.querySelectorAll('.context-menu [data-type="add-to-playlist"]');
     for (var i = 0; i < playlists.length; i++) {
@@ -459,7 +481,7 @@ function insertTracks(tracks, deleteOld) {
     if (deleteOld) {
         cells = document.querySelectorAll(".music-table .cell[data-track]");
         for (var i = 0; i < cells.length; i++) {
-            cells[i].parentNode.removeChild(cells[i]);
+            cells[i].parentElement.removeChild(cells[i]);
         }
     }
     for (var i = 0; i < tracks.length; i++) {
@@ -475,6 +497,14 @@ function insertTracks(tracks, deleteOld) {
             cols[ci].append(cell);
         }
     }
+}
+var playlistHeader = document.querySelector(".music-page > .playlist-header");
+function setPlaylistHeader(playlist) {
+    playlistHeader.style.display = "flex";
+    var name = playlistHeader.querySelector("p.playlist-name");
+    name.innerHTML = playlist.name;
+    var description = playlistHeader.querySelector("p.playlist-description");
+    description.innerHTML = playlist.description;
 }
 
 updateColVisibility();

@@ -41,12 +41,11 @@ header.app-bar
         button.account.button-highlight
 main.content
     main.music-page
-        if pageType == "playlist"
-            header.playlist-header(data-context-menu="playlist")
-                img.image(src="/cdn/cover.jpg")
-                .playlist-info
-                    p.playlist-name= playlist.name
-                    p.playlist-description= playlist.description
+        header.playlist-header(data-context-menu="playlist")
+            img.image(src="/cdn/cover.jpg")
+            .playlist-info
+                p.playlist-name
+                p.playlist-description
         .music-table
             mixin column(colType, colName, colTitle)
                 div(class=`col ${colType}`, data-col-name=colName, data-context-menu="track")
