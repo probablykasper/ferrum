@@ -60,6 +60,7 @@ app.use(passport.initialize());
     app.post("/login", routes.login);
     app.post("/register", routes.register);
     app.post("/logout", routes.logout);
+    app.post("/create-playlist", routes.createPlaylist);
     app.post("/delete-playlist", routes.deletePlaylist);
     app.post("/add-track-to-playlist", routes.addTrackToPlaylist);
     app.post("/remove-track-from-playlist", routes.removeTrackFromPlaylist);

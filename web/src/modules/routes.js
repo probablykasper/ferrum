@@ -186,6 +186,25 @@ module.exports.logout = (req, res) => {
     res.json({ "errors": null });
 }
 
+module.exports.createPlaylist = (req, res) => {
+    if (res.locals.loggedIn) {
+        let name = req.body.name;
+        let description = req.body.description;
+        let errors = {};
+        if (!errors.name && !errors.description) {
+            let values = {
+                userId: res.locals.userId,
+                name: name,
+                description: description
+            }
+            db.query("INSERT INTO playlists SET ?", [values], function(err, result) {
+                if (err) console.log(err);
+                else res.json({ "errors": null, "playlistId": result.insertId });
+            });
+        }
+    } else res.json({ "errors": 83623 });
+}
+
 module.exports.deletePlaylist = (req, res) => {
     if (res.locals.loggedIn) {
         let playlistId = req.body.playlistId;

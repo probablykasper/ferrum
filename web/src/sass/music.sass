@@ -10,7 +10,7 @@ header.app-bar
     .left
         width: 100px
         margin-right: 20px
-        .logo
+        a.logo
             font-family: "Nunito", sans-serif
             font-size: 23px
             display: inline-block
@@ -162,6 +162,19 @@ main.music-page
         background: linear-gradient(to bottom, rgba(#FFFFFF, 0.10) 48px, rgba(#FFFFFF, 0.05) 48px)
         box-shadow: $shadow-1
         margin-bottom: 20px
+        .col:first-child, .col:last-child
+            .cell:nth-child(1n+2)::after
+                content: ""
+                position: absolute
+                height: 36px
+                width: 14px
+                transform: translateY(-10px)
+            .cell.hover::after
+                background-color: rgba(#FFFFFF, 0.025)
+        .col:first-child .cell::after
+            right: 100%
+        .col:last-child .cell::after
+            left: 100%
         .col
             position: relative
             transition: left $transition-short
@@ -170,24 +183,6 @@ main.music-page
                 transition: none
             &.flexible-width
                 width: 0px
-            &:first-child, &:last-child
-                .cell.hover::after
-                        content: ""
-                        position: absolute
-                        height: 36px
-                        width: 14px
-                        transform: translateY(-10px)
-                        background-color: rgba(#FFFFFF, 0.025)
-            &:first-child
-                .cell:first-child
-                    border-top-left-radius: 3px
-                .cell.hover::after
-                    right: 100%
-            &:last-child
-                .cell:first-child
-                    border-top-right-radius: 3px
-                .cell.hover::after
-                    left: 100%
             &.rearranging
                 box-shadow: $shadow-3
             .cell

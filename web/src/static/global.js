@@ -1,5 +1,4 @@
-prefSetup();
-function prefSetup() {
+(function prefSetup() {
     window.localPrefDefault = {
         "table": {
             "cols": {
@@ -37,7 +36,7 @@ function prefSetup() {
             "colOrder": ["name", "time", "artist", "album", "dateAdded", "plays"]
         },
         "sidebar": {
-            "width": 250,
+            "width": 200,
             "visible": false
         }
     }
@@ -56,7 +55,7 @@ function prefSetup() {
         "dateAdded": 95,
         "plays": 60
     }
-}
+})();
 
 function xhr(reqContent, url, callback, type = "POST") {
     var xhr = new XMLHttpRequest();
@@ -70,7 +69,6 @@ function xhr(reqContent, url, callback, type = "POST") {
         }
     }
 }
-changePage(path, false);
 function changePage(path, pushState = true) {
     if (!loggedIn && path == "/") initPage(path);
     else {
@@ -137,11 +135,14 @@ document.addEventListener("click", function(e) {
         }
     }
 });
-document.addEventListener("keypress", function(e) {
+document.addEventListener("keydown", function(e) {
     if (e.which == 13 && e.target.classList.contains("for-register")) { // enter
         var cl = e.target.parentElement.parentElement.classList;
         if (cl.contains("login")) clickLogin();
         else if (cl.contains("register")) clickRegister();
+    } else if (e.keyCode == 27) { // escape
+        closeDialog();
+        closeContextMenu();
     }
 });
 document.addEventListener("mouseover", function(e) {
@@ -162,8 +163,7 @@ document.addEventListener("mouseout", function(e) {
         }
     }
 });
-commonFunctions();
-function commonFunctions() {
+(function commonFunctions() {
     window.logout = function() {
         xhr("", "/logout", function(res) {
             res = JSON.parse(res);
@@ -263,17 +263,23 @@ function commonFunctions() {
                 notification.classList.add("faded-in");
                 notification.classList.add("fade-out");
                 setTimeout(function() {
-                    console.log(notifications);
-                    console.log(notification);
                     notifications.removeChild(notification);
                 }, 1000);
             }
         }
         setTimeout(hideNotification, lifespan);
     }
-}
-POSTs();
-function POSTs() {
+})();
+(function POSTs() {
+    window.createPlaylist = function(name, description, callback) {
+        var req =
+        "name="+name+
+        "&description="+description;
+        xhr(req, "/create-playlist", function(res) {
+            var res = JSON.parse(res);
+            callback(res);
+        });
+    }
     window.addTrackToPlaylist = function(trackId, playlistId, reverse = false, callback) {
         var req =
         "trackId="+trackId+
@@ -295,7 +301,52 @@ function POSTs() {
             callback(res.errors);
         });
     }
-}
+})();
+(function dialogs() {
+    var fg = document.querySelector(".fg");
+    var dialogContainer = document.querySelector(".dialogs");
+    var dialogs = document.querySelectorAll(".dialogs > .dialog");
+    var dialog = null;
+    window.openDialog = function(type) {
+        fg.classList.add("visible");
+        dialogContainer.classList.add("visible");
+        dialog = document.querySelector(".dialogs > .dialog."+type);
+        dialog.classList.add("visible");
+        var focusThis = dialog.querySelector(".focus-this");
+        focusThis.focus();
+    }
+    window.closeDialog = function() {
+        fg.classList.remove("visible");
+        dialogContainer.classList.remove("visible");
+        dialog.classList.remove("visible");
+    }
+    document.addEventListener("click", function(e) {
+        if (e.button == 0) {
+            var cl = e.target.classList;
+            if (insideClass(e.target, "dialogs")) {
+                if (cl.contains("cancel")) {
+                    closeDialog();
+                } else if (cl.contains("create-playlist")) {
+                    closeDialog();
+                    var name = dialog.querySelector(".name").value;
+                    var description = dialog.querySelector(".description").value;
+                    createPlaylist(name, description, function(res) {
+                        if (!res.errors) {
+                            insertPlaylists([{
+                                playlistId: res.playlistId,
+                                name: name
+                            }]);
+                            notify("Created playlist");
+                        }
+                    });
+                }
+            } else if (cl.contains("fg")) {
+                closeDialog();
+            }
+        }
+    });
+    // add enter to create playlist
+})();
 
 // Context menus
 function contextItemClick(context, ctxElement, element) {
@@ -349,8 +400,7 @@ function contextItemClick(context, ctxElement, element) {
         }
     }
 }
-contextMenu();
-function contextMenu() {
+(function contextMenu() {
     // event to open context menu
     document.addEventListener("contextmenu", function(e) {
         var contextMenu = insideDataset(e, "contextMenu");
@@ -372,11 +422,6 @@ function contextMenu() {
     (function() { // triggers to close context menu
         document.addEventListener("mousedown", function(e) {
             if (!insideClass(e.target, "context-menu")) closeContextMenu();
-        });
-        window.addEventListener("keydown", function(e) {
-            if (e.keyCode == 27) { // escape
-                closeContextMenu();
-            }
         });
         window.addEventListener("blur", function(e) {
             closeContextMenu();
@@ -441,14 +486,14 @@ function contextMenu() {
             }
         }
     }
-    function closeContextMenu() {
+    window.closeContextMenu = function() {
         var ctxs = document.querySelectorAll(".context-menu");
         for (var i = 0; i < ctxs.length; i++) {
             ctxs[i].style.display = "none";
         }
         closeSubmenus();
     }
-}
+})();
 
 // MUSIC PAGES
 function insertPlaylists(playlists, deleteOld) {
@@ -528,8 +573,7 @@ function updateColVisibility() {
         }
     }
 }
-colResize();
-function colResize() {
+(function colResize() {
     updateColWitdthPref(true);
     function findNextCol(col, reverse) {
         if (reverse) col = col.previousElementSibling;
@@ -604,9 +648,8 @@ function colResize() {
             updateColWitdthPref();
         }
     });
-}
-colRearrange();
-function colRearrange() {
+})();
+(function colRearrange() {
     // init column positions
     var cols = localPref.table.cols;
     var colOrder = localPref.table.colOrder;
@@ -714,8 +757,67 @@ function colRearrange() {
         }
         updateLocalPref();
     }
-}
-
+})();
+(function sidebar() {
+    var sidebar = document.querySelector("aside.sidebar");
+    var resizer = document.querySelector("aside.sidebar .sidebar-resizer");
+    var mainContent = document.querySelector("main.content");
+    sidebar.style.width = localPref.sidebar.width+"px";
+    mainContent.style.width = "calc(100% - "+localPref.sidebar.width+"px)";
+    if (!localPref.sidebar.visible) {
+        sidebar.classList.add("hidden");
+        mainContent.style.width = "100%";
+    }
+    var mouseDown, mousePosX, mousePosStartX, oldWidth;
+    resizer.addEventListener("mousedown", function(e) {
+        if (e.button == 0) {
+            e.preventDefault();
+            mouseDown = true;
+            mousePosX = e.clientX;
+            mousePosStartX = mousePosX;
+            oldWidth = sidebar.clientWidth;
+        }
+    });
+    document.addEventListener("mousemove", function(e) {
+        if (mouseDown) {
+            mousePosX = e.clientX;
+            var widthDifference = mousePosStartX - mousePosX;
+            var newWidth = oldWidth + widthDifference;
+            if (newWidth < 150) newWidth = 150;
+            if (newWidth > window.innerWidth/2) newWidth = Math.floor(window.innerWidth/2);
+            mainContent.style.width = "calc(100% - "+newWidth+"px)";
+            sidebar.style.width = newWidth+"px";
+        }
+    });
+    document.addEventListener("mouseup", function() {
+        if (mouseDown) {
+            mouseDown = false;
+            localPref.sidebar.width = sidebar.clientWidth;
+            updateLocalPref();
+        }
+    });
+    var button = document.querySelector("header.app-bar .playlists");
+    button.addEventListener("click", function() {
+        mainContent.classList.add("transitioning");
+        if (sidebar.classList.contains("hidden")) {
+            mainContent.style.width = "calc(100% - "+localPref.sidebar.width+"px)";
+            localPref.sidebar.visible = true;
+        } else {
+            mainContent.style.width = "100%";
+            localPref.sidebar.visible = false;
+        }
+        updateLocalPref();
+        sidebar.classList.toggle("hidden");
+        setTimeout(function() {
+            mainContent.classList.remove("transitioning");
+        }, 150);
+    });
+    // createPlaylistButton
+    var cpb = document.querySelector(".sidebar button.create-playlist");
+    cpb.addEventListener("click", function() {
+        openDialog("createPlaylist");
+    });
+})();
 // HOME PAGE
 function validate(type, msg, el, third) {
     var result = false;
@@ -863,3 +965,6 @@ function clickRegister() {
         }
     }
 }
+
+// INIT FIRST PAGE
+changePage(path, false);
