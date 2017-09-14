@@ -212,10 +212,6 @@ module.exports.deletePlaylist = (req, res) => {
         if (!errors.playlistId) {
             let query = "DELETE FROM playlists WHERE playlistId = ? AND userId = ?";
             db.query(query, [playlistId, res.locals.userId], function(err, result) {
-                console.log(query);
-                console.log(playlistId);
-                console.log(res.locals.userId);
-                console.log(result);
                 if (err) {
                     res.json({ "errors": true });
                     console.log(err);

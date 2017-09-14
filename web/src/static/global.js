@@ -271,35 +271,113 @@ document.addEventListener("mouseout", function(e) {
     }
 })();
 (function POSTs() {
-    window.createPlaylist = function(name, description, callback) {
+    window.createPlaylist = function(name, description) {
         var req =
         "name="+name+
         "&description="+description;
         xhr(req, "/create-playlist", function(res) {
             var res = JSON.parse(res);
-            callback(res);
+            if (res.errors) {
+
+            } else {
+                insertPlaylists([{
+                    playlistId: res.playlistId,
+                    name: name
+                }]);
+                notify("Created playlist", "UNDO", function() {
+                    deletePlaylist(res.playlistId, true);
+                });
+            }
         });
     }
-    window.addTrackToPlaylist = function(trackId, playlistId, reverse = false, callback) {
+    window.addTrackToPlaylist = function(trackId, playlistId, undo) {
         var req =
         "trackId="+trackId+
         "&playlistId="+playlistId;
-        if (reverse) var url = "/remove-track-from-playlist";
-        else var url = "/add-track-to-playlist";
+        var url = "/add-track-to-playlist";
         xhr(req, url, function(res) {
             var res = JSON.parse(res);
-            callback(res.errors);
+            if (undo) {
+                if (res.errors) {
+                    if (res.errors.duplicate) {
+                        notify("The track is already in that playlist", true);
+                    } else {
+                        console.log(res.errors);
+                        notify("An unknown error occured while adding the track to that playlist", true);
+                    }
+                } else {
+                    notify("Added track to playlist", "UNDO", function() {
+                        removeTrackFromPlaylist(element.dataset.trackId, data.playlistId, true);
+                    });
+                }
+            } else {
+                if (res.errors) {
+                    console.log(res.errors);
+                    notify("An unknown error occured while undoing", true);
+                } else {
+                    notify("Undo successful", "UNDO");
+                }
+            }
         });
     }
-    window.deletePlaylist = function(playlistId, callback) {
-        var req = "playlistId="+playlistId;
-        xhr(req, "/delete-playlist", function(res) {
+    window.removeTrackFromPlaylist = function(trackId, playlistId, undo) {
+        var req =
+        "trackId="+trackId+
+        "&playlistId="+playlistId;
+        var url = "/remove-track-from-playlist";
+        xhr(req, url, function(res) {
             var res = JSON.parse(res);
-            var selector = 'aside.sidebar .playlist[data-playlist-id="'+playlistId+'"]';
-            var sidebarItem = document.querySelector(selector);
-            sidebarItem.parentElement.removeChild(sidebarItem);
-            callback(res.errors);
+            if (undo) {
+                if (res.errors) {
+                    notify("An unknown error occured while undoing", true);
+                } else {
+                    notify("Undo successful", 3000);
+                }
+            } else {
+                if (res.errors) {
+                    notify("An unknown error occured while removing the track from the that playlist", true);
+                } else {
+                    notify("Track removed from playlist", 3000);
+                }
+            }
         });
+    }
+    window.deletePlaylist = function(playlistId, undo) {
+        var req = "playlistId="+playlistId;
+        if (undo) {
+            perform();
+        } else {
+            var description = "Are you sure you want to delete this playlist? You cannot undo this action.";
+            openDialog("confirm", "Delete Playlist", description, "Delete Playlist", function() {
+                perform();
+            });
+        }
+        function perform() {
+            xhr(req, "/delete-playlist", function(res) {
+                var res = JSON.parse(res);
+                if (undo) {
+                    if (res.errors) {
+                        notify("An unknown error occured while undoing", true);
+                    } else {
+                        var selector = 'aside.sidebar .playlist[data-playlist-id="'+playlistId+'"]';
+                        var sidebarItem = document.querySelector(selector);
+                        sidebarItem.parentElement.removeChild(sidebarItem);
+                        changePage("/");
+                        notify("Undo successful");
+                    }
+                } else {
+                    if (res.errors) {
+                        notify("An unknown error occured while deleting the playlist", true);
+                    } else {
+                        var selector = 'aside.sidebar .playlist[data-playlist-id="'+playlistId+'"]';
+                        var sidebarItem = document.querySelector(selector);
+                        sidebarItem.parentElement.removeChild(sidebarItem);
+                        changePage("/");
+                        notify("Deleted playlist");
+                    }
+                }
+            });
+        }
     }
 })();
 (function dialogs() {
@@ -307,10 +385,20 @@ document.addEventListener("mouseout", function(e) {
     var dialogContainer = document.querySelector(".dialogs");
     var dialogs = document.querySelectorAll(".dialogs > .dialog");
     var dialog = null;
-    window.openDialog = function(type) {
+    var confirmTitle = dialogContainer.querySelector(".dialog.confirm .title");
+    var confirmDescription = dialogContainer.querySelector(".dialog.confirm .description");
+    var confirmButton = dialogContainer.querySelector(".dialog.confirm .primary.confirm");
+    var confirmCallback;
+    window.openDialog = function(type, title, description, confirmText, callback) {
         fg.classList.add("visible");
         dialogContainer.classList.add("visible");
         dialog = document.querySelector(".dialogs > .dialog."+type);
+        if (type == "confirm") {
+            confirmTitle.innerHTML = title;
+            confirmDescription.innerHTML = description;
+            confirmButton.innerHTML = confirmText;
+            confirmCallback = callback;
+        }
         dialog.classList.add("visible");
         var focusThis = dialog.querySelector(".focus-this");
         focusThis.focus();
@@ -330,16 +418,11 @@ document.addEventListener("mouseout", function(e) {
                     closeDialog();
                     var name = dialog.querySelector(".name").value;
                     var description = dialog.querySelector(".description").value;
-                    createPlaylist(name, description, function(res) {
-                        if (!res.errors) {
-                            insertPlaylists([{
-                                playlistId: res.playlistId,
-                                name: name
-                            }]);
-                            notify("Created playlist");
-                        }
-                    });
-                }
+                    createPlaylist(name, description);
+                } else if (cl.contains("confirm") && cl.contains("primary")) {
+                    closeDialog();
+                    confirmCallback();
+                };
             } else if (cl.contains("fg")) {
                 closeDialog();
             }
@@ -372,31 +455,11 @@ function contextItemClick(context, ctxElement, element) {
         }
     } else if (context == "track") {
         if (data.playlistId) {
-            addTrackToPlaylist(element.dataset.trackId, data.playlistId, false, function(errors) {
-                if (errors) {
-                    if (errors.duplicate) {
-                        notify("The track is already in that playlist", true);
-                    } else {
-                        console.log(res.errors);
-                        notify("An unknown error occured while adding the track to that playlist", true);
-                    }
-                } else {
-                    notify("Added to playlist", "UNDO", function() {
-                        addTrackToPlaylist(element.dataset.trackId, data.playlistId, true, function(errors) {
-                            if (errors) notify("An unknown error occured while undoing", true);
-                            else notify("Undo successful", 3000);
-                        });
-                    });
-                }
-            });
+            addTrackToPlaylist(element.dataset.trackId, data.playlistId, false);
         }
     } else if (context == "playlist") {
         if (data.type == "delete") {
-            deletePlaylist(pagePlaylistId, function(errors) {
-                changePage("/");
-                if (errors) notify("An unknown error occured while deleting the playlist", true);
-                else notify("Deleted playlist");
-            });
+            deletePlaylist(pagePlaylistId);
         }
     }
 }
