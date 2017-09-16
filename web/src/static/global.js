@@ -88,6 +88,7 @@ function initPage(path, res) {
     // reset stuff from last page
     playlistHeader.style.display = "none";
     window.pagePlaylistId = null;
+    window.pagePlaylistName = null;
 
     window.trackCount = 0;
     page = path;
@@ -100,6 +101,7 @@ function initPage(path, res) {
             insertTracks(res.tracks, true);
             setPlaylistHeader(res.playlist);
             pagePlaylistId = res.playlist.playlistId;
+            pagePlaylistName = res.playlist.name;
             page = "/";
         }
     }
@@ -278,14 +280,15 @@ document.addEventListener("mouseout", function(e) {
         xhr(req, "/create-playlist", function(res) {
             var res = JSON.parse(res);
             if (res.errors) {
-
+                console.log(res.errors);
+                notify("An unknown error occured while creating playlist", true);
             } else {
                 insertPlaylists([{
                     playlistId: res.playlistId,
                     name: name
                 }]);
                 notify("Created playlist", "UNDO", function() {
-                    deletePlaylist(res.playlistId, true);
+                    deletePlaylist(res.playlistId, null, true);
                 });
             }
         });
@@ -342,19 +345,19 @@ document.addEventListener("mouseout", function(e) {
             }
         });
     }
-    window.deletePlaylist = function(playlistId, undo) {
+    window.deletePlaylist = function(playlistId, name, undo) {
         var req = "playlistId="+playlistId;
         if (undo) {
             perform();
         } else {
-            var description = "Are you sure you want to delete this playlist? You cannot undo this action.";
-            openDialog("confirm", "Delete Playlist", description, "Delete Playlist", function() {
+            var description = "Are you sure you want to delete this playlist?";
+            openDialog("confirm", "Delete playlist", description, "Delete Playlist", function() {
                 perform();
             });
         }
         function perform() {
             xhr(req, "/delete-playlist", function(res) {
-                var res = JSON.parse(res);
+                res = JSON.parse(res);
                 if (undo) {
                     if (res.errors) {
                         notify("An unknown error occured while undoing", true);
@@ -373,11 +376,30 @@ document.addEventListener("mouseout", function(e) {
                         var sidebarItem = document.querySelector(selector);
                         sidebarItem.parentElement.removeChild(sidebarItem);
                         changePage("/");
-                        notify("Deleted playlist");
+                        notify("Deleted playlist", "UNDO", function() {
+                            revivePlaylist(playlistId, name, true);
+                        });
                     }
                 }
             });
         }
+    }
+    window.revivePlaylist = function(playlistId, name, undo) {
+        var req = "playlistId="+playlistId;
+        xhr(req, "/revive-playlist", function(res) {
+            res = JSON.parse(res);
+            if (undo) {
+                if (res.errors) {
+                    notify("An unknown error occured while undoing", true);
+                } else {
+                    insertPlaylists([{
+                        playlistId: playlistId,
+                        name: name
+                    }]);
+                    notify("Undo successful");
+                }
+            }
+        });
     }
 })();
 (function dialogs() {
@@ -459,7 +481,7 @@ function contextItemClick(context, ctxElement, element) {
         }
     } else if (context == "playlist") {
         if (data.type == "delete") {
-            deletePlaylist(pagePlaylistId);
+            deletePlaylist(pagePlaylistId, pagePlaylistName);
         }
     }
 }

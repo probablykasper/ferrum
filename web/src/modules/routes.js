@@ -41,7 +41,9 @@ module.exports.home = (req, res) => {
                 playlistId,
                 name
             FROM playlists
-            WHERE userId = ?`;
+            WHERE
+                userId = ?
+                AND inTrash = 0`;
         db.query(playlistQuery, res.locals.userId, (err, playlists) => {
             let tracksQuery = `
                 SELECT
@@ -73,7 +75,9 @@ module.exports.playlist = (req, res) => {
                 playlistId,
                 name
             FROM playlists
-            WHERE userId = ?`;
+            WHERE
+                userId = ?
+                AND inTrash = 0`;
         db.query(playlistQuery, res.locals.userId, (err, playlists) => {
             let tracksQuery = `
                 SELECT
@@ -89,7 +93,9 @@ module.exports.playlist = (req, res) => {
                 FROM playlistTracks
                 RIGHT JOIN tracks
                     ON playlistTracks.trackId = tracks.trackId
-                WHERE playlistId = ? AND userId = ?`;
+                WHERE
+                    playlistId = ?
+                    AND userId = ?`;
             db.query(tracksQuery, [req.params.playlistId, res.locals.userId], (err, tracks) => {
                 let query = `
                     SELECT
@@ -210,8 +216,14 @@ module.exports.deletePlaylist = (req, res) => {
         let playlistId = req.body.playlistId;
         let errors = {};
         if (!errors.playlistId) {
-            let query = "DELETE FROM playlists WHERE playlistId = ? AND userId = ?";
-            db.query(query, [playlistId, res.locals.userId], function(err, result) {
+            let playlistQuery = `
+                UPDATE playlists
+                SET
+                    inTrash = 1
+                WHERE
+                    playlistId = ?
+                    AND userId = ?`;
+            db.query(playlistQuery, [playlistId, res.locals.userId], function(err, result) {
                 if (err) {
                     res.json({ "errors": true });
                     console.log(err);
@@ -223,6 +235,33 @@ module.exports.deletePlaylist = (req, res) => {
             });
         }
     } else res.json({ "errors": 49102 });
+}
+
+module.exports.revivePlaylist = (req, res) => {
+    if (res.locals.loggedIn) {
+        let playlistId = req.body.playlistId;
+        let errors = {};
+        if (!errors.playlistId) {
+            let playlistQuery = `
+                UPDATE playlists
+                SET
+                    inTrash = 0
+                WHERE
+                    playlistId = ?
+                    AND userId = ?
+                    AND inTrash = 1`;
+            db.query(playlistQuery, [playlistId, res.locals.userId], function(err, result) {
+                if (err) {
+                    res.json({ "errors": true });
+                    console.log(err);
+                } else if (result[0]) {
+                    res.json({ "errors": true });
+                } else {
+                    res.json({ "errors": null });
+                }
+            });
+        }
+    } else res.json({ "errors": 27238 });
 }
 
 module.exports.addTrackToPlaylist = (req, res) => {
