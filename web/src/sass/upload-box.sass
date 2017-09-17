@@ -1,0 +1,38 @@
+.upload-box
+    width: 533px
+    height: 300px
+    transform: translate(-50%, -50%)
+    top: 50%
+    left: 50%
+    position: fixed
+    z-index: 90
+    background-color: #45484f
+    border-radius: 3px
+    display: flex
+    opacity: 0
+    pointer-events: none
+    transition: opacity $transition, background-color $transition
+    &.hover
+        background-color: #3C3E45
+    &.visible
+        opacity: 1
+        pointer-events: all
+    .middle
+        width: 178px
+        height: 100px
+        position: relative
+        margin: auto
+        display: flex
+        flex-direction: column
+        justify-content: center
+        .icon
+            background-image: url('data:image/svg+xml;utf8,<svg fill="#ffffff" xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24"><path d="M0 0h24v24H0z" fill="none"/><path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/></svg>')
+            background-position: center
+            background-size: 48px
+            width: 48px
+            height: 48px
+            background-repeat: no-repeat
+            margin-left: auto
+            margin-right: auto
+        .text
+            text-align: center

@@ -57,10 +57,18 @@
     }
 })();
 
-function xhr(reqContent, url, callback, type = "POST") {
+var defaultXHR = {
+    type: "POST",
+    contentType: "values"
+}
+function xhr(reqContent, url, callback, options = defaultXHR) {
     var xhr = new XMLHttpRequest();
-    xhr.open(type, url, true);
-    xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+    xhr.open(options.type, url, true);
+    if (options.contentType == "values") {
+        xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+    } else if (options.contentType == "multipart") {
+        xhr.setRequestHeader("Content-type", "multipart/form-data");
+    }
     xhr.send(reqContent);
     xhr.onreadystatechange = function() {
         if (this.readyState == 4) {
@@ -218,6 +226,11 @@ document.addEventListener("mouseout", function(e) {
         }
         if (!grab) updateLocalPref();
     }
+    window.addEvents = function(el, events, handler) {
+        for (var i = 0; i < events.length; i++) {
+            el.addEventListener(events[i], handler);
+        }
+    }
 
     var notifications = document.querySelector(".notifications");
     window.notify = function(message, two, buttonMsg, buttonCallback) {
@@ -273,6 +286,22 @@ document.addEventListener("mouseout", function(e) {
     }
 })();
 (function POSTs() {
+    // tracks
+    window.uploadTracks = function(files) {
+        var data = new FormData();
+        for (var i = 0; i < files.length; i++) {
+            data.append("tracks[]", files[i], files[i].name);
+        }
+        xhr(data, "/upload-tracks", function(res) {
+            var res = JSON.parse(res);
+            if (res.errors) {
+                console.log(res.errors);
+            } else {
+                notify("Successfully uploaded tracks");
+            }
+        });
+    }
+    // playlists
     window.createPlaylist = function(name, description) {
         var req =
         "name="+name+
@@ -413,6 +442,7 @@ document.addEventListener("mouseout", function(e) {
     var confirmCallback;
     window.openDialog = function(type, title, description, confirmText, callback) {
         fg.classList.add("visible");
+        fg.classList.remove("short");
         dialogContainer.classList.add("visible");
         dialog = document.querySelector(".dialogs > .dialog."+type);
         if (type == "confirm") {
@@ -901,6 +931,73 @@ function updateColVisibility() {
     var cpb = document.querySelector(".sidebar button.create-playlist");
     cpb.addEventListener("click", function() {
         openDialog("createPlaylist");
+    });
+})();
+(function dropFiles() {
+    var uploadBox = document.querySelector(".upload-box");
+    var fg = document.querySelector(".fg");
+
+    function containsFiles(e) {
+        if (e.dataTransfer.types) {
+            for (var i = 0; i < e.dataTransfer.types.length; i++) {
+                if (e.dataTransfer.types[i] == "Files") {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+    function show() {
+        uploadBox.classList.add("visible");
+        fg.classList.add("visible");
+        fg.classList.add("short");
+    }
+    function hide() {
+        uploadBox.classList.remove("visible");
+        fg.classList.remove("visible");
+    }
+
+    // setup
+    var setupEvents = ["drag", "dragstart", "dragend", "dragover", "dragenter", , "dragleave", "drop"];
+    addEvents(window, setupEvents, function(e) {
+        if (containsFiles(e)) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+    });
+
+    // show
+    addEvents(window, ["dragenter"], function(e) {
+        if (containsFiles(e)) show();
+    });
+    // hide
+    addEvents(window, ["dragend", "dragleave"], function(e) {
+        if (containsFiles(e)) {
+            if (e.type == "dragleave" && e.relatedTarget == null) hide();
+            else if (e.type != "dragleave") hide();
+        }
+    });
+
+    // uploadBox hover
+    addEvents(uploadBox, ["dragover", "dragenter"], function() {
+        uploadBox.classList.add("hover");
+    });
+    // uploadBox unhover
+    addEvents(uploadBox, ["dragleave", "dragend"], function() {
+        uploadBox.classList.remove("hover");
+    });
+
+    // uploadBox drop
+    addEvents(uploadBox, ["drop"], function(e) {
+        hide();
+        if (containsFiles(e)) {
+            var files = e.dataTransfer.files;
+            uploadTracks(files);
+        }
+    });
+    // drop
+    addEvents(window, ["drop"], function(e) {
+        hide();
     });
 })();
 // HOME PAGE

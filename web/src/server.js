@@ -57,14 +57,18 @@ app.use(passport.initialize());
     app.post("/", routes.home);
     app.post("/playlist/:playlistId", routes.playlist);
     // POSTs
-    app.post("/login", routes.login);
-    app.post("/register", routes.register);
-    app.post("/logout", routes.logout);
-    app.post("/create-playlist", routes.createPlaylist);
-    app.post("/delete-playlist", routes.deletePlaylist);
-    app.post("/revive-playlist", routes.revivePlaylist);
-    app.post("/add-track-to-playlist", routes.addTrackToPlaylist);
-    app.post("/remove-track-from-playlist", routes.removeTrackFromPlaylist);
+        // account
+        app.post("/login", routes.login);
+        app.post("/register", routes.register);
+        app.post("/logout", routes.logout);
+        // tracks
+        app.post("/upload-tracks", routes.uploadTracks);
+        // playlists
+        app.post("/create-playlist", routes.createPlaylist);
+        app.post("/delete-playlist", routes.deletePlaylist);
+        app.post("/revive-playlist", routes.revivePlaylist);
+        app.post("/add-track-to-playlist", routes.addTrackToPlaylist);
+        app.post("/remove-track-from-playlist", routes.removeTrackFromPlaylist);
 
 // start server
 app.listen(80, function() {

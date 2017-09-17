@@ -120,6 +120,8 @@ module.exports.playlist = (req, res) => {
 
 // -------------------- POSTs --------------------
 
+// ---------- account ----------
+
 module.exports.login = (req, res) => {
     let username = req.body.username;
     let password = req.body.password;
@@ -191,6 +193,17 @@ module.exports.logout = (req, res) => {
     req.logout();
     res.json({ "errors": null });
 }
+
+// ---------- tracks ----------
+
+module.exports.uploadTracks = (req, res) => {
+    if (res.locals.loggedIn) {
+        console.log(req);
+        res.json({ "errors": 83623 });
+    }
+}
+
+// ---------- playlists ----------
 
 module.exports.createPlaylist = (req, res) => {
     if (res.locals.loggedIn) {

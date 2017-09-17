@@ -59,15 +59,17 @@ html
     height: 100%
     position: fixed
     z-index: 80
-    transition: opacity $transition-long-out
+    transition: opacity $transition-long
     background-color: transparent
     pointer-events: none
     opacity: 0
     background-color: #000000
     &.visible
-        transition: opacity $transition-long-in
+        transition: opacity $transition-long
         pointer-events: all
         opacity: 0.3
+    &.short
+        transition: opacity $transition
 .button-highlight
     cursor: pointer
     border-radius: 3px
