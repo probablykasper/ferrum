@@ -557,7 +557,7 @@ function contextItemClick(context, ctxElement, element) {
     // event to open context menu
     document.addEventListener("contextmenu", function(e) {
         var contextMenu = insideDataset(e, "contextMenu");
-        if (contextMenu) {
+        if (contextMenu && !e.altKey && !e.shiftKey) {
             e.preventDefault();
             openContextMenu(contextMenu, e.clientX, e.clientY, e.target);
         } else {

@@ -292,7 +292,6 @@ module.exports.uploadTracks = (req, res) => {
 }
 
 module.exports.deleteTrack = (req, res) => {
-    console.log("DELBOI");
     if (res.locals.loggedIn) {
         let trackId = req.body.trackId;
         let errors = {};
