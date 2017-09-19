@@ -86,7 +86,9 @@ module.exports.home = (req, res) => {
                         AS dateAdded,
                     plays
                 FROM tracks
-                WHERE userId = ?`
+                WHERE
+                    userId = ?
+                    AND inTrash = 0`;
             db.query(tracksQuery, res.locals.userId, (err, tracks) => {
                 let response = {
                     playlists: playlists,
@@ -290,6 +292,7 @@ module.exports.uploadTracks = (req, res) => {
 }
 
 module.exports.deleteTrack = (req, res) => {
+    console.log("DELBOI");
     if (res.locals.loggedIn) {
         let trackId = req.body.trackId;
         let errors = {};
@@ -299,7 +302,7 @@ module.exports.deleteTrack = (req, res) => {
                 SET
                     inTrash = 1
                 WHERE
-                    playlistId = ?
+                    trackId = ?
                     AND userId = ?`;
             db.query(tracksQuery, [trackId, res.locals.userId], function(err, result) {
                 if (err) {
@@ -309,6 +312,51 @@ module.exports.deleteTrack = (req, res) => {
                     res.json({ "errors": true });
                 } else {
                     res.json({ "errors": null });
+                }
+            });
+        }
+    }
+}
+
+module.exports.reviveTrack = (req, res) => {
+    if (res.locals.loggedIn) {
+        let trackId = req.body.trackId;
+        let errors = {};
+        if (!errors.playlistId) {
+            let tracksQuery = `
+                UPDATE tracks
+                SET
+                    inTrash = 0
+                WHERE
+                    trackId = ?
+                    AND userId = ?`;
+            db.query(tracksQuery, [trackId, res.locals.userId], function(err, result) {
+                if (err) {
+                    res.json({ "errors": true });
+                    console.log(err);
+                } else if (result[0]) {
+                    res.json({ "errors": true });
+                } else {
+                    let responseTrackQuery = `
+                        SELECT
+                            trackId,
+                            name,
+                            artist,
+                            TIME_FORMAT(SEC_TO_TIME(time), "%i:%S")
+                                AS time,
+                            album, DATE_FORMAT(dateAdded, "%e/%c/%y")
+                                AS dateAdded,
+                            plays
+                        FROM tracks
+                        WHERE
+                            trackId = ?
+                            AND userId = ?`;
+                    db.query(responseTrackQuery, [trackId, res.locals.userId], (err, tracks) => {
+                        res.json({
+                            "tracks": tracks,
+                            "errors": null
+                        });
+                    });
                 }
             });
         }

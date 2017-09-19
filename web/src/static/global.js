@@ -299,6 +299,44 @@ document.addEventListener("mouseout", function(e) {
             }
         }, {contentType: "multipart"});
     }
+    window.deleteTrack = function(trackId) {
+        var req = "trackId="+trackId;
+        var description = "Are you sure you want to delete this track?";
+        openDialog("confirm", "Delete track", description, "Delete track", function() {
+            perform();
+        });
+        function perform() {
+            xhr(req, "/delete-track", function(res) {
+                res = JSON.parse(res);
+                if (res.errors) {
+                    notify("An unknown error occured while deleting the track", true);
+                } else {
+                    var selector = '.music-table .cell[data-track-id="'+trackId+'"]';
+                    var trackCells = document.querySelectorAll(selector);
+                    for (var i = 0; i < trackCells.length; i++) {
+                        trackCells[i].parentElement.removeChild(trackCells[i]);
+                    }
+                    notify("Deleted track", "UNDO", function() {
+                        reviveTrack(trackId, true);
+                    });
+                }
+            });
+        }
+    }
+    window.reviveTrack = function(trackId, undo) {
+        var req = "trackId="+trackId;
+        xhr(req, "/revive-track", function(res) {
+            res = JSON.parse(res);
+            if (undo) {
+                if (res.errors) {
+                    notify("An unknown error occured while undoing", true);
+                } else {
+                    insertTracks(res.tracks, false);
+                    notify("Undo successful");
+                }
+            }
+        });
+    }
     // playlists
     window.createPlaylist = function(name, description) {
         var req =
@@ -506,6 +544,8 @@ function contextItemClick(context, ctxElement, element) {
     } else if (context == "track") {
         if (data.playlistId) {
             addTrackToPlaylist(element.dataset.trackId, data.playlistId, false);
+        } else if (data.type == "delete") {
+            deleteTrack(element.dataset.trackId);
         }
     } else if (context == "playlist") {
         if (data.type == "delete") {
