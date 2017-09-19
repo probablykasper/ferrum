@@ -14,6 +14,8 @@
         "nodemon": "1.11.0",
 
         "mysql": "2.14.1",
+        "multer": "1.3.0",
+        "base32": "0.0.6",
 
         "pug": "2.0.0-rc.3",
         "node-sass": "4.5.3",
@@ -28,14 +30,18 @@
         "passport": "0.4.0",
         "passport-local": "1.0.0",
         "bcryptjs": "2.4.3",
+
+
+        "music-metadata": "0.8.4"
+    }
+
+    ,"Deleted": {
+        "string": "3.3.3",
+        "express-validator": "3.2.1",
+        "express-messages": "1.0.1",
+        "express-handlebars": "3.0.0",
+        "connect-flash": "0.1.1",
+        "cookie-parser": "1.4.3",
+        "passport-http": "0.3.0"
     }
 }
-/* Deleted:
-    "string": "3.3.3",
-    "express-validator": "3.2.1",
-    "express-messages": "1.0.1",
-    "express-handlebars": "3.0.0",
-    "connect-flash": "0.1.1",
-    "cookie-parser": "1.4.3",
-    "passport-http": "0.3.0"
-*/

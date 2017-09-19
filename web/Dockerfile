@@ -2,6 +2,8 @@ FROM node:8.4
 RUN npm install -g  nodemon@1.11.0
 
 RUN npm install     mysql@2.14.1
+RUN npm install     multer@1.3.0
+RUN npm install     base32@0.0.6
 
 RUN npm install     pug@2.0.0-rc.3
 RUN npm install     node-sass@4.5.3
@@ -24,6 +26,8 @@ RUN npm install     bcryptjs@2.4.3
 # RUN npm install     connect-flash@0.1.1
 # RUN npm install     cookie-parser@1.4.3
 # RUN npm install     passport-http@0.3.0
+# RUN npm install     jsmediatags@3.8.0
+RUN npm install     music-metadata@0.8.4
 
 WORKDIR /usr/src/app
 

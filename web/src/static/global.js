@@ -57,17 +57,15 @@
     }
 })();
 
-var defaultXHR = {
-    type: "POST",
-    contentType: "values"
-}
-function xhr(reqContent, url, callback, options = defaultXHR) {
+function xhr(reqContent, url, callback, options = {}) {
     var xhr = new XMLHttpRequest();
+    if (options.type == undefined)        options.type = "POST";
+    if (options.contentType == undefined) options.contentType = "values";
     xhr.open(options.type, url, true);
     if (options.contentType == "values") {
         xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
     } else if (options.contentType == "multipart") {
-        xhr.setRequestHeader("Content-type", "multipart/form-data");
+        // xhr.setRequestHeader("Content-type", "multipart/form-data");
     }
     xhr.send(reqContent);
     xhr.onreadystatechange = function() {
@@ -290,7 +288,7 @@ document.addEventListener("mouseout", function(e) {
     window.uploadTracks = function(files) {
         var data = new FormData();
         for (var i = 0; i < files.length; i++) {
-            data.append("tracks[]", files[i], files[i].name);
+            data.append("tracks", files[i], files[i].name);
         }
         xhr(data, "/upload-tracks", function(res) {
             var res = JSON.parse(res);
@@ -299,7 +297,7 @@ document.addEventListener("mouseout", function(e) {
             } else {
                 notify("Successfully uploaded tracks");
             }
-        });
+        }, {contentType: "multipart"});
     }
     // playlists
     window.createPlaylist = function(name, description) {

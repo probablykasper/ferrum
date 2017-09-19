@@ -38,7 +38,7 @@ let sessionStore = new mySQLstore({
 });
 app.use(session({
     key: "sess",
-    secret: 'bananaboy',
+    secret: "bananaboy",
     store: sessionStore,
     resave: false,
     saveUninitialized: false,

@@ -5,6 +5,36 @@ const bcrypt = require("bcryptjs");
 const db = require("./db");
 require("./passport")(passport);
 
+const crypto = require("crypto");
+const base32 = require("base32");
+function b32(x) {
+    // if      (x == 4) x = 2;
+    // else if (x == 7) x = 4;
+    // else if (x == 8) x = 5;
+    // else if (x == 10) x = 6;
+    return base32.encode(crypto.randomBytes(x, "hex"));
+}
+
+const multer = require("multer");
+const storage = multer.diskStorage({
+    destination: function(req, file, cb) {
+        cb(null, "tracks/");
+    },
+    filename: function(req, file, cb) {
+        var filename = b32(6);
+        var extension;
+        if      (file.mimetype == "audio/wav") extension = ".wav";
+        else if (file.mimetype == "audio/mp3") extension = ".mp3";
+        else res.err = "wrongExt";
+        cb(null, filename+extension);
+    }
+});
+const upload = multer({storage: storage});
+
+const jsmediatags = require("jsmediatags");
+const mm = require("music-metadata");
+const util = require("util");
+
 // --------------------- SETUP ---------------------
 
 module.exports.getSetup = (req, res) => {
@@ -70,7 +100,7 @@ module.exports.home = (req, res) => {
 
 module.exports.playlist = (req, res) => {
     if (res.locals.loggedIn) {
-        let playlistQuery = `
+        let playlistsQuery = `
             SELECT
                 playlistId,
                 name
@@ -78,7 +108,7 @@ module.exports.playlist = (req, res) => {
             WHERE
                 userId = ?
                 AND inTrash = 0`;
-        db.query(playlistQuery, res.locals.userId, (err, playlists) => {
+        db.query(playlistsQuery, res.locals.userId, (err, playlists) => {
             let tracksQuery = `
                 SELECT
                     tracks.trackId,
@@ -95,9 +125,10 @@ module.exports.playlist = (req, res) => {
                     ON playlistTracks.trackId = tracks.trackId
                 WHERE
                     playlistId = ?
-                    AND userId = ?`;
+                    AND userId = ?
+                    AND inTrash = 0`;
             db.query(tracksQuery, [req.params.playlistId, res.locals.userId], (err, tracks) => {
-                let query = `
+                let currentPlaylistQuery = `
                     SELECT
                         playlistId,
                         name,
@@ -105,7 +136,7 @@ module.exports.playlist = (req, res) => {
                     FROM
                         playlists
                     WHERE playlistId = ? AND userId = ?`;
-                db.query(query, [req.params.playlistId, res.locals.userId], function(err, playlist) {
+                db.query(currentPlaylistQuery, [req.params.playlistId, res.locals.userId], function(err, playlist) {
                     let response = {
                         playlists: playlists,
                         tracks: tracks,
@@ -175,6 +206,7 @@ module.exports.register = (req, res) => {
                 bcrypt.hash(password, salt, function(err, hashedPassword) {
                     if (err) console.log(err);
                     let values = {
+                        userId: b32(6),
                         username: username,
                         email: email,
                         password: hashedPassword
@@ -196,10 +228,90 @@ module.exports.logout = (req, res) => {
 
 // ---------- tracks ----------
 
+function getMD(filepath, callback) {
+    mm.parseFile(filepath, {
+        duration: true,
+        native: true
+    }).then(function(md) {
+        // console.log(  util.inspect(md, {showHidden: false, depth: null})  );
+        function min2(x) {
+            if (x.toString().length == 1) return `0${x}`;
+            else return x;
+        }
+        let d = new Date();
+        let YYYY = d.getFullYear();
+        let MM = min2(d.getMonth()+1);
+        let DD = min2(d.getDate()   );
+        let hh = min2(d.getDate()   );
+        let mm = min2(d.getMinutes());
+        let ss = min2(d.getSeconds());
+        let response = {
+            time: Math.round(md.format.duration),
+            dateAdded: `${YYYY}-${MM}-${DD} ${hh}:${mm}:${ss}`,
+            plays: 0,
+            bitrate: md.format.bitrate
+        }
+        response.name = (md.common.title) ? md.common.title : "";
+        response.artist = (md.common.artist) ? md.common.artist : "";
+        response.album = (md.common.album) ? md.common.album : "";
+        response.genre = (md.common.genre) ? md.common.genre : "";
+        callback(response);
+    }).catch(function(err) {
+        console.log(err);
+    });
+}
+function insertTrack(req, res, filepath) {
+    getMD(filepath, (value) => {
+        value.userId = res.locals.userId;
+        value.trackId = b32(6);
+        value.tags = "";
+        value.sourcePlatform = "upload";
+        value.appearsOn = "";
+        var tracksQuery = "INSERT INTO tracks SET ?";
+        db.query(tracksQuery, value, function(err, result) {
+            if (err) console.log(err);
+            else res.json({ "errors": null });
+        });
+    });
+}
 module.exports.uploadTracks = (req, res) => {
     if (res.locals.loggedIn) {
-        console.log(req);
-        res.json({ "errors": 83623 });
+        upload.array("tracks")(req, res, function(err) {
+            if (err) {
+                console.log(err);
+                res.json({ "errors": 83623 });
+            } else {
+                for (var i = 0; i < req.files.length; i++) {
+                    insertTrack(req, res, req.files[i].path);
+                }
+            }
+        });
+    }
+}
+
+module.exports.deleteTrack = (req, res) => {
+    if (res.locals.loggedIn) {
+        let trackId = req.body.trackId;
+        let errors = {};
+        if (!errors.playlistId) {
+            let tracksQuery = `
+                UPDATE tracks
+                SET
+                    inTrash = 1
+                WHERE
+                    playlistId = ?
+                    AND userId = ?`;
+            db.query(tracksQuery, [trackId, res.locals.userId], function(err, result) {
+                if (err) {
+                    res.json({ "errors": true });
+                    console.log(err);
+                } else if (result[0]) {
+                    res.json({ "errors": true });
+                } else {
+                    res.json({ "errors": null });
+                }
+            });
+        }
     }
 }
 
@@ -212,6 +324,7 @@ module.exports.createPlaylist = (req, res) => {
         let errors = {};
         if (!errors.name && !errors.description) {
             let values = {
+                playlistId: b32(6),
                 userId: res.locals.userId,
                 name: name,
                 description: description
