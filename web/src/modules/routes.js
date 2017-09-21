@@ -35,7 +35,17 @@ const jsmediatags = require("jsmediatags");
 const mm = require("music-metadata");
 const util = require("util");
 
-// --------------------- SETUP ---------------------
+// -------------------- STATIC --------------------
+
+module.exports.track = (req, res) => {
+    res.sendFile("/usr/src/app/tracks/"+req.params.trackId);
+}
+
+module.exports.dl = (req, res) => {
+    res.download("/usr/src/app/tracks/"+req.params.trackId);
+}
+
+// -------------------- SETUP --------------------
 
 module.exports.getSetup = (req, res) => {
     if (req.session && req.session.passport && req.session.passport.user) {

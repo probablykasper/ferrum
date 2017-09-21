@@ -22,7 +22,6 @@ app.set("view engine", "pug");
 // static content
 app.use("/", express.static("static", { redirect: false }));
 app.use("/", express.static("static/favicon", { redirect: false }));
-app.use("/tracks", express.static("tracks", { redirect: false }));
 
 // parse application/x-www-form-urlencoded
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -51,6 +50,9 @@ app.use(session({
 app.use(passport.initialize());
 
 // set up routes
+    // STATIC
+    app.get("/track/:trackId", routes.track);
+    app.get("/dl/:trackId", routes.dl);
     // SETUP
     app.get("*", routes.getSetup);
     app.post("*", routes.postSetup);

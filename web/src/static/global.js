@@ -544,7 +544,6 @@ function contextItemClick(context, ctxElement, element) {
     } else if (context == "track") {
         if (data.type == "play") {
             playTrack(element.dataset.trackId);
-            console.log(element.dataset.trackId);
         } else if (data.playlistId) {
             addTrackToPlaylist(element.dataset.trackId, data.playlistId, false);
         } else if (data.type == "delete") {
@@ -1045,17 +1044,37 @@ function updateColVisibility() {
 // player
 (function player() {
     var audio = document.querySelector("audio");
+    var playPauseIcon = document.querySelector(".player .icon.play-pause");
     window.playTrack = function(trackId) {
-        audio.setAttribute("src", "/tracks/"+trackId+".mp3");
+        audio.setAttribute("src", "/track/"+trackId+".mp3");
+        play();
+    }
+    window.play = function() {
         audio.play();
+        audio.classList.remove("paused");
+        audio.classList.add("playing");
+        playPauseIcon.innerHTML = '<path d="M0 0h24v24H0z" fill="none"></path><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"></path>';
+    }
+    window.pause = function() {
+        audio.pause();
+        audio.classList.remove("playing");
+        audio.classList.add("paused");
+        playPauseIcon.innerHTML = '<path d="M0 0h24v24H0z" fill="none"></path><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"></path>';
     }
     document.addEventListener("click", function(e) {
         var icon = insideClass(e.target, "icon");
         if (icon) {
             var cl = icon.classList;
-            if (cl.contains("play")) {
-                audio.classList.remove("paused");
-                audio.classList.add("playing");
+            if (cl.contains("play-pause")) {
+                if (audio.classList.contains("paused")) {
+                    play();
+                } else if (audio.classList.contains("playing")) {
+                    pause();
+                } else {
+                    var selector = ".music-table .col .cell:nth-child(2)";
+                    var firstCell = document.querySelector(selector);
+                    playTrack(firstCell.dataset.trackId);
+                }
             }
         }
     });
