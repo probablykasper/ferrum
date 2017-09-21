@@ -21,12 +21,12 @@ const storage = multer.diskStorage({
         cb(null, "tracks/");
     },
     filename: function(req, file, cb) {
-        var filename = b32(6);
+        file.trackId = b32(6);
         var extension;
         if      (file.mimetype == "audio/wav") extension = ".wav";
         else if (file.mimetype == "audio/mp3") extension = ".mp3";
         else res.err = "wrongExt";
-        cb(null, filename+extension);
+        cb(null, file.trackId+extension);
     }
 });
 const upload = multer({storage: storage});
@@ -262,10 +262,10 @@ function getMD(filepath, callback) {
         console.log(err);
     });
 }
-function insertTrack(req, res, filepath) {
+function insertTrack(req, res, filepath, trackId) {
     getMD(filepath, (value) => {
         value.userId = res.locals.userId;
-        value.trackId = b32(6);
+        value.trackId = trackId;
         value.tags = "";
         value.sourcePlatform = "upload";
         value.appearsOn = "";
@@ -281,10 +281,10 @@ module.exports.uploadTracks = (req, res) => {
         upload.array("tracks")(req, res, function(err) {
             if (err) {
                 console.log(err);
-                res.json({ "errors": 83623 });
+                res.json({ "errors": 23623 });
             } else {
                 for (var i = 0; i < req.files.length; i++) {
-                    insertTrack(req, res, req.files[i].path);
+                    insertTrack(req, res, req.files[i].path, req.files[i].trackId);
                 }
             }
         });

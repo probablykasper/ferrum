@@ -195,9 +195,9 @@ document.addEventListener("mouseout", function(e) {
         return false;
     }
     window.insideClass = function(el, cls) {
-        if (hasClass(el, cls)) return true;
+        if (hasClass(el, cls)) return el;
         while (el = el.parentElement) {
-            if (hasClass(el, cls)) return true;
+            if (hasClass(el, cls)) return el;
         }
         return false;
     }
@@ -542,7 +542,10 @@ function contextItemClick(context, ctxElement, element) {
             updateColWitdthPref();
         }
     } else if (context == "track") {
-        if (data.playlistId) {
+        if (data.type == "play") {
+            playTrack(element.dataset.trackId);
+            console.log(element.dataset.trackId);
+        } else if (data.playlistId) {
             addTrackToPlaylist(element.dataset.trackId, data.playlistId, false);
         } else if (data.type == "delete") {
             deleteTrack(element.dataset.trackId);
@@ -710,7 +713,7 @@ function setPlaylistHeader(playlist) {
     var description = playlistHeader.querySelector("p.playlist-description");
     description.innerHTML = playlist.description;
 }
-
+// table
 updateColVisibility();
 function updateColVisibility() {
     for (var i = 0; i < localPref.table.colOrder.length; i++) {
@@ -911,6 +914,7 @@ function updateColVisibility() {
         updateLocalPref();
     }
 })();
+
 (function sidebar() {
     var sidebar = document.querySelector("aside.sidebar");
     var resizer = document.querySelector("aside.sidebar .sidebar-resizer");
@@ -1038,6 +1042,25 @@ function updateColVisibility() {
         hide();
     });
 })();
+// player
+(function player() {
+    var audio = document.querySelector("audio");
+    window.playTrack = function(trackId) {
+        audio.setAttribute("src", "/tracks/"+trackId+".mp3");
+        audio.play();
+    }
+    document.addEventListener("click", function(e) {
+        var icon = insideClass(e.target, "icon");
+        if (icon) {
+            var cl = icon.classList;
+            if (cl.contains("play")) {
+                audio.classList.remove("paused");
+                audio.classList.add("playing");
+            }
+        }
+    });
+})();
+
 // HOME PAGE
 function validate(type, msg, el, third) {
     var result = false;

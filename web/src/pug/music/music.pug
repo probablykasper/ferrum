@@ -1,0 +1,39 @@
+include context-menus.pug
+header.app-bar
+    .left
+        a.logo(href="/", tabindex="0") Ferrum
+    input.search-bar(placeholder="Search", tabindex="0")
+    .right
+        //- .logout Logout
+        button.playlists.button-highlight
+        button.account.button-highlight
+main.content
+    main.music-page
+        header.playlist-header(data-context-menu="playlist")
+            img.image(src="/cdn/cover.jpg")
+            .playlist-info
+                p.playlist-name
+                p.playlist-description
+        .music-table
+            mixin column(colType, colName, colTitle)
+                div(class=`col ${colType}`, data-col-name=colName, data-context-menu="track")
+                    div(class="cell", data-col-name=colName, data-context-menu="table-header")
+                        span.col-span= colTitle
+                        div(class="col-resizer "+colName)
+                            .line
+                        .sort-icon
+                    //- each track, index in tracks
+                    //-     div(class=`cell ${colName} track-${index+1}`, data-track-id=track.trackID, data-context-menu="track")= track[colName]
+            +column("flexible-width", "name", "Name")
+            +column("auto-width", "time", "Time")
+            +column("flexible-width", "artist", "Artist")
+            +column("flexible-width", "album", "Album")
+            +column("auto-width", "dateAdded", "Date Added")
+            +column("auto-width", "plays", "Plays")
+aside.sidebar
+    .sidebar-resizer
+    button.create-playlist
+    .header Playlists
+    //- each playlist in playlists
+    //-     .item.playlist(data-playlist-id=playlist.playlistID, href=`/playlist/${playlist.playlistID}`)= playlist.name
+include player.pug

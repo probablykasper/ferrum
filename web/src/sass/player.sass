@@ -1,0 +1,49 @@
+.player
+    z-index: 60
+    width: 100%
+    height: 80px
+    position: fixed
+    bottom: 0px
+    background-color: rgba(#FFFFFF, 0.1)
+    .icon
+        width: 30px
+        height: 30px
+        cursor: pointer
+        padding: 5px
+        margin: 3px
+        transition: opacity $transition
+        opacity: 0.8
+        &:focus
+            opacity: 1
+    .controls
+        display: flex
+        width: 100%
+        height: 100%
+        justify-content: space-between
+        > div
+            height: 100%
+            width: 100%
+            display: flex
+            align-items: center
+        .left
+            justify-content: flex-start
+            .cover
+                height: 80px
+                width: 80px
+        .middle
+            justify-content: center
+            .icon
+            .icon.prev
+            .icon.play
+                width: 48px
+                height: 48px
+            .icon.pause
+                width: 48px
+                height: 48px
+                display: none
+            .icon.next
+        .right
+            justify-content: flex-end
+            .vol-icon-0
+                display: none
+            .vol-icon-3
