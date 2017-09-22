@@ -238,6 +238,9 @@ document.addEventListener("mouseout", function(e) {
             el.addEventListener(events[i], handler);
         }
     };
+    window.insertAfter = function(arr, i, val) {
+        arr.splice(i+1, 0, val);
+    }
 
     var notifications = document.querySelector(".notifications");
     window.notify = function(message, two, buttonMsg, buttonCallback) {
@@ -550,6 +553,8 @@ function contextItemClick(context, ctxElement, element) {
     } else if (context == "track") {
         if (data.type == "play") {
             playTrack(element.dataset.trackId);
+        } else if (data.type == "play-next") {
+            playTrackNext(element.dataset.trackId);
         } else if (data.playlistId) {
             addTrackToPlaylist(element.dataset.trackId, data.playlistId, false);
         } else if (data.type == "delete") {
@@ -657,9 +662,14 @@ function contextItemClick(context, ctxElement, element) {
 })();
 
 // MUSIC PAGES
+window.tracklist = {};
+window.queue = [];
+window.autoQueue = [];
+window.pageTracks = [];
+window.playingTrackIndex = 0;
 function insertPlaylists(playlists, deleteOld) {
     if (deleteOld) {
-        var items = document.querySelectorAll('aside.sidebar .item.playlist');
+        var items = document.querySelectorAll('aside.sidebar .playlist');
         for (var i = 0; i < items.length; i++) {
             items[i].parentElement.removeChild(items[i]);
         }
@@ -674,7 +684,7 @@ function insertPlaylists(playlists, deleteOld) {
     var ctxMenus = document.querySelectorAll('.context-menu [data-type="add-to-playlist"]');
     for (var i = 0; i < playlists.length; i++) {
         var item = document.createElement("a");
-        item.classList.add("item", "playlist");
+        item.classList.add("playlist");
         item.setAttribute("data-playlist-id", playlists[i].playlistId);
         item.setAttribute("href", "/playlist/"+playlists[i].playlistId);
         item.innerHTML = playlists[i].name;
@@ -697,6 +707,9 @@ function insertTracks(tracks, deleteOld) {
         }
     }
     for (var i = 0; i < tracks.length; i++) {
+        pageTracks.push(tracks[i]);
+        tracklist[tracks[i].trackId] = tracks[i];
+        tracklist[tracks[i].trackId].pagePos = i+1;
         trackCount++;
         var cols = document.querySelectorAll(".music-table > .col");
         for (var ci = 0; ci < cols.length; ci++) {
@@ -1049,12 +1062,21 @@ function updateColVisibility() {
 })();
 // player
 (function player() {
-    var audio = document.querySelector("audio");
+    window.audio = document.querySelector("audio");
     var playPauseIcon = document.querySelector(".player .icon.play-pause");
-    window.playTrack = function(trackId) {
+    window.setSrc = function(trackId) {
         audio.setAttribute("src", "/track/"+trackId+".mp3");
-        play();
+        document.title = tracklist[trackId].artist+" - "+tracklist[trackId].artist;
+    }
+    window.playTrack = function(trackId) {
+        setSrc(trackId);
+        insertAfter(queue, playingTrackIndex, tracklist[trackId]);
+        playingTrackIndex++;
+        audio.play();
     };
+    window.playTrackNext = function(trackId) {
+        insertAfter(queue, playingTrackIndex+1, tracklist[trackId]);
+    }
     window.play = function() {
         audio.play();
         audio.classList.remove("paused");
@@ -1067,6 +1089,33 @@ function updateColVisibility() {
         audio.classList.add("paused");
         playPauseIcon.innerHTML = '<path d="M0 0h24v24H0z" fill="none"></path><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"></path>';
     };
+    window.next = function() {
+        if (playingTrackIndex >= queue.length-1) {
+            if (autoQueue.length > 0) {
+                queue.push(autoQueue[0]);
+                autoQueue.shift();
+            } else {
+                var noMore = true;
+                pause();
+            }
+        }
+        if (!noMore) {
+            setSrc(queue[playingTrackIndex+1].trackId);
+            audio.currentTime = 0;
+            playingTrackIndex++;
+            if (audio.classList.contains("playing")) audio.play();
+        }
+    }
+    window.prev = function() {
+        if (playingTrackIndex > 0) {
+            setSrc(queue[playingTrackIndex-1].trackId);
+            audio.currentTime = 0;
+            playingTrackIndex--;
+            if (audio.classList.contains("playing")) audio.play();
+        } else {
+            audio.currentTime = 0;
+        }
+    }
     document.addEventListener("click", function(e) {
         var icon = insideClass(e.target, "icon");
         if (icon) {
@@ -1079,8 +1128,17 @@ function updateColVisibility() {
                 } else {
                     var selector = ".music-table .col .cell:nth-child(2)";
                     var firstCell = document.querySelector(selector);
-                    playTrack(firstCell.dataset.trackId);
+                    queue.push(pageTracks[0]);
+                    setSrc(queue[0].trackId);
+                    play();
+                    for (var i = 1; i < pageTracks.length; i++) {
+                        autoQueue.push(pageTracks[i]);
+                    }
                 }
+            } else if (cl.contains("next")) {
+                next();
+            } else if (cl.contains("prev")) {
+                prev();
             }
         }
     });

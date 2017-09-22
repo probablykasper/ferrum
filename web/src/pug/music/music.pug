@@ -22,8 +22,6 @@ main.content
                         div(class="col-resizer "+colName)
                             .line
                         .sort-icon
-                    //- each track, index in tracks
-                    //-     div(class=`cell ${colName} track-${index+1}`, data-track-id=track.trackID, data-context-menu="track")= track[colName]
             +column("flexible-width", "name", "Name")
             +column("auto-width", "time", "Time")
             +column("flexible-width", "artist", "Artist")
@@ -34,6 +32,4 @@ aside.sidebar
     .sidebar-resizer
     button.create-playlist
     .header Playlists
-    //- each playlist in playlists
-    //-     .item.playlist(data-playlist-id=playlist.playlistID, href=`/playlist/${playlist.playlistID}`)= playlist.name
 include player.pug
