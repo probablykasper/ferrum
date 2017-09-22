@@ -1,3 +1,5 @@
+(function wrapper() {
+    "use strict";
 (function prefSetup() {
     window.localPrefDefault = {
         "table": {
@@ -39,14 +41,14 @@
             "width": 200,
             "visible": false
         }
-    }
+    };
     if (!localStorage.getItem("localPref")) {
         localStorage.setItem("localPref", JSON.stringify(localPrefDefault));
     }
     window.localPref = JSON.parse(localStorage.getItem("localPref"));
     window.updateLocalPref = function() {
         localStorage.setItem("localPref", JSON.stringify(localPref));
-    }
+    };
     window.colMinWidths = {
         "name": 100,
         "time": 50,
@@ -54,10 +56,11 @@
         "album": 100,
         "dateAdded": 95,
         "plays": 60
-    }
+    };
 })();
 
-function xhr(reqContent, url, callback, options = {}) {
+function xhr(reqContent, url, callback, options) {
+    if (typeof options == "undefined") options = {};
     var xhr = new XMLHttpRequest();
     if (options.type == undefined)        options.type = "POST";
     if (options.contentType == undefined) options.contentType = "values";
@@ -73,9 +76,10 @@ function xhr(reqContent, url, callback, options = {}) {
             if      (this.status == 200) callback(this.responseText, false);
             else if (this.status == 404) callback(this.responseText, 404);
         }
-    }
+    };
 }
-function changePage(path, pushState = true) {
+function changePage(path, pushState) {
+    if (typeof pushState == "undefined") pushState = true;
     if (!loggedIn && path == "/") initPage(path);
     else {
         xhr("", path, function(res, err) {
@@ -97,7 +101,7 @@ function initPage(path, res) {
     window.pagePlaylistName = null;
 
     window.trackCount = 0;
-    page = path;
+    window.page = path;
     if (loggedIn) {
         if (path == "/") {
             insertPlaylists(res.playlists, true);
@@ -117,10 +121,11 @@ function initPage(path, res) {
         activePages[i].classList.remove("active");
     }
     // turn on new page
+    var selector;
     if (loggedIn) {
-        var selector = ".page-container.logged-in[data-page='"+page+"']";
+        selector = ".page-container.logged-in[data-page='"+page+"']";
     } else {
-        var selector = ".page-container.logged-out[data-page='"+page+"']";
+        selector = ".page-container.logged-out[data-page='"+page+"']";
     }
     var container = document.querySelector(selector);
     container.classList.add("active");
@@ -181,9 +186,10 @@ document.addEventListener("mouseout", function(e) {
                 changePage("/");
             }
         });
-    }
-    window.hasClass = function(el, cls, startsWith = false) {
-        classes = cls.split(","); // or
+    };
+    window.hasClass = function(el, cls, startsWith) {
+        if (typeof startsWith == "undefined") startsWith = false;
+        var classes = cls.split(","); // or
         for (var ci = 0; ci < classes.length; ci++) { // classIndex
             if (!startsWith && el.classList.contains(classes[ci])) return true;
             for (var eci = 0; eci < el.classList.length; eci++) { // elementClassIndex
@@ -193,28 +199,31 @@ document.addEventListener("mouseout", function(e) {
             }
         }
         return false;
-    }
+    };
     window.insideClass = function(el, cls) {
         if (hasClass(el, cls)) return el;
-        while (el = el.parentElement) {
+        while (el.parentElement) {
+            el = el.parentElement;
             if (hasClass(el, cls)) return el;
         }
         return false;
-    }
+    };
     window.insideDataset = function(e, dataset) {
         var el = e.target;
         if (el.dataset && el.dataset.hasOwnProperty(dataset)) {
             return el.dataset[dataset];
         } else {
-            while (el = el.parentElement) {
+            while (el.parentElement) {
+                el = el.parentElement;
                 if (el.dataset && el.dataset.hasOwnProperty(dataset)) {
                     return el.dataset[dataset];
                 }
             }
         }
         return false;
-    }
-    window.updateColWitdthPref = function(grab = false) {
+    };
+    window.updateColWitdthPref = function(grab) {
+        if (typeof grab == "undefined") grab = false;
         // grab or set preference?
         var flexibleCols = document.querySelectorAll(".music-table > .col.flexible-width");
         for (var i = 0; i < flexibleCols.length; i++) {
@@ -223,12 +232,12 @@ document.addEventListener("mouseout", function(e) {
             else             localPref.table.cols[colName].width = flexibleCols[i].style.flexGrow;
         }
         if (!grab) updateLocalPref();
-    }
+    };
     window.addEvents = function(el, events, handler) {
         for (var i = 0; i < events.length; i++) {
             el.addEventListener(events[i], handler);
         }
-    }
+    };
 
     var notifications = document.querySelector(".notifications");
     window.notify = function(message, two, buttonMsg, buttonCallback) {
@@ -246,19 +255,19 @@ document.addEventListener("mouseout", function(e) {
         var notification = document.createElement("div");
         notification.classList.add("notification");
         if (error) notification.classList.add("err");
-        var innerHTML = '<p class="msg">'+message+'</p>';
-        if (buttonMsg) innerHTML += '<button>'+buttonMsg+'</button>';
-        innerHTML = '<div class="container">'+innerHTML+'</div>';
+        var innerHTML = '<p class="msg">'+message+"</p>";
+        if (buttonMsg) innerHTML += "<button>"+buttonMsg+"</button>";
+        innerHTML = '<div class="container">'+innerHTML+"</div>";
         notification.innerHTML = innerHTML;
         notifications.append(notification);
 
         // button
+        function buttonClick() {
+            hideNotification();
+            buttonCallback();
+        }
         if (buttonMsg) {
             var button = notification.querySelector("button");
-            function buttonClick() {
-                hideNotification();
-                buttonCallback();
-            }
             button.addEventListener("click", buttonClick);
         }
 
@@ -281,7 +290,7 @@ document.addEventListener("mouseout", function(e) {
             }
         }
         setTimeout(hideNotification, lifespan);
-    }
+    };
 })();
 (function POSTs() {
     // tracks
@@ -291,14 +300,14 @@ document.addEventListener("mouseout", function(e) {
             data.append("tracks", files[i], files[i].name);
         }
         xhr(data, "/upload-tracks", function(res) {
-            var res = JSON.parse(res);
+            res = JSON.parse(res);
             if (res.errors) {
                 console.log(res.errors);
             } else {
                 notify("Successfully uploaded tracks");
             }
         }, {contentType: "multipart"});
-    }
+    };
     window.deleteTrack = function(trackId) {
         var req = "trackId="+trackId;
         var description = "Are you sure you want to delete this track?";
@@ -322,7 +331,7 @@ document.addEventListener("mouseout", function(e) {
                 }
             });
         }
-    }
+    };
     window.reviveTrack = function(trackId, undo) {
         var req = "trackId="+trackId;
         xhr(req, "/revive-track", function(res) {
@@ -336,14 +345,14 @@ document.addEventListener("mouseout", function(e) {
                 }
             }
         });
-    }
+    };
     // playlists
     window.createPlaylist = function(name, description) {
         var req =
         "name="+name+
         "&description="+description;
         xhr(req, "/create-playlist", function(res) {
-            var res = JSON.parse(res);
+            res = JSON.parse(res);
             if (res.errors) {
                 console.log(res.errors);
                 notify("An unknown error occured while creating playlist", true);
@@ -357,44 +366,44 @@ document.addEventListener("mouseout", function(e) {
                 });
             }
         });
-    }
+    };
     window.addTrackToPlaylist = function(trackId, playlistId, undo) {
         var req =
         "trackId="+trackId+
         "&playlistId="+playlistId;
         var url = "/add-track-to-playlist";
         xhr(req, url, function(res) {
-            var res = JSON.parse(res);
+            res = JSON.parse(res);
             if (undo) {
-                if (res.errors) {
-                    if (res.errors.duplicate) {
-                        notify("The track is already in that playlist", true);
-                    } else {
-                        console.log(res.errors);
-                        notify("An unknown error occured while adding the track to that playlist", true);
-                    }
-                } else {
-                    notify("Added track to playlist", "UNDO", function() {
-                        removeTrackFromPlaylist(element.dataset.trackId, data.playlistId, true);
-                    });
-                }
-            } else {
                 if (res.errors) {
                     console.log(res.errors);
                     notify("An unknown error occured while undoing", true);
                 } else {
                     notify("Undo successful", "UNDO");
                 }
+            } else {
+                if (res.errors) {
+                    if (res.errors.duplicate) {
+                        notify("The track is already in that playlist", true);
+                    } else {
+                        console.log(res.errors);
+                        notify("An unknown error occured while undoing", true);
+                    }
+                } else {
+                    notify("Added track to playlist", "UNDO", function() {
+                        removeTrackFromPlaylist(trackId, playlistId, true);
+                    });
+                }
             }
         });
-    }
+    };
     window.removeTrackFromPlaylist = function(trackId, playlistId, undo) {
         var req =
         "trackId="+trackId+
         "&playlistId="+playlistId;
         var url = "/remove-track-from-playlist";
         xhr(req, url, function(res) {
-            var res = JSON.parse(res);
+            res = JSON.parse(res);
             if (undo) {
                 if (res.errors) {
                     notify("An unknown error occured while undoing", true);
@@ -409,7 +418,7 @@ document.addEventListener("mouseout", function(e) {
                 }
             }
         });
-    }
+    };
     window.deletePlaylist = function(playlistId, name, undo) {
         var req = "playlistId="+playlistId;
         if (undo) {
@@ -423,24 +432,24 @@ document.addEventListener("mouseout", function(e) {
         function perform() {
             xhr(req, "/delete-playlist", function(res) {
                 res = JSON.parse(res);
+                function performDelete() {
+                    var selector = 'aside.sidebar .playlist[data-playlist-id="'+playlistId+'"]';
+                    var sidebarItem = document.querySelector(selector);
+                    sidebarItem.parentElement.removeChild(sidebarItem);
+                    changePage("/");
+                }
                 if (undo) {
                     if (res.errors) {
                         notify("An unknown error occured while undoing", true);
                     } else {
-                        var selector = 'aside.sidebar .playlist[data-playlist-id="'+playlistId+'"]';
-                        var sidebarItem = document.querySelector(selector);
-                        sidebarItem.parentElement.removeChild(sidebarItem);
-                        changePage("/");
+                        performDelete();
                         notify("Undo successful");
                     }
                 } else {
                     if (res.errors) {
                         notify("An unknown error occured while deleting the playlist", true);
                     } else {
-                        var selector = 'aside.sidebar .playlist[data-playlist-id="'+playlistId+'"]';
-                        var sidebarItem = document.querySelector(selector);
-                        sidebarItem.parentElement.removeChild(sidebarItem);
-                        changePage("/");
+                        performDelete();
                         notify("Deleted playlist", "UNDO", function() {
                             revivePlaylist(playlistId, name, true);
                         });
@@ -448,7 +457,7 @@ document.addEventListener("mouseout", function(e) {
                 }
             });
         }
-    }
+    };
     window.revivePlaylist = function(playlistId, name, undo) {
         var req = "playlistId="+playlistId;
         xhr(req, "/revive-playlist", function(res) {
@@ -465,12 +474,11 @@ document.addEventListener("mouseout", function(e) {
                 }
             }
         });
-    }
+    };
 })();
 (function dialogs() {
     var fg = document.querySelector(".fg");
     var dialogContainer = document.querySelector(".dialogs");
-    var dialogs = document.querySelectorAll(".dialogs > .dialog");
     var dialog = null;
     var confirmTitle = dialogContainer.querySelector(".dialog.confirm .title");
     var confirmDescription = dialogContainer.querySelector(".dialog.confirm .description");
@@ -490,12 +498,12 @@ document.addEventListener("mouseout", function(e) {
         dialog.classList.add("visible");
         var focusThis = dialog.querySelector(".focus-this");
         focusThis.focus();
-    }
+    };
     window.closeDialog = function() {
         fg.classList.remove("visible");
         dialogContainer.classList.remove("visible");
         dialog.classList.remove("visible");
-    }
+    };
     document.addEventListener("click", function(e) {
         if (e.button == 0) {
             var cl = e.target.classList;
@@ -510,7 +518,7 @@ document.addEventListener("mouseout", function(e) {
                 } else if (cl.contains("confirm") && cl.contains("primary")) {
                     closeDialog();
                     confirmCallback();
-                };
+                }
             } else if (cl.contains("fg")) {
                 closeDialog();
             }
@@ -521,22 +529,20 @@ document.addEventListener("mouseout", function(e) {
 
 // Context menus
 function contextItemClick(context, ctxElement, element) {
-    var item = ctxElement.innerHTML;
     var data = ctxElement.dataset;
-    var cl = ctxElement.classList;
     if (context == "table-header") {
         if (data.col) {
             if (localPref.table.cols[data.col].visible) {
                 localPref.table.cols[data.col].visible = false;
             } else {
-                localPref.table.cols[data.col].visible = true;''
+                localPref.table.cols[data.col].visible = true;
             }
             updateColVisibility();
             updateLocalPref();
         } else if (data.type == "reset") {
             for (var i = 0; i < localPref.table.colOrder.length; i++) {
                 var col = localPref.table.colOrder[i];
-                localPref.table.cols[col].width = localPrefDefault.table.cols[col].width
+                localPref.table.cols[col].width = localPrefDefault.table.cols[col].width;
             }
             updateColWitdthPref(true);
             updateColWitdthPref();
@@ -566,8 +572,8 @@ function contextItemClick(context, ctxElement, element) {
             closeContextMenu();
         }
     });
-    var currentContextMenu = undefined;
-    var clickedContextElement = undefined;
+    var currentContextMenu;
+    var clickedContextElement;
     document.addEventListener("click", function(e) {
         if (e.target.classList.contains("context-item") && !e.target.classList.contains("arrow")) {
             contextItemClick(currentContextMenu, e.target, clickedContextElement);
@@ -647,7 +653,7 @@ function contextItemClick(context, ctxElement, element) {
             ctxs[i].style.display = "none";
         }
         closeSubmenus();
-    }
+    };
 })();
 
 // MUSIC PAGES
@@ -685,7 +691,7 @@ function insertPlaylists(playlists, deleteOld) {
 }
 function insertTracks(tracks, deleteOld) {
     if (deleteOld) {
-        cells = document.querySelectorAll(".music-table .cell[data-track]");
+        var cells = document.querySelectorAll(".music-table .cell[data-track]");
         for (var i = 0; i < cells.length; i++) {
             cells[i].parentElement.removeChild(cells[i]);
         }
@@ -737,7 +743,7 @@ function updateColVisibility() {
         if (hasClass(col, "auto-width")) col = findNextCol(col, reverse);
         return col;
     }
-    var mouseDown, mousePosX, mouseStartPosX, oldWidth, oldWidthNext, flexibleCols, availWidth, nextColClass;
+    var mouseDown, mousePosX, oldWidth, oldWidthNext, flexibleCols, availWidth, nextColClass;
     document.addEventListener("mousedown", function(e) {
         if (e.button == 0 && e.target.classList.contains("col-resizer")) {
             e.preventDefault();
@@ -770,16 +776,16 @@ function updateColVisibility() {
             var widthDifference = mousePosX - mousePosStartX;
             var newWidth = oldWidth + widthDifference;
             var newWidthNext = oldWidthNext - widthDifference;
-            var nextColWidth = Number(currentCol.nextElementSibling.style.width.slice(0, -2));
 
             // min widths
+            var differenceFix;
             if (newWidth < colMinWidths[currentColClass]) {
-                var differenceFix = colMinWidths[currentColClass] - newWidth;
+                differenceFix = colMinWidths[currentColClass] - newWidth;
                 newWidth += differenceFix;
                 newWidthNext -= differenceFix;
             }
             if (newWidthNext < colMinWidths[nextColClass]) {
-                var differenceFix = colMinWidths[nextColClass] - newWidthNext;
+                differenceFix = colMinWidths[nextColClass] - newWidthNext;
                 newWidth -= differenceFix;
                 newWidthNext += differenceFix;
             }
@@ -806,7 +812,6 @@ function updateColVisibility() {
 })();
 (function colRearrange() {
     // init column positions
-    var cols = localPref.table.cols;
     var colOrder = localPref.table.colOrder;
     var html = "";
     for (var i = 0; i < colOrder.length; i++) {
@@ -824,7 +829,7 @@ function updateColVisibility() {
     }
 
     var musicTable = document.querySelector(".music-table");
-    var mouseDown, mousePosX, mouseStartPosX, currentCol, nextCol, moveCount;
+    var mouseDown, mousePosX, currentCol, nextCol, moveCount;
     musicTable.addEventListener("mousedown", function(e) {
         if (e.button == 0 && hasClass(e.target, "cell") && e.target.previousElementSibling == null) {
             e.preventDefault();
@@ -884,10 +889,11 @@ function updateColVisibility() {
             musicTable.classList.remove("rearranging");
             document.querySelector(".fg").style.pointerEvents = "";
             var cols = document.querySelectorAll(".music-table .col");
+            var newPos;
             for (var i = 0; i < cols.length; i++) {
                 cols[i].classList.add("no-transition");
                 cols[i].style.left = "";
-                if (cols[i] == currentCol) var newPos = i + moveCount;
+                if (cols[i] == currentCol) newPos = i + moveCount;
             }
             var table = document.querySelector(".music-table");
             if      (moveCount > 0) table.insertBefore(currentCol, table.children[newPos+1]);
@@ -999,7 +1005,7 @@ function updateColVisibility() {
     }
 
     // setup
-    var setupEvents = ["drag", "dragstart", "dragend", "dragover", "dragenter", , "dragleave", "drop"];
+    var setupEvents = ["drag", "dragstart", "dragend", "dragover", "dragenter", "dragleave", "drop"];
     addEvents(window, setupEvents, function(e) {
         if (containsFiles(e)) {
             e.preventDefault();
@@ -1048,19 +1054,19 @@ function updateColVisibility() {
     window.playTrack = function(trackId) {
         audio.setAttribute("src", "/track/"+trackId+".mp3");
         play();
-    }
+    };
     window.play = function() {
         audio.play();
         audio.classList.remove("paused");
         audio.classList.add("playing");
         playPauseIcon.innerHTML = '<path d="M0 0h24v24H0z" fill="none"></path><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"></path>';
-    }
+    };
     window.pause = function() {
         audio.pause();
         audio.classList.remove("playing");
         audio.classList.add("paused");
         playPauseIcon.innerHTML = '<path d="M0 0h24v24H0z" fill="none"></path><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"></path>';
-    }
+    };
     document.addEventListener("click", function(e) {
         var icon = insideClass(e.target, "icon");
         if (icon) {
@@ -1095,7 +1101,7 @@ function validate(type, msg, el, third) {
         var num = third;
         if (el.value.length > num) result = true;
     } else if (type == "notEmail") {
-        var regex = "[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?"
+        var regex = "[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?";
         if (!el.value.match(regex)) result = true;
     }
     if (result == true) {
@@ -1230,3 +1236,6 @@ function clickRegister() {
 
 // INIT FIRST PAGE
 changePage(path, false);
+
+}());
+// end of wrapper function
