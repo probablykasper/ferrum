@@ -253,8 +253,8 @@ function getMD(filepath, callback) {
         let d = new Date();
         let YYYY = d.getFullYear();
         let MM = min2(d.getMonth()+1);
-        let DD = min2(d.getDate()   );
-        let hh = min2(d.getDate()   );
+        let DD = min2(d.getDate());
+        let hh = min2(d.getHours());
         let mm = min2(d.getMinutes());
         let ss = min2(d.getSeconds());
         let response = {
@@ -272,7 +272,7 @@ function getMD(filepath, callback) {
         console.log(err);
     });
 }
-function insertTrack(req, res, filepath, trackId) {
+function insertTrack(req, res, filepath, trackId, callback) {
     getMD(filepath, (value) => {
         value.userId = res.locals.userId;
         value.trackId = trackId;
@@ -282,7 +282,7 @@ function insertTrack(req, res, filepath, trackId) {
         var tracksQuery = "INSERT INTO tracks SET ?";
         db.query(tracksQuery, value, function(err, result) {
             if (err) console.log(err);
-            else res.json({ "errors": null });
+            else callback();
         });
     });
 }
@@ -293,8 +293,19 @@ module.exports.uploadTracks = (req, res) => {
                 console.log(err);
                 res.json({ "errors": 23623 });
             } else {
+                let uploadedCount = 0;
+                function oneUploaded() {
+                    uploadedCount++;
+                    if (uploadedCount == req.files.length) {
+                        res.json({ "errors": null })
+                    }
+                }
                 for (var i = 0; i < req.files.length; i++) {
-                    insertTrack(req, res, req.files[i].path, req.files[i].trackId);
+                    var path = req.files[i].path;
+                    var trackId = req.files[i].trackId;
+                    insertTrack(req, res, path, trackId, function() {
+                        oneUploaded();
+                    });
                 }
             }
         });
