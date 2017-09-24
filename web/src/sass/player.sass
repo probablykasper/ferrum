@@ -7,7 +7,9 @@
     background-color: rgba(#FFFFFF, 0.1)
     &.playing, &.paused
         .controls .left
-            visibility: visible
+            opacity: 1
+        .rangeSlider.progress-slider
+            opacity: 1
     .icon
         width: 30px
         height: 30px
@@ -18,6 +20,30 @@
         opacity: 0.8
         &:focus
             opacity: 1
+    .rangeSlider.progress-slider
+        opacity: 0
+        cursor: pointer
+        transition: opacity $transition
+        width: calc(100% - 80px + 12px)
+        height: 4px
+        position: relative
+        background-color: rgba(#FFFFFF, 0.5)
+        left: calc(80px - 12px/2)
+        .rangeSlider__buffer
+            z-index: 62
+        .rangeSlider__fill
+            z-index: 64
+            background-color: rgba(#FFFFFF, 0.75)
+            height: 100%
+            position: absolute
+        .rangeSlider__handle
+            z-index: 66
+            height: 12px
+            width: 12px
+            background-color: #FFFFFF
+            border-radius: 100%
+            position: absolute
+            bottom: -100%
     .controls
         display: flex
         width: 100%
@@ -29,18 +55,28 @@
             display: flex
             align-items: center
         .left
-            visibility: hidden
+            opacity: 0
+            transition: opacity $transition
             justify-content: flex-start
             min-width: 0
             .cover
                 height: 80px
                 width: 80px
+                position: relative
+                bottom: 4px
+                z-index: 65
             .track-info
+                padding-left: 10px
                 overflow: hidden
                 > div
                     white-space: nowrap
                     overflow: hidden
                     text-overflow: ellipsis
+                .title
+                    font-size: 18px
+                .artist
+                    font-size: 14px
+                    color: rgba(#FFFFFF, 0.75)
         .middle
             justify-content: center
             width: 180px

@@ -103,7 +103,7 @@ module.exports.home = (req, res) => {
                 let response = {
                     playlists: playlists,
                     tracks: tracks
-                }
+                };
                 res.send(JSON.stringify(response));
             });
         });
@@ -369,6 +369,32 @@ module.exports.reviveTrack = (req, res) => {
                 }
             });
         }
+    }
+}
+
+module.exports.getTrackInfo = (req, res) => {
+    if (res.locals.loggedIn) {
+        let tracksQuery = `
+            SELECT
+                trackId,
+                name,
+                artist,
+                TIME_FORMAT(SEC_TO_TIME(time), "%i:%S")
+                    AS time,
+                album, DATE_FORMAT(dateAdded, "%e/%c/%y")
+                    AS dateAdded,
+                plays
+            FROM tracks
+            WHERE
+                userId = ?
+                AND trackId = ?
+                AND inTrash = 0`;
+        db.query(tracksQuery, [res.locals.userId, req.body.trackId], (err, track) => {
+            let response = {
+                track: track[0]
+            };
+            res.send(JSON.stringify(response));
+        });
     }
 }
 
