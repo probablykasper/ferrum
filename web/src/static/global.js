@@ -1167,6 +1167,9 @@ function updateColVisibility() {
             if (player.classList.contains("playing")) play(false);
         }
     };
+    audio.addEventListener("ended", function() {
+        next();
+    });
     window.prev = function() {
         if (playingTrackIndex > 0) {
             setSrc(queue[playingTrackIndex-1].trackId);
@@ -1201,6 +1204,32 @@ function updateColVisibility() {
             } else if (cl.contains("prev")) {
                 prev();
             }
+        }
+    });
+
+    var volumeSlider = document.querySelector(".player .volume-slider");
+    var volumeMouseDown = false;
+    var volume = localStorage.getItem("volume");
+    if (volume) volume = Number(volume);
+    else volume = 1;
+    audio.volume = volume;
+    rangeSlider.create(volumeSlider, {
+        rangeClass: "rangeSlider volume-slider",
+        polyfill: true,
+        min: 0,
+        max: 1,
+        step: 0.0002,
+        value: volume,
+        onSlideStart: function() {
+            volumeMouseDown = true;
+        },
+        onSlide: function(value) {
+            audio.volume = value;
+        },
+        onSlideEnd: function(value) {
+            volumeMouseDown = false;
+            audio.volume = value;
+            localStorage.setItem("volume", String(value));
         }
     });
 })();
