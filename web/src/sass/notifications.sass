@@ -1,51 +1,56 @@
 .notifications
     pointer-events: none
     z-index: 100
-    bottom: 0px
+    bottom: 80px
     position: fixed
     display: flex
     justify-content: flex-end
     flex-direction: column
     font-size: 14px
-    margin: 20px
-    .notification
-        border-radius: 3px
-        pointer-events: all
-        margin-top: 20px
-        background-color: rgba(#192A3D, 1)
-        width: 250px
-        box-shadow: $shadow-5
-        position: relative
-        transition: transform $transition-long-in
-        transform: translateY(calc(100% + 20px)) scale(0.75)
-        &.fade-in
+    padding: 20px
+    overflow: hidden
+    .notification-container
+        &.fade-in .notification
             transform: none
-            &.faded-in
-                transition: transform $transition-long-out
-        &.fade-out
+            max-height: 100px
+            margin-top: 20px
+        &.faded-in .notification
+            transition: transform $transition-long-out, max-height $transition-short, margin-top $transition-short
+        &.fade-out .notification
             transform: translate(calc(-100% - 20px), 0px) scale(0.75)
-        &.err::after
-            content: ""
-            position: absolute
-            width: 4px
-            height: 100%
-            top: 0px
-            border-top-left-radius: 3px
-            border-bottom-left-radius: 3px
-            background-color: rgba(#D92E2E, 0.5)
-        .container
-            padding: 12px
+        .notification
             border-radius: 3px
-            background-color: rgba(#FFFFFF, 0.05)
-            display: flex
-            justify-content: space-between
-        p.msg
-            white-space: normal
-            color: rgba(#FFFFFF, 0.75)
-        button
-            font-variant-caps: all-small-caps
-            background-color: transparent
-            font-family: "Roboto", sans-serif
-            cursor: pointer
-            padding: 0px
-            // color: rgba(#FFFFFF, 0.75)
+            pointer-events: all
+            background-color: rgba(#192A3D, 1)
+            width: 250px
+            box-shadow: $shadow-5
+            position: relative
+            transition: transform $transition-long-in, max-height $transition-short, margin-top $transition-short
+            max-height: 0px
+            margin-top: 0px
+            transform: translateX(calc(-100% - 20px)) scale(0.75)
+            &.err::after
+                content: ""
+                position: absolute
+                width: 4px
+                height: 100%
+                top: 0px
+                border-top-left-radius: 3px
+                border-bottom-left-radius: 3px
+                background-color: rgba(#D92E2E, 0.5)
+            .container
+                padding: 12px
+                border-radius: 3px
+                background-color: rgba(#FFFFFF, 0.05)
+                display: flex
+                justify-content: space-between
+            p.msg
+                white-space: normal
+                color: rgba(#FFFFFF, 0.75)
+            button
+                font-variant-caps: all-small-caps
+                background-color: transparent
+                font-family: "Roboto", sans-serif
+                cursor: pointer
+                padding: 0px
+                // color: rgba(#FFFFFF, 0.75)

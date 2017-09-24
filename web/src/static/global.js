@@ -253,11 +253,23 @@ document.addEventListener("mouseout", function(e) {
         }
         // create element
         var notification = document.createElement("div");
-        notification.classList.add("notification");
-        if (error) notification.classList.add("err");
-        var innerHTML = '<p class="msg">'+message+"</p>";
-        if (buttonMsg) innerHTML += "<button>"+buttonMsg+"</button>";
-        innerHTML = '<div class="container">'+innerHTML+"</div>";
+        notification.classList.add("notification-container");
+        var err = (error) ? " err" : "";
+        var buttonMsgHTML = (buttonMsg) ? "<button>"+buttonMsg+"</button>" : "";
+
+        var innerHTML  = '<div class="notification'+err+'">';
+            innerHTML +=     '<div class="container">';
+            innerHTML +=         '<p class="msg">'+message+'</p>';
+            innerHTML +=         buttonMsgHTML;
+            innerHTML +=     '</div>';
+            innerHTML += '</div>';
+
+        // var notification = document.createElement("div");
+        // notification.classList.add("notification");
+        // if (error) notification.classList.add("err");
+        // var innerHTML = '<p class="msg">'+message+"</p>";
+        // if (buttonMsg) innerHTML += "<button>"+buttonMsg+"</button>";
+        // innerHTML = '<div class="container">'+innerHTML+"</div>";
         notification.innerHTML = innerHTML;
         notifications.append(notification);
 
