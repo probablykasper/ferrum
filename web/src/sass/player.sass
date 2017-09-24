@@ -5,6 +5,9 @@
     position: fixed
     bottom: 0px
     background-color: rgba(#FFFFFF, 0.1)
+    &.playing, &.paused
+        .controls .left
+            visibility: visible
     .icon
         width: 30px
         height: 30px
@@ -22,16 +25,25 @@
         justify-content: space-between
         > div
             height: 100%
-            width: 100%
+            width: calc(50% - 180px/2)
             display: flex
             align-items: center
         .left
+            visibility: hidden
             justify-content: flex-start
+            min-width: 0
             .cover
                 height: 80px
                 width: 80px
+            .track-info
+                overflow: hidden
+                > div
+                    white-space: nowrap
+                    overflow: hidden
+                    text-overflow: ellipsis
         .middle
             justify-content: center
+            width: 180px
             .icon
             .icon.prev
             .icon.play-pause
