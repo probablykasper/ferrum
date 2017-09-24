@@ -409,6 +409,28 @@ module.exports.getTrackInfo = (req, res) => {
     }
 }
 
+module.exports.IncrementTrackPlayCount = (req, res) => {
+    if (res.locals.loggedIn) {
+        let tracksQuery = `
+            UPDATE tracks
+            SET
+                plays = plays + 1
+            WHERE
+                userId = ?
+                AND trackId = ?`;
+        db.query(tracksQuery, [res.locals.userId, req.body.trackId], (err, result) => {
+            if (err) {
+                console.log(err);
+                res.json({ "errors": 73942 });
+            } else if (result.affectedRows == 0) {
+                res.json({ "errors": 27222 });
+            } else if (result.affectedRows == 1) {
+                res.json({ "errors": null });
+            }
+        });
+    }
+}
+
 // ---------- playlists ----------
 
 module.exports.createPlaylist = (req, res) => {

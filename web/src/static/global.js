@@ -1174,6 +1174,16 @@ function updateColVisibility() {
         }
     };
     audio.addEventListener("ended", function() {
+        var trackId = queue[playingTrackIndex].trackId;
+        var req = "trackId="+trackId;
+        xhr(req, "/increment-track-play-count", function(res) {
+            res = JSON.parse(res);
+            if (!res.errors) {
+                var query = '.music-table .col[data-col-name="plays"] .cell[data-track-id="'+trackId+'"]';
+                var cell = document.querySelector(query);
+                cell.innerHTML = Number(cell.innerHTML) + 1;
+            }
+        });
         next();
     });
     window.prev = function() {
