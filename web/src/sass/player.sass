@@ -2,7 +2,7 @@
     cursor: pointer
     height: 4px
     position: relative
-    background-color: rgba(#FFFFFF, 0.5)
+    background-color: rgba(#FFFFFF, 0.4)
     .rangeSlider__buffer
     .rangeSlider__fill
         background-color: rgba(#FFFFFF, 0.75)
@@ -39,9 +39,12 @@
             opacity: 1
     .rangeSlider.progress-slider
         opacity: 0
-        transition: opacity $transition
+        transition: opacity $transition, background-color $transition
         width: calc(100% - 80px + 12px)
         left: calc(80px - 12px/2)
+        background-color: transparent
+        &:hover, &.mouse-down
+            background-color: rgba(#FFFFFF, 0.4)
         .rangeSlider__buffer
             z-index: 62
         .rangeSlider__fill
@@ -100,9 +103,10 @@
                 display: flex
                 align-items: center
                 padding-left: 40px
-                &:hover .volume-slider
-                    opacity: 1
-                    transform: translateX(0px) scale(1)
+                &:hover, &.mouse-down
+                    .volume-slider
+                        opacity: 1
+                        transform: translateX(0px) scale(1)
                 .volume-slider
                     opacity: 0
                     transform: translateX(20%) scale(0.75)
