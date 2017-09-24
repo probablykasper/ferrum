@@ -1146,7 +1146,8 @@ function updateColVisibility() {
         if (changeHTML) {
             player.classList.remove("paused");
             player.classList.add("playing");
-            playPauseIcon.innerHTML = '<path d="M0 0h24v24H0z" fill="none"></path><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"></path>';
+            // playPauseIcon.innerHTML = '<path d="M0 0h24v24H0z" fill="none"></path><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"></path>';
+            playPauseIcon.innerHTML = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/><path d="M0 0h24v24H0z" fill="none"/>';
         }
     };
     window.pause = function() {
@@ -1154,7 +1155,8 @@ function updateColVisibility() {
         clearInterval(progressInterval);
         player.classList.remove("playing");
         player.classList.add("paused");
-        playPauseIcon.innerHTML = '<path d="M0 0h24v24H0z" fill="none"></path><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"></path>';
+        // playPauseIcon.innerHTML = '<path d="M0 0h24v24H0z" fill="none"></path><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"></path>';
+        playPauseIcon.innerHTML = '<path d="M8 5v14l11-7z"/><path d="M0 0h24v24H0z" fill="none"/>';
     };
     window.next = function() {
         if (playingTrackIndex >= queue.length-1) {
