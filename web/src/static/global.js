@@ -1389,8 +1389,7 @@ function clickRegister() {
         if (!d) d = validate("noMatch",     "The passwords do not match",               password2, password );
         if (!a && !b && !c && !d) {
             var req =
-            "type=register"+
-            "&email="+email.value+
+            "email="+email.value+
             "&password="+password.value+
             "&password2="+password2.value;
 
