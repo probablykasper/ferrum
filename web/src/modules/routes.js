@@ -220,6 +220,23 @@ module.exports.login = (req, res) => {
 //     console.log("-----err");
 //     console.log(error);
 // });
+// client.indices.putMapping({
+//     index: "users",
+//     type: "cooltype",
+//     body: {
+//         "properties": {
+//             "full_name": {
+//                 "type": "text"
+//             }
+//         }
+//     }
+// }).then((body) => {
+//     console.log("-----suc");
+//     console.log(body);
+// }, (error) => {
+//     console.log("-----err");
+//     console.log(error);
+// });
 
 module.exports.register = (req, res) => {
     let email = req.body.email;
@@ -232,13 +249,11 @@ module.exports.register = (req, res) => {
     if (!validator.isLength(password, {min: 8}))    errors.password = "short";
     if (!validator.isLength(password, {max: 100}))  errors.password = "long";
     if (!validator.equals(password2, password))     errors.password2 = "match";
-    client.search({
-        index: "users",
-        type: "user",
-        q: "email:"+email,
-        size: 1
-    }).then((body) => {
-        if (body.hits.total == 0) {
+    db.query("SELECT * FROM users WHERE email = ?", email, function(err, result) {
+        if (err) console.log(err);
+        if (result[0] && result[0].email == email) errors.email = "exist";
+        if (result[1] && result[1].email == email) errors.email = "exist";
+        if (!errors.email && !errors.password && !errors.password2) {
             bcrypt.genSalt(10, function(err, salt) {
                 if (err) {
                     jsonResErr(res, {unknown: 55529});
@@ -258,53 +273,14 @@ module.exports.register = (req, res) => {
                             }).then((body) => {
                                 jsonResErr(res, null);
                             }, (error) => {
-                                jsonResErr(res, {unknown: 50132});
+                                jsonResErr(res, 29132);
                             });
                         }
                     });
                 }
             });
-        } else if (body.hits.total == 1) {
-            jsonResErr(res, {email: "exist"});
-        } else {
-            jsonResErr(res, {unknown: 59283});
-        }
-
-    }, (error) => {
-        jsonResErr(res, {unknown: 52334});
+        } else res.json({ "errors": errors });
     });
-    // db.query("SELECT * FROM users WHERE email = ?", email, function(err, result) {
-    //     if (err) console.log(err);
-    //     if (result[0] && result[0].email == email) errors.email = "exist";
-    //     if (result[1] && result[1].email == email) errors.email = "exist";
-    //     if (!errors.email && !errors.password && !errors.password2) {
-    //         bcrypt.genSalt(10, function(err, salt) {
-    //             if (err) {
-    //                 jsonResErr(res, {unknown: 55529});
-    //             } else {
-    //                 bcrypt.hash(password, salt, function(err, hashedPassword) {
-    //                     if (err) {
-    //                         jsonResErr(res, {unknown: 55222});
-    //                     } else {
-    //                         client.index({
-    //                             index: "users",
-    //                             type: "user",
-    //                             body: {
-    //                                 userId: b32(6),
-    //                                 email: email,
-    //                                 password: hashedPassword
-    //                             }
-    //                         }).then((body) => {
-    //                             jsonResErr(res, null);
-    //                         }, (error) => {
-    //                             jsonResErr(res, 29132);
-    //                         });
-    //                     }
-    //                 });
-    //             }
-    //         });
-    //     } else res.json({ "errors": errors });
-    // });
 };
 
 module.exports.logout = (req, res) => {
