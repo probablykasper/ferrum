@@ -31,9 +31,24 @@ const storage = multer.diskStorage({
 });
 const upload = multer({storage: storage});
 
-const jsmediatags = require("jsmediatags");
 const mm = require("music-metadata");
 const util = require("util");
+
+
+
+const elasticsearch = require("elasticsearch");
+const client = new elasticsearch.Client({
+    host: "elastic:9200",
+    httpAuth: "elastic:changeme",
+    apiVersion: "5.5",
+    log: "trace"
+});
+
+function jsonResErr(res, err) {
+    res.json({
+        errors: err
+    });
+}
 
 // -------------------- STATIC --------------------
 
@@ -192,6 +207,36 @@ module.exports.login = (req, res) => {
     } else res.json({ "errors": errors });
 }
 
+// client.search({
+//     index: "users",
+//     type: "user",
+//     q: "username:kah",
+//     size: 1
+// }).then((body) => {
+//     console.log("-----suc");
+//     console.log(body);
+// }, (error) => {
+//     console.log("-----err");
+//     console.log(error);
+// });
+client.indices.putMapping({
+    index: "users",
+    type: "user",
+    body: {
+        properties: {
+            username: "text",
+            email: "text",
+            password: "text"
+        }
+    }
+}).then((body) => {
+    console.log("-----suc");
+    console.log(body);
+}, (error) => {
+    console.log("-----err");
+    console.log(error);
+});
+
 module.exports.register = (req, res) => {
     let username = req.body.username;
     let email = req.body.email;
@@ -214,24 +259,39 @@ module.exports.register = (req, res) => {
         if (result[1] && result[1].email == email) errors.email = "exist";
         if (!errors.username && !errors.email && !errors.password && !errors.password2) {
             bcrypt.genSalt(10, function(err, salt) {
-                if (err) console.log(err);
-                bcrypt.hash(password, salt, function(err, hashedPassword) {
-                    if (err) console.log(err);
-                    let values = {
-                        userId: b32(6),
-                        username: username,
-                        email: email,
-                        password: hashedPassword
-                    };
-                    db.query("INSERT INTO users SET ?", values, function(err, result) {
-                        if (err) console.log(err);
+                if (err) {
+                    jsonResErr(res, {unknown: 55529});
+                } else {
+                    bcrypt.hash(password, salt, function(err, hashedPassword) {
+                        if (err) {
+                            jsonResErr(res, {unknown: 55222});
+                        } else {
+                            let values = {
+                                userId: b32(6),
+                                username: username,
+                                email: email,
+                                password: hashedPassword
+                            };
+                            client.index({
+                                index: "users",
+                                type: "user",
+                                body: {
+                                    username: username,
+                                    email: email,
+                                    password: hashedPassword
+                                }
+                            }).then((body) => {
+                                jsonResErr(res, null);
+                            }, (error) => {
+                                jsonResErr(res, 29132);
+                            });
+                        }
                     });
-                    res.json({ "errors": null });
-                });
+                }
             });
         } else res.json({ "errors": errors });
     });
-}
+};
 
 module.exports.logout = (req, res) => {
     req.logout();

@@ -2,15 +2,29 @@
 Some (to-be) web/desktop/mobile application for your music library. Oh, and it's my first project with Docker. My first project with Node.js as well. Oh, also the first project using GitLab. And the first one where I use Jade. The first one where I build a RESTful API too, in fact.
 
 ## ToDo
-- [x] Double-click to reset column/sidebar sizes
-- [x] Column sorting
-- [x] Column organizing
-- [ ] Figure out how to display account/settings/playlists
-- [x] Custom context menu
-- [x] Sidebar
-    - [ ] Double-click to resize to min width
-- [ ] Auto-Playlists like iTunes
-- [ ] Import tool
-    - [ ] Upload/YouTube/SoundCloud/Spotify by YT/SC search
-    - [ ] Chrome extension
-    - [ ] Smart artist/song
+- Account
+    - Email verification
+    - Change password
+    - Device management?
+- Search
+- Queue
+- Double-click to reset column/sidebar sizes
+- Column sorting
+- Custom context menus
+- Account/settings
+- Auto-playlists
+- Import tool
+    - YouTube
+    - SoundCloud
+    - Google Play Music
+    - Extensions for Chrome/Firefox/Opera/Safari/Edge
+    - Smart artist/song
+
+- Web app
+- Electron desktop app
+    - Native context menus
+    - Native notifications?
+    - Files can "Open with" to add to Ferrum
+    - Media controls
+- Android app
+- iPhone app

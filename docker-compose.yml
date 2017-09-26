@@ -1,5 +1,26 @@
 version: "3.3"
 services:
+    elastic:
+        image: docker.elastic.co/elasticsearch/elasticsearch:5.5.3
+        container_name: elastic
+        environment:
+            - cluster.name=ferrum-cluster
+            - bootstrap.memory_lock=true
+            - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+        ulimits:
+            memlock:
+                soft: -1
+                hard: -1
+        deploy:
+            resources:
+                limits:
+                    memory: 1g
+        volumes:
+            - esdata:/usr/share/elasticsearch/data
+        ports:
+            - 9200:9200
+        # networks:
+        #     - esnet
     db:
         build: ./db
         container_name: db
@@ -27,6 +48,8 @@ services:
             - db
         environment:
             - DATABASE_HOST=db
+        # networks:
+        #     - esnet
     phpmyadmin:
         image: phpmyadmin/phpmyadmin:4.7
         container_name: phpmyadmin
@@ -39,3 +62,8 @@ services:
             - /sessions
         depends_on:
             - db
+volumes:
+    esdata:
+        driver: local
+# networks:
+#     esnet:
