@@ -181,20 +181,21 @@ module.exports.playlist = (req, res) => {
 // ---------- account ----------
 
 module.exports.login = (req, res) => {
-    let username = req.body.username;
+    let email = req.body.email;
     let password = req.body.password;
     let errors = {};
-    if (validator.isEmpty(username))                errors.username = "empty";
-    if (!validator.isLength(username, {max: 30}))   errors.username = "long";
+    if (!validator.isEmail(email))                  errors.email = "invalid";
+    if (validator.isEmpty(email))                   errors.email = "empty";
+    if (!validator.isLength(email, {max: 60}))      errors.email = "long";
     if (!validator.isLength(password, {min: 8}))    errors.password = "short";
     if (!validator.isLength(password, {max: 100}))  errors.password = "long";
 
-    if (!errors.username && !errors.password) {
+    if (!errors.email && !errors.password) {
         // auth
         passport.authenticate("local", function(err, user, info) {
             if (err) return console.log(err);
             if (!user) {
-                if (info.username) errors.username = info.username;
+                if (info.email) errors.email = info.email;
                 if (info.password) errors.password = info.password;
                 res.json({ "errors": errors });
             } else {
@@ -219,45 +220,40 @@ module.exports.login = (req, res) => {
 //     console.log("-----err");
 //     console.log(error);
 // });
-client.indices.putMapping({
-    index: "users",
-    type: "user",
-    body: {
-        properties: {
-            username: "text",
-            email: "text",
-            password: "text"
-        }
-    }
-}).then((body) => {
-    console.log("-----suc");
-    console.log(body);
-}, (error) => {
-    console.log("-----err");
-    console.log(error);
-});
+// client.indices.putMapping({
+//     index: "users",
+//     type: "cooltype",
+//     body: {
+//         "properties": {
+//             "full_name": {
+//                 "type": "text"
+//             }
+//         }
+//     }
+// }).then((body) => {
+//     console.log("-----suc");
+//     console.log(body);
+// }, (error) => {
+//     console.log("-----err");
+//     console.log(error);
+// });
 
 module.exports.register = (req, res) => {
-    let username = req.body.username;
     let email = req.body.email;
     let password = req.body.password;
     let password2 = req.body.password2;
     let errors = {};
-    if (validator.isEmpty(username))                errors.username = "empty";
-    if (!validator.isLength(username, {max: 30}))   errors.username = "long";
     if (!validator.isEmail(email))                  errors.email = "invalid";
     if (validator.isEmpty(email))                   errors.email = "empty";
     if (!validator.isLength(email, {max: 60}))      errors.email = "long";
     if (!validator.isLength(password, {min: 8}))    errors.password = "short";
     if (!validator.isLength(password, {max: 100}))  errors.password = "long";
     if (!validator.equals(password2, password))     errors.password2 = "match";
-    db.query("SELECT * FROM users WHERE username = ? OR email = ?", [username, email], function(err, result) {
+    db.query("SELECT * FROM users WHERE email = ?", email, function(err, result) {
         if (err) console.log(err);
-        if (result[0] && result[0].username == username) errors.username = "exist";
         if (result[0] && result[0].email == email) errors.email = "exist";
-        if (result[1] && result[1].username == username) errors.username = "exist";
         if (result[1] && result[1].email == email) errors.email = "exist";
-        if (!errors.username && !errors.email && !errors.password && !errors.password2) {
+        if (!errors.email && !errors.password && !errors.password2) {
             bcrypt.genSalt(10, function(err, salt) {
                 if (err) {
                     jsonResErr(res, {unknown: 55529});
@@ -266,17 +262,11 @@ module.exports.register = (req, res) => {
                         if (err) {
                             jsonResErr(res, {unknown: 55222});
                         } else {
-                            let values = {
-                                userId: b32(6),
-                                username: username,
-                                email: email,
-                                password: hashedPassword
-                            };
                             client.index({
                                 index: "users",
                                 type: "user",
                                 body: {
-                                    username: username,
+                                    userId: b32(6),
                                     email: email,
                                     password: hashedPassword
                                 }
