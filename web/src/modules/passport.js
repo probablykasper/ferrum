@@ -4,11 +4,14 @@ const db = require("./db");
 
 module.exports = function(passport) {
     // local strategy
-    passport.use(new LocalStrategy(function(username, password, done) {
-        // match username
-        db.query("SELECT * FROM users WHERE username = ?", [username], function(err, result) {
+    passport.use(new LocalStrategy({
+        usernameField: "email",
+        passwordField: "password"
+    }, function(email, password, done) {
+        // match email
+        db.query("SELECT * FROM users WHERE email = ?", email, function(err, result) {
             if (err) console.log(err);
-            if (!result[0]) return done(null, false, {username: "exist"});
+            if (!result[0]) return done(null, false, {email: "exist"});
 
             // match password
             bcrypt.compare(password, result[0].password, function(err, isMatch) {
@@ -24,7 +27,7 @@ module.exports = function(passport) {
     });
 
     passport.deserializeUser(function(userId, done) {
-        db.query("SELECT * FROM users WHERE userId = ?", [userId], function(err, result) {
+        db.query("SELECT * FROM users WHERE userId = ?", userId, function(err, result) {
             done(err, result[0]);
         });
     });

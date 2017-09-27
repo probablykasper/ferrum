@@ -1303,13 +1303,11 @@ function validate(type, msg, el, third) {
 }
 function resetMsgs() {
     success.classList.remove("visible");
-    username. previousElementSibling.classList.remove("visible");
     email.    previousElementSibling.classList.remove("visible");
     password. previousElementSibling.classList.remove("visible");
     password2.previousElementSibling.classList.remove("visible");
 }
 function displayErr(field, msg) {
-    if (field == "username") field = username;
     if (field == "email") field = email;
     if (field == "password") field = password;
     if (field == "password2") field = password2;
@@ -1320,7 +1318,6 @@ var login = document.querySelector("button.login");
 var register = document.querySelector("button.register");
 var form = document.querySelector(".form");
 
-var username = document.querySelector("input[name='username']");
 var email = document.querySelector("input[name='email']");
 var password = document.querySelector("input[name='password']");
 var password2 = document.querySelector("input[name='password2']");
@@ -1328,9 +1325,8 @@ var success = document.querySelector(".form .success");
 function clickLogin() {
     resetMsgs();
     if (!form.classList.contains("login")) {
-        email.setAttribute("tabindex", "-1");
+        email.setAttribute("tabindex", "0");
         password2.setAttribute("tabindex", "-1");
-        username.setAttribute("tabindex", "0");
         password.setAttribute("tabindex", "0");
         login.setAttribute("tabindex", "0");
         register.setAttribute("tabindex", "0");
@@ -1341,22 +1337,23 @@ function clickLogin() {
         form.classList.add("has-been-expanded");
     } else {
         var a = false, b = false;
-        if (!a) a = validate("empty",        "You should fill this in",                 username        );
-        if (!a) a = validate("longerThan",   "Keep it below 30",                        username, 30    );
+        if (!b) b = validate("empty",       "We need your email",                       email               );
+        if (!b) b = validate("longerThan",  "Maximum 60 characters :/",                 email,     60       );
+        if (!b) b = validate("notEmail",    "That's email isn't valid",                 email               );
         if (!b) b = validate("shorterThan",  "That's a bit short... Try 8 characters",  password, 8     );
         if (!b) b = validate("longerThan",   "You crossed the 100 characters line",     password, 100   );
 
         if (!a && !b) {
             var req =
-            "type=login"+
-            "&username="+username.value+
+            "&email="+email.value+
             "&password="+password.value;
             xhr(req, "/login", function(res) {
                 var errors = JSON.parse(res).errors;
                 if (errors) {
-                    if (errors.username == "empty") displayErr("username", "You should fill this in");
-                    if (errors.username == "long") displayErr("username", "Keep it below 30");
-                    if (errors.username == "exist") displayErr("username", "Had trouble finding that user");
+                    if (errors.email == "invalid") displayErr("email", "That email isn't valid");
+                    if (errors.email == "empty") displayErr("email", "We need your email");
+                    if (errors.email == "long") displayErr("email", "Maximum 60 characters :/");
+                    if (errors.email == "exist") displayErr("email", "Email already exists");
                     if (errors.password == "short") displayErr("password", "That's a bit short... Try 8 characters");
                     if (errors.password == "long") displayErr("password", "You crossed the 100 characters line");
                     if (errors.password == "incorrect") displayErr("password", "You guessed the wrong password");
@@ -1371,7 +1368,6 @@ function clickLogin() {
 function clickRegister() {
     resetMsgs();
     if (!form.classList.contains("register")) {
-        username.setAttribute("tabindex", "0");
         email.setAttribute("tabindex", "0");
         password.setAttribute("tabindex", "0");
         password2.setAttribute("tabindex", "0");
@@ -1384,8 +1380,6 @@ function clickRegister() {
         form.classList.add("has-been-expanded");
     } else {
         var a = false, b = false, c = false, d = false;
-        if (!a) a = validate("empty",       "You should fill this in",                  username            );
-        if (!a) a = validate("longerThan",  "Keep it below 30",                         username,  30       );
         if (!b) b = validate("empty",       "We need your email",                       email               );
         if (!b) b = validate("longerThan",  "Maximum 60 characters :/",                 email,     60       );
         if (!b) b = validate("notEmail",    "That's email isn't valid",                 email               );
@@ -1394,18 +1388,13 @@ function clickRegister() {
         if (!d) d = validate("noMatch",     "The passwords do not match",               password2, password );
         if (!a && !b && !c && !d) {
             var req =
-            "type=register"+
-            "&username="+username.value+
-            "&email="+email.value+
+            "email="+email.value+
             "&password="+password.value+
             "&password2="+password2.value;
 
             xhr(req, "/register", function(res) {
                 var errors = JSON.parse(res).errors;
                 if (errors) {
-                    if (errors.username == "empty") displayErr("username", "You should fill this in");
-                    if (errors.username == "long") displayErr("username", "Keep it below 30");
-                    if (errors.username == "exist") displayErr("username", "Unavailable username");
                     if (errors.email == "invalid") displayErr("email", "That email isn't valid");
                     if (errors.email == "empty") displayErr("email", "We need your email");
                     if (errors.email == "long") displayErr("email", "Maximum 60 characters :/");
