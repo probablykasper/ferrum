@@ -34,6 +34,25 @@ const upload = multer({storage: storage});
 const mm = require("music-metadata");
 const util = require("util");
 
+const elasticsearch = require("elasticsearch");
+const client = new elasticsearch.Client({
+    host: "elastic:9200",
+    httpAuth: "elastic:changeme",
+    apiVersion: "5.5",
+    log: "trace"
+});
+
+function jsonRes(res, one, two) {
+    let resObj = {};
+    if (one == "err") {
+        resObj.errors = two;
+    } else {
+        resObj = one;
+        one.errors = null;
+    }
+    res.json(resObj);
+}
+
 // -------------------- STATIC --------------------
 
 module.exports.track = (req, res) => {
