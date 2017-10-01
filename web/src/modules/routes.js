@@ -50,10 +50,9 @@ const trackData = {
         trackId,
         name,
         artist,
-        TIME_FORMAT(SEC_TO_TIME(time), "%i:%S")
-            AS time,
+        time,
         album,
-        DATE_FORMAT(dateAdded, "%e/%c/%y")
+        DATE_FORMAT(dateAdded, "%Y-%m-%d %T")
             AS dateAdded,
         plays
     `,
@@ -61,10 +60,9 @@ const trackData = {
         tracks.trackId,
         name,
         artist,
-        TIME_FORMAT(SEC_TO_TIME(time), "%i:%S")
-            AS time,
+        time,
         album,
-        DATE_FORMAT(dateAdded, "%e/%c/%y")
+        DATE_FORMAT(dateAdded, "%Y-%m-%d %T")
             AS dateAdded,
         plays
     `
@@ -145,6 +143,67 @@ module.exports.home = (req, res) => {
                 };
                 res.send(JSON.stringify(response));
             });
+        });
+    }
+}
+
+// reserved elastic characters + - = && || > < ! ( ) { } [ ] ^ " ~ * ? : \ /
+module.exports.search = (req, res) => {
+    if (res.locals.loggedIn) {
+        let searchQuery = req.params.searchQuery;
+        let inTrash = 0;
+        if (searchQuery.indexOf("inTrash:true") > -1) {
+            searchQuery.replace(" inTrash:true ", " ");
+            inTrash = 1;
+        }
+        if (searchQuery == "") searchQuery = "*";
+        elastic.search({
+            index: "catalog",
+            sort: [
+                "_score",
+                "name.keyword"
+            ],
+            _source: trackData.elastic,
+            body: {
+                query: {
+                    bool: {
+                        must: [{
+                            query_string: {
+                                query: searchQuery,
+                                default_operator: "and"
+                            }
+                        }
+                    ],
+                    filter: [
+                        {term: { userId: res.locals.userId }},
+                        {term: { inTrash: inTrash }}
+                    ]
+                }
+            }
+        },
+        size: 1000,
+        }).then((body) => {
+            let playlistQuery = `
+                SELECT
+                    playlistId,
+                    name
+                FROM playlists
+                WHERE
+                    userId = ?
+                    AND inTrash = 0`;
+            db.query(playlistQuery, res.locals.userId, (err, playlists) => {
+                if (err) {
+                    jsonRes(res, "err", 22211);
+                } else {
+                    jsonRes(res, {
+                        tracks: body.hits.hits,
+                        playlists: playlists,
+                        searchQuery: searchQuery
+                    });
+                }
+            });
+        }, (err) => {
+            jsonRes(res, "err", 22210);
         });
     }
 }
@@ -502,52 +561,6 @@ module.exports.IncrementTrackPlayCount = (req, res) => {
             } else if (result.affectedRows == 1) {
                 res.json({ "errors": null });
             }
-        });
-    }
-}
-
-// reserved elastic characters + - = && || > < ! ( ) { } [ ] ^ " ~ * ? : \ /
-module.exports.search = (req, res) => {
-    if (res.locals.loggedIn) {
-        let searchQuery = req.body.query;
-        let inTrash = 0;
-        if (searchQuery.indexOf("inTrash:true") > -1) {
-            searchQuery.replace(" inTrash:true ", " ");
-            inTrash = 1;
-        }
-        elastic.search({
-            index: "catalog",
-            sort: [
-                "_score",
-                "name.keyword"
-            ],
-            _source: trackData.elastic,
-            body: {
-                query: {
-                    bool: {
-                        must: [{
-                            query_string: {
-                                query: searchQuery,
-                                default_operator: "and"
-                            }
-                        }
-                    ],
-                    filter: [
-                        {term: { userId: res.locals.userId }},
-                        {term: { inTrash: inTrash }}
-                    ]
-                }
-                }
-            },
-            size: 1000,
-        }).then((body) => {
-            jsonRes(res, {
-                tracks: body.hits.hits
-            });
-            console.log("GOTTENRES");
-        }, (err) => {
-            console.log("GOTTENRES");
-            jsonRes(res, "err", 11200);
         });
     }
 }

@@ -112,6 +112,12 @@ function initPage(path, res) {
             pagePlaylistId = res.playlist.playlistId;
             pagePlaylistName = res.playlist.name;
             page = "/";
+        } else if (path.startsWith("/search/")) {
+            insertPlaylists(res.playlists, true);
+            insertTracks(res.tracks, true, true);
+            page = "/";
+            var searchBar = document.querySelector("header.app-bar input.search-bar");
+            searchBar.value = res.searchQuery;
         }
     }
     // turn off active pages
@@ -131,7 +137,7 @@ function initPage(path, res) {
 }
 
 window.addEventListener("popstate", function(e) {
-    changePage(e.state.path, true);
+    changePage(e.state.path, false);
 });
 document.addEventListener("click", function(e) {
     var cl = e.target.classList;
@@ -355,19 +361,6 @@ document.addEventListener("mouseout", function(e) {
                     insertTracks(res.tracks, false);
                     notify("Undo successful");
                 }
-            }
-        });
-    };
-    window.search = function(searchQuery) {
-        var req =
-        "query="+searchQuery;
-        xhr(req, "/search", function(res) {
-            res = JSON.parse(res);
-            if (res.errors) {
-                notify("An unknown error while searching.", true);
-            } else {
-                insertTracks(res.tracks, true, true);
-                console.log(res.tracks);
             }
         });
     };
@@ -725,6 +718,16 @@ function insertTracks(tracks, deleteOld, _source) {
     }
     for (var i = 0; i < tracks.length; i++) {
         if (_source) tracks[i] = tracks[i]._source;
+        // date format
+            var date = new Date(tracks[i].dateAdded);
+            var d = date.getDate();
+            var m = date.getMonth() + 1;
+            var y = date.getFullYear().toString().slice(2);
+            tracks[i].dateAdded = d+"/"+m+"/"+y;
+        // time format
+            var time = tracks[i].time;
+            time = Math.floor(time / 60)+":"+time % 60
+            tracks[i].time = time;
         pageTracks.push(tracks[i]);
         tracklist[tracks[i].trackId] = tracks[i];
         tracklist[tracks[i].trackId].pagePos = i+1;
@@ -1290,7 +1293,7 @@ function updateColVisibility() {
     var searchBar = document.querySelector("header.app-bar input.search-bar");
     document.addEventListener("keydown", function(e) {
         if (e.which == 13 && e.target.classList.contains("search-bar")) { //enter
-            search(e.target.value);
+            changePage("/search/"+e.target.value);
         }
     });
 })();

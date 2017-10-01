@@ -58,6 +58,7 @@ app.use(passport.initialize());
     app.post("*", routes.postSetup);
     // PAGES
     app.post("/", routes.home);
+    app.post("/search/:searchQuery", routes.search);
     app.post("/playlist/:playlistId", routes.playlist);
     // POSTs
         // account
@@ -70,7 +71,6 @@ app.use(passport.initialize());
         app.post("/revive-track", routes.reviveTrack);
         app.post("/get-track-info", routes.getTrackInfo);
         app.post("/increment-track-play-count", routes.IncrementTrackPlayCount);
-        app.post("/search", routes.search);
         // playlists
         app.post("/create-playlist", routes.createPlaylist);
         app.post("/delete-playlist", routes.deletePlaylist);
