@@ -35,19 +35,21 @@ const mm = require("music-metadata");
 const util = require("util");
 
 const elasticsearch = require("elasticsearch");
-const client = new elasticsearch.Client({
+const elastic = new elasticsearch.Client({
     host: "elastic:9200",
     httpAuth: "elastic:changeme",
     apiVersion: "5.5",
     log: "trace"
 });
 
+const elasticQueries = require("./elastic-queries")();
+
 function jsonRes(res, one, two) {
     let resObj = {};
     if (one == "err") {
         resObj.errors = two;
     } else {
-        resObj = one;
+        if (one) resObj = one;
         one.errors = null;
     }
     res.json(resObj);
@@ -260,11 +262,26 @@ function getMD(filepath, callback) {
         duration: true,
         native: true
     }).then(function(md) {
-        // console.log(  util.inspect(md, {showHidden: false, depth: null})  );
-        function min2(x) {
-            if (x.toString().length == 1) return `0${x}`;
-            else return x;
+        let response = {
+            time: Math.round(md.format.duration),
+            bitrate: md.format.bitrate
         }
+        response.name = (md.common.title) ? md.common.title : "";
+        response.artist = (md.common.artist) ? md.common.artist : "";
+        response.album = (md.common.album) ? md.common.album : "";
+        response.genre = (md.common.genre) ? md.common.genre : "";
+        callback(null, response);
+    }).catch(function(err) {
+        console.log(err);
+        callback(64322);
+    });
+}
+function min2(x) {
+    if (x.toString().length == 1) return `0${x}`;
+    else return x;
+}
+function getCurrentDate(format) {
+    if (format == "sql") {
         let d = new Date();
         let YYYY = d.getFullYear();
         let MM = min2(d.getMonth()+1);
@@ -272,33 +289,60 @@ function getMD(filepath, callback) {
         let hh = min2(d.getHours());
         let mm = min2(d.getMinutes());
         let ss = min2(d.getSeconds());
-        let response = {
-            time: Math.round(md.format.duration),
-            dateAdded: `${YYYY}-${MM}-${DD} ${hh}:${mm}:${ss}`,
-            plays: 0,
-            bitrate: md.format.bitrate
-        }
-        response.name = (md.common.title) ? md.common.title : "";
-        response.artist = (md.common.artist) ? md.common.artist : "";
-        response.album = (md.common.album) ? md.common.album : "";
-        response.genre = (md.common.genre) ? md.common.genre : "";
-        callback(response);
-    }).catch(function(err) {
-        console.log(err);
-    });
+        return `${YYYY}-${MM}-${DD} ${hh}:${mm}:${ss}`;
+    }
 }
 function insertTrack(req, res, filepath, trackId, callback) {
-    getMD(filepath, (value) => {
-        value.userId = res.locals.userId;
-        value.trackId = trackId;
-        value.tags = "";
-        value.sourcePlatform = "upload";
-        value.appearsOn = "";
-        var tracksQuery = "INSERT INTO tracks SET ?";
-        db.query(tracksQuery, value, function(err, result) {
-            if (err) console.log(err);
-            else callback();
-        });
+    getMD(filepath, (err, value) => {
+        if (err) {
+            callback(err);
+        } else {
+            value.trackId = trackId;
+            value.userId = res.locals.userId;
+            value.dateAdded = getCurrentDate("sql");
+            value.plays = 0;
+            value.tags = "";
+            value.sourcePlatform = "upload";
+            value.appearsOn = "";
+            value.inTrash = 0;
+            // mysql
+            var tracksQuery = "INSERT INTO tracks SET ?";
+            db.query(tracksQuery, value, function(err, result) {
+                if (err) {
+                    console.log(err);
+                    callback(96666);
+                } else {
+                    // elasticsearch
+                    elastic.index({
+                        index: "catalog",
+                        type: "track",
+                        id: value.trackId,
+                        body: {
+                            userId: value.userId,
+                            trackId: value.trackId,
+                            name: value.name,
+                            artist: value.artist,
+                            time: value.time,
+                            album: value.album,
+                            dateAdded: value.dateAdded,
+                            plays: value.plays,
+                            genre: value.genre,
+                            tags: value.tags,
+                            bitrate: value.bitrate,
+                            sourcePlatform: value.sourcePlatform,
+                            appearsOn: value.appearsOn,
+                            inTrash: value.inTrash
+                        }
+                    }).then((body) => {
+                        if (body.created == true) callback();
+                        else callback(65573);
+                    }, (err) => {
+                        console.log(err);
+                        callback(96555);
+                    });
+                }
+            });
+        }
     });
 }
 module.exports.uploadTracks = (req, res) => {
@@ -306,20 +350,31 @@ module.exports.uploadTracks = (req, res) => {
         upload.array("tracks")(req, res, function(err) {
             if (err) {
                 console.log(err);
-                res.json({ "errors": 23623 });
+                jsonRes(res, "err", 23623);
             } else {
                 let uploadedCount = 0;
-                function oneUploaded() {
+                let errors = [];
+                function oneUploaded(err, trackNumber) {
                     uploadedCount++;
+                    if (err) {
+                        errors.push({
+                            code: err,
+                            track:trackNumber
+                        });
+                    }
                     if (uploadedCount == req.files.length) {
-                        res.json({ "errors": null })
+                        if (errors.length > 0) {
+                            jsonRes(res, "err", errors)
+                        } else {
+                            jsonRes(res);
+                        }
                     }
                 }
                 for (var i = 0; i < req.files.length; i++) {
                     var path = req.files[i].path;
                     var trackId = req.files[i].trackId;
-                    insertTrack(req, res, path, trackId, function() {
-                        oneUploaded();
+                    insertTrack(req, res, path, trackId, function(err) {
+                        oneUploaded(err, i+1);
                     });
                 }
             }
@@ -341,12 +396,20 @@ module.exports.deleteTrack = (req, res) => {
                     AND userId = ?`;
             db.query(tracksQuery, [trackId, res.locals.userId], function(err, result) {
                 if (err) {
-                    res.json({ "errors": true });
+                    jsonRes(res, "err", 11110);
                     console.log(err);
                 } else if (result[0]) {
-                    res.json({ "errors": true });
+                    jsonRes(res, "err", 11111);
                 } else {
-                    res.json({ "errors": null });
+                    elastic.delete({
+                        index: "catalog",
+                        type: "track",
+                        id: trackId
+                    }).then((body) => {
+                        jsonRes(res);
+                    }, (err) => {
+                        jsonRes(res, "err", 11112);
+                    });
                 }
             });
         }
@@ -445,6 +508,28 @@ module.exports.IncrementTrackPlayCount = (req, res) => {
         });
     }
 }
+
+// module.exports.search = (req, res) => {
+//     if (res.locals.loggedIn) {
+        elastic.search({
+            index: "catalog",
+            body: {
+                query: {
+                    simple_query_string: {
+                        query: "\*",
+                        default_operator: "and",
+                        flags: "ALL|NONE|PHRASE"
+                    }
+                }
+            },
+            size: 1000,
+        }).then((body) => {
+            //
+        }, (err) => {
+            // jsonRes(res, "err", 11200);
+        });
+//     }
+// }
 
 // ---------- playlists ----------
 
