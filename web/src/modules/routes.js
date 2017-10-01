@@ -34,15 +34,41 @@ const upload = multer({storage: storage});
 const mm = require("music-metadata");
 const util = require("util");
 
-const elasticsearch = require("elasticsearch");
-const elastic = new elasticsearch.Client({
-    host: "elastic:9200",
-    httpAuth: "elastic:changeme",
-    apiVersion: "5.5",
-    log: "trace"
-});
+const elastic = require("./elastic");
 
-const elasticQueries = require("./elastic-queries")();
+const trackData = {
+    elastic: [
+        "trackId",
+        "name",
+        "artist",
+        "time",
+        "album",
+        "dateAdded",
+        "plays"
+    ],
+    sql: `
+        trackId,
+        name,
+        artist,
+        TIME_FORMAT(SEC_TO_TIME(time), "%i:%S")
+            AS time,
+        album,
+        DATE_FORMAT(dateAdded, "%e/%c/%y")
+            AS dateAdded,
+        plays
+    `,
+    sqlPlaylist: `
+        tracks.trackId,
+        name,
+        artist,
+        TIME_FORMAT(SEC_TO_TIME(time), "%i:%S")
+            AS time,
+        album,
+        DATE_FORMAT(dateAdded, "%e/%c/%y")
+            AS dateAdded,
+        plays
+    `
+}
 
 function jsonRes(res, one, two) {
     let resObj = {};
@@ -107,14 +133,7 @@ module.exports.home = (req, res) => {
         db.query(playlistQuery, res.locals.userId, (err, playlists) => {
             let tracksQuery = `
                 SELECT
-                    trackId,
-                    name,
-                    artist,
-                    TIME_FORMAT(SEC_TO_TIME(time), "%i:%S")
-                        AS time,
-                    album, DATE_FORMAT(dateAdded, "%e/%c/%y")
-                        AS dateAdded,
-                    plays
+                    ${trackData.sql}
                 FROM tracks
                 WHERE
                     userId = ?
@@ -143,15 +162,7 @@ module.exports.playlist = (req, res) => {
         db.query(playlistsQuery, res.locals.userId, (err, playlists) => {
             let tracksQuery = `
                 SELECT
-                    tracks.trackId,
-                    name,
-                    artist,
-                    TIME_FORMAT(SEC_TO_TIME(time), "%i:%S")
-                        AS time,
-                    album,
-                    DATE_FORMAT(dateAdded, "%e/%c/%y")
-                        AS dateAdded,
-                    plays
+                    ${trackData.sqlPlaylist}
                 FROM playlistTracks
                 RIGHT JOIN tracks
                     ON playlistTracks.trackId = tracks.trackId
@@ -437,14 +448,7 @@ module.exports.reviveTrack = (req, res) => {
                 } else {
                     let responseTrackQuery = `
                         SELECT
-                            trackId,
-                            name,
-                            artist,
-                            TIME_FORMAT(SEC_TO_TIME(time), "%i:%S")
-                                AS time,
-                            album, DATE_FORMAT(dateAdded, "%e/%c/%y")
-                                AS dateAdded,
-                            plays
+                            ${trackData.sql}
                         FROM tracks
                         WHERE
                             trackId = ?
@@ -465,14 +469,7 @@ module.exports.getTrackInfo = (req, res) => {
     if (res.locals.loggedIn) {
         let tracksQuery = `
             SELECT
-                trackId,
-                name,
-                artist,
-                TIME_FORMAT(SEC_TO_TIME(time), "%i:%S")
-                    AS time,
-                album, DATE_FORMAT(dateAdded, "%e/%c/%y")
-                    AS dateAdded,
-                plays
+                ${trackData.sql}
             FROM tracks
             WHERE
                 userId = ?
@@ -509,27 +506,51 @@ module.exports.IncrementTrackPlayCount = (req, res) => {
     }
 }
 
-// module.exports.search = (req, res) => {
-//     if (res.locals.loggedIn) {
+// reserved elastic characters + - = && || > < ! ( ) { } [ ] ^ " ~ * ? : \ /
+module.exports.search = (req, res) => {
+    if (res.locals.loggedIn) {
+        let searchQuery = req.body.query;
+        let inTrash = 0;
+        if (searchQuery.indexOf("inTrash:true") > -1) {
+            searchQuery.replace(" inTrash:true ", " ");
+            inTrash = 1;
+        }
         elastic.search({
             index: "catalog",
+            sort: [
+                "_score",
+                "name.keyword"
+            ],
+            _source: trackData.elastic,
             body: {
                 query: {
-                    simple_query_string: {
-                        query: "\*",
-                        default_operator: "and",
-                        flags: "ALL|NONE|PHRASE"
-                    }
+                    bool: {
+                        must: [{
+                            query_string: {
+                                query: searchQuery,
+                                default_operator: "and"
+                            }
+                        }
+                    ],
+                    filter: [
+                        {term: { userId: res.locals.userId }},
+                        {term: { inTrash: inTrash }}
+                    ]
+                }
                 }
             },
             size: 1000,
         }).then((body) => {
-            //
+            jsonRes(res, {
+                tracks: body.hits.hits
+            });
+            console.log("GOTTENRES");
         }, (err) => {
-            // jsonRes(res, "err", 11200);
+            console.log("GOTTENRES");
+            jsonRes(res, "err", 11200);
         });
-//     }
-// }
+    }
+}
 
 // ---------- playlists ----------
 

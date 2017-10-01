@@ -358,6 +358,19 @@ document.addEventListener("mouseout", function(e) {
             }
         });
     };
+    window.search = function(searchQuery) {
+        var req =
+        "query="+searchQuery;
+        xhr(req, "/search", function(res) {
+            res = JSON.parse(res);
+            if (res.errors) {
+                notify("An unknown error while searching.", true);
+            } else {
+                insertTracks(res.tracks, true, true);
+                console.log(res.tracks);
+            }
+        });
+    };
     // playlists
     window.createPlaylist = function(name, description) {
         var req =
@@ -703,7 +716,7 @@ function insertPlaylists(playlists, deleteOld) {
         }
     }
 }
-function insertTracks(tracks, deleteOld) {
+function insertTracks(tracks, deleteOld, _source) {
     if (deleteOld) {
         var cells = document.querySelectorAll(".music-table .cell[data-track]");
         for (var i = 0; i < cells.length; i++) {
@@ -711,6 +724,7 @@ function insertTracks(tracks, deleteOld) {
         }
     }
     for (var i = 0; i < tracks.length; i++) {
+        if (_source) tracks[i] = tracks[i]._source;
         pageTracks.push(tracks[i]);
         tracklist[tracks[i].trackId] = tracks[i];
         tracklist[tracks[i].trackId].pagePos = i+1;
@@ -1065,7 +1079,6 @@ function updateColVisibility() {
         hide();
     });
 })();
-// player
 (function setupPlayer() {
     window.tracklist = {};
     window.autoQueue = [];
@@ -1273,6 +1286,14 @@ function updateColVisibility() {
         }
     }
 })();
+(function setupSearch() {
+    var searchBar = document.querySelector("header.app-bar input.search-bar");
+    document.addEventListener("keydown", function(e) {
+        if (e.which == 13 && e.target.classList.contains("search-bar")) { //enter
+            search(e.target.value);
+        }
+    });
+})();
 
 // HOME PAGE
 function validate(type, msg, el, third) {
@@ -1345,7 +1366,7 @@ function clickLogin() {
 
         if (!a && !b) {
             var req =
-            "&email="+email.value+
+            "email="+email.value+
             "&password="+password.value;
             xhr(req, "/login", function(res) {
                 var errors = JSON.parse(res).errors;
