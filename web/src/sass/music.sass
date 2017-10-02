@@ -187,6 +187,33 @@ main.music-page
             &.rearranging
                 box-shadow: $shadow-3
             .cell
+                &.hover .cover-container .cover-overlay
+                    opacity: 1
+                .cover-container
+                    background-color: white
+                    height: 30px
+                    width: 30px
+                    position: absolute
+                    transform: translate(-33px, -7px)
+                    pointer-events: none
+                    .cover-overlay
+                        pointer-events: all
+                        height: 100%
+                        width: 100%
+                        position: absolute
+                        z-index: 22
+                        opacity: 0
+                        background-color: rgba(#030303, 0.65)
+                        background-image: url('data:image/svg+xml;utf8,<svg fill="#FFFFFF" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M8 5v14l11-7z"></path><path d="M0 0h24v24H0z" fill="none"></path></svg>')
+                        background-size: cover
+                        background-repeat: no-repeat
+                        background-position: center
+                    img.cover
+                        height: 100%
+                        width: 100%
+                        position: absolute
+                &[data-col-name="name"]:not(:first-child)
+                    padding-left: 36px
                 &[data-col-name="artist"]:hover:not(:first-child)
                     text-decoration: underline
                 &[data-col-name="album"]:hover:not(:first-child)

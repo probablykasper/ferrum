@@ -125,6 +125,10 @@ module.exports.track = (req, res) => {
     res.sendFile("/usr/src/app/tracks/"+req.params.trackId);
 }
 
+module.exports.cover = (req, res) => {
+    res.sendFile("/usr/src/app/covers/"+req.params.trackId);
+}
+
 module.exports.dl = (req, res) => {
     res.download("/usr/src/app/tracks/"+req.params.trackId);
 }

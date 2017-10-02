@@ -52,6 +52,7 @@ app.use(passport.initialize());
 // set up routes
     // STATIC
     app.get("/track/:trackId", routes.track);
+    app.get("/cover/:trackId", routes.cover);
     app.get("/dl/:trackId", routes.dl);
     // SETUP
     app.get("*", routes.getSetup);

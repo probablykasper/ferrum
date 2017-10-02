@@ -171,24 +171,6 @@ document.addEventListener("keydown", function(e) {
         closeContextMenu();
     }
 });
-document.addEventListener("mouseover", function(e) {
-    if (e.target.classList.contains("cell") && e.target.dataset.track) {
-        var id = e.target.dataset.track;
-        var hoveredTrack = document.querySelectorAll('.music-table .cell[data-track="'+id+'"]');
-        for (var i = 0; i < hoveredTrack.length; i++) {
-            hoveredTrack[i].classList.add("hover");
-        }
-    }
-});
-document.addEventListener("mouseout", function(e) {
-    if (e.target.classList.contains("cell") && e.target.dataset.track) {
-        var id = e.target.dataset.track;
-        var hoveredTrack = document.querySelectorAll('.music-table .cell[data-track="'+id+'"]');
-        for (var i = 0; i < hoveredTrack.length; i++) {
-            hoveredTrack[i].classList.remove("hover");
-        }
-    }
-});
 (function commonFunctions() {
     window.swapChars = function(string, first, last) {
     	var array = [];
@@ -775,7 +757,12 @@ function insertTracks(tracks, deleteOld, _source) {
             cell.setAttribute("data-col-name", cols[ci].dataset.colName);
             cell.setAttribute("data-track", trackCount);
             cell.setAttribute("data-track-id", tracks[i].trackId);
-            var innerHTML = '<img src="/covers/'+tracks[i].trackId+'"/>';
+            var innerHTML = "";
+            if (cols[ci].dataset.colName == "name") {
+                innerHTML += '<div class="cover-overlay"></div>';
+                innerHTML += '<img class="cover" src="/cover/'+tracks[i].trackId+'"/>';
+                innerHTML  = '<div class="cover-container">'+innerHTML+"</div>";
+            }
             innerHTML += tracks[i][cols[ci].dataset.colName];
             cell.innerHTML = innerHTML;
             cols[ci].append(cell);
@@ -992,7 +979,8 @@ function updateColVisibility() {
         updateLocalPref();
     }
 })();
-(function cellLinks() {
+(function rowStuff() {
+    // cell links, artist etc
     document.addEventListener("click", function(e) {
         if (e.button == 0 && e.target.classList.contains("cell")
         && e.target.previousElementSibling && e.target.innerHTML != "") {
@@ -1001,6 +989,30 @@ function updateColVisibility() {
                 changePage("/artist/"+urlEncode(e.target.innerHTML));
             } else if (data.colName == "album") {
                 changePage("/album/"+urlEncode(e.target.innerHTML));
+            }
+        }
+        if (e.button == 0 && e.target.classList.contains("cover-overlay")) {
+            playTrack(e.target.parentElement.parentElement.dataset.trackId);
+        }
+    });
+    // row hover
+    document.addEventListener("mouseover", function(e) {
+        var cell = insideClass(e.target, "cell");
+        if (cell && cell.dataset.track) {
+            var id = cell.dataset.track;
+            var hoveredTrack = document.querySelectorAll('.music-table .cell[data-track="'+id+'"]');
+            for (var i = 0; i < hoveredTrack.length; i++) {
+                hoveredTrack[i].classList.add("hover");
+            }
+        }
+    });
+    document.addEventListener("mouseout", function(e) {
+        var cell = insideClass(e.target, "cell");
+        if (cell && cell.dataset.track) {
+            var id = cell.dataset.track;
+            var hoveredTrack = document.querySelectorAll(".music-table .cell.hover");
+            for (var i = 0; i < hoveredTrack.length; i++) {
+                hoveredTrack[i].classList.remove("hover");
             }
         }
     });
