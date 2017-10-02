@@ -1016,6 +1016,14 @@ function updateColVisibility() {
             }
         }
     });
+    // double-click row to play
+    document.addEventListener("dblclick", function(e) {
+        if (e.button == 0 && e.target.classList.contains("cell")
+        && e.target.previousElementSibling) {
+            e.preventDefault();
+            playTrack(e.target.dataset.trackId);
+        }
+    });
 })();
 
 (function sidebar() {
