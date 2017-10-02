@@ -59,6 +59,8 @@ app.use(passport.initialize());
     // PAGES
     app.post("/", routes.home);
     app.post("/search/:searchQuery", routes.search);
+    app.post("/artist/:artist", routes.artist);
+    app.post("/album/:album", routes.album);
     app.post("/playlist/:playlistId", routes.playlist);
     // POSTs
         // account

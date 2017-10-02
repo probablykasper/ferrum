@@ -117,7 +117,15 @@ function initPage(path, res) {
             insertTracks(res.tracks, true, true);
             page = "/";
             var searchBar = document.querySelector("header.app-bar input.search-bar");
-            searchBar.value = res.searchQuery;
+            searchBar.value = urlDecode(res.searchQuery);
+        } else if (path.startsWith("/artist/")) {
+            insertPlaylists(res.playlists, true);
+            insertTracks(res.tracks, true);
+            page = "/";
+        } else if (path.startsWith("/album/")) {
+            insertPlaylists(res.playlists, true);
+            insertTracks(res.tracks, true);
+            page = "/";
         }
     }
     // turn off active pages
@@ -182,6 +190,23 @@ document.addEventListener("mouseout", function(e) {
     }
 });
 (function commonFunctions() {
+    window.swapChars = function(string, first, last) {
+    	var array = [];
+    	for (var i = 0; i < string.length; i++) {
+    		array[i] = string.charAt(i);
+    		if (array[i] == first) array[i] = last;
+    		else if (array[i] == last) array[i] = first;
+        }
+    	return array.join("");
+    };
+    window.urlEncode = function(string) {
+        string = swapChars(string, " ", "-");
+        return encodeURIComponent(string);
+    };
+    window.urlDecode = function(string) {
+        string = decodeURIComponent(string);
+        return swapChars(string, " ", "-");
+    };
     window.logout = function() {
         xhr("", "/logout", function(res) {
             res = JSON.parse(res);
@@ -954,6 +979,19 @@ function updateColVisibility() {
         updateLocalPref();
     }
 })();
+(function cellLinks() {
+    document.addEventListener("click", function(e) {
+        if (e.button == 0 && e.target.classList.contains("cell")
+        && e.target.previousElementSibling && e.target.innerHTML != "") {
+            var data = e.target.dataset;
+            if (data.colName == "artist") {
+                changePage("/artist/"+urlEncode(e.target.innerHTML));
+            } else if (data.colName == "album") {
+                changePage("/album/"+urlEncode(e.target.innerHTML));
+            }
+        }
+    });
+})();
 
 (function sidebar() {
     var sidebar = document.querySelector("aside.sidebar");
@@ -1293,7 +1331,7 @@ function updateColVisibility() {
     var searchBar = document.querySelector("header.app-bar input.search-bar");
     document.addEventListener("keydown", function(e) {
         if (e.which == 13 && e.target.classList.contains("search-bar")) { //enter
-            changePage("/search/"+e.target.value);
+            changePage("/search/"+urlEncode(e.target.value));
         }
     });
 })();

@@ -187,9 +187,14 @@ main.music-page
             &.rearranging
                 box-shadow: $shadow-3
             .cell
+                &[data-col-name="artist"]:hover:not(:first-child)
+                    text-decoration: underline
+                &[data-col-name="album"]:hover:not(:first-child)
+                    text-decoration: underline
                 &.hover
                     background-color: rgba(#FFFFFF, 0.025)
                 height: 16px
+                cursor: pointer
                 white-space: nowrap
                 overflow: hidden
                 text-overflow: ellipsis

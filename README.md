@@ -8,7 +8,7 @@ Some (to-be) web/desktop/mobile application for your music library. Oh, and it's
     - Device management?
 - Search
 - Queue
-- Double-click to reset column/sidebar sizes
+- Double-click to reset sidebar(/column?) sizes
 - Column sorting
 - Custom context menus
 - Account/settings

@@ -78,6 +78,39 @@ function jsonRes(res, one, two) {
     }
     res.json(resObj);
 }
+function swapChars(string, first, last) {
+    var array = [];
+    for (var i = 0; i < string.length; i++) {
+        array[i] = string.charAt(i);
+        if (array[i] == first) array[i] = last;
+        else if (array[i] == last) array[i] = first;
+    }
+    return array.join("");
+}
+
+// -------------------- QUERIES --------------------
+
+function getUserPlaylists(res, errCode, callback) {
+    let playlistQuery = `
+        SELECT
+            playlistId,
+            name
+        FROM
+            playlists
+        WHERE
+            userId = ?
+            AND inTrash = 0`;
+    db.query(playlistQuery, res.locals.userId, (err, playlists) => {
+        if (err) jsonRes(res, "err", errCode);
+        else callback(playlists);
+    });
+}
+function dbQuery(res, errCode, query, variables, callback) {
+    db.query(query, variables, (err, tracks) => {
+        if (err) jsonRes(res, "err", errCode);
+        else callback(tracks);
+    });
+}
 
 // -------------------- STATIC --------------------
 
@@ -150,7 +183,7 @@ module.exports.home = (req, res) => {
 // reserved elastic characters + - = && || > < ! ( ) { } [ ] ^ " ~ * ? : \ /
 module.exports.search = (req, res) => {
     if (res.locals.loggedIn) {
-        let searchQuery = req.params.searchQuery;
+        let searchQuery = swapChars(req.params.searchQuery, " ", "-");
         let inTrash = 0;
         if (searchQuery.indexOf("inTrash:true") > -1) {
             searchQuery.replace(" inTrash:true ", " ");
@@ -204,6 +237,61 @@ module.exports.search = (req, res) => {
             });
         }, (err) => {
             jsonRes(res, "err", 22210);
+        });
+    }
+}
+
+module.exports.artist = (req, res) => {
+    if (res.locals.loggedIn) {
+        let artist = swapChars(req.params.artist, " ", "-");
+        getUserPlaylists(res, 22800, (playlists) => {
+            let tracksQuery = `
+                SELECT
+                    ${trackData.sql}
+                FROM
+                    tracks
+                WHERE
+                    userId = ?
+                    AND artist = ?
+                    AND inTrash = 0`;
+            let variables = [res.locals.userId, artist];
+            dbQuery(res, 22801, tracksQuery, variables, (tracks) => {
+                jsonRes(res, {
+                    tracks: tracks,
+                    playlists: playlists,
+                    artist: {
+                        name: artist
+                    }
+                });
+            });
+        });
+    }
+}
+
+module.exports.album = (req, res) => {
+    console.log(6);
+    if (res.locals.loggedIn) {
+        let album = swapChars(req.params.album, " ", "-");
+        getUserPlaylists(res, 22900, (playlists) => {
+            let tracksQuery = `
+                SELECT
+                    ${trackData.sql}
+                FROM
+                    tracks
+                WHERE
+                    userId = ?
+                    AND album = ?
+                    AND inTrash = 0`;
+            let variables = [res.locals.userId, album];
+            dbQuery(res, 22801, tracksQuery, variables, (tracks) => {
+                jsonRes(res, {
+                    tracks: tracks,
+                    playlists: playlists,
+                    album: {
+                        name: album
+                    }
+                });
+            });
         });
     }
 }
