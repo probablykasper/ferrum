@@ -1,13 +1,27 @@
 .dialog.createPlaylist
-    .title New playlist
-    input.name.focus-this(placeholder="Name")
-    textarea.description(placeholder="Description")
-    .buttons
-        button.button-highlight.secondary.cancel Cancel
-        button.button-highlight.primary.create-playlist Create
+    div
+        .title New playlist
+        input.field.name.focus-this(placeholder="Name")
+        textarea.description(placeholder="Description")
+        .flex-row
+            button.button-highlight.secondary.cancel Cancel
+            button.button-highlight.primary.create-playlist Create
+.dialog.editTrack
+    div
+        .title Edit Track Info
+        input.field.trackName.focus-this(placeholder="Name")
+        input.field.trackArtist(placeholder="Artist")
+        input.field.trackAlbum(placeholder="Album")
+        .flex-row
+            input.field.trackGenre(placeholder="Genre")
+            p.text.trackBitrate
+        .flex-row
+            button.button-highlight.secondary.cancel Cancel
+            button.button-highlight.primary.edit-playlist Save
 .dialog.confirm
-    .title Title
-    p.description Description
-    .buttons
-        button.button-highlight.secondary.cancel.focus-this Cancel
-        button.button-highlight.primary.confirm Confirm
+    div
+        .title Title
+        p.description Description
+        .flex-row
+            button.button-highlight.secondary.cancel.focus-this Cancel
+            button.button-highlight.primary.confirm Confirm

@@ -104,3 +104,11 @@ function deleteCatalogIndex() {
         index: "catalog"
     }, eslog)
 }
+
+function deleteCatalogDocuments() {
+    elastic.deleteByQuery({
+        index: "catalog",
+        type: "track",
+        q: "*"
+    }, eslog);
+}

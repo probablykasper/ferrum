@@ -1,3 +1,4 @@
+const fs = require("fs");
 const validator = require("validator");
 const passport = require("passport");
 const bcrypt = require("bcryptjs");
@@ -43,8 +44,10 @@ const trackData = {
         "artist",
         "time",
         "album",
+        "genre",
         "dateAdded",
-        "plays"
+        "plays",
+        "bitrate"
     ],
     sql: `
         trackId,
@@ -54,7 +57,9 @@ const trackData = {
         album,
         DATE_FORMAT(dateAdded, "%Y-%m-%d %T")
             AS dateAdded,
-        plays
+        genre,
+        plays,
+        bitrate
     `,
     sqlPlaylist: `
         tracks.trackId,
@@ -64,7 +69,9 @@ const trackData = {
         album,
         DATE_FORMAT(dateAdded, "%Y-%m-%d %T")
             AS dateAdded,
-        plays
+        genre,
+        plays,
+        bitrate
     `
 }
 
@@ -269,7 +276,6 @@ module.exports.artist = (req, res) => {
 }
 
 module.exports.album = (req, res) => {
-    console.log(6);
     if (res.locals.loggedIn) {
         let album = swapChars(req.params.album, " ", "-");
         getUserPlaylists(res, 22900, (playlists) => {
@@ -420,6 +426,7 @@ function getMD(filepath, callback) {
         duration: true,
         native: true
     }).then(function(md) {
+        // console.log(md.native["ID3v2.4"]);
         let response = {
             time: Math.round(md.format.duration),
             bitrate: md.format.bitrate
@@ -428,7 +435,8 @@ function getMD(filepath, callback) {
         response.artist = (md.common.artist) ? md.common.artist : "";
         response.album = (md.common.album) ? md.common.album : "";
         response.genre = (md.common.genre) ? md.common.genre : "";
-        callback(null, response);
+        let image = (md.common.picture) ? md.common.picture[0] : null;
+        callback(null, response, image);
     }).catch(function(err) {
         console.log(err);
         callback(64322);
@@ -451,7 +459,7 @@ function getCurrentDate(format) {
     }
 }
 function insertTrack(req, res, filepath, trackId, callback) {
-    getMD(filepath, (err, value) => {
+    getMD(filepath, (err, value, image) => {
         if (err) {
             callback(err);
         } else {
@@ -462,7 +470,7 @@ function insertTrack(req, res, filepath, trackId, callback) {
             value.tags = "";
             value.sourcePlatform = "upload";
             value.appearsOn = "";
-            value.inTrash = 0;
+            value.inTrash = false;
             // mysql
             var tracksQuery = "INSERT INTO tracks SET ?";
             db.query(tracksQuery, value, function(err, result) {
@@ -492,8 +500,17 @@ function insertTrack(req, res, filepath, trackId, callback) {
                             inTrash: value.inTrash
                         }
                     }).then((body) => {
-                        if (body.created == true) callback();
-                        else callback(65573);
+                        if (body.created == true) {
+                            if (image) {
+                                let filename = `covers/${value.trackId}`;
+                                fs.writeFile(filename, image.data, (err) => {
+                                    if (err) {
+                                        console.log(err);
+                                    }
+                                });
+                            }
+                            callback();
+                        } else callback(65573);
                     }, (err) => {
                         console.log(err);
                         callback(96555);

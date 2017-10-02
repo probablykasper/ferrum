@@ -351,6 +351,15 @@ document.addEventListener("mouseout", function(e) {
             }
         }, {contentType: "multipart"});
     };
+    window.editTrack = function(trackId) {
+        var dialog = document.querySelector(".dialogs .dialog.editTrack");
+        dialog.querySelector(".trackName").value = tracklist[trackId].name;
+        dialog.querySelector(".trackArtist").value = tracklist[trackId].artist;
+        dialog.querySelector(".trackAlbum").value = tracklist[trackId].album;
+        dialog.querySelector(".trackGenre").value = tracklist[trackId].genre;
+        dialog.querySelector(".trackBitrate").innerHTML = "Bitrate: "+tracklist[trackId].bitrate;
+        openDialog("editTrack");
+    }
     window.deleteTrack = function(trackId) {
         var req = "trackId="+trackId;
         var description = "Are you sure you want to delete this track?";
@@ -597,6 +606,8 @@ function contextItemClick(context, ctxElement, element) {
             playTrackNext(element.dataset.trackId);
         } else if (data.playlistId) {
             addTrackToPlaylist(element.dataset.trackId, data.playlistId, false);
+        } else if (data.type == "edit") {
+            editTrack(element.dataset.trackId);
         } else if (data.type == "delete") {
             deleteTrack(element.dataset.trackId);
         }
@@ -764,7 +775,9 @@ function insertTracks(tracks, deleteOld, _source) {
             cell.setAttribute("data-col-name", cols[ci].dataset.colName);
             cell.setAttribute("data-track", trackCount);
             cell.setAttribute("data-track-id", tracks[i].trackId);
-            cell.innerHTML = tracks[i][cols[ci].dataset.colName];
+            var innerHTML = '<img src="/covers/'+tracks[i].trackId+'"/>';
+            innerHTML += tracks[i][cols[ci].dataset.colName];
+            cell.innerHTML = innerHTML;
             cols[ci].append(cell);
         }
     }

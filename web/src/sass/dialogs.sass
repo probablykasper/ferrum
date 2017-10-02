@@ -7,6 +7,7 @@
     // display: none
     &.visible
         // display: block
+
     .dialog
         pointer-events: all
         padding: 20px
@@ -34,7 +35,15 @@
             font-size: 15px
             border-radius: 3px
             margin-bottom: 20px
-        input.name
+        p.text
+            font-size: 14px
+            color: rgba(#FFFFFF, 0.75)
+            height: 42px
+            line-height: 42px
+        p.trackBitrate
+            margin-left: 20px
+            white-space: nowrap
+        input.field
             height: 42px
             box-shadow: $shadow-1
             background-color: rgba(#FFFFFF, 0.05)
@@ -48,7 +57,7 @@
             margin-bottom: 20px
             font-size: 16px
             color: rgba(#FFFFFF, 0.75)
-        .buttons
+        .flex-row
             display: flex
             justify-content: flex-end
         button
