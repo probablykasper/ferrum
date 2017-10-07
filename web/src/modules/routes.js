@@ -465,11 +465,14 @@ function getCurrentDate(format) {
         return `${YYYY}-${MM}-${DD} ${hh}:${mm}:${ss}`;
     }
 }
-function insertTrack(req, res, filepath, trackId, callback) {
+function insertTrack(req, res, filepath, trackId, originalFilename, callback) {
     getMD(filepath, (err, value, image) => {
         if (err) {
             callback(err);
         } else {
+            if (value.name == "") {
+                value.name = originalFilename;
+            }
             value.trackId = trackId;
             value.userId = res.locals.userId;
             value.dateAdded = getCurrentDate("sql");
@@ -541,12 +544,12 @@ module.exports.uploadTracks = (req, res) => {
                     if (err) {
                         errors.push({
                             code: err,
-                            track:trackNumber
+                            track: trackNumber
                         });
                     }
                     if (uploadedCount == req.files.length) {
                         if (errors.length > 0) {
-                            jsonRes(res, "err", errors)
+                            jsonRes(res, "err", errors);
                         } else {
                             jsonRes(res);
                         }
@@ -555,7 +558,8 @@ module.exports.uploadTracks = (req, res) => {
                 for (var i = 0; i < req.files.length; i++) {
                     var path = req.files[i].path;
                     var trackId = req.files[i].trackId;
-                    insertTrack(req, res, path, trackId, function(err) {
+                    var originalFilename = req.files[i].originalname;
+                    insertTrack(req, res, path, trackId, originalFilename, (err) => {
                         oneUploaded(err, i+1);
                     });
                 }

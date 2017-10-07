@@ -1164,11 +1164,15 @@ function updateColVisibility() {
 
     var playPauseIcon = document.querySelector(".player .icon.play-pause");
     function updateMetaData(trackId) {
+        // artist/title
         var TrackInfoName = document.querySelector(".player .left .name");
         var TrackInfoArtist = document.querySelector(".player .left .artist");
         document.title = tracklist[trackId].artist+" - "+tracklist[trackId].name;
         TrackInfoName.innerHTML = tracklist[trackId].name;
         TrackInfoArtist.innerHTML = tracklist[trackId].artist;
+        // cover
+        var cover = document.querySelector(".player img.cover");
+        cover.setAttribute("src", "/cover/"+trackId);
     }
     window.setSrc = function(trackId) {
         if (!tracklist[trackId]) {
@@ -1176,7 +1180,7 @@ function updateColVisibility() {
             xhr(req, "/get-track-info", function(res) {
                 res = JSON.parse(res);
                 tracklist[trackId] = res.track;
-                updateMetaData();
+                updateMetaData(trackId);
             });
         } else {
             updateMetaData(trackId);
