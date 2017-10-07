@@ -1020,7 +1020,6 @@ function updateColVisibility() {
     document.addEventListener("dblclick", function(e) {
         if (e.button == 0 && e.target.classList.contains("cell")
         && e.target.previousElementSibling) {
-            e.preventDefault();
             playTrack(e.target.dataset.trackId);
         }
     });
@@ -1448,7 +1447,7 @@ function clickLogin() {
                     if (errors.email == "invalid") displayErr("email", "That email isn't valid");
                     if (errors.email == "empty") displayErr("email", "We need your email");
                     if (errors.email == "long") displayErr("email", "Maximum 60 characters :/");
-                    if (errors.email == "exist") displayErr("email", "Email already exists");
+                    if (errors.email == "exist") displayErr("email", "Email does not exist");
                     if (errors.password == "short") displayErr("password", "That's a bit short... Try 8 characters");
                     if (errors.password == "long") displayErr("password", "You crossed the 100 characters line");
                     if (errors.password == "incorrect") displayErr("password", "You guessed the wrong password");

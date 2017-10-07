@@ -1,4 +1,5 @@
 FROM node:8.4
+
 RUN npm install -g  nodemon@1.11.0
 
 RUN npm install     mysql@2.14.1

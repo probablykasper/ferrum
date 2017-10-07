@@ -126,7 +126,10 @@ module.exports.track = (req, res) => {
 }
 
 module.exports.cover = (req, res) => {
-    res.sendFile("/usr/src/app/covers/"+req.params.trackId);
+    fs.access("/usr/src/app/covers/"+req.params.trackId, (err) => {
+        if (err) res.sendFile("/usr/src/app/static/default-cover.svg");
+        else res.sendFile("/usr/src/app/covers/"+req.params.trackId);
+    });
 }
 
 module.exports.dl = (req, res) => {

@@ -1,6 +1,7 @@
 const sass = require("node-sass");
 const fs = require("fs");
 const fsPath = require("fs-path");
+
 const sassSuc = "\x1b[42m[Sass]\x1b[0m ";
 
 module.exports = () => {
