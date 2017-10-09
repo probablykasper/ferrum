@@ -335,12 +335,37 @@ document.addEventListener("keydown", function(e) {
     };
     window.editTrack = function(trackId) {
         var dialog = document.querySelector(".dialogs .dialog.editTrack");
-        dialog.querySelector(".trackName").value = tracklist[trackId].name;
-        dialog.querySelector(".trackArtist").value = tracklist[trackId].artist;
-        dialog.querySelector(".trackAlbum").value = tracklist[trackId].album;
-        dialog.querySelector(".trackGenre").value = tracklist[trackId].genre;
-        dialog.querySelector(".trackBitrate").innerHTML = "Bitrate: "+tracklist[trackId].bitrate;
-        openDialog("editTrack");
+        var name = dialog.querySelector(".trackName");
+        var artist = dialog.querySelector(".trackArtist");
+        var album = dialog.querySelector(".trackAlbum");
+        var genre = dialog.querySelector(".trackGenre");
+        var bitrate = dialog.querySelector(".trackBitrate");
+        name.value = tracklist[trackId].name;
+        artist.value = tracklist[trackId].artist;
+        album.value = tracklist[trackId].album;
+        genre.value = tracklist[trackId].genre;
+        bitrate.innerHTML = "Bitrate: "+tracklist[trackId].bitrate;
+
+        openDialog("editTrack", null, null, null, function() {
+            perform();
+        });
+        function perform() {
+            var req = "trackId="+trackId+
+            "&name="+encodeURIComponent(name.value)+
+            "&artist="+encodeURIComponent(artist.value)+
+            "&album="+encodeURIComponent(album.value)+
+            "&genre="+encodeURIComponent(genre.value);
+            console.log(req);
+            console.log("saaave");
+            xhr(req, "/edit-track", function(res) {
+                res = JSON.parse(res);
+                if (res.errors) {
+                    notify("An unknown error occured while editing the track", true);
+                } else {
+                    console.log(res);
+                }
+            });
+        }
     }
     window.deleteTrack = function(trackId) {
         var req = "trackId="+trackId;
@@ -527,7 +552,12 @@ document.addEventListener("keydown", function(e) {
             confirmTitle.innerHTML = title;
             confirmDescription.innerHTML = description;
             confirmButton.innerHTML = confirmText;
+        }
+        if (callback) {
             confirmCallback = callback;
+        }
+        else {
+            confirmCallback = function(){};
         }
         dialog.classList.add("visible");
         var focusThis = dialog.querySelector(".focus-this");
@@ -549,7 +579,7 @@ document.addEventListener("keydown", function(e) {
                     var name = dialog.querySelector(".name").value;
                     var description = dialog.querySelector(".description").value;
                     createPlaylist(name, description);
-                } else if (cl.contains("confirm") && cl.contains("primary")) {
+                } else if (cl.contains("primary")) {
                     closeDialog();
                     confirmCallback();
                 }

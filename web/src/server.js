@@ -71,6 +71,7 @@ app.use(passport.initialize());
         // tracks
         app.post("/upload-tracks", routes.uploadTracks);
         app.post("/delete-track", routes.deleteTrack);
+        app.post("/edit-track", routes.editTrack);
         app.post("/revive-track", routes.reviveTrack);
         app.post("/get-track-info", routes.getTrackInfo);
         app.post("/increment-track-play-count", routes.IncrementTrackPlayCount);

@@ -602,6 +602,53 @@ module.exports.deleteTrack = (req, res) => {
     }
 }
 
+module.exports.editTrack = (req, res) => {
+    if (res.locals.loggedIn) {
+        let trackId = req.body.trackId;
+        let metadata = {
+            name: req.body.name,
+            artist: req.body.artist,
+            album: req.body.album,
+            genre: req.body.genre
+        };
+        let tracksQuery = `
+            UPDATE
+                tracks
+            SET
+                ?
+            WHERE
+                trackId = ?
+                AND userId = ?`;
+        let args = [metadata, trackId, res.locals.userId];
+        db.query(tracksQuery, args, (err, result) => {
+            if (err) {
+                jsonRes(res, "err", 12001);
+            } else {
+                console.log(trackId);
+                elastic.update({
+                    index: "catalog",
+                    type: "track",
+                    id: trackId,
+                    body: {
+                        doc: {
+                            trackId: metadata.trackId,
+                            name: metadata.name,
+                            artist: metadata.artist,
+                            album: metadata.album,
+                            genre: metadata.genre,
+                        }
+                    }
+                }).then((body) => {
+                    jsonRes(res);
+                }, (err) => {
+                    console.log(err);
+                    jsonRes(res, "err", 12002);
+                });
+            }
+        });
+    }
+}
+
 module.exports.reviveTrack = (req, res) => {
     if (res.locals.loggedIn) {
         let trackId = req.body.trackId;

@@ -2,13 +2,17 @@
 Some (to-be) web/desktop/mobile application for your music library. Oh, and it's my first project with Docker. My first project with Node.js as well. Oh, also the first project using GitLab. And the first one where I use Jade. The first one where I build a RESTful API too, in fact.
 
 ## ToDo
+
+### Short-term
+- Make track edits change file metadata
+- Double-click to reset sidebar width
+
 - Account
     - Email verification
     - Change password
     - Device management?
 - Search
 - Queue
-- Double-click to reset sidebar(/column?) sizes
 - Column sorting
 - Custom context menus
 - Account/settings
