@@ -6,6 +6,8 @@ Some (to-be) web/desktop/mobile application for your music library. Oh, and it's
 ### Short-term
 - Make track edits change file metadata
 - Double-click to reset sidebar width
+- Click volume icon to mute/unmute
+- Context menu > Play adds next tracks to autoQueue
 
 - Account
     - Email verification

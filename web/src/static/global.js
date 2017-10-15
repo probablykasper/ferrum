@@ -1352,6 +1352,7 @@ function updateColVisibility() {
     else volume = 1;
     audio.volume = volume;
     var volumeContainer = document.querySelector(".player .volume-container");
+    var volumeIcon = document.querySelector(".player svg.icon.volume");
     rangeSlider.create(volumeSlider, {
         rangeClass: "rangeSlider volume-slider",
         polyfill: true,
