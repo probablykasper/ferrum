@@ -6,9 +6,12 @@
     "main": "server.js",
 
     "scripts": {
-        "start": "npm run nodemon && npm run gulp",
-        "nodemon": "nodemon server.js",
-        "gulp": "gulp"
+        "dev": "npm run start_dev",
+        "start_dev": "nodemon server.js",
+        "production": "npm run start_production",
+        "start_production": "node server.js"
+    },
+    "devDependencies": {
     },
     "dependencies": {
         "nodemon": "1.11.0",
@@ -32,17 +35,6 @@
         "passport-local": "1.0.0",
         "bcryptjs": "2.4.3",
 
-
         "music-metadata": "0.8.4"
-    }
-
-    ,"Deleted": {
-        "string": "3.3.3",
-        "express-validator": "3.2.1",
-        "express-messages": "1.0.1",
-        "express-handlebars": "3.0.0",
-        "connect-flash": "0.1.1",
-        "cookie-parser": "1.4.3",
-        "passport-http": "0.3.0"
     }
 }

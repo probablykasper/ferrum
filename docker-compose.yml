@@ -1,7 +1,7 @@
 version: "3.3"
 services:
     elastic:
-        image: docker.elastic.co/elasticsearch/elasticsearch:5.5.3
+        image: docker.elastic.co/elasticsearch/elasticsearch:6.0.0
         container_name: elastic
         environment:
             - cluster.name=ferrum-cluster
@@ -19,8 +19,6 @@ services:
             - esdata:/usr/share/elasticsearch/data
         ports:
             - 9200:9200
-        # networks:
-            # - esnet
     db:
         build: ./db
         container_name: db
@@ -48,9 +46,8 @@ services:
         depends_on:
             - db
         environment:
-            - DATABASE_HOST=db
-        # networks:
-        #     - esnet
+            - "DATABASE_HOST=db"
+            - "FERRUM_ENV=dev"
     phpmyadmin:
         image: phpmyadmin/phpmyadmin:4.7
         container_name: phpmyadmin
@@ -66,5 +63,3 @@ services:
 volumes:
     esdata:
         driver: local
-# networks:
-#     esnet:

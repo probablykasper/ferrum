@@ -1,4 +1,6 @@
-FROM node:8.4
+FROM node:8.9
+
+COPY src/package.json .
 
 RUN npm install -g  nodemon@1.11.0
 
@@ -21,14 +23,6 @@ RUN npm install     passport@0.4.0
 RUN npm install     passport-local@1.0.0
 RUN npm install     bcryptjs@2.4.3
 
-# RUN npm install     string@3.3.3
-# RUN npm install     express-validator@3.2.1
-# RUN npm install     express-messages@1.0.1
-# RUN npm install     express-handlebars@3.0.0
-# RUN npm install     connect-flash@0.1.1
-# RUN npm install     cookie-parser@1.4.3
-# RUN npm install     passport-http@0.3.0
-# RUN npm install     jsmediatags@3.8.0
 RUN npm install     music-metadata@0.8.4
 
 WORKDIR /usr/src/app
