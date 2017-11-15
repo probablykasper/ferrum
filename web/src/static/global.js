@@ -1093,24 +1093,25 @@ function updateColVisibility() {
             updateLocalPref();
         }
     });
-    var button = document.querySelector("header.app-bar .playlists");
-    button.addEventListener("click", function() {
-        mainContent.classList.add("transitioning");
-        if (sidebar.classList.contains("hidden")) {
-            mainContent.style.width = "calc(100% - "+localPref.sidebar.width+"px)";
-            localPref.sidebar.visible = true;
-        } else {
-            mainContent.style.width = "100%";
-            localPref.sidebar.visible = false;
+    document.addEventListener("click", function(e) {
+        if (insideClass(e.target, "playlist-toggle-icon")) {
+            mainContent.classList.add("transitioning");
+            if (sidebar.classList.contains("hidden")) {
+                mainContent.style.width = "calc(100% - "+localPref.sidebar.width+"px)";
+                localPref.sidebar.visible = true;
+            } else {
+                mainContent.style.width = "100%";
+                localPref.sidebar.visible = false;
+            }
+            updateLocalPref();
+            sidebar.classList.toggle("hidden");
+            setTimeout(function() {
+                mainContent.classList.remove("transitioning");
+            }, 150);
         }
-        updateLocalPref();
-        sidebar.classList.toggle("hidden");
-        setTimeout(function() {
-            mainContent.classList.remove("transitioning");
-        }, 150);
     });
     // createPlaylistButton
-    var cpb = document.querySelector(".sidebar button.create-playlist");
+    var cpb = document.querySelector(".sidebar svg.create-playlist");
     cpb.addEventListener("click", function() {
         openDialog("createPlaylist");
     });
