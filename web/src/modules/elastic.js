@@ -1,8 +1,8 @@
 const elasticsearch = require("elasticsearch");
 const elastic = new elasticsearch.Client({
     host: "elastic:9200",
-    httpAuth: "elastic:changeme",
-    apiVersion: "5.5",
+    httpAuth: "elastic:bigbagelbabe",
+    apiVersion: "6.0",
     log: "trace"
 });
 module.exports = elastic;

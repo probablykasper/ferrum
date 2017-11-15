@@ -4,6 +4,7 @@ services:
         image: docker.elastic.co/elasticsearch/elasticsearch:6.0.0
         container_name: elastic
         environment:
+            - ELASTIC_PASSWORD=bigbagelbabe
             - cluster.name=ferrum-cluster
             - bootstrap.memory_lock=true
             - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
@@ -24,18 +25,17 @@ services:
         container_name: db
         volumes:
             - ./db/data:/var/lib/mysql
-
-    api:
-        build: ./api
-        container_name: api
-        ports:
-            - 3000:80
-        volumes:
-            - ./api/src:/usr/src/app
-        depends_on:
-            - db
-        environment:
-            - DATABASE_HOST=db
+    # api:
+    #     build: ./api
+    #     container_name: api
+    #     ports:
+    #         - 3000:80
+    #     volumes:
+    #         - ./api/src:/usr/src/app
+    #     depends_on:
+    #         - db
+    #     environment:
+    #         - DATABASE_HOST=db
     web:
         build: ./web
         container_name: web
