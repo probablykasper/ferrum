@@ -36,19 +36,20 @@ header.app-bar
         justify-content: flex-end
         svg:last-child
             margin-right: 0px
-aside.sidebar
-    width: 200px
-    height: calc(100% - 64px - 20px - 80px)
-    padding: 10px 0px
+div.sidebar-container
+    height: calc(100% - 64px - 80px)
     top: 64px
     right: 0px
     position: fixed
     z-index: 20
     background-color: rgba(#ffffff, 0.05)
     box-shadow: $shadow-2-left, $shadow-1-inset-top, $shadow-2-inset-bottom
-    overflow-y: scroll
-    overflow: visible
     transition: transform $transition
+    aside.sidebar
+        width: 200px
+        height: calc(100% - 20px)
+        padding: 10px 0px
+        overflow-y: auto
     &.hidden
         transform: translateX(calc(100% + 3px))
     .sidebar-resizer
@@ -95,8 +96,7 @@ aside.sidebar
 main.content
     display: flex
     width: calc(100% - 200px)
-    height: calc(100% - 64px - 20px - 80px)
-    padding-top: 20px
+    height: calc(100% - 64px - 80px)
     position: absolute
     top: 64px
     z-index: 20
@@ -106,8 +106,7 @@ main.content
 main.music-page
     width: 100%
     height: 100%
-    padding: 0px 20px
-    overflow-y: scroll
+    overflow-y: auto
     header.playlist-header
         display: none
         width: 100%
@@ -137,9 +136,7 @@ main.music-page
         color: rgba(#FFFFFF, 0.75)
         border-radius: 3px
         padding: 0px 14px
-        background: linear-gradient(to bottom, rgba(#FFFFFF, 0.10) 48px, rgba(#FFFFFF, 0.05) 48px)
-        box-shadow: $shadow-1
-        margin-bottom: 20px
+        margin: 20px 0px
         user-select: none
         .col:first-child, .col:last-child
             .cell:nth-child(1n+2)::after
@@ -163,7 +160,7 @@ main.music-page
             &.flexible-width
                 width: 0px
             &.rearranging
-                box-shadow: $shadow-3
+                box-shadow: $shadow-col
             .cell
                 &.hover .cover-container .cover-overlay
                     opacity: 1
@@ -205,31 +202,32 @@ main.music-page
                 &.time:nth-child(n+2)
                     color: #76797F
                 padding: 10px
-                &:last-child
-                    margin-bottom: 12px
                 &:first-child
-                    padding-top: 22px
+                    padding-top: 14px
+                    padding-bottom: 14px
                     font-family: "Roboto", sans-serif
                     font-size: 14px
                     font-variant-caps: all-small-caps
                     color: #FFFFFF
                     position: relative
                     cursor: move
+                    overflow: visible
                     span.col-span
                         cursor: pointer
             &.flexible-width:not(.last-non-auto), &.fixed-width:not(.last-non-auto)
                 .cell:first-child .col-resizer
-                    width: 9px
-                    height: 100%
+                    width: 3px
+                    height: 50%
                     padding: 0px 2px
                     position: absolute
                     right: -3px
                     top: 50%
                     cursor: col-resize
-                    transform: translate(3px, -50%)
+                    transform: translate(0px, -50%)
+                    z-index: 22
                     .line
-                        width: 2px
+                        width: 1px
                         height: 100%
-                        background-color: rgba(#FFFFFF, 0.05)
+                        background-color: rgba(#FFFFFF, 0.15)
                         margin: auto
                         pointer-events: none

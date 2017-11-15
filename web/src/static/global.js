@@ -1057,7 +1057,7 @@ function updateColVisibility() {
 
 (function sidebar() {
     var sidebar = document.querySelector("aside.sidebar");
-    var resizer = document.querySelector("aside.sidebar .sidebar-resizer");
+    var resizer = document.querySelector(".sidebar-resizer");
     var mainContent = document.querySelector("main.content");
     sidebar.style.width = localPref.sidebar.width+"px";
     mainContent.style.width = "calc(100% - "+localPref.sidebar.width+"px)";
