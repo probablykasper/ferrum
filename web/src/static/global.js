@@ -1092,7 +1092,9 @@ function updateColVisibility() {
         document.addEventListener("mouseup", function(e) {
             if (mouseDown) {
                 mouseDown = false;
-                addTrackToPlaylist(trackId, e.target.dataset.playlistId, false);
+                if (e.target.classList.contains("playlist")) {
+                    addTrackToPlaylist(trackId, e.target.dataset.playlistId, false);
+                }
                 visible = false;
                 dragTrack.classList.remove("visible");
                 cover.setAttribute("src", "");
