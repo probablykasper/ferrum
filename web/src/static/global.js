@@ -1053,6 +1053,52 @@ function updateColVisibility() {
             playTrack(e.target.dataset.trackId);
         }
     });
+    // drag-and-drop
+    (function dragAndDrop() {
+        var mouseDown, mousePosX, mousePosY, startMousePosX, startMousePosY, visible;
+        var trackId;
+        var dragTrack = document.querySelector(".drag-track");
+        var cover = document.querySelector(".drag-track .drag-cover");
+        document.addEventListener("mousedown", function(e) {
+            var cell = insideClass(e.target, "cell");
+            if (e.button == 0 && cell && cell.dataset.trackId) {
+                trackId = cell.dataset.trackId;
+                // var track = document.querySelectorAll('.music-table .cell[data-track-id="'+id+'"]');
+                mouseDown = true;
+                visible = false;
+                startMousePosX = e.clientX;
+                startMousePosY = e.clientY;
+                cover.setAttribute("src", "/cover/"+trackId);
+            }
+        });
+        document.addEventListener("mousemove", function(e) {
+            if (mouseDown) {
+                mousePosX = e.clientX;
+                mousePosY = e.clientY;
+                if (!visible) {
+                    var offsetX = startMousePosX - mousePosX;
+                    var offsetY = startMousePosY - mousePosY;
+                    if (offsetY < -5 || offsetY > 5 || offsetX < -5 || offsetX > 5) {
+                        visible = true;
+                        dragTrack.classList.add("visible");
+                    } else {
+                        return;
+                    }
+                }
+                dragTrack.style.left = mousePosX+"px";
+                dragTrack.style.top = mousePosY+"px";
+            }
+        });
+        document.addEventListener("mouseup", function(e) {
+            if (mouseDown) {
+                mouseDown = false;
+                addTrackToPlaylist(trackId, e.target.dataset.playlistId, false);
+                visible = false;
+                dragTrack.classList.remove("visible");
+                cover.setAttribute("src", "");
+            }
+        });
+    })();
 })();
 
 (function sidebar() {
@@ -1062,7 +1108,7 @@ function updateColVisibility() {
     sidebar.style.width = localPref.sidebar.width+"px";
     mainContent.style.width = "calc(100% - "+localPref.sidebar.width+"px)";
     if (!localPref.sidebar.visible) {
-        sidebar.classList.add("hidden");
+        sidebar.parentElement.classList.add("hidden");
         mainContent.style.width = "100%";
     }
     var mouseDown, mousePosX, mousePosStartX, oldWidth;
@@ -1096,7 +1142,7 @@ function updateColVisibility() {
     document.addEventListener("click", function(e) {
         if (insideClass(e.target, "playlist-toggle-icon")) {
             mainContent.classList.add("transitioning");
-            if (sidebar.classList.contains("hidden")) {
+            if (sidebar.parentElement.classList.contains("hidden")) {
                 mainContent.style.width = "calc(100% - "+localPref.sidebar.width+"px)";
                 localPref.sidebar.visible = true;
             } else {
@@ -1104,7 +1150,7 @@ function updateColVisibility() {
                 localPref.sidebar.visible = false;
             }
             updateLocalPref();
-            sidebar.classList.toggle("hidden");
+            sidebar.parentElement.classList.toggle("hidden");
             setTimeout(function() {
                 mainContent.classList.remove("transitioning");
             }, 150);
