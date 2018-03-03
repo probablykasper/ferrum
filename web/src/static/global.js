@@ -1460,7 +1460,6 @@ function updateColVisibility() {
         }
     });
     function updateVolIcon(value) {
-        console.log(value);
         if (value == 0) {
             if (volIcon.dataset.loudness != "0") {
                 volIcon.dataset.loudness = "0";

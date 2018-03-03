@@ -37,9 +37,6 @@
         .rangeSlider.progress-slider
             opacity: 1
             pointer-events: all
-    .icon
-        width: 30px
-        height: 30px
     .rangeSlider.progress-slider
         opacity: 0
         pointer-events: none
@@ -93,11 +90,11 @@
             justify-content: center
             width: 180px
             .icon
-            .icon.prev
+                width: 30px
+                height: 30px
             .icon.play-pause
                 width: 40px
                 height: 40px
-            .icon.next
         .right
             justify-content: flex-end
             .volume-container
@@ -122,3 +119,6 @@
                         z-index: 64
                     .rangeSlider__handle
                         z-index: 66
+            .icon.queue
+                margin-right: 20px
+                min-width: 24px

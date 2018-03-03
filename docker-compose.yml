@@ -21,10 +21,14 @@ services:
         ports:
             - 9200:9200
     db:
-        build: ./db
+        image: mysql:8.0.2
         container_name: db
+        environment:
+            - "MYSQL_ROOT_PASSWORD=123"
         volumes:
             - ./db/data:/var/lib/mysql
+        ports:
+            - 3306:3306
     # api:
     #     build: ./api
     #     container_name: api
