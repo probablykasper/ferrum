@@ -1,0 +1,119 @@
+// sass --watch css/global.sass:css/global.css
+
+$c-dark: #282c35
+$c-dark-2: #242933
+$c-light: #323742
+$c-accent: #03A9F4
+
+
+body
+	background-color: $c-dark
+	margin: 0px
+	width: 100%
+	height: 100%
+	font-family: "Roboto", sans-serif
+	color: white
+	-webkit-font-smoothing: antialiased
+p
+	text-align: center
+	font-size: 18px
+	margin: 0
+a
+	text-decoration: none
+	outline: none
+h1
+	text-align: center
+	font-size: 40px
+	font-weight: normal
+	margin-top: 25px
+	margin-bottom: 25px
+
+main.home
+
+	div.login-div
+		position: absolute
+		top: 50%
+		left: 50%
+		transform: translate(-50%, -50%)
+
+		div
+			display: flex
+
+	form
+
+		input
+			color: rgba(#FFFFFF, 0.6)
+			background-color: $c-light
+			border: none
+			border-radius: 2px
+			width: 150px
+			padding: 5px
+			margin: 10px 3px
+			font-size: 17px
+
+			&:focus
+				outline: none
+
+			&[type="submit"]
+				font-size: 20px
+				color: $c-accent
+				width: auto
+				margin: auto
+				display: block
+				transition: color 0.2s ease
+				background-color: rgba(#000000, 0)
+				cursor: pointer
+				&:hover
+					color: rgba($c-accent, 0.8)
+
+	a
+		position: absolute
+		left: 50%
+		bottom: 5px
+		transform: translate(-50%, -50%)
+
+		p
+			color: $c-accent
+			transition: color 0.2s ease
+
+		&:hover, &:focus
+			cursor: pointer
+			p
+				color: rgba($c-accent, 0.8)
+
+	div.chat-box
+		width: 400px
+		// height: 100%
+		position: absolute
+		transform: translateX(-50%)
+		left: 50%
+
+		div.chat-message
+			height: 50px
+			margin: 10px 0px
+			border-radius: 2px
+
+			p
+				text-align: left
+
+			&:nth-child(2n)
+				background-color: $c-dark-2
+
+			&:nth-child(2n-1)
+				background-color: $c-light
+
+		div.chat-typer
+			// bottom: 0
+			// position: absolute
+			width: 100%
+			margin: 10px 0px
+
+			input
+				background-color: $c-light
+				border: none
+				outline: none
+				width: 390px
+				border-radius: 2px
+				padding: 5px
+				font-size: 17px
+				color: rgba(#FFFFFF, 0.6)

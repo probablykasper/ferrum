@@ -1,0 +1,100 @@
+// sass --watch css/global.sass:css/global.css
+
+$c-dark: #282c35
+$c-light: #323742
+$c-accent: #03A9F4
+
+
+body
+	background-color: $c-dark
+	margin: 0px
+	width: 100%
+	height: 100%
+	font-family: "Roboto", sans-serif
+	color: white
+	-webkit-font-smoothing: antialiased
+p
+	text-align: center
+	font-size: 18px
+	margin: 0
+a
+	text-decoration: none
+	outline: none
+h1
+	text-align: center
+	font-size: 40px
+	font-weight: normal
+	margin-top: 25px
+	margin-bottom: 25px
+
+main.home
+
+	div.login-div
+		position: absolute
+		top: 50%
+		left: 50%
+		transform: translate(-50%, -50%)
+
+		form
+
+			div
+				display: flex
+
+				input
+					color: rgba(#FFFFFF, 0.6)
+					background-color: $c-light
+					border: none
+					border-radius: 2px
+					width: 150px
+					padding: 5px
+					margin: 10px 3px
+					font-size: 20px
+
+					&:focus
+						outline: none
+
+					&[name="submit_login"], &[name="submit_register"]
+						width: auto
+						color: $c-accent
+						margin: auto
+						display: block
+						transition: color 0.2s ease
+						background-color: rgba(#000000, 0)
+						cursor: pointer
+
+						&:hover
+							color: rgba($c-accent, 0.8)
+
+	form
+
+		input[type="submit"]
+			border: none
+			padding: 5px
+			font-size: 20px
+			color: $c-accent
+			margin: auto
+			display: block
+			transition: color 0.2s ease
+			background-color: rgba(#000000, 0)
+			cursor: pointer
+
+			&:focus
+				outline: none
+
+			&:hover
+				color: rgba($c-accent, 0.8)
+
+	a
+		position: absolute
+		left: 50%
+		bottom: 5px
+		transform: translate(-50%, -50%)
+
+		p
+			color: $c-accent
+			transition: color 0.2s ease
+
+		&:hover, &:focus
+			cursor: pointer
+			p
+				color: rgba($c-accent, 0.8)
