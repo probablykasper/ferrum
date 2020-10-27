@@ -18,14 +18,12 @@ function b32(x) {
 
 const multer = require("multer");
 const storage = multer.diskStorage({
-    destination: function(req, file, cb) {
-        cb(null, "tracks/");
-    },
+    destination: "tracks/",
     filename: function(req, file, cb) {
         file.trackId = b32(6);
         var extension;
         if      (file.mimetype == "audio/wav") extension = ".wav";
-        else if (file.mimetype == "audio/mp3") extension = ".mp3";
+        else if (file.mimetype == "audio/mpeg") extension = ".mp3";
         else res.err = "wrongExt";
         cb(null, file.trackId+extension);
     }
