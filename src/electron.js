@@ -25,7 +25,7 @@ function createWindow() {
   // uses eval(). This causes a security warning, so we disable that. This
   // should be fine because 'self' won't be an external origin, as we only
   // index.html locally.
-  mainWindow.ELECTRON_DISABLE_SECURITY_WARNINGS = true
+  process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = true
   session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
     callback({
       responseHeaders: {
