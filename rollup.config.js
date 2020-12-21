@@ -41,7 +41,7 @@ function serve() {
       if (server) return
       server = require('child_process').spawn(
         'npm',
-        ['run', 'start', '--', '--dev'],
+        ['run', 'serve:ui', '--', '--dev'],
         {
           stdio: ['ignore', 'inherit', 'inherit'],
           shell: true,
@@ -55,12 +55,12 @@ function serve() {
 }
 
 export default {
-  input: 'src/main.js',
+  input: './src/main.js',
   output: {
     sourcemap: true,
     format: 'iife',
     name: 'app',
-    file: 'public/build/bundle.js',
+    file: './public/build/bundle.js',
   },
   plugins: [
     svelte({

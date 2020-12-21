@@ -52,8 +52,8 @@
     "sirv-cli": "^1.0.10"
   },
   "scripts": {
-    "start": "DEV_PORT=5000 concurrently npm:dev:ui npm:dev:electron",
-    "dev:ui": "nollup -c --hot --port $DEV_PORT --content-base ./public",
+    "start": "DEV_PORT=5000 concurrently npm:dev:ui:nollup npm:dev:electron",
+    "dev:ui:nollup": "nollup -c --hot --port $DEV_PORT --content-base ./public",
     "dev:electron": "APP_ENV=dev electron .",
     "dev:ui:rollup": "rollup -c -w",
     "dev:ui:livereload": "rollup -c -w --environment LIVERELOAD",
