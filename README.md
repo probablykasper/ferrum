@@ -3,16 +3,19 @@
 ## Commands
 
 ### `npm run start`
-Start dev server with HMR, using Nollup.
+Start Electron + dev server with HMR, using Nollup.
 
-### `npm run start:rollup`
+### `npm run dev:ui:rollup`
 Start dev server with HMR, using Rollup.
 
-### `npm run start:livereload`
+### `npm run dev:ui:livereload`
 Start dev server with livereload.
 
-### `npm run build`
-Build
+### `npm run build:ui`
+Build UI
 
-### `npm run serve`
-Serve
+### `npm run serve:ui`
+Serve UI
+
+### `npm run lint`
+Lint code

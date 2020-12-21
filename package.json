@@ -1,13 +1,43 @@
 {
   "name": "ferrum",
+  "author": "kasper.space",
+  "description": "Music library app",
+  "version": "0.1.0",
+  "repository": "https://github.com/probablykasper/ferrum",
+  "build": {
+    "appId": "space.kasper.ferrum",
+    "productName": "Ferrum",
+    "mac": {
+      "category": "public.app-category.music",
+      "target": [
+        "dmg"
+      ],
+      "extendInfo": {
+        "NSRequiresAquaSystemAppearance": false
+      }
+    },
+    "files": [
+      "public",
+      "src/electron.js"
+    ],
+    "directories": {
+      "buildResources": "build_resources",
+      "output": "dist"
+    }
+  },
+  "main": "./src/electron.js",
   "devDependencies": {
     "@babel/core": "^7.12.10",
     "@babel/preset-env": "^7.12.11",
     "@rollup/plugin-commonjs": "^17.0.0",
     "@rollup/plugin-node-resolve": "^11.0.1",
+    "concurrently": "^5.3.0",
+    "electron": "^11.1.0",
+    "electron-builder": "^22.9.1",
     "eslint": "^7.16.0",
     "eslint-plugin-svelte3": "^3.0.0",
     "nollup": "^0.14.3",
+    "npm-run-all": "^4.1.5",
     "pug": "^3.0.0",
     "rollup": "^2.35.1",
     "rollup-plugin-hot": "^0.1.1",
@@ -22,11 +52,14 @@
     "sirv-cli": "^1.0.10"
   },
   "scripts": {
-    "start": "nollup -c --hot --port 5000 --content-base ./public",
-    "start:rollup": "rollup -c -w",
-    "start:livereload": "rollup -c -w --environment LIVERELOAD",
-    "build": "rollup -c",
-    "serve": "sirv public",
+    "start": "DEV_PORT=5000 concurrently npm:dev:ui npm:dev:electron",
+    "dev:ui": "nollup -c --hot --port $DEV_PORT --content-base ./public",
+    "dev:electron": "APP_ENV=dev electron .",
+    "dev:ui:rollup": "rollup -c -w",
+    "dev:ui:livereload": "rollup -c -w --environment LIVERELOAD",
+    "build": "npm run build:ui && electron-builder",
+    "build:ui": "rollup -c",
+    "serve:ui": "sirv public",
     "lint": "eslint . **/*.pug"
   }
 }
