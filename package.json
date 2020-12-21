@@ -7,6 +7,7 @@
   "build": {
     "appId": "space.kasper.ferrum",
     "productName": "Ferrum",
+    "artifactName": "${productName}-v${version}-${os}.${ext}",
     "mac": {
       "category": "public.app-category.music",
       "target": [

@@ -1,5 +1,6 @@
 const { app, session, globalShortcut, ipcMain, BrowserWindow, Electron, Menu } = require('electron')
 const path = require('path')
+const vars = require('./variables')
 
 let mainWindow
 const dev = process.env.APP_ENV === 'dev'
@@ -18,6 +19,7 @@ function createWindow() {
       contextIsolation: true,
       nodeIntegration: true,
     },
+    backgroundColor: vars['--bg-color'],
     show: false,
   })
 
