@@ -3,7 +3,7 @@ name = "ferrum"
 version = "0.1.0"
 build = "build.rs"
 edition = "2018"
-exclude = ["artifacts.json", "index.node"]
+exclude = ["artifacts.json", "addon.node"]
 
 [lib]
 name = "ferrum"
@@ -13,5 +13,5 @@ crate-type = ["cdylib"]
 napi-build = "1.0.0-alpha.0"
 
 [dependencies]
-napi = "1.0.0-alpha.2"
+napi = "1.0.0-alpha.4"
 napi-derive = "1.0.0-alpha.0"

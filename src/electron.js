@@ -1,7 +1,7 @@
 const { app, session, globalShortcut, ipcMain, BrowserWindow, Electron, Menu } = require('electron')
 const path = require('path')
 const vars = require('./variables')
-const addon = require('../native/index.node')
+const addon = require('../native/addon.node')
 
 let mainWindow
 const dev = process.env.APP_ENV === 'dev'
