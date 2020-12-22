@@ -21,6 +21,7 @@
       "public",
       "src/electron.js",
       "src/variables.js",
+      "src/preload.js",
       "native/index.node"
     ],
     "directories": {
@@ -29,6 +30,7 @@
     }
   },
   "main": "./src/electron.js",
+  "napi": {},
   "devDependencies": {
     "@babel/core": "^7.12.10",
     "@babel/preset-env": "^7.12.11",
@@ -59,11 +61,12 @@
   "scripts": {
     "start": "DEV_PORT=5000 concurrently npm:dev:ui:nollup npm:dev:electron",
     "dev:ui:nollup": "nollup -c --hot --port $DEV_PORT --content-base ./public",
-    "dev:electron": "cd native && electron-build-env napi build && cd .. && APP_ENV=dev electron .",
+    "dev:electron": "npm run dev:napi && APP_ENV=dev electron .",
+    "dev:napi": "cd native && electron-build-env napi build --config ../package.json",
     "dev:ui:rollup": "rollup -c -w",
     "dev:ui:livereload": "rollup -c -w --environment LIVERELOAD",
     "build": "npm run build:ui && npm run build:napi && electron-builder",
-    "build:napi": "cd native && electron-build-env napi build --release",
+    "build:napi": "cd native && electron-build-env napi build --config ../package.json --release",
     "build:ui": "rollup -c",
     "serve:ui": "sirv public",
     "lint": "eslint . **/*.pug"
