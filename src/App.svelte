@@ -2,7 +2,7 @@
   import { onMount } from 'svelte'
   import styles from './variables.js'
   const addon = window.addon
-  console.log('hello():', addon.hello())
+  console.log(addon.get_path())
 
   $: cssVarStyles = Object.entries(styles)
     .map(([key, value]) => `${key}:${value}`)
