@@ -44,4 +44,5 @@
     title Svelte app
   main(style='{cssVarStyles}')
     .titlebar
+    h1 Hello World
 </template>

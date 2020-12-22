@@ -19,7 +19,9 @@
     },
     "files": [
       "public",
-      "src/electron.js"
+      "src/electron.js",
+      "src/variables.js",
+      "native/index.node"
     ],
     "directories": {
       "buildResources": "build_resources",
@@ -34,9 +36,11 @@
     "@rollup/plugin-node-resolve": "^11.0.1",
     "concurrently": "^5.3.0",
     "electron": "^11.1.0",
+    "electron-build-env": "^0.2.0",
     "electron-builder": "^22.9.1",
     "eslint": "^7.16.0",
     "eslint-plugin-svelte3": "^3.0.0",
+    "neon-cli": "^0.6.0",
     "nollup": "^0.14.3",
     "npm-run-all": "^4.1.5",
     "pug": "^3.0.0",
@@ -55,10 +59,10 @@
   "scripts": {
     "start": "DEV_PORT=5000 concurrently npm:dev:ui:nollup npm:dev:electron",
     "dev:ui:nollup": "nollup -c --hot --port $DEV_PORT --content-base ./public",
-    "dev:electron": "APP_ENV=dev electron .",
+    "dev:electron": "electron-build-env neon build && APP_ENV=dev electron .",
     "dev:ui:rollup": "rollup -c -w",
     "dev:ui:livereload": "rollup -c -w --environment LIVERELOAD",
-    "build": "npm run build:ui && electron-builder",
+    "build": "npm run build:ui && electron-build-env neon build --release && electron-builder",
     "build:ui": "rollup -c",
     "serve:ui": "sirv public",
     "lint": "eslint . **/*.pug"

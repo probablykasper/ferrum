@@ -1,6 +1,8 @@
 const { app, session, globalShortcut, ipcMain, BrowserWindow, Electron, Menu } = require('electron')
 const path = require('path')
 const vars = require('./variables')
+const addon = require('../native/index.node')
+console.log('rust:', addon.hello())
 
 let mainWindow
 const dev = process.env.APP_ENV === 'dev'
@@ -10,18 +12,17 @@ function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1300,
     height: 800,
-    // minHeight
-    // minWidth
-    // darkTheme: true,
     frame: false,
-    // vibrancy: dark,
     webPreferences: {
-      contextIsolation: true,
+      contextIsolation: false,
       nodeIntegration: true,
+      enableRemoteModule: true,
     },
     backgroundColor: vars['--bg-color'],
     show: false,
   })
+
+  if (dev) mainWindow.webContents.openDevTools()
 
   // Here we set the CSP to allow 'unsafe-eval' for 'self' because Nollup
   // uses eval(). This causes a security warning, so we disable that. This

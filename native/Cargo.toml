@@ -1,0 +1,16 @@
+[package]
+name = "ferrum"
+version = "0.1.0"
+build = "build.rs"
+edition = "2018"
+exclude = ["artifacts.json", "index.node"]
+
+[lib]
+name = "ferrum"
+crate-type = ["cdylib"]
+
+[build-dependencies]
+neon-build = "0.6.0"
+
+[dependencies]
+neon = "0.6.0"
