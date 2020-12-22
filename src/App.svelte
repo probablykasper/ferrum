@@ -1,6 +1,8 @@
 <script>
   import { onMount } from 'svelte'
   import styles from './variables.js'
+  const addon = window.addon
+  console.log('hello():', addon.hello())
 
   $: cssVarStyles = Object.entries(styles)
     .map(([key, value]) => `${key}:${value}`)
@@ -25,13 +27,16 @@
     background-color: var(--bg-color)
 
   :global(body)
-    color: var(--text-color)
     position: relative
     width: 100%
     height: 100%
     margin: 0
     box-sizing: border-box
+
+  main
+    color: var(--text-color)
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif
+    user-select: none
   
   .titlebar
     height: 20px
