@@ -2,8 +2,6 @@ const { app, session, globalShortcut, ipcMain, BrowserWindow, Electron, Menu } =
 const path = require('path')
 const vars = require('./variables')
 const addon = require('../native/index.node')
-console.log('rust:', addon.hello())
-app.allowRendererProcessReuse = false
 
 let mainWindow
 const dev = process.env.APP_ENV === 'dev'
@@ -15,9 +13,8 @@ function createWindow() {
     height: 800,
     frame: false,
     webPreferences: {
-      contextIsolation: true,
+      contextIsolation: false,
       nodeIntegration: true,
-      enableRemoteModule: true,
       preload: path.resolve(__dirname, './preload.js'),
     },
     backgroundColor: vars['--bg-color'],
