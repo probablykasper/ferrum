@@ -72,5 +72,8 @@
     "build:ui": "rollup -c",
     "serve:ui": "sirv public",
     "lint": "eslint . **/*.pug"
+  },
+  "dependencies": {
+    "simple-plist": "^1.1.1"
   }
 }

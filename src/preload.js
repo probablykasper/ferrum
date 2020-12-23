@@ -2,11 +2,14 @@ const path = require('path')
 const fs = require('fs')
 const { app, dialog } = require('electron').remote
 const addon = window.require(path.resolve(__dirname, '../native/addon.node'))
+const iTunesImport = require('./scripts/import_itunes.js')
 window.addon = addon
 
 const libraryPath = path.join(app.getPath('music'), 'Ferrum')
 const libraryJsonPath = path.join(app.getPath('music'), 'Ferrum', 'library.json')
+
 const db = {
+  iTunesImport,
   load: function() {
     if (fs.existsSync(libraryJsonPath)) {
       db.library = JSON.parse(fs.readFileSync(libraryJsonPath))
