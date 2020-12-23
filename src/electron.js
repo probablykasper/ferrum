@@ -1,20 +1,24 @@
-const { app, session, globalShortcut, ipcMain, BrowserWindow, Electron, Menu } = require('electron')
+const { app, session, BrowserWindow } = require('electron')
 const path = require('path')
 const vars = require('./variables')
-const addon = require('../native/addon.node')
+// const addon = require('../native/addon.node')
 
 let mainWindow
 const dev = process.env.APP_ENV === 'dev'
 const devPort = process.env.DEV_PORT
+const isMac = process.platform === 'darwin'
 
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1300,
-    height: 800,
+    height: 1000,
+    minWidth: 850,
+    minHeight: 400,
     frame: false,
     webPreferences: {
       contextIsolation: false,
       nodeIntegration: true,
+      enableRemoteModule: true,
       preload: path.resolve(__dirname, './preload.js'),
     },
     backgroundColor: vars['--bg-color'],
@@ -52,7 +56,7 @@ function createWindow() {
 app.on('ready', createWindow)
 
 app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') app.quit()
+  if (!isMac) app.quit()
 })
 
 app.on('activate', () => {

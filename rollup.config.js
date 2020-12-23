@@ -131,6 +131,6 @@ export default {
   ],
   watch: {
     clearScreen: false,
-    include: ['src/**.js'],
+    exclude: ['./native/**'],
   },
 }
