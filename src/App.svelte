@@ -5,17 +5,20 @@
   // const addon = window.addon
   // console.log(addon.get_path())
   const db = window.api.db
-  const headerHeight = 70
   db.load()
 
   let pageStatus = ''
+  let pageStatusWarnings = ''
+  let pageStatusErr = ''
   const { ipcRenderer } = window.require('electron')
   ipcRenderer.on('itunesImport', async(event, arg) => {
-    await db.iTunesImport((status) => {
+    const { err, warnings } = await db.iTunesImport((status) => {
       pageStatus = status
+    }, (warning) => {
+      pageStatusWarnings += warning+'\n'
     })
+    if (err) pageStatusErr = err.stack
   })
-
 
   $: cssVarStyles = Object.entries(styles)
     .map(([key, value]) => `${key}:${value}`)
@@ -72,12 +75,22 @@
     align-items: center
     .page-status
       background-color: #3b3b3b
-      width: 300px
-      height: 80px
+      min-width: 300px
+      max-width: 800px
+      min-height: 100px
+      max-height: 350px
       padding: 10px 20px
       display: flex
+      flex-direction: column
       align-items: center
       justify-content: center
+      .page-status-item
+        margin: 6px 0px
+      pre
+        white-space: pre-wrap
+        overflow: hidden
+        overflow-wrap: anywhere
+        user-select: text
 </style>
 
 <template lang='pug'>
@@ -88,7 +101,17 @@
       .titlebar
       h1 Hello World
     TrackList(tracks='{db.library.tracks}')
-    +if('pageStatus')
+    +if('pageStatus || pageStatusWarnings || pageStatusErr')
       .page-status-bg
-        .page-status {pageStatus}
+        .page-status
+          +if('pageStatus')
+            .page-status-item {pageStatus}
+          +if('pageStatusWarnings')
+            .page-status-item
+              b Warnings:
+              pre {pageStatusWarnings}
+          +if('pageStatusErr')
+            .page-status-item
+              b Error:
+              pre {pageStatusErr}
 </template>
