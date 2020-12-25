@@ -1,5 +1,9 @@
 # Ferrum
 
+ToDo:
+- Load tracks from library into player
+- Import albums, playlists
+
 Potential databases:
 - https://github.com/TheNeikos/rustbreak
 - https://github.com/spacejam/sled

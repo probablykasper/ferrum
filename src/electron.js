@@ -3,10 +3,11 @@ const path = require('path')
 const vars = require('./variables')
 // const addon = require('../native/addon.node')
 
-let mainWindow
 const dev = process.env.APP_ENV === 'dev'
 const devPort = process.env.DEV_PORT
 const isMac = process.platform === 'darwin'
+let mainWindow
+let quitting = false
 
 function ready() {
 
@@ -56,20 +57,24 @@ function ready() {
   })
 
   mainWindow.on('close', (e) => {
-    if (isMac) e.preventDefault()
-    if (isMac) mainWindow.hide()
-    if (!isMac) mainWindow = null
+    if (isMac && !quitting) e.preventDefault()
+    if (isMac && !quitting) mainWindow.hide()
+  })
+  mainWindow.on('closed', () => {
+    mainWindow = null
   })
 }
 
 app.on('ready', ready)
 
+app.on('before-quit', () => {
+  quitting = true
+})
 app.on('window-all-closed', () => {
-  if (!isMac) app.quit()
+  app.quit()
 })
 
 app.on('activate', () => {
-  console.log('ACTIVATE', mainWindow)
   if (mainWindow === null) ready()
   else mainWindow.show()
 })

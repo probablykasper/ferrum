@@ -20,9 +20,7 @@
     },
     "files": [
       "public",
-      "src/electron.js",
-      "src/variables.js",
-      "src/preload.js",
+      "src/*.js",
       "native/addon.node"
     ],
     "directories": {
