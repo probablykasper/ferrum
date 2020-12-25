@@ -1,4 +1,4 @@
-const { app, session, Menu, BrowserWindow, globalShortcut } = require('electron')
+const { app, session, Menu, BrowserWindow, protocol } = require('electron')
 const path = require('path')
 const vars = require('./variables')
 // const addon = require('../native/addon.node')
@@ -8,7 +8,13 @@ const dev = process.env.APP_ENV === 'dev'
 const devPort = process.env.DEV_PORT
 const isMac = process.platform === 'darwin'
 
-function createWindow() {
+function ready() {
+
+  protocol.registerFileProtocol('file', (request, callback) => {
+    const pathname = decodeURI(request.url.replace('file:///', ''))
+    callback(pathname)
+  })
+
   mainWindow = new BrowserWindow({
     width: 1300,
     height: 1000,
@@ -17,6 +23,7 @@ function createWindow() {
     frame: false,
     webPreferences: {
       contextIsolation: false,
+      webSecurity: false,
       nodeIntegration: true,
       enableRemoteModule: true,
       preload: path.resolve(__dirname, './preload.js'),
@@ -53,14 +60,14 @@ function createWindow() {
   })
 }
 
-app.on('ready', createWindow)
+app.on('ready', ready)
 
 app.on('window-all-closed', () => {
   if (!isMac) app.quit()
 })
 
 app.on('activate', () => {
-  if (mainWindow === null) createWindow()
+  if (mainWindow === null) ready()
 })
 
 const template = [

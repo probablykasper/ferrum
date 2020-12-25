@@ -7,6 +7,8 @@ Potential databases:
 
 Gapless audio:
 - https://github.com/regosen/Gapless-5
+- https://github.com/sudara/stitches
+- https://www.npmjs.com/package/gapless.js
 
 ## Commands
 

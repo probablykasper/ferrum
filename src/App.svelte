@@ -2,6 +2,7 @@
   import { onMount } from 'svelte'
   import styles from './variables.js'
   import TrackList from './components/TrackList.svelte'
+  import Player from './components/Player.svelte'
   // const addon = window.addon
   // console.log(addon.get_path())
   const db = window.api.db
@@ -99,6 +100,7 @@
   main(style='{cssVarStyles}')
     .header
       .titlebar
+      Player
       h1 Hello World
     TrackList(tracks='{db.library.tracks}')
     +if('pageStatus || pageStatusWarnings || pageStatusErr')
