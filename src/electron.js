@@ -55,8 +55,10 @@ function ready() {
     mainWindow.show()
   })
 
-  app.on('closed', () => {
-    mainWindow = null
+  mainWindow.on('close', (e) => {
+    if (isMac) e.preventDefault()
+    if (isMac) mainWindow.hide()
+    if (!isMac) mainWindow = null
   })
 }
 
@@ -67,7 +69,9 @@ app.on('window-all-closed', () => {
 })
 
 app.on('activate', () => {
+  console.log('ACTIVATE', mainWindow)
   if (mainWindow === null) ready()
+  else mainWindow.show()
 })
 
 const template = [
