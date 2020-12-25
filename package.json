@@ -20,7 +20,7 @@
     },
     "files": [
       "public",
-      "src/*.js",
+      "src/**/*.js",
       "native/addon.node"
     ],
     "directories": {
