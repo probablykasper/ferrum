@@ -3,6 +3,7 @@
 ToDo:
 - Load tracks from library into player
 - Import albums, playlists
+  - use Persistent ID instead of Track ID
 
 Potential databases:
 - https://github.com/TheNeikos/rustbreak

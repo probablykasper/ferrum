@@ -1,10 +1,9 @@
-Custom field:
-  - Date Imported
 Good to go:
+  Custom fields:
+    - Date Imported
   - Title
   - Artist
   - Genre
-  - Duration (total time, ms)
   - Year
   - BPM
   - Date Modified
@@ -15,40 +14,43 @@ Good to go:
   - Play Date UTC
   - Skip Count
   - Skip Date
-  - Album
-  - Album artist
   - Composer
+  - Podcast (gotta ignore)
+  - Sort Name, Artist, Composer
+  - Compilation
+To add:
+  - Duration (total time, ms)
   - Track Number / Count
   - Disc Number / Count
-  - Podcast (gotta ignore)
-  - Location (use to get file and extract cover)
-  - Sort Name, Album, Album Artist, Artist, Composer
+  - Album
+  - Album artist
+  - Sort Album, Album Artist
 Undecided:
+  - Location (use to get file and extract cover)
   - Kind (5496 MPEG audio file,  4 MPEG-4 video file,  3939 Matched AAC audio file,  17 AAC audio file)
   - Size (bytes)
   - Bit Rate (kbps)
   - Sample Rate
   - Track Type
-  - Compilation
-  - Media kind alert tone/‌audiobook/‌book/‌home video/‌iTunesU/‌movie/‌song/‌music video/‌podcast/‌ringtone/‌TV show/‌voice memo/‌unknown)
+  - Media kind (alert tone/‌audiobook/‌book/‌home video/‌iTunesU/‌movie/‌song/‌music video/‌podcast/‌ringtone/‌TV show/‌voice memo/‌unknown)
   - release date
   - Normalization (same as volume adjustment?)
   - Track ID
+  - Start time
+  - Stop time
 Probably ignore:
   - Artwork Count
   - Persistent ID
-  - Start time
-  - Stop time
+  - Album disliked
+  - Album loved
+  - Album rating
 Gotta test:
   - Grouping
   - Rating stars
   - Rating love
   - Lyrics
   - Disliked
-  - Album disliked
-  - Album loved
-  - Album rating
-  - Enabled
+  - Enabled/Disabled
   - Loved
   - Shufflable
 Playlists:

@@ -49,6 +49,10 @@ function parseTrack(xmlTrack, warn, startTime) {
   }
   addIfTruthy('title', xmlTrack['Name'])
   addIfTruthy('artist', xmlTrack['Artist'])
+  addIfTruthy('composer', xmlTrack['Composer'])
+  addIfTruthy('sortTitle', xmlTrack['Sort Name'])
+  addIfTruthy('sortArtist', xmlTrack['Sort Artist'])
+  addIfTruthy('sortComposer', xmlTrack['Sort Composer'])
   addIfTruthy('genre', xmlTrack['Genre'])
   // Duration (total time, ms)
   addIfTruthy('year', xmlTrack['Year'])
@@ -101,25 +105,16 @@ function parseTrack(xmlTrack, warn, startTime) {
   }
   // Play Time?
   //    Probably don't calculate play time from imported plays
-  addIfTruthy('album', xmlTrack['Album'])
-  addIfTruthy('albumArtist', xmlTrack['Album Artist'])
-  addIfTruthy('composer', xmlTrack['Composer'])
-  // Track Number / Count
-  // Disc Number / Count
   // Location (use to get file and extract cover)
-  addIfTruthy('sortName', xmlTrack['Sort Name'])
-  addIfTruthy('sortArtist', xmlTrack['Sort Artist'])
-  addIfTruthy('sortAlbum', xmlTrack['Sort Album'])
-  addIfTruthy('sortAlbumArtist', xmlTrack['Sort Album Artist'])
-  addIfTruthy('sortComposer', xmlTrack['Sort Composer'])
+  // Liked / Disliked
+  //    Do I just add it as a property, or have it be a playlist, or both?
 
   if (
     xmlTrack['Track ID'] === 22056 // init.seq
       || xmlTrack['Track ID'] === 112726 // test track
       || xmlTrack['Track ID'] === 112776 // test track2
   ) {
-    console.log('Loc:', xmlTrack['Location'])
-    console.log(xmlTrack['Track ID'], xmlTrack, track)
+    console.log(xmlTrack['Track ID'], xmlTrack['Name'], { album, track, xmlTrack })
   }
 
   return track
