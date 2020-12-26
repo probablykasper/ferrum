@@ -25,8 +25,13 @@ To add:
   - Album
   - Album artist
   - Sort Album, Album Artist
+Missing from xml:
+  - Lyrics
+  - Skip when shuffling (Shufflable)
+  - Remember playback position
 Undecided:
   - Location (use to get file and extract cover)
+  - Equalizer
   - Kind (5496 MPEG audio file,  4 MPEG-4 video file,  3939 Matched AAC audio file,  17 AAC audio file)
   - Size (bytes)
   - Bit Rate (kbps)
@@ -35,12 +40,12 @@ Undecided:
   - Media kind (alert tone/‌audiobook/‌book/‌home video/‌iTunesU/‌movie/‌song/‌music video/‌podcast/‌ringtone/‌TV show/‌voice memo/‌unknown)
   - release date
   - Normalization (same as volume adjustment?)
-  - Track ID
+  - Persistent ID
   - Start time
   - Stop time
 Probably ignore:
+  - Track ID
   - Artwork Count
-  - Persistent ID
   - Album disliked
   - Album loved
   - Album rating
@@ -48,11 +53,9 @@ Gotta test:
   - Grouping
   - Rating stars
   - Rating love
-  - Lyrics
   - Disliked
   - Enabled/Disabled
   - Loved
-  - Shufflable
 Playlists:
   - Regular
   - Smart playlists

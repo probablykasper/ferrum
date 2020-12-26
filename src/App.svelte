@@ -60,8 +60,8 @@
   
   .header
     .titlebar
-      height: 20px
-      background-color: var(--bg-color)
+      height: 24px
+      background-color: var(--bg-color-2)
       -webkit-app-region: drag
 
   .page-status-bg

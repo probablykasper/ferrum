@@ -29,6 +29,12 @@ function getFilePath() {
     'Select an iTunes "Library.xml" file. To get that file, open iTunes and click on "File > Library > Export Library..."'
     +'\n'
     +'\nMusic video, podcasts, audiobooks, voice memos etc will not be imported.',
+    +'\n',
+    +'\nThe following metadata for tracks will will not be imported:',
+    +'\n- Lyrics',
+    +'\n- Equalizer',
+    +'\n- Skip when shuffling',
+    +'\n- Remember playback position',
   )
   const filePaths = dialog.showOpenDialogSync({
     properties: ['openFile'],
@@ -47,7 +53,7 @@ function parseTrack(xmlTrack, warn, startTime) {
       throw new Error(`Track missing required field "${prop}": ${value}`)
     }
   }
-  addIfTruthy('title', xmlTrack['Name'])
+  addIfTruthy('name', xmlTrack['Name'])
   addIfTruthy('artist', xmlTrack['Artist'])
   addIfTruthy('composer', xmlTrack['Composer'])
   addIfTruthy('sortTitle', xmlTrack['Sort Name'])
@@ -61,6 +67,7 @@ function parseTrack(xmlTrack, warn, startTime) {
   addIfTruthy('dateAdded', xmlTrack['Date Added'], true)
   track['dateImported'] = startTime
   addIfTruthy('comments', xmlTrack['Comments'])
+  addIfTruthy('grouping', xmlTrack['Grouping'])
   if (xmlTrack['Play Count'] && xmlTrack['Play Count'] >= 1) {
     track['playCount'] = xmlTrack['Play Count']
     // Unlike "Skip Date" etc, "Play Date" is a non-UTC Mac HFS+ timestamp, but
@@ -106,8 +113,43 @@ function parseTrack(xmlTrack, warn, startTime) {
   // Play Time?
   //    Probably don't calculate play time from imported plays
   // Location (use to get file and extract cover)
+  // Volume Adjustment
   // Liked / Disliked
   //    Do I just add it as a property, or have it be a playlist, or both?
+
+  const album = {}
+  if (xmlTrack['Album']) album.name = xmlTrack['Album']
+  if (xmlTrack['Album Artist']) album.artist = xmlTrack['Album Artist']
+  if (xmlTrack['Sort Album']) album.sortName = xmlTrack['Sort Album']
+  if (xmlTrack['Sort Album Artist']) album.sortArtist = xmlTrack['Sort Album Artist']
+  if (xmlTrack['Compilation']) album.compilation = true
+  // type: album / compilation / playlist / folder
+
+  if (xmlTrack['Track Number']) album.trackNum = xmlTrack['Track Number']
+  if (xmlTrack['Track Count']) album.trackCount = xmlTrack['Track Count']
+  if (xmlTrack['Disc Number']) album.discNum = xmlTrack['Disc Number']
+  if (xmlTrack['Disc Count']) album.discCount = xmlTrack['Disc Count']
+  // Album rating if non-computed
+
+  // COMMON
+  //    name
+  // PLAYLIST
+  //    name
+  //    description
+  //    duration
+  //    loved
+  //    parent
+  //    size
+  //    folder?
+  //    smart?
+  // ALBUM
+  //    name
+  //    sort name
+  //    track number/count
+  //    disc number/count
+  //    album artist
+  //    sort album artist
+  //    compilation
 
   if (
     xmlTrack['Track ID'] === 22056 // init.seq
@@ -117,7 +159,7 @@ function parseTrack(xmlTrack, warn, startTime) {
     console.log(xmlTrack['Track ID'], xmlTrack['Name'], { album, track, xmlTrack })
   }
 
-  return track
+  return { track, album }
 }
 
 async function doIt(status, warn) {
@@ -156,16 +198,15 @@ async function doIt(status, warn) {
 
   // We import the tracks that are in the "Music" playlist since xml.Tracks
   // contains podcasts, etc.
-
+  const xmlMusicPlaylistItems = xmlMusicPlaylist['Playlist Items']
   const startTime = new Date().getTime()
   const tracks = []
-  const xmlMusicPlaylistItems = xmlMusicPlaylist['Playlist Items']
   for (let i = 0; i < xmlMusicPlaylistItems.length; i++) {
     status(`Parsing tracks... (${i+1}/${xmlMusicPlaylistItems.length})`)
     const xmlPlaylistItem = xmlMusicPlaylistItems[i]
     const trackID = xmlPlaylistItem['Track ID']
     const xmlTrack = xml.Tracks[trackID]
-    const track = parseTrack(xmlTrack, warn, startTime)
+    const { track, album } = parseTrack(xmlTrack, warn, startTime)
     tracks.push(track)
   }
 
