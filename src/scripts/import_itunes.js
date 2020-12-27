@@ -116,9 +116,20 @@ function parseTrack(xmlTrack, warn, startTime) {
   // Play Time?
   //    Probably don't calculate play time from imported plays
   // Location (use to get file and extract cover)
-  // Volume Adjustment
-  // Liked / Disliked
-  //    Do I just add it as a property, or have it be a playlist, or both?
+  if (xmlTrack['Volume Adjustment']) {
+    // In iTunes, you can choose volume adjustment at 10% increments. The XML
+    // value Seems like it should go from -255 to 255. However, when set to
+    // 100%, I got 255 on one track, but 254 on another. We'll just
+    // convert it to a -100 to 100 range and round off decimals.
+    const vol = Math.round(xmlTrack['Volume Adjustment']/2.55)
+    if (vol && vol >= -100 && vol <= 100) {
+      track['volume'] = vol
+    } else {
+      warn(logPrefix+` Unable to import Volume Adjustment of value "${vol}"`)
+    }
+  }
+  addIfTruthy('liked', xmlTrack['Loved'])
+  addIfTruthy('disliked', xmlTrack['Disliked'])
 
   const album = {}
   if (xmlTrack['Album']) album.name = xmlTrack['Album']
