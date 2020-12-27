@@ -38,13 +38,20 @@ function getFilePath() {
   alert(
     'Select an iTunes "Library.xml" file. To get that file, open iTunes and click on "File > Library > Export Library..."'
     +'\n'
-    +'\nMusic video, podcasts, audiobooks, voice memos etc will not be imported.',
+    +'\nAll your tracks need to be downloaded for this to work.',
+    +'\nIf you have tracks from iTunes Store/Apple Music, it should hopefully work.',
     +'\n',
-    +'\nThe following metadata for tracks will will not be imported:',
-    +'\n- Lyrics',
-    +'\n- Equalizer',
-    +'\n- Skip when shuffling',
-    +'\n- Remember playback position',
+    +'\nSmart playlists, Genius playlists and Genius Mix playlists will not be imported.',
+    +'\nThe following will not be imported:',
+    +'\n- Music videos, podcasts, audiobooks, voice memos etc.',
+    +'\n- Smart playlists, Genius playlists and Genius Mix playlists',
+    +'\n- View options',
+    +'\n- Album ratings/likes/dislikes',
+    +'\n- The following track metadata:',
+    +'\n    - Lyrics',
+    +'\n    - Equalizer',
+    +'\n    - Skip when shuffling',
+    +'\n    - Remember playback position',
   )
   const filePaths = dialog.showOpenDialogSync({
     properties: ['openFile'],
@@ -55,29 +62,32 @@ function getFilePath() {
 function parseTrack(xmlTrack, warn, startTime) {
   const track = {}
   const logPrefix = '['+xmlTrack['Artist']+' - '+xmlTrack['Name']+']'
-  const addIfTruthy = function(prop, value, required) {
+  const REQUIRED = 1
+  const RECOMMENDED = 2
+  const addIfTruthy = function(prop, value, info) {
     if (value instanceof Date) {
       track[prop] = value.getTime()
     } else if (value) {
       track[prop] = value
-    } else if (required) {
-      throw new Error(`Track missing required field "${prop}": ${value}`)
+    } else if (info === REQUIRED) {
+      throw new Error(logPrefix+` Track missing required field "${prop}"`)
+    } else if (info === RECOMMENDED) {
+      warn(logPrefix+` Missing recommended field "${prop}"`)
     }
   }
-  addIfTruthy('name', xmlTrack['Name'])
+  addIfTruthy('name', xmlTrack['Name'], RECOMMENDED)
   addIfTruthy('originalId', xmlTrack['Persistent ID'])
   track['importedFrom'] = 'itunes'
-  addIfTruthy('artist', xmlTrack['Artist'])
+  addIfTruthy('artist', xmlTrack['Artist'], RECOMMENDED)
   addIfTruthy('composer', xmlTrack['Composer'])
   addIfTruthy('sortTitle', xmlTrack['Sort Name'])
   addIfTruthy('sortArtist', xmlTrack['Sort Artist'])
   addIfTruthy('sortComposer', xmlTrack['Sort Composer'])
   addIfTruthy('genre', xmlTrack['Genre'])
-  // Duration (total time, ms)
   addIfTruthy('year', xmlTrack['Year'])
   addIfTruthy('bpm', xmlTrack['BPM'])
-  addIfTruthy('dateModified', xmlTrack['Date Modified'], true)
-  addIfTruthy('dateAdded', xmlTrack['Date Added'], true)
+  addIfTruthy('dateModified', xmlTrack['Date Modified'], REQUIRED)
+  addIfTruthy('dateAdded', xmlTrack['Date Added'], REQUIRED)
   track['dateImported'] = startTime
   addIfTruthy('comments', xmlTrack['Comments'])
   addIfTruthy('grouping', xmlTrack['Grouping'])
@@ -123,6 +133,7 @@ function parseTrack(xmlTrack, warn, startTime) {
       } ]
     }
   }
+  // Duration (total time, ms)
   // Play Time?
   //    Probably don't calculate play time from imported plays
   // Location (use to get file and extract cover)
@@ -142,39 +153,17 @@ function parseTrack(xmlTrack, warn, startTime) {
   addIfTruthy('disliked', xmlTrack['Disliked'])
   addIfTruthy('disabled', xmlTrack['Disabled'])
 
-  const album = {}
+  const album = { type: 'album' }
+  if (xmlTrack['Compilation']) album.type = 'compilation'
   if (xmlTrack['Album']) album.name = xmlTrack['Album']
   if (xmlTrack['Album Artist']) album.artist = xmlTrack['Album Artist']
   if (xmlTrack['Sort Album']) album.sortName = xmlTrack['Sort Album']
   if (xmlTrack['Sort Album Artist']) album.sortArtist = xmlTrack['Sort Album Artist']
-  if (xmlTrack['Compilation']) album.compilation = true
-  // type: album / compilation / playlist / folder
 
   if (xmlTrack['Track Number']) album.trackNum = xmlTrack['Track Number']
   if (xmlTrack['Track Count']) album.trackCount = xmlTrack['Track Count']
   if (xmlTrack['Disc Number']) album.discNum = xmlTrack['Disc Number']
   if (xmlTrack['Disc Count']) album.discCount = xmlTrack['Disc Count']
-  // Album rating if non-computed
-
-  // COMMON
-  //    name
-  // PLAYLIST
-  //    name
-  //    description
-  //    duration
-  //    loved
-  //    parent
-  //    size
-  //    folder?
-  //    smart?
-  // ALBUM
-  //    name
-  //    sort name
-  //    track number/count
-  //    disc number/count
-  //    album artist
-  //    sort album artist
-  //    compilation
 
   if (
     xmlTrack['Persistent ID'] === 'A7F64F85A799AA1C' // init.seq
@@ -182,10 +171,22 @@ function parseTrack(xmlTrack, warn, startTime) {
       || xmlTrack['Persistent ID'] === '7B468E51DD4EC3DB' // test track2
   ) {
     console.log(xmlTrack['Name'], { album, track, xmlTrack })
-    console.log(xmlTrack['Volume Adjustment'])
   }
 
   return { track, album }
+}
+
+function addCommonPlaylistFields(playlist, xmlPlaylist) {
+  const addIfTruthy = function(prop, value) {
+    if (value) playlist[prop] = value
+  }
+  if (!xmlPlaylist['Name']) {
+    throw new Error('Playlist missing required field "Name":', xmlPlaylist)
+  }
+  playlist.name = xmlPlaylist['Name']
+  addIfTruthy('description', xmlPlaylist['Description'])
+  addIfTruthy('liked', xmlPlaylist['Loved'])
+  addIfTruthy('disliked', xmlPlaylist['Disliked'])
 }
 
 async function doIt(status, warn) {
@@ -221,20 +222,58 @@ async function doIt(status, warn) {
       xmlPlaylists.push(xmlPlaylist)
     }
   }
-
   // We import the tracks that are in the "Music" playlist since xml.Tracks
   // contains podcasts, etc.
   const xmlMusicPlaylistItems = xmlMusicPlaylist['Playlist Items']
   const startTime = new Date().getTime()
-  const tracks = []
+  const parsedTracks = {}
   for (let i = 0; i < xmlMusicPlaylistItems.length; i++) {
     status(`Parsing tracks... (${i+1}/${xmlMusicPlaylistItems.length})`)
     const xmlPlaylistItem = xmlMusicPlaylistItems[i]
     const trackID = xmlPlaylistItem['Track ID']
     const xmlTrack = xml.Tracks[trackID]
     const { track, album } = parseTrack(xmlTrack, warn, startTime)
-    tracks.push(track)
+    parsedTracks[trackID] = track
   }
+
+  status('Parsing folders...')
+  const parsedPlaylists = {}
+  for (const xmlPlaylist of xmlPlaylists) {
+    if (xmlPlaylist['Folder'] !== true) continue
+    const playlist = { type: 'folder' }
+    addCommonPlaylistFields(playlist, xmlPlaylist)
+    const persistentId = xmlPlaylist['Playlist Persistent ID']
+    parsedPlaylists[persistentId] = playlist
+  }
+
+  status('Parsing playlists...')
+  for (const xmlPlaylist of xmlPlaylists) {
+    if (xmlPlaylist['Folder'] === true) continue
+    const playlist = { type: 'playlist' }
+    addCommonPlaylistFields(playlist, xmlPlaylist)
+    const parentId = xmlPlaylist['Parent Persistent ID']
+    const persistentId = xmlPlaylist['Playlist Persistent ID']
+    if (parentId) {
+      const parent = parsedPlaylists[parentId]
+      if (!parsedPlaylists[parentId]) {
+        throw new Error(`Could not find folder of playlist "${playlist.name}"`)
+      }
+      if (!parent.children) parent.children = []
+      parent.children.push(persistentId)
+    }
+    if (xmlPlaylist['Playlist Items']) {
+      playlist.tracks = []
+      for (const item of xmlPlaylist['Playlist Items']) {
+        const trackId = item['Track ID']
+        // skip podcasts etc by checking if it's in parsedTracks
+        if (parsedTracks[trackId]) {
+          playlist.tracks.push(trackId)
+        }
+      }
+    }
+    parsedPlaylists[persistentId] = playlist
+  }
+  console.log('parsedPlaylists:', parsedPlaylists)
 
   status('')
 }

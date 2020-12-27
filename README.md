@@ -5,6 +5,7 @@ ToDo:
 - Import albums, playlists
 - Prevent duplicate IDs
 - Metadata: Duration, Size
+- Implement custom IDs
 
 Potential databases:
 - https://github.com/TheNeikos/rustbreak
