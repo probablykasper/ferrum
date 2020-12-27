@@ -14,12 +14,13 @@
   let pageStatusErr = ''
   const { ipcRenderer } = window.require('electron')
   ipcRenderer.on('itunesImport', async(event, arg) => {
-    const { result, err, warnings } = await db.iTunesImport((status) => {
+    const result = await db.iTunesImport((status) => {
       pageStatus = status
     }, (warning) => {
       pageStatusWarnings += warning+'\n'
     })
-    if (err) pageStatusErr = err.stack
+    if (result.cancelled) return
+    if (result.err) pageStatusErr = err.stack
     library.tracks = result.tracks
     library.trackLists = result.trackLists
     library = library

@@ -1,12 +1,16 @@
 const path = require('path')
 const fs = require('fs')
-const { app, dialog } = require('electron').remote
+const { app } = require('electron').remote
 const addon = window.require(path.resolve(__dirname, '../native/addon.node'))
 const iTunesImport = require('./scripts/import_itunes.js')
 window.addon = addon
+const { libraryPath, libraryJsonPath, tracksPath } = require('./scripts/handy.js')
 
-const libraryPath = path.join(app.getPath('music'), 'Ferrum')
-const libraryJsonPath = path.join(app.getPath('music'), 'Ferrum', 'library.json')
+function ensureExists(path) {
+  if (!fs.existsSync(path)) fs.mkdirSync(path, { recursive: true })
+}
+ensureExists(libraryPath)
+ensureExists(tracksPath)
 
 let library
 if (fs.existsSync(libraryJsonPath)) {
@@ -28,9 +32,6 @@ if (fs.existsSync(libraryJsonPath)) {
       },
     ],
     trackLists: [],
-  }
-  if (!fs.existsSync(libraryPath)) {
-    fs.mkdirSync(libraryPath, { recursive: true })
   }
   fs.appendFileSync(libraryJsonPath, JSON.stringify(library, null, '  '))
 }

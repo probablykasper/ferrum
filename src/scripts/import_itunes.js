@@ -1,5 +1,9 @@
-const { dialog } = require('electron').remote
+const { app, dialog } = require('electron').remote
 const simplePlist = require('simple-plist')
+const path = require('path')
+const url = require('url')
+const fs = require('fs')
+const { tracksPath, generateFilename } = require('./handy.js')
 
 module.exports = async function(status, warn) {
   const warnings = []
@@ -8,10 +12,11 @@ module.exports = async function(status, warn) {
       warnings.push(warning)
       warn(warning)
     })
-    return { result, err: null, warnings }
+    result.warnings = warnings
+    return result
   } catch(err) {
     console.error(err)
-    return { result: null, err: err, warnings }
+    return { err, warnings }
   }
 }
 
@@ -35,28 +40,34 @@ function makeId(length = 10) {
 }
 
 function getFilePath() {
-  alert(
-    'Select an iTunes "Library.xml" file. To get that file, open iTunes and click on "File > Library > Export Library..."'
-    +'\n'
-    +'\nAll your tracks need to be downloaded for this to work.',
-    +'\nIf you have tracks from iTunes Store/Apple Music, it should hopefully work.',
-    +'\n',
-    +'\nSmart playlists, Genius playlists and Genius Mix playlists will not be imported.',
-    +'\nThe following will not be imported:',
-    +'\n- Music videos, podcasts, audiobooks, voice memos etc.',
-    +'\n- Smart playlists, Genius playlists and Genius Mix playlists',
-    +'\n- View options',
-    +'\n- Album ratings/likes/dislikes',
-    +'\n- The following track metadata:',
-    +'\n    - Lyrics',
-    +'\n    - Equalizer',
-    +'\n    - Skip when shuffling',
-    +'\n    - Remember playback position',
-  )
+  m='Select an iTunes "Library.xml" file. To get that file, open iTunes and click on "File > Library > Export Library..."'
+  +'\n'
+  +'\nAll your tracks need to be downloaded for this to work.'
+  +' If you have tracks from iTunes Store/Apple Music, it should hopefully work.'
+  +'\n'
+  +"\nDuplicates will not be checked for, so if there's a song you already have in Ferrum, you'll end up with two."
+  +'\n'
+  +'\nThe following will not be imported:'
+  +'\n- Music videos, podcasts, audiobooks, voice memos etc.'
+  +'\n- Smart playlists, Genius playlists and Genius Mix playlists'
+  +'\n- View options'
+  +'\n- Album ratings, album likes and album dislikes'
+  +'\n- The following track metadata:'
+  +'\n    - Lyrics'
+  +'\n    - Equalizer'
+  +'\n    - Skip when shuffling'
+  +'\n    - Remember playback position'
+  const x = dialog.showMessageBoxSync({
+    type: 'info',
+    title: 'iTunes Import',
+    message: m,
+    buttons: ['OK', 'Cancel'],
+  })
+  if (x === 1) return
   const filePaths = dialog.showOpenDialogSync({
     properties: ['openFile'],
   })
-  if (filePaths && filePaths[0]) filePaths[0]
+  if (filePaths && filePaths[0]) return filePaths[0]
 }
 
 function parseTrack(xmlTrack, warn, startTime) {
@@ -166,6 +177,17 @@ function parseTrack(xmlTrack, warn, startTime) {
   if (xmlTrack['Disc Number']) album.discNum = xmlTrack['Disc Number']
   if (xmlTrack['Disc Count']) album.discCount = xmlTrack['Disc Count']
 
+  if (!xmlTrack['Location']) {
+    throw new Error(logPrefix+' Track does not have required field "Location"')
+  }
+  const xmlTrackPath = url.fileURLToPath(xmlTrack['Location'])
+  if (!fs.existsSync(xmlTrackPath)) {
+    throw new Error(logPrefix+' File does not exist')
+  }
+  const newFilename = generateFilename(track, xmlTrackPath)
+  const newPath = path.join(tracksPath, newFilename)
+  fs.copyFileSync(xmlTrackPath, newPath)
+
   if (
     xmlTrack['Persistent ID'] === 'A7F64F85A799AA1C' // init.seq
       || xmlTrack['Persistent ID'] === '033D11C37D8F07CA' // test track
@@ -191,9 +213,11 @@ function addCommonPlaylistFields(playlist, xmlPlaylist) {
 }
 
 async function doIt(status, warn) {
-  const filePath = '/Users/kasper/Downloads/Library.xml'
-  // const filePath = getFilePath()
-  if (!filePath) return
+  // const filePath = '/Users/kasper/Downloads/Library.xml'
+  const filePath = getFilePath()
+  if (!filePath) {
+    return { cancelled: true }
+  }
 
   status('Reading iTunes Library file...')
   const xml = await readPlist(filePath)
@@ -232,6 +256,7 @@ async function doIt(status, warn) {
     const xmlPlaylistItem = xmlMusicPlaylistItems[i]
     const trackID = xmlPlaylistItem['Track ID']
     const xmlTrack = xml.Tracks[trackID]
+    if (!['KUURO', 'EDEN'].includes(xmlTrack['Artist'])) continue
     const { track, album } = parseTrack(xmlTrack, warn, startTime)
     parsedTracks[trackID] = track
   }
@@ -240,6 +265,7 @@ async function doIt(status, warn) {
   const parsedPlaylists = {}
   for (const xmlPlaylist of xmlPlaylists) {
     if (xmlPlaylist['Folder'] !== true) continue
+    if (xmlPlaylist['Name'] !== '_TESTF') continue
     const playlist = { type: 'folder' }
     addCommonPlaylistFields(playlist, xmlPlaylist)
     const persistentId = xmlPlaylist['Playlist Persistent ID']
@@ -249,6 +275,7 @@ async function doIt(status, warn) {
   status('Parsing playlists...')
   for (const xmlPlaylist of xmlPlaylists) {
     if (xmlPlaylist['Folder'] === true) continue
+    if (xmlPlaylist['Name'] !== '_KUUP') continue
     const playlist = { type: 'playlist' }
     addCommonPlaylistFields(playlist, xmlPlaylist)
     const parentId = xmlPlaylist['Parent Persistent ID']
