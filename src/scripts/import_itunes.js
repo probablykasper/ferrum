@@ -3,6 +3,7 @@ const simplePlist = require('simple-plist')
 const path = require('path')
 const url = require('url')
 const fs = require('fs')
+const mm = require('music-metadata')
 const { tracksPath, generateFilename } = require('./handy.js')
 
 module.exports = async function(status, warn) {
@@ -43,7 +44,7 @@ function getFilePath() {
   m='Select an iTunes "Library.xml" file. To get that file, open iTunes and click on "File > Library > Export Library..."'
   +'\n'
   +'\nAll your tracks need to be downloaded for this to work.'
-  +' If you have tracks from iTunes Store/Apple Music, it should hopefully work.'
+  +' If you have tracks from iTunes Store/Apple Music, it might not work.'
   +'\n'
   +"\nDuplicates will not be checked for, so if there's a song you already have in Ferrum, you'll end up with two."
   +'\n'
@@ -70,7 +71,7 @@ function getFilePath() {
   if (filePaths && filePaths[0]) return filePaths[0]
 }
 
-function parseTrack(xmlTrack, warn, startTime) {
+async function parseTrack(xmlTrack, warn, startTime) {
   const track = {}
   const logPrefix = '['+xmlTrack['Artist']+' - '+xmlTrack['Name']+']'
   const REQUIRED = 1
@@ -145,7 +146,6 @@ function parseTrack(xmlTrack, warn, startTime) {
       } ]
     }
   }
-  // Duration (total time, ms)
   // Play Time?
   //    Probably don't calculate play time from imported plays
   // Location (use to get file and extract cover)
@@ -177,8 +177,12 @@ function parseTrack(xmlTrack, warn, startTime) {
   if (xmlTrack['Disc Number']) album.discNum = xmlTrack['Disc Number']
   if (xmlTrack['Disc Count']) album.discCount = xmlTrack['Disc Count']
 
+  if (!xmlTrack['Track Type'] !== 'File') {
+    const trackType = xmlTrack['Track Type']
+    throw new Error(logPrefix+` Expected track type "File", was "${trackType}"`)
+  }
   if (!xmlTrack['Location']) {
-    throw new Error(logPrefix+' Track does not have required field "Location"')
+    throw new Error(logPrefix+' Missing required field "Location"')
   }
   const xmlTrackPath = url.fileURLToPath(xmlTrack['Location'])
   if (!fs.existsSync(xmlTrackPath)) {
@@ -187,6 +191,17 @@ function parseTrack(xmlTrack, warn, startTime) {
   const newFilename = generateFilename(track, xmlTrackPath)
   const newPath = path.join(tracksPath, newFilename)
   fs.copyFileSync(xmlTrackPath, newPath)
+
+  const md = await mm.parseFile(newPath)
+  // Warnings are in md.quality.warnings
+  if (!md.format.duration) throw new Error(logPrefix+' Could not read duration from file')
+  if (!md.format.bitrate) throw new Error(logPrefix+' Could not read bitrate from file')
+  if (!md.format.sampleRate) throw new Error(logPrefix+' Could not read sample rate from file')
+  track.duration = md.format.duration
+  track.bitrate = Math.round(md.format.bitrate)
+  track.sampleRate = md.format.sampleRate
+  fs.writeFileSync('/Users/kasper/Downloads/xfsd.txt', JSON.stringify(md, null, '  '))
+  console.log()
 
   if (
     xmlTrack['Persistent ID'] === 'A7F64F85A799AA1C' // init.seq
@@ -213,8 +228,8 @@ function addCommonPlaylistFields(playlist, xmlPlaylist) {
 }
 
 async function doIt(status, warn) {
-  // const filePath = '/Users/kasper/Downloads/Library.xml'
-  const filePath = getFilePath()
+  const filePath = '/Users/kasper/Downloads/Library.xml'
+  // const filePath = getFilePath()
   if (!filePath) {
     return { cancelled: true }
   }
@@ -257,7 +272,7 @@ async function doIt(status, warn) {
     const trackID = xmlPlaylistItem['Track ID']
     const xmlTrack = xml.Tracks[trackID]
     if (!['KUURO', 'EDEN'].includes(xmlTrack['Artist'])) continue
-    const { track, album } = parseTrack(xmlTrack, warn, startTime)
+    const { track, album } = await parseTrack(xmlTrack, warn, startTime)
     parsedTracks[trackID] = track
   }
 

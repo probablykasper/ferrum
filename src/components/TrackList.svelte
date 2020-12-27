@@ -8,6 +8,7 @@
     for (const key in tracks) {
       if (!Object.prototype.hasOwnProperty.call(tracks, key)) continue
       tracksx[i] = tracks[key]
+      tracksx[i].duration = Math.round(tracks[key].duration)
       i++
     }
   }

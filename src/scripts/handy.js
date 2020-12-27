@@ -26,7 +26,7 @@ function sanitizeFilename(str) {
 function generateFilename(track, originalPath) {
   const name = track.name || ''
   const artist = track.artist || ''
-  const beginning = sanitizeFilename(name+' - '+artist)
+  const beginning = sanitizeFilename(artist+' - '+name)
 
   const ext = path.extname(originalPath)
   const allowedExt = ['.mp3', '.m4a']

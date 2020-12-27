@@ -1,8 +1,8 @@
 Good to go:
   Custom fields:
     - Date Imported
-  - Title
-  - Artist
+  - Name, Sort Name
+  - Artist, Sort Artist
   - Genre
   - Year
   - BPM
@@ -14,9 +14,8 @@ Good to go:
   - Play Date UTC
   - Skip Count
   - Skip Date
-  - Composer
+  - Composer, Sort Composer
   - Podcast (gotta ignore)
-  - Sort Name, Artist, Composer
   - Compilation
   - Disliked
   - Loved
@@ -25,30 +24,30 @@ Good to go:
   - Disabled
   - Persistent ID
   - Rating stars
-To add:
+  - Media kind (alert tone/‌audiobook/‌book/‌home video/‌iTunesU/‌movie/‌song/‌music video/‌podcast/‌ringtone/‌TV show/‌voice memo/‌unknown)
+  - Location (use to get file and extract cover)
+Scanned from file:
   - Duration (total time, ms)
+  - Bit Rate (kbps)
+  - Sample Rate
+To add:
   - Track Number / Count
   - Disc Number / Count
-  - Album
-  - Album artist
-  - Sort Album, Album Artist
+  - Album, Sort Album
+  - Album Artist, Sort Album Artist
 Missing from xml:
   - Lyrics
   - Skip when shuffling (Shufflable)
   - Remember playback position
 Undecided:
-  - Location (use to get file and extract cover)
-  - Equalizer
-  - Kind (5496 MPEG audio file,  4 MPEG-4 video file,  3939 Matched AAC audio file,  17 AAC audio file)
   - Size (bytes)
-  - Bit Rate (kbps)
-  - Sample Rate
   - Track Type
-  - Media kind (alert tone/‌audiobook/‌book/‌home video/‌iTunesU/‌movie/‌song/‌music video/‌podcast/‌ringtone/‌TV show/‌voice memo/‌unknown)
   - Normalization
   - Start time
   - Stop time
 Probably ignore:
+  - Kind (5496 MPEG audio file,  4 MPEG-4 video file,  3939 Matched AAC audio file,  17 AAC audio file)
+  - Equalizer
   - Track ID
   - Artwork Count
   - Album disliked

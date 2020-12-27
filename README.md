@@ -9,6 +9,7 @@ ToDo:
 - Write tags to files:
   - m4a/aac: https://github.com/Saecki/rust-mp4ameta
   - mp3/mp3: https://github.com/polyfloyd/rust-id3
+- Check if a track is VBR. Can we use codecProfile? What about non-mp3s?
 
 Potential databases:
 - https://github.com/TheNeikos/rustbreak
