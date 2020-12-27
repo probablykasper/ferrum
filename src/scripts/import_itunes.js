@@ -130,6 +130,7 @@ function parseTrack(xmlTrack, warn, startTime) {
   }
   addIfTruthy('liked', xmlTrack['Loved'])
   addIfTruthy('disliked', xmlTrack['Disliked'])
+  addIfTruthy('disabled', xmlTrack['Disabled'])
 
   const album = {}
   if (xmlTrack['Album']) album.name = xmlTrack['Album']

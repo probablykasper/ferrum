@@ -18,6 +18,11 @@ Good to go:
   - Podcast (gotta ignore)
   - Sort Name, Artist, Composer
   - Compilation
+  - Disliked
+  - Loved
+  - Volume Adjustment
+  - Grouping
+  - Disabled
 To add:
   - Duration (total time, ms)
   - Track Number / Count
@@ -38,8 +43,7 @@ Undecided:
   - Sample Rate
   - Track Type
   - Media kind (alert tone/‌audiobook/‌book/‌home video/‌iTunesU/‌movie/‌song/‌music video/‌podcast/‌ringtone/‌TV show/‌voice memo/‌unknown)
-  - release date
-  - Normalization (same as volume adjustment?)
+  - Normalization
   - Persistent ID
   - Start time
   - Stop time
@@ -49,13 +53,9 @@ Probably ignore:
   - Album disliked
   - Album loved
   - Album rating
+  - release date
 Gotta test:
-  - Grouping
   - Rating stars
-  - Rating love
-  - Disliked
-  - Enabled/Disabled
-  - Loved
 Playlists:
   - Regular
   - Smart playlists
