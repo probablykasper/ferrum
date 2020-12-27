@@ -1,10 +1,15 @@
 <script>
   import VirtualList from '@sveltejs/svelte-virtual-list'
   export let tracks
-  let tracksx = tracks
-  for (let i = 0; i < 1000; i++) {
-    tracksx = tracksx.concat(tracks)
-    tracksx[i].duration = '5:02'
+  let tracksx = []
+  $: {
+    console.log(tracks)
+    let i = 0
+    for (const key in tracks) {
+      if (!Object.prototype.hasOwnProperty.call(tracks, key)) continue
+      tracksx[i] = tracks[key]
+      i++
+    }
   }
 </script>
 
@@ -63,7 +68,7 @@
       VirtualList(height='100%' items='{tracksx}' let:item='')
         .row
           div.c.index 1
-          div.c.name {item.title}
+          div.c.name {item.name}
           div.c.plays {item.plays}
           div.c.time {item.duration}
           div.c.artist {item.artist}

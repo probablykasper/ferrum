@@ -5,20 +5,24 @@
   import Player from './components/Player.svelte'
   // const addon = window.addon
   // console.log(addon.get_path())
-  const db = window.api.db
-  db.load()
+  const db = window.db
+  let library = db.get()
+  $: tracks = library.tracks
 
   let pageStatus = ''
   let pageStatusWarnings = ''
   let pageStatusErr = ''
   const { ipcRenderer } = window.require('electron')
   ipcRenderer.on('itunesImport', async(event, arg) => {
-    const { err, warnings } = await db.iTunesImport((status) => {
+    const { result, err, warnings } = await db.iTunesImport((status) => {
       pageStatus = status
     }, (warning) => {
       pageStatusWarnings += warning+'\n'
     })
     if (err) pageStatusErr = err.stack
+    library.tracks = result.tracks
+    library.trackLists = result.trackLists
+    library = library
   })
 
   $: cssVarStyles = Object.entries(styles)
@@ -102,7 +106,7 @@
       .titlebar
       Player
       h1 Hello World
-    TrackList(tracks='{db.library.tracks}')
+    TrackList(tracks='{tracks}')
     +if('pageStatus || pageStatusWarnings || pageStatusErr')
       .page-status-bg
         .page-status

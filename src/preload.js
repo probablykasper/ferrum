@@ -8,41 +8,41 @@ window.addon = addon
 const libraryPath = path.join(app.getPath('music'), 'Ferrum')
 const libraryJsonPath = path.join(app.getPath('music'), 'Ferrum', 'library.json')
 
-const db = {
-  iTunesImport,
-  load: function() {
-    if (fs.existsSync(libraryJsonPath)) {
-      db.library = JSON.parse(fs.readFileSync(libraryJsonPath))
-    } else {
-      db.library = {
-        version: 1,
-        tracks: [
-          {
-            title: 'Junction Seven',
-            artist: 'Muzzy',
-            album: 'F Minor Factory EP',
-            album_artist: 'Muzzy',
-            duration: 305,
-            genre: 'Drum & Bass',
-            year: 2016,
-            plays: 21,
-            comments: 'Monstercat',
-          },
-        ],
-        albums: [],
-        playlists: [],
-      }
-      if (!fs.existsSync(libraryPath)) {
-        fs.mkdirSync(libraryPath, { recursive: true })
-      }
-      fs.appendFileSync(libraryJsonPath, JSON.stringify(db.library, null, '  '))
-    }
-  },
-  save: function() {
-    fs.writeFileSync(libraryJsonPath, JSON.stringify(db.library, null, '  '))
-  },
+let library
+if (fs.existsSync(libraryJsonPath)) {
+  library = JSON.parse(fs.readFileSync(libraryJsonPath))
+} else {
+  library = {
+    version: 1,
+    tracks: [
+      {
+        name: 'Junction Seven',
+        artist: 'Muzzy',
+        album: 'F Minor Factory EP',
+        albumArtist: 'Muzzy',
+        duration: 305,
+        genre: 'Drum & Bass',
+        year: 2016,
+        plays: 21,
+        comments: 'Monstercat',
+      },
+    ],
+    trackLists: [],
+  }
+  if (!fs.existsSync(libraryPath)) {
+    fs.mkdirSync(libraryPath, { recursive: true })
+  }
+  fs.appendFileSync(libraryJsonPath, JSON.stringify(library, null, '  '))
 }
 
-window.api = {
-  db,
+window.db = {
+  iTunesImport: async function(...args) {
+    return iTunesImport(...args)
+  },
+  get: function() {
+    return library
+  },
+  save: function() {
+    fs.writeFileSync(libraryJsonPath, JSON.stringify(library, null, '  '))
+  },
 }

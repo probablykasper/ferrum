@@ -8,10 +8,10 @@ module.exports = async function(status, warn) {
       warnings.push(warning)
       warn(warning)
     })
-    return { result, warnings: warnings }
+    return { result, err: null, warnings }
   } catch(err) {
     console.error(err)
-    return { err: err, warnings: warnings }
+    return { result: null, err: err, warnings }
   }
 }
 
@@ -80,7 +80,7 @@ function parseTrack(xmlTrack, warn, startTime) {
   track['importedFrom'] = 'itunes'
   addIfTruthy('artist', xmlTrack['Artist'], RECOMMENDED)
   addIfTruthy('composer', xmlTrack['Composer'])
-  addIfTruthy('sortTitle', xmlTrack['Sort Name'])
+  addIfTruthy('sortName', xmlTrack['Sort Name'])
   addIfTruthy('sortArtist', xmlTrack['Sort Artist'])
   addIfTruthy('sortComposer', xmlTrack['Sort Composer'])
   addIfTruthy('genre', xmlTrack['Genre'])
@@ -206,7 +206,6 @@ async function doIt(status, warn) {
   console.log('xml:', xml)
   console.log('music folder:', xml['Music Folder'])
 
-
   status('Parsing tracks...')
   const xmlPlaylists = []
   let xmlMusicPlaylist
@@ -277,4 +276,8 @@ async function doIt(status, warn) {
   console.log('parsedPlaylists:', parsedPlaylists)
 
   status('')
+  return {
+    tracks: parsedTracks,
+    trackLists: parsedPlaylists,
+  }
 }
