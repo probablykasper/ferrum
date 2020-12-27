@@ -23,6 +23,7 @@ Good to go:
   - Volume Adjustment
   - Grouping
   - Disabled
+  - Persistent ID
 To add:
   - Duration (total time, ms)
   - Track Number / Count
@@ -44,7 +45,6 @@ Undecided:
   - Track Type
   - Media kind (alert tone/‌audiobook/‌book/‌home video/‌iTunesU/‌movie/‌song/‌music video/‌podcast/‌ringtone/‌TV show/‌voice memo/‌unknown)
   - Normalization
-  - Persistent ID
   - Start time
   - Stop time
 Probably ignore:

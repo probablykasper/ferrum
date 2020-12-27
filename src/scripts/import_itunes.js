@@ -24,6 +24,16 @@ function readPlist(filePath) {
   })
 }
 
+function makeId(length = 10) {
+  let result = ''
+  const characters = 'abcdefghijklmnopqrstuvwxyz234567'
+  const charactersLength = characters.length
+  for (var i = 0; i < length; i++) {
+    result += characters.charAt(Math.floor(Math.random() * charactersLength))
+  }
+  return result
+}
+
 function getFilePath() {
   alert(
     'Select an iTunes "Library.xml" file. To get that file, open iTunes and click on "File > Library > Export Library..."'
