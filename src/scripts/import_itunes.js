@@ -44,6 +44,7 @@ function getFilePath() {
 
 function parseTrack(xmlTrack, warn, startTime) {
   const track = {}
+  const logPrefix = '['+xmlTrack['Artist']+' - '+xmlTrack['Name']+']'
   const addIfTruthy = function(prop, value, required) {
     if (value instanceof Date) {
       track[prop] = value.getTime()
@@ -54,6 +55,8 @@ function parseTrack(xmlTrack, warn, startTime) {
     }
   }
   addIfTruthy('name', xmlTrack['Name'])
+  addIfTruthy('originalId', xmlTrack['Persistent ID'])
+  track['importedFrom'] = 'itunes'
   addIfTruthy('artist', xmlTrack['Artist'])
   addIfTruthy('composer', xmlTrack['Composer'])
   addIfTruthy('sortTitle', xmlTrack['Sort Name'])
@@ -152,11 +155,12 @@ function parseTrack(xmlTrack, warn, startTime) {
   //    compilation
 
   if (
-    xmlTrack['Track ID'] === 22056 // init.seq
-      || xmlTrack['Track ID'] === 112726 // test track
-      || xmlTrack['Track ID'] === 112776 // test track2
+    xmlTrack['Persistent ID'] === 'A7F64F85A799AA1C' // init.seq
+      || xmlTrack['Persistent ID'] === '033D11C37D8F07CA' // test track
+      || xmlTrack['Persistent ID'] === '7B468E51DD4EC3DB' // test track2
   ) {
-    console.log(xmlTrack['Track ID'], xmlTrack['Name'], { album, track, xmlTrack })
+    console.log(xmlTrack['Name'], { album, track, xmlTrack })
+    console.log(xmlTrack['Volume Adjustment'])
   }
 
   return { track, album }
