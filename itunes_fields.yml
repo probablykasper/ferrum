@@ -24,6 +24,7 @@ Good to go:
   - Grouping
   - Disabled
   - Persistent ID
+  - Rating stars
 To add:
   - Duration (total time, ms)
   - Track Number / Count
@@ -54,5 +55,3 @@ Probably ignore:
   - Album loved
   - Album rating
   - release date
-Gotta test:
-  - Rating stars

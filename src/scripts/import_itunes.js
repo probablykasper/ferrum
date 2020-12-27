@@ -84,6 +84,7 @@ function parseTrack(xmlTrack, warn, startTime) {
   addIfTruthy('sortArtist', xmlTrack['Sort Artist'])
   addIfTruthy('sortComposer', xmlTrack['Sort Composer'])
   addIfTruthy('genre', xmlTrack['Genre'])
+  addIfTruthy('rating', xmlTrack['Rating'])
   addIfTruthy('year', xmlTrack['Year'])
   addIfTruthy('bpm', xmlTrack['BPM'])
   addIfTruthy('dateModified', xmlTrack['Date Modified'], REQUIRED)
