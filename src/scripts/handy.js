@@ -29,7 +29,7 @@ function generateFilename(track, originalPath) {
   const beginning = sanitizeFilename(name+' - '+artist)
 
   const ext = path.extname(originalPath)
-  const allowedExt = ['.mp3', '.ogg', '.oga', '.aac', '.m4a', '.wav', '.flac']
+  const allowedExt = ['.mp3', '.m4a']
   if (!allowedExt.includes(ext)) {
     // by having an approved set of file extensions, we avoid unsafe filenames:
     //    - Unix reserved filenames `.` and `..`

@@ -6,6 +6,9 @@ ToDo:
 - Prevent duplicate IDs
 - Metadata: Duration, Size
 - Implement custom IDs
+- Write tags to files:
+  - m4a/aac: https://github.com/Saecki/rust-mp4ameta
+  - mp3/mp3: https://github.com/polyfloyd/rust-id3
 
 Potential databases:
 - https://github.com/TheNeikos/rustbreak
