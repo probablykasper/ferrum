@@ -69,13 +69,13 @@
       VirtualList(height='100%' items='{tracksx}' let:item='')
         .row
           div.c.index 1
-          div.c.name {item.name}
-          div.c.plays {item.plays}
-          div.c.time {item.duration}
-          div.c.artist {item.artist}
-          div.c.album {item.album}
-          div.c.comments {item.comments}
-          div.c.genre {item.genre}
+          div.c.name {item.name || ''}
+          div.c.plays {item.playCount || 0}
+          div.c.time {item.duration || 0}
+          div.c.artist {item.artist || ''}
+          div.c.album {item.album || ''}
+          div.c.comments {item.comments || ''}
+          div.c.genre {item.genre || ''}
           div.c.date-added {item.dateAdded}
-          div.c.year {item.year}
+          div.c.year {item.year || ''}
 </template>

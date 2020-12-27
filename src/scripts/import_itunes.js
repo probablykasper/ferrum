@@ -1,4 +1,4 @@
-const { app, dialog } = require('electron').remote
+const { app, dialog, BrowserWindow } = require('electron').remote
 const simplePlist = require('simple-plist')
 const path = require('path')
 const url = require('url')
@@ -40,7 +40,7 @@ function makeId(length = 10) {
   return result
 }
 
-function getFilePath() {
+async function popup() {
   m='Select an iTunes "Library.xml" file. To get that file, open iTunes and click on "File > Library > Export Library..."'
   +'\n'
   +'\nAll your tracks need to be downloaded for this to work.'
@@ -58,20 +58,26 @@ function getFilePath() {
   +'\n    - Equalizer'
   +'\n    - Skip when shuffling'
   +'\n    - Remember playback position'
-  const x = dialog.showMessageBoxSync({
+  const focusedWindow = BrowserWindow.getFocusedWindow()
+  const result = await dialog.showMessageBox(focusedWindow, {
     type: 'info',
     title: 'iTunes Import',
     message: m,
+    checkboxLabel: 'Dry run',
+    checkboxChecked: true,
     buttons: ['OK', 'Cancel'],
   })
-  if (x === 1) return
-  const filePaths = dialog.showOpenDialogSync({
+  if (result.response === 1) return {}
+  const filePaths = dialog.showOpenDialogSync(focusedWindow, {
     properties: ['openFile'],
   })
-  if (filePaths && filePaths[0]) return filePaths[0]
+  if (filePaths && filePaths[0]) {
+    return { filePath: filePaths[0], dryRun: result.checkboxChecked }
+  }
+  return {}
 }
 
-async function parseTrack(xmlTrack, warn, startTime) {
+async function parseTrack(xmlTrack, warn, startTime, dryRun) {
   const track = {}
   const logPrefix = '['+xmlTrack['Artist']+' - '+xmlTrack['Name']+']'
   const REQUIRED = 1
@@ -177,7 +183,7 @@ async function parseTrack(xmlTrack, warn, startTime) {
   if (xmlTrack['Disc Number']) album.discNum = xmlTrack['Disc Number']
   if (xmlTrack['Disc Count']) album.discCount = xmlTrack['Disc Count']
 
-  if (!xmlTrack['Track Type'] !== 'File') {
+  if (xmlTrack['Track Type'] !== 'File') {
     const trackType = xmlTrack['Track Type']
     throw new Error(logPrefix+` Expected track type "File", was "${trackType}"`)
   }
@@ -189,8 +195,9 @@ async function parseTrack(xmlTrack, warn, startTime) {
     throw new Error(logPrefix+' File does not exist')
   }
   const newFilename = generateFilename(track, xmlTrackPath)
-  const newPath = path.join(tracksPath, newFilename)
-  fs.copyFileSync(xmlTrackPath, newPath)
+  let newPath = path.join(tracksPath, newFilename)
+  if (dryRun) newPath = xmlTrackPath
+  if (!dryRun) fs.copyFileSync(xmlTrackPath, newPath)
 
   const md = await mm.parseFile(newPath)
   // Warnings are in md.quality.warnings
@@ -200,8 +207,6 @@ async function parseTrack(xmlTrack, warn, startTime) {
   track.duration = md.format.duration
   track.bitrate = Math.round(md.format.bitrate)
   track.sampleRate = md.format.sampleRate
-  fs.writeFileSync('/Users/kasper/Downloads/xfsd.txt', JSON.stringify(md, null, '  '))
-  console.log()
 
   if (
     xmlTrack['Persistent ID'] === 'A7F64F85A799AA1C' // init.seq
@@ -228,8 +233,9 @@ function addCommonPlaylistFields(playlist, xmlPlaylist) {
 }
 
 async function doIt(status, warn) {
-  const filePath = '/Users/kasper/Downloads/Library.xml'
-  // const filePath = getFilePath()
+  // const filePath = '/Users/kasper/Downloads/Library.xml'
+  // const dryRun = true
+  const { filePath, dryRun } = await popup()
   if (!filePath) {
     return { cancelled: true }
   }
@@ -272,7 +278,7 @@ async function doIt(status, warn) {
     const trackID = xmlPlaylistItem['Track ID']
     const xmlTrack = xml.Tracks[trackID]
     if (!['KUURO', 'EDEN'].includes(xmlTrack['Artist'])) continue
-    const { track, album } = await parseTrack(xmlTrack, warn, startTime)
+    const { track, album } = await parseTrack(xmlTrack, warn, startTime, dryRun)
     parsedTracks[trackID] = track
   }
 
