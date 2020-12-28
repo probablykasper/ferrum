@@ -1,16 +1,22 @@
 <script>
   import VirtualList from '@sveltejs/svelte-virtual-list'
-  export let tracks
-  let tracksx = []
+  export let library
+  $: libTracks = library.tracks
+  let tracks = []
   $: {
-    console.log(tracks)
+    console.log(library)
     let i = 0
-    for (const key in tracks) {
-      if (!Object.prototype.hasOwnProperty.call(tracks, key)) continue
-      tracksx[i] = tracks[key]
-      tracksx[i].duration = Math.round(tracks[key].duration)
+    for (const key in libTracks) {
+      if (!Object.prototype.hasOwnProperty.call(libTracks, key)) continue
+      tracks[i] = libTracks[key]
+      tracks[i].id = key
+      tracks[i].duration = Math.round(libTracks[key].duration)
       i++
     }
+  }
+  let selected = new Set()
+  function rowClick(item) {
+    selected = new Set([item.id])
   }
 </script>
 
@@ -28,8 +34,10 @@
       position: relative
     .row
       display: flex
-      height: 21px
+      height: 24px
       font-size: 14px
+      &.selected
+        background-color: var(--select-color)
       .c
         display: inline-block
         vertical-align: top
@@ -66,8 +74,8 @@
       div.c.date-added Date Added
       div.c.year Year
     .body
-      VirtualList(height='100%' items='{tracksx}' let:item='')
-        .row
+      VirtualList(height='100%' items='{tracks}' let:item='')
+        .row(on:click='{rowClick(item)}' class:selected='{selected.has(item.id)}')
           div.c.index 1
           div.c.name {item.name || ''}
           div.c.plays {item.playCount || 0}

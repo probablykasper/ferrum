@@ -91,13 +91,13 @@
       max-height: calc(100% - 100px)
       overflow-y: scroll
       padding: 10px 20px
+      user-select: text
       .page-status-item
         margin: 6px 0px
       pre
         white-space: pre-wrap
         overflow: hidden
         overflow-wrap: anywhere
-        user-select: text
 </style>
 
 <template lang='pug'>
@@ -108,7 +108,7 @@
       .titlebar
       Player
       h1 Hello World
-    TrackList(tracks='{tracks}')
+    TrackList(library='{library}')
     +if('pageStatus || pageStatusWarnings || pageStatusErr')
       .page-status-bg
         .page-status

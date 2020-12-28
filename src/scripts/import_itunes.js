@@ -47,10 +47,11 @@ function buffersEqual(buf1, buf2) {
 async function popup() {
   m='Select an iTunes "Library.xml" file. To get that file, open iTunes and click on "File > Library > Export Library..."'
   +'\n'
+  +'\nWARNING: This will reset/delete your Ferrum library!'
+  // +"\nDuplicates will not be checked for, so if there's a song you already have in Ferrum, you'll end up with two."
+  +'\n'
   +'\nAll your tracks need to be downloaded for this to work.'
   +' If you have tracks from iTunes Store/Apple Music, it might not work.'
-  +'\n'
-  +"\nDuplicates will not be checked for, so if there's a song you already have in Ferrum, you'll end up with two."
   +'\n'
   +'\nThe following will not be imported:'
   +'\n- Music videos, podcasts, audiobooks, voice memos etc.'
