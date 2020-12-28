@@ -3,9 +3,20 @@ const path = require('path')
 const fs = require('fs')
 const url = require('url')
 
+function ensureExists(path) {
+  if (!fs.existsSync(path)) fs.mkdirSync(path, { recursive: true })
+}
+
 const libraryPath = path.join(app.getPath('music'), 'Ferrum')
 const libraryJsonPath = path.join(app.getPath('music'), 'Ferrum', 'library.json')
 const tracksPath = path.join(libraryPath, 'Tracks')
+const artworksPath = path.join(libraryPath, 'Artworks')
+function ensureLibDirsExist(path) {
+  ensureExists(libraryPath)
+  ensureExists(libraryJsonPath)
+  ensureExists(tracksPath)
+  ensureExists(artworksPath)
+}
 
 function sanitizeFilename(str) {
   str = str.replaceAll('/', '_')
@@ -62,5 +73,7 @@ module.exports = {
   libraryPath,
   libraryJsonPath,
   tracksPath,
+  artworksPath,
   generateFilename,
+  ensureLibDirsExist,
 }

@@ -4,7 +4,7 @@ const path = require('path')
 const url = require('url')
 const fs = require('fs')
 const mm = require('music-metadata')
-const { tracksPath, generateFilename } = require('./handy.js')
+const { tracksPath, generateFilename, artworksPath, ensureLibDirsExist } = require('./handy.js')
 
 module.exports = async function(status, warn) {
   const warnings = []
@@ -38,6 +38,10 @@ function makeId(length = 10) {
     result += characters.charAt(Math.floor(Math.random() * charactersLength))
   }
   return result
+}
+
+function buffersEqual(buf1, buf2) {
+  return Buffer.compare(buf1, buf2) === 0
 }
 
 async function popup() {
@@ -201,12 +205,51 @@ async function parseTrack(xmlTrack, warn, startTime, dryRun) {
 
   const md = await mm.parseFile(newPath)
   // Warnings are in md.quality.warnings
-  if (!md.format.duration) throw new Error(logPrefix+' Could not read duration from file')
-  if (!md.format.bitrate) throw new Error(logPrefix+' Could not read bitrate from file')
-  if (!md.format.sampleRate) throw new Error(logPrefix+' Could not read sample rate from file')
+  if (!md.format.duration) {
+    throw new Error(logPrefix+' Could not read duration from file. Probably unusual or badly encoded file')
+  }
+  if (!md.format.bitrate) {
+    throw new Error(logPrefix+' Could not read bitrate from file. Probably unusual or badly encoded file')
+  }
+  if (!md.format.sampleRate) {
+    throw new Error(logPrefix+' Could not read sample rate from file. Probably unusual or badly encoded file')
+  }
   track.duration = md.format.duration
   track.bitrate = Math.round(md.format.bitrate)
   track.sampleRate = md.format.sampleRate
+  const picture = md.common.picture
+  if (picture && picture[0]) {
+    // if the track has multiple artworks, check if if they're equal. If
+    // yes, use the first one, otherwise warn
+    if (picture.length > 1) {
+      // Start at 1 since we're comparing two elements in the array
+      for (let i = 1; i < picture.length; i++) {
+        const equal = buffersEqual(picture[i-1].data, picture[i].data)
+        if (!equal) {
+          warn(logPrefix+' Found multiple unique artworks. Using the first one')
+        }
+      }
+      // // this code is for writing the multiple artworks
+      // if (!allEqual) {
+      //   for (let i = 0; i < picture.length; i++) {
+      //     let ext = '.jpg'
+      //     if (picture[0].format === 'image/png') ext = '.png'
+      //     const dir = path.join(libraryPath, 'Export', newFilename+' '+i+ext)
+      //     fs.writeFileSync(dir, picture[i].data)
+      //   }
+      // }
+    }
+    const thePicture = picture[0]
+    let ext = '.jpg'
+    if (thePicture.format === 'image/png') ext = '.png'
+    const imgFormat = thePicture.format
+    if (!['image/jpeg', 'image/png'].includes(imgFormat)) {
+      warn(logPrefix+` Skipping unsupported cover format "${imgFormat}"`)
+    }
+    if (!dryRun) {
+      fs.writeFileSync(path.join(artworksPath, newFilename+ext), thePicture.data)
+    }
+  }
 
   if (
     xmlTrack['Persistent ID'] === 'A7F64F85A799AA1C' // init.seq
@@ -233,12 +276,11 @@ function addCommonPlaylistFields(playlist, xmlPlaylist) {
 }
 
 async function doIt(status, warn) {
-  // const filePath = '/Users/kasper/Downloads/Library.xml'
-  // const dryRun = true
-  const { filePath, dryRun } = await popup()
-  if (!filePath) {
-    return { cancelled: true }
-  }
+  const filePath = '/Users/kasper/Downloads/Library.xml'
+  const dryRun = true
+  // const { filePath, dryRun } = await popup()
+  if (!filePath) return { cancelled: true }
+  ensureLibDirsExist()
 
   status('Reading iTunes Library file...')
   const xml = await readPlist(filePath)
@@ -273,11 +315,12 @@ async function doIt(status, warn) {
   const startTime = new Date().getTime()
   const parsedTracks = {}
   for (let i = 0; i < xmlMusicPlaylistItems.length; i++) {
+    // if (i < 6900) continue
     status(`Parsing tracks... (${i+1}/${xmlMusicPlaylistItems.length})`)
     const xmlPlaylistItem = xmlMusicPlaylistItems[i]
     const trackID = xmlPlaylistItem['Track ID']
     const xmlTrack = xml.Tracks[trackID]
-    if (!['KUURO', 'EDEN'].includes(xmlTrack['Artist'])) continue
+    // if (!['KUURO', 'EDEN'].includes(xmlTrack['Artist'])) continue
     const { track, album } = await parseTrack(xmlTrack, warn, startTime, dryRun)
     parsedTracks[trackID] = track
   }
@@ -286,7 +329,7 @@ async function doIt(status, warn) {
   const parsedPlaylists = {}
   for (const xmlPlaylist of xmlPlaylists) {
     if (xmlPlaylist['Folder'] !== true) continue
-    if (xmlPlaylist['Name'] !== '_TESTF') continue
+    // if (xmlPlaylist['Name'] !== '_TESTF') continue
     const playlist = { type: 'folder' }
     addCommonPlaylistFields(playlist, xmlPlaylist)
     const persistentId = xmlPlaylist['Playlist Persistent ID']
@@ -296,7 +339,7 @@ async function doIt(status, warn) {
   status('Parsing playlists...')
   for (const xmlPlaylist of xmlPlaylists) {
     if (xmlPlaylist['Folder'] === true) continue
-    if (xmlPlaylist['Name'] !== '_KUUP') continue
+    // if (xmlPlaylist['Name'] !== '_KUUP') continue
     const playlist = { type: 'playlist' }
     addCommonPlaylistFields(playlist, xmlPlaylist)
     const parentId = xmlPlaylist['Parent Persistent ID']

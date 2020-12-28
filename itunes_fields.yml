@@ -26,6 +26,7 @@ Good to go:
   - Rating stars
   - Media kind (alert tone/‌audiobook/‌book/‌home video/‌iTunesU/‌movie/‌song/‌music video/‌podcast/‌ringtone/‌TV show/‌voice memo/‌unknown)
   - Location (use to get file and extract cover)
+  - Artwork Count
 Scanned from file:
   - Duration (total time, ms)
   - Bit Rate (kbps)
@@ -49,7 +50,6 @@ Probably ignore:
   - Kind (5496 MPEG audio file,  4 MPEG-4 video file,  3939 Matched AAC audio file,  17 AAC audio file)
   - Equalizer
   - Track ID
-  - Artwork Count
   - Album disliked
   - Album loved
   - Album rating

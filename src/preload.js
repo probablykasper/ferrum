@@ -4,13 +4,9 @@ const { app } = require('electron').remote
 const addon = window.require(path.resolve(__dirname, '../native/addon.node'))
 const iTunesImport = require('./scripts/import_itunes.js')
 window.addon = addon
-const { libraryPath, libraryJsonPath, tracksPath } = require('./scripts/handy.js')
+const { libraryPath, libraryJsonPath, tracksPath, ensureLibDirsExist } = require('./scripts/handy.js')
 
-function ensureExists(path) {
-  if (!fs.existsSync(path)) fs.mkdirSync(path, { recursive: true })
-}
-ensureExists(libraryPath)
-ensureExists(tracksPath)
+ensureLibDirsExist()
 
 let library
 if (fs.existsSync(libraryJsonPath)) {

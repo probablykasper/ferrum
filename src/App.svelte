@@ -17,6 +17,7 @@
     const result = await db.iTunesImport((status) => {
       pageStatus = status
     }, (warning) => {
+      console.warn(warning)
       pageStatusWarnings += warning+'\n'
     })
     if (result.cancelled) return
@@ -84,12 +85,9 @@
       min-width: 300px
       max-width: 800px
       min-height: 100px
-      max-height: 350px
+      max-height: calc(100% - 100px)
+      overflow-y: scroll
       padding: 10px 20px
-      display: flex
-      flex-direction: column
-      align-items: center
-      justify-content: center
       .page-status-item
         margin: 6px 0px
       pre
