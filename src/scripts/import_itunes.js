@@ -324,6 +324,7 @@ async function doIt(status, warn) {
   console.log('parsedPlaylists:', parsedPlaylists)
 
   status('')
+  if (dryRun) return { cancelled: true }
   return {
     tracks: parsedTracks,
     trackLists: parsedPlaylists,
