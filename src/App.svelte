@@ -7,7 +7,6 @@
   // console.log(addon.get_path())
   const db = window.db
   let library = db.get()
-  $: tracks = library.tracks
 
   let pageStatus = ''
   let pageStatusWarnings = ''

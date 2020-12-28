@@ -200,6 +200,7 @@ async function parseTrack(xmlTrack, warn, startTime, dryRun) {
     throw new Error(logPrefix+' File does not exist')
   }
   const newFilename = generateFilename(track, xmlTrackPath)
+  track.file = newFilename
   let newPath = path.join(tracksPath, newFilename)
   if (dryRun) newPath = xmlTrackPath
   if (!dryRun) fs.copyFileSync(xmlTrackPath, newPath)

@@ -1,46 +1,19 @@
 <script>
-  import Gapless from 'gapless.js'
+  import { playPause, previous, next, duration, currentTime, seek } from '../stores/player.js'
   let sliderBeingDragged = false
-  let currentTime = 0
-  let duration = 0
-  let sliderValue = 0
   const sliderSteps = 400
-  const player = new Gapless.Queue({
-    numberOfTracksToPreload: 2,
-    onProgress: (track) => {
-      if (track) {
-        currentTime = track.currentTime
-        duration = track.duration
-        if (!sliderBeingDragged && duration > 0) {
-          sliderValue = currentTime/duration*sliderSteps
-        }
-      }
-    },
-  })
-  const tracks = [
-    '/Users/kasper/Downloads/01 Neo-Seoul (Part 1).m4a',
-    '/Users/kasper/Downloads/02 Neo-Tokyo (Part 2).m4a',
-    '/Users/kasper/Downloads/03 Aeon Metropolis (Part 3).m4a',
-    '/Users/kasper/Downloads/04 Goodnight Sequence (part 4).m4a',
-  ]
-  for (const track of tracks) {
-    player.addTrack({ trackUrl: 'file://'+track })
-  }
-  function playPause() {
-    player.togglePlayPause()
-  }
-  function previous() {
-    player.playNext()
-  }
-  function next() {
-    player.playNext()
+  let sliderValue = 0
+  $: {
+    if (!sliderBeingDragged && $duration > 0) {
+      sliderValue = $currentTime/$duration*sliderSteps
+    }
   }
   function sliderMousedown() {
     sliderBeingDragged = true
   }
   function sliderMouseup(e) {
     sliderBeingDragged = false
-    player.currentTrack.seek(e.target.value/sliderSteps*duration || 0)
+    seek(e.target.value/sliderSteps*$duration || 0)
   }
 </script>
 
@@ -73,6 +46,6 @@
   button(on:click='{previous}') &lt;
   button(on:click='{playPause}') Play/Pause
   button(on:click='{next}') &gt;
-  div duration {duration} - currentTime {currentTime}
+  div duration {$duration} - currentTime {$currentTime}
   input.slider(tabindex=-1 type='range' min=0 max='{sliderSteps}' bind:value='{sliderValue}' on:mousedown='{sliderMousedown}' on:mouseup='{sliderMouseup}')
 </template>

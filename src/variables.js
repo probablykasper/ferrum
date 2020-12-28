@@ -4,4 +4,5 @@ module.exports = {
   // '--text-color': '#C9D1D9',
   '--text-color': '#DCDCDC',
   '--select-color': '#333333',
+  '--icon-color': '#FFFFFF',
 }

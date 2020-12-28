@@ -1,5 +1,6 @@
 <script>
   import VirtualList from '@sveltejs/svelte-virtual-list'
+  import { playTrack } from '../stores/player.js'
   export let library
   $: libTracks = library.tracks
   let tracks = []
@@ -46,9 +47,24 @@
         overflow: hidden
         text-overflow: ellipsis
         margin-right: 10px
-      .index
+      .index, .play
         width: 0px
         min-width: 20px
+        text-align: center
+      .play
+        display: none
+        padding: 0px
+        border: none
+        background-color: transparent
+        outline: none
+        svg
+          width: 16px
+          height: 16px
+          color: var(--icon-color)
+      &:hover .index
+        display: none
+      &:hover .play
+        display: block
       .year
         width: 0px
         min-width: 35px
@@ -77,6 +93,9 @@
       VirtualList(height='100%' items='{tracks}' let:item='')
         .row(on:click='{rowClick(item)}' class:selected='{selected.has(item.id)}')
           div.c.index 1
+          button.c.index.play(on:click|stopPropagation='{playTrack(item.id)}')
+            svg(height='32', role='img', width='32', viewbox='0 0 24 24')
+              polygon(points='21.57 12 5.98 3 5.98 21 21.57 12', fill='currentColor')
           div.c.name {item.name || ''}
           div.c.plays {item.playCount || 0}
           div.c.time {item.duration || 0}
