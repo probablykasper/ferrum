@@ -4,7 +4,7 @@ const path = require('path')
 const url = require('url')
 const fs = require('fs')
 const mm = require('music-metadata')
-const { tracksPath, generateFilename, artworksPath, ensureLibDirsExist } = require('./handy.js')
+const { tracksPath, generateFilename, artworksPath, ensureLibExists } = require('./handy.js')
 
 module.exports = async function(status, warn) {
   const warnings = []
@@ -277,10 +277,10 @@ function addCommonPlaylistFields(playlist, xmlPlaylist) {
 
 async function doIt(status, warn) {
   const filePath = '/Users/kasper/Downloads/Library.xml'
-  const dryRun = true
+  const dryRun = false
   // const { filePath, dryRun } = await popup()
   if (!filePath) return { cancelled: true }
-  ensureLibDirsExist()
+  ensureLibExists()
 
   status('Reading iTunes Library file...')
   const xml = await readPlist(filePath)
@@ -315,7 +315,7 @@ async function doIt(status, warn) {
   const startTime = new Date().getTime()
   const parsedTracks = {}
   for (let i = 0; i < xmlMusicPlaylistItems.length; i++) {
-    // if (i < 6900) continue
+    // if (i < 9400) continue
     status(`Parsing tracks... (${i+1}/${xmlMusicPlaylistItems.length})`)
     const xmlPlaylistItem = xmlMusicPlaylistItems[i]
     const trackID = xmlPlaylistItem['Track ID']

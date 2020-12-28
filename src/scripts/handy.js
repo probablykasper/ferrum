@@ -11,11 +11,34 @@ const libraryPath = path.join(app.getPath('music'), 'Ferrum')
 const libraryJsonPath = path.join(app.getPath('music'), 'Ferrum', 'library.json')
 const tracksPath = path.join(libraryPath, 'Tracks')
 const artworksPath = path.join(libraryPath, 'Artworks')
-function ensureLibDirsExist(path) {
+function ensureLibExists(path) {
   ensureExists(libraryPath)
-  ensureExists(libraryJsonPath)
   ensureExists(tracksPath)
   ensureExists(artworksPath)
+  let library
+  if (fs.existsSync(libraryJsonPath)) {
+    library = JSON.parse(fs.readFileSync(libraryJsonPath))
+  } else {
+    library = {
+      version: 1,
+      tracks: [
+        {
+          name: 'Junction Seven',
+          artist: 'Muzzy',
+          album: 'F Minor Factory EP',
+          albumArtist: 'Muzzy',
+          duration: 305,
+          genre: 'Drum & Bass',
+          year: 2016,
+          plays: 21,
+          comments: 'Monstercat',
+        },
+      ],
+      trackLists: [],
+    }
+    fs.appendFileSync(libraryJsonPath, JSON.stringify(library, null, '  '))
+  }
+  return library
 }
 
 function sanitizeFilename(str) {
@@ -75,5 +98,5 @@ module.exports = {
   tracksPath,
   artworksPath,
   generateFilename,
-  ensureLibDirsExist,
+  ensureLibExists,
 }

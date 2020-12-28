@@ -25,6 +25,9 @@
     library.tracks = result.tracks
     library.trackLists = result.trackLists
     library = library
+    pageStatus = 'SAVING'
+    await db.save()
+    pageStatus = ''
   })
 
   $: cssVarStyles = Object.entries(styles)
