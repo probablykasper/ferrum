@@ -290,7 +290,7 @@ function addCommonPlaylistFields(playlist, xmlPlaylist) {
 
 async function start(status, warn) {
   const filePath = '/Users/kasper/Downloads/Library.xml'
-  const dryRun = false
+  const dryRun = true
   // const { filePath, dryRun } = await popup()
   if (!filePath) return { cancelled: true }
   ensureLibExists()
@@ -311,6 +311,10 @@ async function start(status, warn) {
   let xmlMusicPlaylist
   for (const key of Object.keys(xml.Playlists)) {
     const xmlPlaylist = xml.Playlists[key]
+    // skip invisible playlists (should just be the "Library" playlist)
+    if (xmlPlaylist['Visible'] === false) continue
+    // skip smart playlists
+    if (xmlPlaylist['Smart Info']) continue
     if (xmlPlaylist['Distinguished Kind'] && xmlPlaylist['Distinguished Kind'] !== 1) {
       // ignore iTunes-generated playlists
       if (xmlPlaylist['Distinguished Kind'] === 4) {

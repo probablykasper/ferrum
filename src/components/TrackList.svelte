@@ -85,6 +85,7 @@
   .tracklist
     .row.header
       div.c.index
+      button.c.index.play
       div.c.name Name
       div.c.plays Plays
       div.c.time Time

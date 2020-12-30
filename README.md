@@ -2,9 +2,9 @@
 
 ToDo:
 - Log plays, play time, skips
-- Load tracks from library into player
-- Import albums, playlists
-- Metadata: Duration, Size
+- Parse albums
+- Auto add tracks to up next
+- Show playlists
 - Write tags to files:
   - m4a/aac: https://github.com/Saecki/rust-mp4ameta
   - mp3/mp3: https://github.com/polyfloyd/rust-id3
