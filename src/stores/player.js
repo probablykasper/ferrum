@@ -5,6 +5,7 @@ export const currentTime = writable(0)
 export const duration = writable(0)
 let trackList = []
 let trackIndex = null
+export const stopped = writable(true)
 
 if (window.audio) window.audio.pause() // for hmr: garbage collect old audio
 
@@ -34,6 +35,7 @@ function play(id) {
   const trackPath = window.db.getTrackPath(id, true)
   audio.src = trackPath
   audio.play()
+  stopped.set(false)
 }
 export function playPause() {
   if (audio.paused) audio.play()
@@ -61,6 +63,7 @@ export function stop() {
   trackList = []
   trackIndex = null
   audio.pause()
+  stopped.set(true)
   seek(0)
 }
 export function playTrack(list, index) {

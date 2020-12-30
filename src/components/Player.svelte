@@ -1,5 +1,5 @@
 <script>
-  import { playPause, previous, next, duration, currentTime, seek } from '../stores/player.js'
+  import { stopped, playPause, previous, next, duration, currentTime, seek } from '../stores/player.js'
   let sliderBeingDragged = false
   const sliderSteps = 400
   let sliderValue = 0
@@ -18,6 +18,10 @@
 </script>
 
 <style lang='sass'>
+  .stopped
+    button, input
+      pointer-events: none
+      opacity: 0.5
   input.slider
     width: 400px
     -webkit-appearance: none
@@ -43,9 +47,10 @@
 </style>
 
 <template lang='pug'>
-  button(on:click='{previous}') &lt;
-  button(on:click='{playPause}') Play/Pause
-  button(on:click='{next}') &gt;
-  div duration {$duration} - currentTime {$currentTime}
-  input.slider(tabindex=-1 type='range' min=0 max='{sliderSteps}' bind:value='{sliderValue}' on:mousedown='{sliderMousedown}' on:mouseup='{sliderMouseup}')
+  div(class:stopped='{$stopped}')
+    button(on:click='{previous}') &lt;
+    button(on:click='{playPause}') Play/Pause
+    button(on:click='{next}') &gt;
+    div {$stopped ? 'stopped' : ''} duration {$duration} - currentTime {$currentTime}
+    input.slider(tabindex=-1 type='range' min=0 max='{sliderSteps}' bind:value='{sliderValue}' on:mousedown='{sliderMousedown}' on:mouseup='{sliderMouseup}')
 </template>
