@@ -19,6 +19,14 @@ const db = {
   getTrack: function(id) {
     return library.tracks[id]
   },
+  addSkip: function(id) {
+    const track = db.getTrack(id)
+    if (!track.skipCount) track.skipCount = 0
+    if (!track.skips) track.skips = []
+    track.skipCount++
+    track.skips.push(new Date().getTime())
+    db.save()
+  },
   getTrackPath: function(id, fileUrl) {
     const trackPath = path.join(tracksPath, db.getTrack(id).file)
     if (fileUrl) return pathToFileURL(trackPath)

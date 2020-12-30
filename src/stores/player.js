@@ -1,5 +1,6 @@
 import Gapless from 'gapless.js'
 import { writable } from 'svelte/store'
+let library = db.get()
 
 export const currentTime = writable(0)
 export const duration = writable(0)
@@ -21,6 +22,8 @@ export function previous() {
   gPlayer.playPrevious()
 }
 export function next() {
+  const currentId = gPlayer.currentTrack.metadata.id
+  db.addSkip(currentId)
   gPlayer.playNext()
 }
 export function playTrack(id) {
