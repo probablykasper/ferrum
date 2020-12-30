@@ -1,5 +1,5 @@
 <script>
-  import { stopped, playPause, previous, next, duration, currentTime, seek } from '../stores/player.js'
+  import { stopped, playPause, previous, skip, duration, currentTime, seek } from '../stores/player.js'
   let sliderBeingDragged = false
   const sliderSteps = 400
   let sliderValue = 0
@@ -50,7 +50,7 @@
   div(class:stopped='{$stopped}')
     button(on:click='{previous}') &lt;
     button(on:click='{playPause}') Play/Pause
-    button(on:click='{next}') &gt;
+    button(on:click='{skip}') &gt;
     div {$stopped ? 'stopped' : ''} duration {$duration} - currentTime {$currentTime}
     input.slider(tabindex=-1 type='range' min=0 max='{sliderSteps}' bind:value='{sliderValue}' on:mousedown='{sliderMousedown}' on:mouseup='{sliderMouseup}')
 </template>

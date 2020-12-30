@@ -1,5 +1,4 @@
 import { writable } from 'svelte/store'
-let library = db.get()
 
 export const currentTime = writable(0)
 export const duration = writable(0)
@@ -50,7 +49,8 @@ export function previous() {
   }
   trackIndex = newIndex
 }
-export function next() {
+export function skip() {
+  window.db.addSkip(trackList[trackIndex])
   const newIndex = trackIndex + 1
   if (newIndex < trackList.length) {
     play(trackList[newIndex])
