@@ -10,7 +10,7 @@ const addon = require('./addon.js')
 module.exports = async function(status, warn) {
   const warnings = []
   try {
-    result = await doIt(status, (warning) => {
+    result = await start(status, (warning) => {
       warnings.push(warning)
       warn(warning)
     })
@@ -288,7 +288,7 @@ function addCommonPlaylistFields(playlist, xmlPlaylist) {
   addIfTruthy('disliked', xmlPlaylist['Disliked'])
 }
 
-async function doIt(status, warn) {
+async function start(status, warn) {
   const filePath = '/Users/kasper/Downloads/Library.xml'
   const dryRun = false
   // const { filePath, dryRun } = await popup()
@@ -327,59 +327,77 @@ async function doIt(status, warn) {
   const xmlMusicPlaylistItems = xmlMusicPlaylist['Playlist Items']
   const startTime = new Date().getTime()
   const parsedTracks = {}
+  const trackIdMap = {}
   for (let i = 0; i < xmlMusicPlaylistItems.length; i++) {
-    // if (i > 10) continue
+    // if (i > 1000) continue
     status(`Parsing tracks... (${i+1}/${xmlMusicPlaylistItems.length})`)
     const xmlPlaylistItem = xmlMusicPlaylistItems[i]
-    const trackID = xmlPlaylistItem['Track ID']
-    const xmlTrack = xml.Tracks[trackID]
-    // if (!['KUURO', 'EDEN'].includes(xmlTrack['Artist'])) continue
+    const iTunesId = xmlPlaylistItem['Track ID']
+    const xmlTrack = xml.Tracks[iTunesId]
     const { track, album } = await parseTrack(xmlTrack, warn, startTime, dryRun)
-    parsedTracks[trackID] = track
+    let id
+
+    do { // prevent duplicate IDs
+      id = makeId(7)
+    } while (parsedTracks[id])
+    parsedTracks[id] = track
+    trackIdMap[iTunesId] = id
   }
 
   status('Parsing folders...')
   const parsedPlaylists = {}
+  const folderIdMap = {}
   for (const xmlPlaylist of xmlPlaylists) {
     if (xmlPlaylist['Folder'] !== true) continue
-    // if (xmlPlaylist['Name'] !== '_TESTF') continue
     const playlist = { type: 'folder' }
     addCommonPlaylistFields(playlist, xmlPlaylist)
-    const persistentId = xmlPlaylist['Playlist Persistent ID']
-    parsedPlaylists[persistentId] = playlist
+    const itunesId = xmlPlaylist['Playlist Persistent ID']
+    let id
+    do { // prevent duplicate IDs
+      id = makeId(7)
+    } while (parsedPlaylists[id])
+    parsedPlaylists[id] = playlist
+    folderIdMap[itunesId] = id
   }
 
   status('Parsing playlists...')
   for (const xmlPlaylist of xmlPlaylists) {
     if (xmlPlaylist['Folder'] === true) continue
-    // if (xmlPlaylist['Name'] !== '_KUUP') continue
     const playlist = { type: 'playlist' }
     addCommonPlaylistFields(playlist, xmlPlaylist)
-    const parentId = xmlPlaylist['Parent Persistent ID']
-    const persistentId = xmlPlaylist['Playlist Persistent ID']
+
+    const parentItunesId = xmlPlaylist['Parent Persistent ID']
+    const parentId = folderIdMap[parentItunesId]
+    let id
+    do { // prevent duplicate IDs
+      id = makeId(7)
+    } while (parsedTracks[id])
+
     if (parentId) {
       const parent = parsedPlaylists[parentId]
-      if (!parsedPlaylists[parentId]) {
+      if (!parent) {
         throw new Error(`Could not find folder of playlist "${playlist.name}"`)
       }
       if (!parent.children) parent.children = []
-      parent.children.push(persistentId)
+      parent.children.push(id)
     }
     if (xmlPlaylist['Playlist Items']) {
       playlist.tracks = []
       for (const item of xmlPlaylist['Playlist Items']) {
-        const trackId = item['Track ID']
+        const itunesTrackId = item['Track ID']
+        const trackId = trackIdMap[itunesTrackId]
         // skip podcasts etc by checking if it's in parsedTracks
         if (parsedTracks[trackId]) {
           playlist.tracks.push(trackId)
         }
       }
     }
-    parsedPlaylists[persistentId] = playlist
+    parsedPlaylists[id] = playlist
   }
   console.log('parsedPlaylists:', parsedPlaylists)
 
   status('')
+  console.log('LIB', { tracks: parsedTracks, trackLists: parsedPlaylists })
   if (dryRun) return { cancelled: true }
   return {
     tracks: parsedTracks,
