@@ -20,13 +20,18 @@
       pageStatusWarnings += warning+'\n'
     })
     if (result.cancelled) return
-    if (result.err) pageStatusErr = result.err.stack
-    library.tracks = result.tracks
-    library.trackLists = result.trackLists
-    library = library
-    pageStatus = 'SAVING'
-    await db.save()
-    pageStatus = ''
+    if (result.err) {
+      pageStatusErr = result.err.stack
+    } else {
+      library = {
+        version: 1,
+        tracks: result.tracks,
+        trackLists: result.trackLists,
+      }
+      pageStatus = 'SAVING'
+      await db.save()
+      pageStatus = ''
+    }
   })
 
   $: cssVarStyles = Object.entries(styles)
