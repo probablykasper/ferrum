@@ -2,22 +2,26 @@
   import VirtualList from '@sveltejs/svelte-virtual-list'
   import { playTrack } from '../stores/player.js'
   export let library
-  $: libTracks = library.tracks
-  let tracks = []
+  $: tracks = library.tracks
+  let ids = []
+  let list = []
   $: {
     console.log(library)
     let i = 0
-    for (const key in libTracks) {
-      if (!Object.prototype.hasOwnProperty.call(libTracks, key)) continue
-      tracks[i] = libTracks[key]
-      tracks[i].id = key
-      tracks[i].duration = Math.round(libTracks[key].duration)
+    for (const key in tracks) {
+      if (!Object.prototype.hasOwnProperty.call(tracks, key)) continue
+      ids[i] = key
+      list[i] = { id: key, index: i }
+      list[i].duration = Math.round(list[i].duration)
       i++
     }
   }
   let selected = new Set()
-  function rowClick(item) {
-    selected = new Set([item.id])
+  function rowClick(id) {
+    selected = new Set([id])
+  }
+  function playRow(index) {
+    playTrack(ids, index)
   }
 </script>
 
@@ -52,7 +56,7 @@
         margin-left: 10px
       .index, .play
         width: 0px
-        min-width: 20px
+        min-width: 40px
         text-align: center
       .play
         display: none
@@ -96,19 +100,19 @@
       div.c.date-added Date Added
       div.c.year Year
     .body
-      VirtualList(height='100%' items='{tracks}' let:item='')
-        .row(on:mousedown='{rowClick(item)}' class:selected='{selected.has(item.id)}')
-          div.c.index 1
-          button.c.index.play(on:click|stopPropagation='{playTrack(item.id)}')
+      VirtualList(height='100%' items='{list}' let:item)
+        .row(on:mousedown='{rowClick(item.id)}' class:selected='{selected.has(item.id)}')
+          div.c.index {item.index + 1}
+          button.c.index.play(on:click|stopPropagation='{playRow(item.index)}')
             svg(height='32', role='img', width='32', viewbox='0 0 24 24')
               polygon(points='21.57 12 5.98 3 5.98 21 21.57 12', fill='currentColor')
-          div.c.name {item.name || ''}
-          div.c.plays {item.playCount || 0}
+          div.c.name {tracks[item.id].name || ''}
+          div.c.plays {tracks[item.id].playCount || 0}
           div.c.time {item.duration || 0}
-          div.c.artist {item.artist || ''}
-          div.c.album {item.album || ''}
-          div.c.comments {item.comments || ''}
-          div.c.genre {item.genre || ''}
-          div.c.date-added {item.dateAdded}
-          div.c.year {item.year || ''}
+          div.c.artist {tracks[item.id].artist || ''}
+          div.c.album {tracks[item.id].album || ''}
+          div.c.comments {tracks[item.id].comments || ''}
+          div.c.genre {tracks[item.id].genre || ''}
+          div.c.date-added {tracks[item.id].dateAdded}
+          div.c.year {tracks[item.id].year || ''}
 </template>

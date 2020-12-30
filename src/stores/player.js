@@ -1,40 +1,74 @@
-import Gapless from 'gapless.js'
 import { writable } from 'svelte/store'
 let library = db.get()
 
 export const currentTime = writable(0)
 export const duration = writable(0)
+let trackList = []
+let trackIndex = null
 
-const gPlayer = new Gapless.Queue({
-  numberOfTracksToPreload: 2,
-  onProgress: (track) => {
-    if (track) {
-      currentTime.set(track.currentTime)
-      duration.set(track.duration)
-    }
-  },
-})
+if (window.audio) window.audio.pause() // for hmr: garbage collect old audio
 
+window.audio = new Audio() // hmr:@keep
+let audio = window.audio
+audio.onerror = (e) => {
+  console.error('audioOnError', e)
+}
+audio.onended = (e) => {
+  const newIndex = trackIndex + 1
+  if (newIndex < trackList.length) {
+    const newId = trackList[newIndex]
+    const trackPath = window.db.getTrackPath(newId, true)
+    audio.src = trackPath
+    audio.play()
+  } else {
+    stop()
+  }
+  trackIndex = newIndex
+}
+audio.ontimeupdate = (e) => {
+  currentTime.set(audio.currentTime)
+  duration.set(audio.duration)
+}
+
+function play(id) {
+  const trackPath = window.db.getTrackPath(id, true)
+  audio.src = trackPath
+  audio.play()
+}
 export function playPause() {
-  gPlayer.togglePlayPause()
+  if (audio.paused) audio.play()
+  else audio.pause()
 }
 export function previous() {
-  gPlayer.playPrevious()
+  const newIndex = trackIndex - 1
+  if (newIndex >= 0) {
+    play(trackList[newIndex])
+  } else {
+    stop()
+  }
+  trackIndex = newIndex
 }
 export function next() {
-  const currentId = gPlayer.currentTrack.metadata.id
-  db.addSkip(currentId)
-  gPlayer.playNext()
-}
-export function playTrack(id) {
-  gPlayer.pauseAll()
-  for (let i = 0; i < gPlayer.tracks.length; i++) {
-    gPlayer.removeTrack(i)
+  const newIndex = trackIndex + 1
+  if (newIndex < trackList.length) {
+    play(trackList[newIndex])
+  } else {
+    stop()
   }
-  const trackPath = window.db.getTrackPath(id, true)
-  gPlayer.addTrack({ trackUrl: trackPath })
-  gPlayer.gotoTrack(0, true)
+  trackIndex = newIndex
+}
+export function stop() {
+  trackList = []
+  trackIndex = null
+  audio.pause()
+  seek(0)
+}
+export function playTrack(list, index) {
+  trackList = list
+  trackIndex = index
+  play(list[index])
 }
 export function seek(to) {
-  gPlayer.currentTrack.seek(to)
+  audio.currentTime = to
+  currentTime.set(to)
 }
