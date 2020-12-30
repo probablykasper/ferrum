@@ -10,22 +10,20 @@ const { pathToFileURL } = require('url')
 
 let library = ensureLibExists()
 
+
 let saving = false
-let saveQueued = false
-
 let gonnaQuit = false
-ipcRenderer.on('gonnaQuit', function(event) {
-  gonnaQuit = true
-})
-
 let addedPlayTime = false
 window.readyToQuit = function(status) {
   if (status === 'addedPlayTime') addedPlayTime = true
   if (gonnaQuit && addedPlayTime && saving === false) {
     ipcRenderer.send('readyToQuit')
   }
-  console.log('notREADY TO QUIT', gonnaQuit, addedPlayTime, saving)
 }
+ipcRenderer.on('gonnaQuit', function(event) {
+  gonnaQuit = true
+  window.readyToQuit()
+})
 
 const db = {
   iTunesImport: async function(...args) {
@@ -70,29 +68,29 @@ const db = {
     else return trackPath
   },
   save: async function() {
-    // prevent concurrency causing corrupt library
-    if (saving) {
-      saveQueued = true
-      return
-    }
     saving = true
-    const { performance } = require('perf_hooks')
-    const one = performance.now()
+    const timer = newTimer()
 
     const json = JSON.stringify(library, null, '  ')
-    
-    const two = performance.now()
-    console.log('Stringify:', two-one)
+    console.log('Stringify:', timer.reset())
 
-    await fs.promises.writeFile(libraryJsonPath, json)
+    await addon.atomic_file_save(libraryJsonPath, json)
+    console.log('Write Rust:', timer.reset())
 
-    const three = performance.now()
-    console.log('Writefile:', three-two)
     saving = false
-    if (saveQueued) {
-      saveQueued = false
-      await db.save()
-    }
+    window.readyToQuit()
   },
 }
 window.db = db
+
+const { performance } = require('perf_hooks')
+function newTimer() {
+  let start = performance.now()
+  return {
+    reset: () => {
+      const time = performance.now() - start
+      start = performance.now()
+      return time
+    },
+  }
+}

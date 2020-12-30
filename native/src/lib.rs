@@ -1,6 +1,7 @@
 #[macro_use]
 extern crate napi_derive;
 use std::fs::copy;
+use tempfile::NamedTempFile;
 #[allow(unused_imports)]
 use napi::{JsNull, CallContext, JsObject, Result as NapiResult, Error as NapiError, JsString};
 
@@ -19,8 +20,23 @@ fn copy_file(ctx: CallContext) -> NapiResult<JsNull> {
   ctx.env.get_null()
 }
 
+use std::io::{Write};
+
+#[js_function(2)]
+fn atomic_file_save(ctx: CallContext) -> NapiResult<JsNull> {
+  let file_path = arg_to_string(&ctx, 0)?;
+  let content = arg_to_string(&ctx, 1)?;
+
+  let mut tmpfile = NamedTempFile::new().unwrap();
+  write!(tmpfile, "{}", content).unwrap();
+  tmpfile.persist(&file_path).unwrap();
+
+  ctx.env.get_null()
+}
+
 #[module_exports]
 fn init(mut exports: JsObject) -> NapiResult<()> {
   exports.create_named_method("copy_file", copy_file)?;
+  exports.create_named_method("atomic_file_save", atomic_file_save)?;
   Ok(())
 }
