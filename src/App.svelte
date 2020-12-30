@@ -20,7 +20,7 @@
       pageStatusWarnings += warning+'\n'
     })
     if (result.cancelled) return
-    if (result.err) pageStatusErr = err.stack
+    if (result.err) pageStatusErr = result.err.stack
     library.tracks = result.tracks
     library.trackLists = result.trackLists
     library = library
