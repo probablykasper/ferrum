@@ -23,11 +23,12 @@
     if (result.err) {
       pageStatusErr = result.err.stack
     } else {
-      library = {
+      db.overwriteLibrary({
         version: 1,
         tracks: result.tracks,
         trackLists: result.trackLists,
-      }
+        playTime: [],
+      })
       pageStatus = 'SAVING'
       await db.save()
       pageStatus = ''

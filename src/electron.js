@@ -59,8 +59,10 @@ function ready() {
   })
 
   mainWindow.on('close', (e) => {
-    if (isMac && !quitting) e.preventDefault()
-    if (isMac && !quitting) mainWindow.hide()
+    if (isMac && !quitting) {
+      e.preventDefault()
+      mainWindow.hide()
+    }
   })
   mainWindow.on('closed', () => {
     mainWindow = null

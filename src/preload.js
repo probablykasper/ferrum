@@ -16,6 +16,9 @@ const db = {
   get: function() {
     return library
   },
+  overwriteLibrary: function(newLib) {
+    library = newLib
+  },
   getTrack: function(id) {
     return library.tracks[id]
   },
