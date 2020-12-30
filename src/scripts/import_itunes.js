@@ -124,10 +124,7 @@ async function parseTrack(xmlTrack, warn, startTime, dryRun) {
     let importedPlayCount = xmlTrack['Play Count']
     if (playDate !== undefined) {
       // if we have a playDate, add a play for it
-      track['plays'] = [ {
-        date: playDate.getTime(),
-        count: 1,
-      } ]
+      track['plays'] = [playDate.getTime()]
       importedPlayCount--
     }
     if (importedPlayCount >= 1) {
@@ -144,10 +141,7 @@ async function parseTrack(xmlTrack, warn, startTime, dryRun) {
     let importedSkipCount = xmlTrack['Skip Count']
     if (skipDate !== undefined) {
       // if we have a skipDate, add a skip for it
-      track['skips'] = [ {
-        date: skipDate.getTime(),
-        count: 1,
-      } ]
+      track['skips'] = [skipDate.getTime()]
       importedSkipCount--
     }
     if (importedSkipCount >= 1) {
@@ -292,7 +286,7 @@ function addCommonPlaylistFields(playlist, xmlPlaylist, startTime) {
 
 async function start(status, warn) {
   const filePath = '/Users/kasper/Downloads/Library.xml'
-  const dryRun = true
+  const dryRun = false
   // const { filePath, dryRun } = await popup()
   if (!filePath) return { cancelled: true }
   ensureLibExists()
