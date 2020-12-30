@@ -74,12 +74,21 @@
         display: none
       &:hover .play
         display: flex
+      .name
+        width: 150%
+      .genre
+        width: 80%
       .year
         width: 0px
         min-width: 35px
+      .plays
+        width: 0px
+        min-width: 40px
+        text-align: right
       .time
         width: 0px
         min-width: 40px
+        text-align: right
 
   .row:nth-child(even)
     background-color: var(--bg-color-2)

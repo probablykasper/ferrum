@@ -1,15 +1,15 @@
 # Ferrum
 
 ToDo:
-- Log plays, play time, skips
+- Prevent corrupting library (atomic file write, don't quit when writing, don't hmr when writing)
 - Parse albums
-- Auto add tracks to up next
 - Show playlists
 - Write tags to files:
   - m4a/aac: https://github.com/Saecki/rust-mp4ameta
   - mp3/mp3: https://github.com/polyfloyd/rust-id3
 - Check if a track is VBR. Can we use codecProfile? What about non-mp3s?
 - Look into playing audio from Rust to reduce CPU usage
+- iTunes Import overwrites library, but old track/artwork files are still kept. Either move or delete them
 
 Potential databases:
 - https://github.com/TheNeikos/rustbreak

@@ -329,7 +329,7 @@ async function start(status, warn) {
   const parsedTracks = {}
   const trackIdMap = {}
   for (let i = 0; i < xmlMusicPlaylistItems.length; i++) {
-    // if (i > 1000) continue
+    if (i > 100) continue
     status(`Parsing tracks... (${i+1}/${xmlMusicPlaylistItems.length})`)
     const xmlPlaylistItem = xmlMusicPlaylistItems[i]
     const iTunesId = xmlPlaylistItem['Track ID']

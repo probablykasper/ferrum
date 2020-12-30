@@ -23,6 +23,7 @@ function ensureLibExists(path) {
       version: 1,
       tracks: [],
       trackLists: [],
+      playTime: [],
     }
     fs.appendFileSync(libraryJsonPath, JSON.stringify(library, null, '  '))
   }

@@ -12,7 +12,7 @@
   let pageStatusWarnings = ''
   let pageStatusErr = ''
   const { ipcRenderer } = window.require('electron')
-  ipcRenderer.on('itunesImport', async(event, arg) => {
+  ipcRenderer.on('itunesImport', async() => {
     const result = await db.iTunesImport((status) => {
       pageStatus = status
     }, (warning) => {

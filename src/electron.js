@@ -1,4 +1,4 @@
-const { app, session, Menu, BrowserWindow, protocol } = require('electron')
+const { app, ipcMain, session, Menu, BrowserWindow, protocol } = require('electron')
 const path = require('path')
 const vars = require('./variables')
 const appData = app.getPath('appData')
@@ -59,7 +59,7 @@ function ready() {
   })
 
   mainWindow.on('close', (e) => {
-    if (isMac && !quitting) {
+    if (!quitting) {
       e.preventDefault()
       mainWindow.hide()
     }
@@ -72,7 +72,12 @@ function ready() {
 app.on('ready', ready)
 
 app.on('before-quit', () => {
-  quitting = true
+  mainWindow.hide()
+  mainWindow.webContents.send('gonnaQuit')
+  ipcMain.once('readyToQuit', () => {
+    quitting = true
+    mainWindow.close()
+  })
 })
 app.on('window-all-closed', () => {
   app.quit()

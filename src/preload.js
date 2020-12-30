@@ -1,5 +1,6 @@
 const path = require('path')
 const fs = require('fs')
+const { ipcRenderer } = require('electron')
 const { app } = require('electron').remote
 const iTunesImport = require('./scripts/import_itunes.js')
 const addon = require('./scripts/addon.js')
@@ -8,6 +9,21 @@ const { tracksPath, libraryJsonPath, ensureLibExists } = require('./scripts/hand
 const { pathToFileURL } = require('url')
 
 let library = ensureLibExists()
+
+let gonnaQuit = false
+ipcRenderer.on('gonnaQuit', function(event) {
+  gonnaQuit = true
+})
+
+let addedPlayTime = false
+let activeWrites = 0
+window.readyToQuit = function(status) {
+  if (status === 'addedPlayTime') addedPlayTime = true
+  if (gonnaQuit && addedPlayTime && activeWrites === 0) {
+    ipcRenderer.send('readyToQuit')
+  }
+  console.log('notREADY TO QUIT', gonnaQuit, addedPlayTime, activeWrites)
+}
 
 const db = {
   iTunesImport: async function(...args) {
@@ -22,21 +38,29 @@ const db = {
   getTrack: function(id) {
     return library.tracks[id]
   },
-  addSkip: function(id) {
+  addSkip: async function(id) {
     const track = db.getTrack(id)
     if (!track.skipCount) track.skipCount = 0
     if (!track.skips) track.skips = []
     track.skipCount++
     track.skips.push(new Date().getTime())
-    db.save()
+    await db.save()
   },
-  addPlay: function(id) {
+  addPlay: async function(id) {
     const track = db.getTrack(id)
     if (!track.playCount) track.playCount = 0
     if (!track.plays) track.plays = []
     track.playCount++
     track.plays.push(new Date().getTime())
-    db.save()
+    await db.save()
+  },
+  addPlayTime: async function(id, startTime) {
+    const duration = new Date().getTime() - startTime
+    // don't bother if the track was played less than 1s
+    if (duration >= 1000) {
+      library.playTime.push([id, startTime, duration])
+      await db.save()
+    }
   },
   getTrackPath: function(id, fileUrl) {
     const trackPath = path.join(tracksPath, db.getTrack(id).file)
@@ -44,6 +68,7 @@ const db = {
     else return trackPath
   },
   save: async function() {
+    activeWrites++
     const { performance } = require('perf_hooks')
     const one = performance.now()
 
@@ -56,6 +81,7 @@ const db = {
 
     const three = performance.now()
     console.log('Writefile:', three-two)
+    activeWrites--
   },
 }
 window.db = db
