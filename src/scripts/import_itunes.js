@@ -275,7 +275,7 @@ async function parseTrack(xmlTrack, warn, startTime, dryRun) {
   return { track, album }
 }
 
-function addCommonPlaylistFields(playlist, xmlPlaylist) {
+function addCommonPlaylistFields(playlist, xmlPlaylist, startTime) {
   const addIfTruthy = function(prop, value) {
     if (value) playlist[prop] = value
   }
@@ -286,6 +286,8 @@ function addCommonPlaylistFields(playlist, xmlPlaylist) {
   addIfTruthy('description', xmlPlaylist['Description'])
   addIfTruthy('liked', xmlPlaylist['Loved'])
   addIfTruthy('disliked', xmlPlaylist['Disliked'])
+  playlist.importedFrom = 'itunes'
+  playlist.dateImported = startTime
 }
 
 async function start(status, warn) {
@@ -354,7 +356,7 @@ async function start(status, warn) {
   for (const xmlPlaylist of xmlPlaylists) {
     if (xmlPlaylist['Folder'] !== true) continue
     const playlist = { type: 'folder' }
-    addCommonPlaylistFields(playlist, xmlPlaylist)
+    addCommonPlaylistFields(playlist, xmlPlaylist, startTime)
     const itunesId = xmlPlaylist['Playlist Persistent ID']
     let id
     do { // prevent duplicate IDs
@@ -368,7 +370,7 @@ async function start(status, warn) {
   for (const xmlPlaylist of xmlPlaylists) {
     if (xmlPlaylist['Folder'] === true) continue
     const playlist = { type: 'playlist' }
-    addCommonPlaylistFields(playlist, xmlPlaylist)
+    addCommonPlaylistFields(playlist, xmlPlaylist, startTime)
 
     const parentItunesId = xmlPlaylist['Parent Persistent ID']
     const parentId = folderIdMap[parentItunesId]
