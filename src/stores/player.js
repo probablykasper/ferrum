@@ -14,6 +14,7 @@ audio.onerror = (e) => {
   console.error('audioOnError', e)
 }
 audio.onended = (e) => {
+  window.db.addPlay(trackList[trackIndex])
   const newIndex = trackIndex + 1
   if (newIndex < trackList.length) {
     const newId = trackList[newIndex]

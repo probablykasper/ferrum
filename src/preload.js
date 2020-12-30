@@ -27,6 +27,14 @@ const db = {
     track.skips.push(new Date().getTime())
     db.save()
   },
+  addPlay: function(id) {
+    const track = db.getTrack(id)
+    if (!track.playCount) track.playCount = 0
+    if (!track.plays) track.plays = []
+    track.playCount++
+    track.plays.push(new Date().getTime())
+    db.save()
+  },
   getTrackPath: function(id, fileUrl) {
     const trackPath = path.join(tracksPath, db.getTrack(id).file)
     if (fileUrl) return pathToFileURL(trackPath)
