@@ -28,15 +28,16 @@
     position: relative
     display: flex
     flex-direction: column
-    margin-left: 10px
     .body
       height: 100%
       min-height: 0px
       position: relative
     .row
       display: flex
-      height: 24px
+      $row-height: 24px
+      height: $row-height
       font-size: 14px
+      line-height: $row-height
       &.selected
         background-color: var(--select-color)
       .c
@@ -47,6 +48,8 @@
         overflow: hidden
         text-overflow: ellipsis
         margin-right: 10px
+      .c.index, .c.play
+        margin-left: 10px
       .index, .play
         width: 0px
         min-width: 20px
@@ -57,6 +60,8 @@
         border: none
         background-color: transparent
         outline: none
+        justify-content: center
+        align-items: center
         svg
           width: 16px
           height: 16px
@@ -64,7 +69,7 @@
       &:hover .index
         display: none
       &:hover .play
-        display: block
+        display: flex
       .year
         width: 0px
         min-width: 35px

@@ -25,14 +25,12 @@ export function next() {
 }
 export function playTrack(id) {
   gPlayer.pauseAll()
-  for (let i = 0; i < gPlayer.tracks.lengt; i++) {
+  for (let i = 0; i < gPlayer.tracks.length; i++) {
     gPlayer.removeTrack(i)
   }
-  gPlayer.tracks = []
   const trackPath = window.db.getTrackPath(id, true)
   gPlayer.addTrack({ trackUrl: trackPath })
-  gPlayer.play()
-  console.log(gPlayer)
+  gPlayer.gotoTrack(0, true)
 }
 export function seek(to) {
   gPlayer.currentTrack.seek(to)

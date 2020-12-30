@@ -328,7 +328,7 @@ async function doIt(status, warn) {
   const startTime = new Date().getTime()
   const parsedTracks = {}
   for (let i = 0; i < xmlMusicPlaylistItems.length; i++) {
-    if (i > 10) continue
+    // if (i > 10) continue
     status(`Parsing tracks... (${i+1}/${xmlMusicPlaylistItems.length})`)
     const xmlPlaylistItem = xmlMusicPlaylistItems[i]
     const trackID = xmlPlaylistItem['Track ID']
