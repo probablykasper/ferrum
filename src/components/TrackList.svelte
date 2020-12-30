@@ -91,7 +91,7 @@
       div.c.year Year
     .body
       VirtualList(height='100%' items='{tracks}' let:item='')
-        .row(on:click='{rowClick(item)}' class:selected='{selected.has(item.id)}')
+        .row(on:mousedown='{rowClick(item)}' class:selected='{selected.has(item.id)}')
           div.c.index 1
           button.c.index.play(on:click|stopPropagation='{playTrack(item.id)}')
             svg(height='32', role='img', width='32', viewbox='0 0 24 24')

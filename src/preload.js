@@ -1,8 +1,8 @@
 const path = require('path')
 const fs = require('fs')
 const { app } = require('electron').remote
-const addon = window.require(path.resolve(__dirname, '../native/addon.node'))
 const iTunesImport = require('./scripts/import_itunes.js')
+const addon = require('./scripts/addon.js')
 window.addon = addon
 const { tracksPath, libraryJsonPath, ensureLibExists } = require('./scripts/handy.js')
 const { pathToFileURL } = require('url')

@@ -4,7 +4,6 @@ const vars = require('./variables')
 const appData = app.getPath('appData')
 const electronData = path.join(appData, app.name, 'Electron Data')
 app.setPath('userData', electronData)
-// const addon = require('../native/addon.node')
 
 const dev = process.env.APP_ENV === 'dev'
 const devPort = process.env.DEV_PORT

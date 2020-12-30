@@ -1,22 +1,26 @@
 #[macro_use]
 extern crate napi_derive;
-extern crate dirs;
-mod funcs;
-use funcs::get_path;
-use napi::{CallContext, JsObject, Result as NapiResult, Error as NapiError, JsString};
+use std::fs::copy;
+#[allow(unused_imports)]
+use napi::{JsNull, CallContext, JsObject, Result as NapiResult, Error as NapiError, JsString};
 
-#[js_function(1)]
-fn w_get_path(ctx: CallContext) -> NapiResult<JsString> {
-  match get_path() {
-    Ok(value) => Ok(ctx.env.create_string(&value)?),
-    Err(e) => {
-      Err(NapiError::from_reason(e))
-    },
-  }
+fn arg_to_string(ctx: &CallContext, arg: usize) -> NapiResult<String> {
+  let js_string = ctx.get::<JsString>(arg)?;
+  let js_utf8_string = js_string.into_utf8()?;
+  let rust_string = js_utf8_string.as_str()?.to_string();
+  return Ok(rust_string)
+}
+
+#[js_function(2)]
+fn copy_file(ctx: CallContext) -> NapiResult<JsNull> {
+  let from = arg_to_string(&ctx, 0)?;
+  let to = arg_to_string(&ctx, 1)?;
+  copy(from, to)?;
+  ctx.env.get_null()
 }
 
 #[module_exports]
 fn init(mut exports: JsObject) -> NapiResult<()> {
-  exports.create_named_method("get_path", w_get_path)?;
+  exports.create_named_method("copy_file", copy_file)?;
   Ok(())
 }

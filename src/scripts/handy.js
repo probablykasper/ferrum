@@ -21,19 +21,7 @@ function ensureLibExists(path) {
   } else {
     library = {
       version: 1,
-      tracks: [
-        {
-          name: 'Junction Seven',
-          artist: 'Muzzy',
-          album: 'F Minor Factory EP',
-          albumArtist: 'Muzzy',
-          duration: 305,
-          genre: 'Drum & Bass',
-          year: 2016,
-          plays: 21,
-          comments: 'Monstercat',
-        },
-      ],
+      tracks: [],
       trackLists: [],
     }
     fs.appendFileSync(libraryJsonPath, JSON.stringify(library, null, '  '))

@@ -5,6 +5,7 @@ const url = require('url')
 const fs = require('fs')
 const mm = require('music-metadata')
 const { tracksPath, generateFilename, artworksPath, ensureLibExists } = require('./handy.js')
+const addon = require('./addon.js')
 
 module.exports = async function(status, warn) {
   const warnings = []
@@ -199,13 +200,10 @@ async function parseTrack(xmlTrack, warn, startTime, dryRun) {
   if (!fs.existsSync(xmlTrackPath)) {
     throw new Error(logPrefix+' File does not exist')
   }
-  const newFilename = generateFilename(track, xmlTrackPath)
-  track.file = newFilename
-  let newPath = path.join(tracksPath, newFilename)
-  if (dryRun) newPath = xmlTrackPath
-  if (!dryRun) fs.copyFileSync(xmlTrackPath, newPath)
+  const stats = fs.statSync(xmlTrackPath)
+  track.size = stats.size
 
-  const md = await mm.parseFile(newPath)
+  const md = await mm.parseFile(xmlTrackPath)
   // Warnings are in md.quality.warnings
   if (!md.format.duration) {
     throw new Error(logPrefix+' Could not read duration from file. Probably unusual or badly encoded file')
@@ -220,6 +218,9 @@ async function parseTrack(xmlTrack, warn, startTime, dryRun) {
   track.bitrate = Math.round(md.format.bitrate)
   track.sampleRate = md.format.sampleRate
   const picture = md.common.picture
+  const newFilename = generateFilename(track, xmlTrackPath)
+  track.file = newFilename
+  let artworkPath, artworkData
   if (picture && picture[0]) {
     // if the track has multiple artworks, check if if they're equal. If
     // yes, use the first one, otherwise warn
@@ -248,9 +249,19 @@ async function parseTrack(xmlTrack, warn, startTime, dryRun) {
     if (!['image/jpeg', 'image/png'].includes(imgFormat)) {
       warn(logPrefix+` Skipping unsupported cover format "${imgFormat}"`)
     }
-    if (!dryRun) {
-      fs.writeFileSync(path.join(artworksPath, newFilename+ext), thePicture.data)
-    }
+    artworkPath = path.join(artworksPath, newFilename+ext)
+    artworkData = thePicture.data
+  }
+  const newPath = path.join(tracksPath, newFilename)
+  if (fs.existsSync(newPath)) {
+    throw new Error(logPrefix+' File already exists: '+newPath)
+  }
+  if (fs.existsSync(artworkPath)) {
+    throw new Error(logPrefix+' File already exists: '+artworkPath)
+  }
+  if (!dryRun) {
+    if (artworkPath) fs.writeFileSync(artworkPath, artworkData)
+    addon.copy_file(xmlTrackPath, newPath)
   }
 
   if (
@@ -317,7 +328,7 @@ async function doIt(status, warn) {
   const startTime = new Date().getTime()
   const parsedTracks = {}
   for (let i = 0; i < xmlMusicPlaylistItems.length; i++) {
-    // if (i < 9400) continue
+    if (i > 10) continue
     status(`Parsing tracks... (${i+1}/${xmlMusicPlaylistItems.length})`)
     const xmlPlaylistItem = xmlMusicPlaylistItems[i]
     const trackID = xmlPlaylistItem['Track ID']
