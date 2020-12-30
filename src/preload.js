@@ -10,19 +10,21 @@ const { pathToFileURL } = require('url')
 
 let library = ensureLibExists()
 
+let saving = false
+let saveQueued = false
+
 let gonnaQuit = false
 ipcRenderer.on('gonnaQuit', function(event) {
   gonnaQuit = true
 })
 
 let addedPlayTime = false
-let activeWrites = 0
 window.readyToQuit = function(status) {
   if (status === 'addedPlayTime') addedPlayTime = true
-  if (gonnaQuit && addedPlayTime && activeWrites === 0) {
+  if (gonnaQuit && addedPlayTime && saving === false) {
     ipcRenderer.send('readyToQuit')
   }
-  console.log('notREADY TO QUIT', gonnaQuit, addedPlayTime, activeWrites)
+  console.log('notREADY TO QUIT', gonnaQuit, addedPlayTime, saving)
 }
 
 const db = {
@@ -68,7 +70,12 @@ const db = {
     else return trackPath
   },
   save: async function() {
-    activeWrites++
+    // prevent concurrency causing corrupt library
+    if (saving) {
+      saveQueued = true
+      return
+    }
+    saving = true
     const { performance } = require('perf_hooks')
     const one = performance.now()
 
@@ -81,7 +88,11 @@ const db = {
 
     const three = performance.now()
     console.log('Writefile:', three-two)
-    activeWrites--
+    saving = false
+    if (saveQueued) {
+      saveQueued = false
+      await db.save()
+    }
   },
 }
 window.db = db
