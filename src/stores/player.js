@@ -58,6 +58,16 @@ export function playPause() {
     audio.pause()
   }
 }
+document.addEventListener('keydown', async(e) => {
+  if (e.target.tagName === 'INPUT') return
+  if (e.target.tagName === 'TEXTAREA') return
+  if (e.key === ' ') {
+    await playPause()
+  }
+})
+ipcRenderer.on('playPause', async() => {
+  await playPause()
+})
 export function previous() {
   const newIndex = trackIndex - 1
   if (newIndex >= 0) {

@@ -1,4 +1,4 @@
-const { app, ipcMain, session, Menu, BrowserWindow, protocol } = require('electron')
+const { app, ipcMain, session, Menu, BrowserWindow, protocol, globalShortcut } = require('electron')
 const path = require('path')
 const vars = require('./variables')
 const appData = app.getPath('appData')
@@ -146,6 +146,12 @@ const template = [
     ],
   },
   {
+    label: 'Song',
+    submenu: [
+      { label: 'TBA' },
+    ],
+  },
+  {
     label: 'View',
     submenu: [
       { role: 'reload' },
@@ -157,6 +163,18 @@ const template = [
       { role: 'zoomOut' },
       { type: 'separator' },
       { role: 'togglefullscreen' },
+    ],
+  },
+  {
+    label: 'Playback',
+    submenu: [
+      {
+        label: 'Pause',
+        // accelerator: 'Space',
+        click: () => {
+          mainWindow.webContents.send('playPause')
+        },
+      },
     ],
   },
   {

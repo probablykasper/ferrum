@@ -118,6 +118,7 @@
       .titlebar
       Player
       h1 Hello World
+      input
     .meat
       Sidebar
       TrackList(library='{library}')
