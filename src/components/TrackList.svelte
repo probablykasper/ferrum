@@ -134,7 +134,7 @@
       div.c.year Year
     .body
       VirtualList(height='100%' items='{list}' let:item)
-        .row(on:mousedown='{rowClick(item.id)}' class:selected='{selected.has(item.id)}')
+        .row(on:dblclick='{playRow(item.index)}' on:mousedown='{rowClick(item.id)}' class:selected='{selected.has(item.id)}')
           div.c.index {item.index + 1}
           button.c.index.play(on:click|stopPropagation='{playRow(item.index)}')
             svg(height='32', role='img', width='32', viewbox='0 0 24 24')
