@@ -1,4 +1,4 @@
-const { app, dialog, BrowserWindow } = require('electron').remote
+const { dialog, BrowserWindow } = require('electron').remote
 const simplePlist = require('simple-plist')
 const path = require('path')
 const url = require('url')
@@ -64,6 +64,8 @@ async function popup() {
   +'\n    - Equalizer'
   +'\n    - Skip when shuffling'
   +'\n    - Remember playback position'
+  +'\n    - Disc Count'
+  +"\n- A track's Track Number and Track Count if it has no Album Title, no Album Name and no Disc Number"
   const focusedWindow = BrowserWindow.getFocusedWindow()
   const result = await dialog.showMessageBox(focusedWindow, {
     type: 'info',
@@ -280,6 +282,7 @@ function addCommonPlaylistFields(playlist, xmlPlaylist, startTime) {
   addIfTruthy('description', xmlPlaylist['Description'])
   addIfTruthy('liked', xmlPlaylist['Loved'])
   addIfTruthy('disliked', xmlPlaylist['Disliked'])
+  playlist.originalId = xmlPlaylist['Playlist Persistent ID']
   playlist.importedFrom = 'itunes'
   playlist.dateImported = startTime
 }
@@ -345,19 +348,44 @@ async function start(status, warn) {
   }
 
   status('Parsing folders...')
-  const parsedPlaylists = {}
+  const parsedPlaylists = {
+    root: {
+      name: 'Root',
+      type: 'special',
+      dateCreated: startTime,
+      children: [],
+    },
+  }
   const folderIdMap = {}
   for (const xmlPlaylist of xmlPlaylists) {
     if (xmlPlaylist['Folder'] !== true) continue
     const playlist = { type: 'folder' }
     addCommonPlaylistFields(playlist, xmlPlaylist, startTime)
-    const itunesId = xmlPlaylist['Playlist Persistent ID']
     let id
     do { // prevent duplicate IDs
       id = makeId(7)
     } while (parsedPlaylists[id])
     parsedPlaylists[id] = playlist
+    const itunesId = playlist.originalId
     folderIdMap[itunesId] = id
+  }
+  for (const xmlPlaylist of xmlPlaylists) {
+    if (xmlPlaylist['Folder'] !== true) continue
+    const itunesId = xmlPlaylist['Playlist Persistent ID']
+    const id = folderIdMap[itunesId]
+    const playlist = parsedPlaylists[id]
+    const parentItunesId = xmlPlaylist['Parent Persistent ID']
+    const parentId = folderIdMap[parentItunesId]
+    if (parentId) {
+      const parent = parsedPlaylists[parentId]
+      if (!parent) {
+        throw new Error(`Could not find folder of playlist "${playlist.name}"`)
+      }
+      if (!parent.children) parent.children = []
+      parent.children.push(id)
+    } else {
+      parsedPlaylists.root.children.push(id)
+    }
   }
 
   status('Parsing playlists...')
@@ -380,6 +408,8 @@ async function start(status, warn) {
       }
       if (!parent.children) parent.children = []
       parent.children.push(id)
+    } else {
+      parsedPlaylists.root.children.push(id)
     }
     if (xmlPlaylist['Playlist Items']) {
       playlist.tracks = []

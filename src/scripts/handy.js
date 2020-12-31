@@ -21,8 +21,15 @@ function ensureLibExists(path) {
   } else {
     library = {
       version: 1,
-      tracks: [],
-      trackLists: [],
+      tracks: {},
+      trackLists: {
+        root: {
+          name: 'Root',
+          type: 'special',
+          dateCreated: new Date().getTime(),
+          children: [],
+        },
+      },
       playTime: [],
     }
     fs.appendFileSync(libraryJsonPath, JSON.stringify(library, null, '  '))
