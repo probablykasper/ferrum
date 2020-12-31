@@ -65,7 +65,6 @@ async function popup() {
   +'\n    - Skip when shuffling'
   +'\n    - Remember playback position'
   +'\n    - Disc Count'
-  +"\n- A track's Track Number and Track Count if it has no Album Title, no Album Name and no Disc Number"
   const focusedWindow = BrowserWindow.getFocusedWindow()
   const result = await dialog.showMessageBox(focusedWindow, {
     type: 'info',
@@ -173,17 +172,16 @@ async function parseTrack(xmlTrack, warn, startTime, dryRun) {
   addIfTruthy('disliked', xmlTrack['Disliked'])
   addIfTruthy('disabled', xmlTrack['Disabled'])
 
-  const album = { type: 'album' }
-  if (xmlTrack['Compilation']) album.type = 'compilation'
-  if (xmlTrack['Album']) album.name = xmlTrack['Album']
-  if (xmlTrack['Album Artist']) album.artist = xmlTrack['Album Artist']
-  if (xmlTrack['Sort Album']) album.sortName = xmlTrack['Sort Album']
-  if (xmlTrack['Sort Album Artist']) album.sortArtist = xmlTrack['Sort Album Artist']
+  if (xmlTrack['Compilation']) track.compilation = true
+  if (xmlTrack['Album']) track.albumName = xmlTrack['Album']
+  if (xmlTrack['Album Artist']) track.albumArtist = xmlTrack['Album Artist']
+  if (xmlTrack['Sort Album']) track.sortAlbumName = xmlTrack['Sort Album']
+  if (xmlTrack['Sort Album Artist']) track.sortAlbumArtist = xmlTrack['Sort Album Artist']
 
-  if (xmlTrack['Track Number']) album.trackNum = xmlTrack['Track Number']
-  if (xmlTrack['Track Count']) album.trackCount = xmlTrack['Track Count']
-  if (xmlTrack['Disc Number']) album.discNum = xmlTrack['Disc Number']
-  if (xmlTrack['Disc Count']) album.discCount = xmlTrack['Disc Count']
+  if (xmlTrack['Track Number']) track.trackNum = xmlTrack['Track Number']
+  if (xmlTrack['Track Count']) track.trackCount = xmlTrack['Track Count']
+  if (xmlTrack['Disc Number']) track.discNum = xmlTrack['Disc Number']
+  if (xmlTrack['Disc Count']) track.discCount = xmlTrack['Disc Count']
 
   if (xmlTrack['Track Type'] !== 'File') {
     const trackType = xmlTrack['Track Type']
@@ -265,10 +263,10 @@ async function parseTrack(xmlTrack, warn, startTime, dryRun) {
       || xmlTrack['Persistent ID'] === '033D11C37D8F07CA' // test track
       || xmlTrack['Persistent ID'] === '7B468E51DD4EC3DB' // test track2
   ) {
-    console.log(xmlTrack['Name'], { album, track, xmlTrack })
+    console.log(xmlTrack['Name'], { track, xmlTrack })
   }
 
-  return { track, album }
+  return track
 }
 
 function addCommonPlaylistFields(playlist, xmlPlaylist, startTime) {
@@ -337,7 +335,7 @@ async function start(status, warn) {
     const xmlPlaylistItem = xmlMusicPlaylistItems[i]
     const iTunesId = xmlPlaylistItem['Track ID']
     const xmlTrack = xml.Tracks[iTunesId]
-    const { track, album } = await parseTrack(xmlTrack, warn, startTime, dryRun)
+    const track = await parseTrack(xmlTrack, warn, startTime, dryRun)
     let id
 
     do { // prevent duplicate IDs

@@ -1,7 +1,6 @@
 # Ferrum
 
 ToDo:
-- Prevent corrupting library (atomic file write, don't quit when writing, don't hmr when writing)
 - Parse albums
 - Show playlists
 - Write tags to files:
