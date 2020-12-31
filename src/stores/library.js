@@ -9,3 +9,11 @@ export const trackLists = (() => {
     subscribe,
   }
 })()
+
+export const tracks = (() => {
+  const { subscribe, set, update } = writable(library.tracks)
+
+  return {
+    subscribe,
+  }
+})()

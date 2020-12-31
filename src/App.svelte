@@ -117,7 +117,6 @@
     .header
       .titlebar
       Player
-      h1 Hello World
       input
     .meat
       Sidebar

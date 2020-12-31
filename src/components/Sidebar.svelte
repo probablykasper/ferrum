@@ -2,6 +2,11 @@
   import { onMount } from 'svelte'
   import SidebarItems from './SidebarItems.svelte'
   import { trackLists } from '../stores/library.js'
+  const special = {
+    children: [
+      'root',
+    ],
+  }
   let viewport
   onMount(() => {
     viewport.addEventListener('keydown', function(e) {
@@ -19,7 +24,6 @@
 <style lang='sass'>
   .sidebar
     width: 230px
-    padding-right: 10px
     padding-top: 10px
     padding-bottom: 10px
     font-size: 14px
@@ -31,5 +35,7 @@
 
 <template lang='pug'>
   .sidebar(tabindex='0' bind:this='{viewport}')
+    SidebarItems(trackList='{special}')
+    br
     SidebarItems(trackList='{$trackLists.root}')
 </template>

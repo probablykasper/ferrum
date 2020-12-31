@@ -1,28 +1,43 @@
 <script>
   import { onMount } from 'svelte'
   import VirtualList from '@sveltejs/svelte-virtual-list'
+  import { tracks, trackLists } from '../stores/library.js'
   import { playTrack } from '../stores/player.js'
-  export let library
-  $: tracks = library.tracks
-  let ids = []
+  import { openPlaylist } from '../stores/view.js'
+  // export let library
+  $: trackList = $trackLists[$openPlaylist]
+  let trackIds = []
   let list = []
   $: {
-    list = []
-    let i = 0
-    for (const key in tracks) {
-      if (!Object.prototype.hasOwnProperty.call(tracks, key)) continue
-      ids[i] = key
-      list[i] = { id: key, index: i }
-      list[i].duration = Math.round(list[i].duration)
-      i++
+    // let listIds = trackList.children
+    let newTrackIds = []
+    let newList = []
+    if (trackList.type === 'playlist') {
+      newTrackIds = trackList.tracks
+    } else if (trackList.type === 'special') {
+      for (const key in $tracks) {
+        if (!Object.hasOwnProperty.call($tracks, key)) continue
+        newTrackIds.push(key)
+      }
     }
+    for (let i = 0; i < newTrackIds.length; i++) {
+      newList.push({ id: newTrackIds[i], index: i })
+    }
+    trackIds = newTrackIds
+    list = newList
+  }
+  function getDuration(dur) {
+    dur = Math.round(dur)
+    const secs = dur % 60
+    const mins = (dur - secs)/60
+    return mins+':'+secs
   }
   let selected = new Set()
   function rowClick(id) {
     selected = new Set([id])
   }
   function playRow(index) {
-    playTrack(ids, index)
+    playTrack(trackIds, index)
   }
   let scrollContainer
   onMount(() => {
@@ -109,7 +124,8 @@
       .comments
         width: 65%
       .date-added
-        width: 62%
+        width: 130px
+        min-width: 130px
       .year
         width: 0px
         min-width: 35px
@@ -139,13 +155,13 @@
           button.c.index.play(on:click|stopPropagation='{playRow(item.index)}')
             svg(height='32', role='img', width='32', viewbox='0 0 24 24')
               polygon(points='21.57 12 5.98 3 5.98 21 21.57 12', fill='currentColor')
-          div.c.name {tracks[item.id].name || ''}
-          div.c.plays {tracks[item.id].playCount || 0}
-          div.c.time {item.duration || 0}
-          div.c.artist {tracks[item.id].artist || ''}
-          div.c.album {tracks[item.id].album || ''}
-          div.c.comments {tracks[item.id].comments || ''}
-          div.c.genre {tracks[item.id].genre || ''}
-          div.c.date-added {tracks[item.id].dateAdded}
-          div.c.year {tracks[item.id].year || ''}
+          div.c.name {$tracks[item.id].name || ''}
+          div.c.plays {$tracks[item.id].playCount || 0}
+          div.c.time {getDuration($tracks[item.id].duration) || 0}
+          div.c.artist {$tracks[item.id].artist || ''}
+          div.c.album {$tracks[item.id].album || ''}
+          div.c.comments {$tracks[item.id].comments || ''}
+          div.c.genre {$tracks[item.id].genre || ''}
+          div.c.date-added {$tracks[item.id].dateAdded}
+          div.c.year {$tracks[item.id].year || ''}
 </template>

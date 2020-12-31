@@ -1,12 +1,15 @@
 <script>
   import { trackLists } from '../stores/library.js'
+  import { openPlaylist } from '../stores/view.js'
   // import { Router, navigate, Route, link } from 'svelte-routing'
   export let trackList
   let childLists = []
   $: {
     childLists = []
     for (const id of trackList.children) {
-      childLists.push($trackLists[id])
+      const tl = $trackLists[id]
+      tl.id = id
+      childLists.push(tl)
     }
   }
 </script>
@@ -20,6 +23,8 @@
     position: relative
     display: flex
     align-items: center
+    &.active
+      background-color: var(--select-color)
   .sub
     margin-left: calc(2px + 6px*2)
     display: none
@@ -34,6 +39,10 @@
     height: 6px
     flex-shrink: 0
     fill: white
+  .text
+    overflow: hidden
+    text-overflow: ellipsis
+    padding-right: 10px
 </style>
 
 <template lang='pug'>
@@ -42,11 +51,11 @@
       .item(class:show='{childList.show}' on:click!='{e => childList.show = !childList.show }')
         svg.arrow(xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24")
           path(d='M21 12l-18 12v-24z')
-        div {childList.name}
+        .text {childList.name}
       .sub(class:show='{childList.show}')
         svelte:self(trackList='{childList}')
       +else()
-        .item
+        .item(on:click='{openPlaylist.set(childList.id)}' class:active='{$openPlaylist === childList.id}')
           .arrow
-          div {childList.name}
+          .text {childList.name}
 </template>
