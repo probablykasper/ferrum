@@ -55,9 +55,11 @@
     "rollup-plugin-svelte-hot": "^0.13.0",
     "rollup-plugin-terser": "^7.0.2",
     "sass": "^1.32.0",
+    "simple-plist": "^1.1.1",
     "sirv-cli": "^1.0.10",
     "svelte": "^3.31.0",
-    "svelte-preprocess": "^4.6.1"
+    "svelte-preprocess": "^4.6.1",
+    "svelte-routing": "^1.4.2"
   },
   "scripts": {
     "start": "DEV_PORT=5000 concurrently npm:dev:ui:nollup npm:dev:electron",
@@ -71,8 +73,5 @@
     "build:ui": "rollup -c",
     "serve:ui": "sirv public",
     "lint": "eslint . **/*.pug"
-  },
-  "dependencies": {
-    "simple-plist": "^1.1.1"
   }
 }

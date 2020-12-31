@@ -3,8 +3,7 @@
   import styles from './variables.js'
   import TrackList from './components/TrackList.svelte'
   import Player from './components/Player.svelte'
-  // const addon = window.addon
-  // console.log(addon.get_path())
+  import Sidebar from './components/Sidebar.svelte'
   const db = window.db
   let library = db.get()
 
@@ -77,6 +76,12 @@
       height: 24px
       background-color: var(--bg-color-2)
       -webkit-app-region: drag
+  .meat
+    position: relative
+    height: 0px
+    display: flex
+    flex-direction: row
+    flex-grow: 1
 
   .page-status-bg
     position: absolute
@@ -113,7 +118,9 @@
       .titlebar
       Player
       h1 Hello World
-    TrackList(library='{library}')
+    .meat
+      Sidebar
+      TrackList(library='{library}')
     +if('pageStatus || pageStatusWarnings || pageStatusErr')
       .page-status-bg
         .page-status

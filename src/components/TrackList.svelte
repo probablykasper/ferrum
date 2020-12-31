@@ -6,7 +6,7 @@
   let ids = []
   let list = []
   $: {
-    console.log(library)
+    list = []
     let i = 0
     for (const key in tracks) {
       if (!Object.prototype.hasOwnProperty.call(tracks, key)) continue
@@ -29,6 +29,7 @@
   .tracklist
     min-height: 0px
     height: 100%
+    width: 100%
     position: relative
     display: flex
     flex-direction: column
@@ -40,7 +41,7 @@
       display: flex
       $row-height: 24px
       height: $row-height
-      font-size: 14px
+      font-size: 13px
       line-height: $row-height
       &.selected
         background-color: var(--select-color)
@@ -75,12 +76,7 @@
       &:hover .play
         display: flex
       .name
-        width: 150%
-      .genre
-        width: 80%
-      .year
-        width: 0px
-        min-width: 35px
+        width: 170%
       .plays
         width: 0px
         min-width: 40px
@@ -89,6 +85,19 @@
         width: 0px
         min-width: 40px
         text-align: right
+      .artist
+        width: 120%
+      .album
+        width: 90%
+      .genre
+        width: 65%
+      .comments
+        width: 65%
+      .date-added
+        width: 62%
+      .year
+        width: 0px
+        min-width: 35px
 
   .row:nth-child(even)
     background-color: var(--bg-color-2)
