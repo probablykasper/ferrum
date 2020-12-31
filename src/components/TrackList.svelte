@@ -1,4 +1,5 @@
 <script>
+  import { onMount } from 'svelte'
   import VirtualList from '@sveltejs/svelte-virtual-list'
   import { playTrack } from '../stores/player.js'
   export let library
@@ -23,6 +24,19 @@
   function playRow(index) {
     playTrack(ids, index)
   }
+  let scrollContainer
+  onMount(() => {
+    const viewport = scrollContainer.getElementsByTagName('svelte-virtual-list-viewport')[0]
+    scrollContainer.addEventListener('keydown', function(e) {
+      let prevent = true
+      if (e.key == 'Home') viewport.scrollTop = 0
+      else if (e.key == 'End') viewport.scrollTop = viewport.scrollHeight
+      else if (e.key == 'PageUp') viewport.scrollTop -= viewport.clientHeight
+      else if (e.key == 'PageDown') viewport.scrollTop += viewport.clientHeight
+      else prevent = false
+      if (prevent) e.preventDefault()
+    })
+  })
 </script>
 
 <style lang='sass'>
@@ -33,6 +47,7 @@
     position: relative
     display: flex
     flex-direction: column
+    outline: none
     .body
       height: 100%
       min-height: 0px
@@ -104,7 +119,7 @@
 </style>
 
 <template lang='pug'>
-  .tracklist
+  .tracklist(tabindex='0' bind:this='{scrollContainer}')
     .row.header
       div.c.index
       button.c.index.play

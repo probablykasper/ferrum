@@ -1,6 +1,19 @@
 <script>
+  import { onMount } from 'svelte'
   import SidebarItems from './SidebarItems.svelte'
   import { trackLists } from '../stores/library.js'
+  let viewport
+  onMount(() => {
+    viewport.addEventListener('keydown', function(e) {
+      let prevent = true
+      if (e.key == 'Home') viewport.scrollTop = 0
+      else if (e.key == 'End') viewport.scrollTop = viewport.scrollHeight
+      else if (e.key == 'PageUp') viewport.scrollTop -= viewport.clientHeight
+      else if (e.key == 'PageDown') viewport.scrollTop += viewport.clientHeight
+      else prevent = false
+      if (prevent) e.preventDefault()
+    })
+  })
 </script>
 
 <style lang='sass'>
@@ -13,9 +26,10 @@
     min-width: 230px
     overflow-y: scroll
     background-color: var(--bg-color-2)
+    outline: none
 </style>
 
 <template lang='pug'>
-  .sidebar
+  .sidebar(tabindex='0' bind:this='{viewport}')
     SidebarItems(trackList='{$trackLists.root}')
 </template>
