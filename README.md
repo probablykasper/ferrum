@@ -1,8 +1,10 @@
 # Ferrum
 
+Ferrum is a music library client.
+
+## Dev instructions
+
 ToDo:
-- Parse albums
-- Show playlists
 - Write tags to files:
   - m4a/aac: https://github.com/Saecki/rust-mp4ameta
   - mp3/mp3: https://github.com/polyfloyd/rust-id3
@@ -39,3 +41,16 @@ Serve UI
 
 ### `npm run lint`
 Lint code
+
+## Publish new version
+1. Update CHANGELOG.md
+2. Bump the version number
+    ```
+    npm version --no-git-tag <version>
+    ```
+3. Commit and tag in format "v#.#.#"
+4. Build the app
+    ```
+    npm run build
+    ```
+5. Create GitHub release with release notes

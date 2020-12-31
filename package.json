@@ -11,6 +11,7 @@
     "artifactName": "${productName}-v${version}-${os}.${ext}",
     "mac": {
       "category": "public.app-category.music",
+      "icon": "assets/Logo 1024.png",
       "target": [
         "dmg"
       ],
@@ -35,10 +36,10 @@
   "devDependencies": {
     "@babel/core": "^7.12.10",
     "@babel/preset-env": "^7.12.11",
+    "@lionixevolve/svelte-virtual-list-enhanced": "^3.1.1",
     "@napi-rs/cli": "^1.0.0",
     "@rollup/plugin-commonjs": "^17.0.0",
     "@rollup/plugin-node-resolve": "^11.0.1",
-    "@sveltejs/svelte-virtual-list": "^3.0.1",
     "concurrently": "^5.3.0",
     "electron": "^11.1.1",
     "electron-build-env": "^0.2.0",
@@ -59,7 +60,7 @@
     "sirv-cli": "^1.0.10",
     "svelte": "^3.31.0",
     "svelte-preprocess": "^4.6.1",
-    "svelte-routing": "^1.4.2"
+    "svelte-routing": "^1.5.0"
   },
   "scripts": {
     "start": "DEV_PORT=5000 concurrently npm:dev:ui:nollup npm:dev:electron",

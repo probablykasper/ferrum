@@ -120,7 +120,7 @@
       input
     .meat
       Sidebar
-      TrackList(library='{library}')
+      TrackList
     +if('pageStatus || pageStatusWarnings || pageStatusErr')
       .page-status-bg
         .page-status

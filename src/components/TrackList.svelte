@@ -1,31 +1,11 @@
 <script>
   import { onMount } from 'svelte'
-  import VirtualList from '@sveltejs/svelte-virtual-list'
-  import { tracks, trackLists } from '../stores/library.js'
+  // import VirtualList from '@lionixevolve/svelte-virtual-list-enhanced'
+  import VirtualList from './VirtualList.svelte'
+  import { tracks } from '../stores/library.js'
   import { playTrack } from '../stores/player.js'
-  import { openPlaylist } from '../stores/view.js'
-  // export let library
-  $: trackList = $trackLists[$openPlaylist]
-  let trackIds = []
-  let list = []
-  $: {
-    // let listIds = trackList.children
-    let newTrackIds = []
-    let newList = []
-    if (trackList.type === 'playlist') {
-      newTrackIds = trackList.tracks
-    } else if (trackList.type === 'special') {
-      for (const key in $tracks) {
-        if (!Object.hasOwnProperty.call($tracks, key)) continue
-        newTrackIds.push(key)
-      }
-    }
-    for (let i = 0; i < newTrackIds.length; i++) {
-      newList.push({ id: newTrackIds[i], index: i })
-    }
-    trackIds = newTrackIds
-    list = newList
-  }
+  import { trackIds } from '../stores/view.js'
+  $: console.log(trackIds)
   function getDuration(dur) {
     dur = Math.round(dur)
     const secs = dur % 60
@@ -37,7 +17,7 @@
     selected = new Set([id])
   }
   function playRow(index) {
-    playTrack(trackIds, index)
+    playTrack($trackIds, index)
   }
   let scrollContainer
   onMount(() => {
@@ -149,19 +129,19 @@
       div.c.date-added Date Added
       div.c.year Year
     .body
-      VirtualList(height='100%' items='{list}' let:item)
-        .row(on:dblclick='{playRow(item.index)}' on:mousedown='{rowClick(item.id)}' class:selected='{selected.has(item.id)}')
-          div.c.index {item.index + 1}
-          button.c.index.play(on:click|stopPropagation='{playRow(item.index)}')
+      VirtualList(height='100%' items='{$trackIds}' let:item='{id}' let:index)
+        .row(on:dblclick='{playRow(index)}' on:mousedown='{rowClick(id)}' class:selected='{selected.has(id)}')
+          div.c.index {index + 1}
+          button.c.index.play(on:click|stopPropagation='{playRow(index)}')
             svg(height='32', role='img', width='32', viewbox='0 0 24 24')
               polygon(points='21.57 12 5.98 3 5.98 21 21.57 12', fill='currentColor')
-          div.c.name {$tracks[item.id].name || ''}
-          div.c.plays {$tracks[item.id].playCount || 0}
-          div.c.time {getDuration($tracks[item.id].duration) || 0}
-          div.c.artist {$tracks[item.id].artist || ''}
-          div.c.album {$tracks[item.id].album || ''}
-          div.c.comments {$tracks[item.id].comments || ''}
-          div.c.genre {$tracks[item.id].genre || ''}
-          div.c.date-added {$tracks[item.id].dateAdded}
-          div.c.year {$tracks[item.id].year || ''}
+          div.c.name {$tracks[id].name || ''}
+          div.c.plays {$tracks[id].playCount || 0}
+          div.c.time {getDuration($tracks[id].duration) || 0}
+          div.c.artist {$tracks[id].artist || ''}
+          div.c.album {$tracks[id].album || ''}
+          div.c.comments {$tracks[id].comments || ''}
+          div.c.genre {$tracks[id].genre || ''}
+          div.c.date-added {$tracks[id].dateAdded}
+          div.c.year {$tracks[id].year || ''}
 </template>
