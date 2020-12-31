@@ -286,9 +286,9 @@ function addCommonPlaylistFields(playlist, xmlPlaylist, startTime) {
 }
 
 async function start(status, warn) {
-  const filePath = '/Users/kasper/Downloads/Library.xml'
-  const dryRun = false
-  // const { filePath, dryRun } = await popup()
+  // const filePath = '/Users/kasper/Downloads/Library.xml'
+  // const dryRun = false
+  const { filePath, dryRun } = await popup()
   if (!filePath) return { cancelled: true }
   ensureLibExists()
 
