@@ -1,17 +1,12 @@
-const { app } = require('electron').remote
 const path = require('path')
 const fs = require('fs')
-const url = require('url')
+const { libraryPath, libraryJsonPath, tracksPath, artworksPath } = require('./paths.js')
 
 function ensureExists(path) {
   if (!fs.existsSync(path)) fs.mkdirSync(path, { recursive: true })
 }
 
-const libraryPath = path.join(app.getPath('music'), 'Ferrum')
-const libraryJsonPath = path.join(app.getPath('music'), 'Ferrum', 'library.json')
-const tracksPath = path.join(libraryPath, 'Tracks')
-const artworksPath = path.join(libraryPath, 'Artworks')
-function ensureLibExists(path) {
+function ensureLibExists() {
   ensureExists(libraryPath)
   ensureExists(tracksPath)
   ensureExists(artworksPath)
@@ -89,10 +84,6 @@ function generateFilename(track, originalPath) {
 }
 
 module.exports = {
-  libraryPath,
-  libraryJsonPath,
-  tracksPath,
-  artworksPath,
   generateFilename,
   ensureLibExists,
 }

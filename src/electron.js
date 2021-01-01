@@ -1,13 +1,17 @@
-const { app, ipcMain, session, Menu, BrowserWindow, protocol, globalShortcut } = require('electron')
+const { app } = require('electron')
+const dev = process.env.APP_ENV === 'dev'
+if (dev) app.setName('Ferrum Dev')
+
+const { ipcMain, session, Menu, BrowserWindow, protocol } = require('electron')
 const path = require('path')
 const vars = require('./variables')
-const appData = app.getPath('appData')
-const electronData = path.join(appData, app.name, 'Electron Data')
+
+const { electronData } = require('./scripts/paths.js')
 app.setPath('userData', electronData)
 
-const dev = process.env.APP_ENV === 'dev'
 const devPort = process.env.DEV_PORT
 const isMac = process.platform === 'darwin'
+
 let mainWindow
 let quitting = false
 

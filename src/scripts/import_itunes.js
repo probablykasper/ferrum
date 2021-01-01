@@ -4,7 +4,8 @@ const path = require('path')
 const url = require('url')
 const fs = require('fs')
 const mm = require('music-metadata')
-const { tracksPath, generateFilename, artworksPath, ensureLibExists } = require('./handy.js')
+const { tracksPath, artworksPath } = require('./paths.js')
+const { generateFilename, ensureLibExists } = require('./handy.js')
 const addon = require('./addon.js')
 
 module.exports = async function(status, warn) {

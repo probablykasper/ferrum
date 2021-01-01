@@ -4,7 +4,6 @@
 
 
 
-
   import { onMount, tick, createEventDispatcher } from 'svelte'
   // props
   export let items

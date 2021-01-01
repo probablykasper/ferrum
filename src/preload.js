@@ -1,11 +1,11 @@
 const path = require('path')
 const fs = require('fs')
 const { ipcRenderer } = require('electron')
-const { app } = require('electron').remote
 const iTunesImport = require('./scripts/import_itunes.js')
 const addon = require('./scripts/addon.js')
 window.addon = addon
-const { tracksPath, libraryJsonPath, ensureLibExists } = require('./scripts/handy.js')
+const { ensureLibExists } = require('./scripts/handy.js')
+const { tracksPath, libraryJsonPath } = require('./scripts/paths.js')
 const { pathToFileURL } = require('url')
 
 let library = ensureLibExists()
