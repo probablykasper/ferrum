@@ -66,6 +66,8 @@ async function popup() {
   +'\n    - Skip when shuffling'
   +'\n    - Remember playback position'
   +'\n    - Disc Count'
+  +'\n    - Start time'
+  +'\n    - Stop time'
   const focusedWindow = BrowserWindow.getFocusedWindow()
   const result = await dialog.showMessageBox(focusedWindow, {
     type: 'info',

@@ -11,6 +11,7 @@ ToDo:
 - Check if a track is VBR. Can we use codecProfile? What about non-mp3s?
 - Look into playing audio from Rust to reduce CPU usage
 - iTunes Import overwrites library, but old track/artwork files are still kept. Either move or delete them
+- Consider volume normalization
 
 Potential databases:
 - https://github.com/TheNeikos/rustbreak
