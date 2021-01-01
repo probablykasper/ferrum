@@ -5,6 +5,11 @@
   import { tracks } from '../stores/library.js'
   import { playTrack } from '../stores/player.js'
   import { trackIds } from '../stores/view.js'
+  let toTop
+  trackIds.subscribe(() => {
+    // Fix empty list when opening playlist while scrolled down
+    if (toTop) toTop()
+  })
   function getDuration(dur) {
     dur = Math.round(dur)
     const secs = dur % 60
@@ -128,7 +133,7 @@
       div.c.date-added Date Added
       div.c.year Year
     .body
-      VirtualList(height='100%' items='{$trackIds}' let:item='{id}' let:index)
+      VirtualList(bind:toTop='{toTop}' height='100%' items='{$trackIds}' let:item='{id}' let:index)
         .row(on:dblclick='{playRow(index)}' on:mousedown='{rowClick(id)}' class:selected='{selected.has(id)}')
           div.c.index {index + 1}
           button.c.index.play(on:click|stopPropagation='{playRow(index)}')
