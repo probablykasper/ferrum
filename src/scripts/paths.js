@@ -24,5 +24,3 @@ module.exports = {
   tracksPath,
   artworksPath,
 }
-
-console.log(module.exports)

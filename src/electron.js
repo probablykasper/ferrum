@@ -112,7 +112,6 @@ const template = [
     submenu: [
       {
         label: 'Import iTunes Library...',
-        accelerator: 'CommandOrControl+I',
         click: () => {
           mainWindow.webContents.send('itunesImport')
         },
