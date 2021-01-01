@@ -5,7 +5,6 @@
   import { tracks } from '../stores/library.js'
   import { playTrack } from '../stores/player.js'
   import { trackIds } from '../stores/view.js'
-  $: console.log(trackIds)
   function getDuration(dur) {
     dur = Math.round(dur)
     const secs = dur % 60
@@ -139,7 +138,7 @@
           div.c.plays {$tracks[id].playCount || 0}
           div.c.time {getDuration($tracks[id].duration) || 0}
           div.c.artist {$tracks[id].artist || ''}
-          div.c.album {$tracks[id].album || ''}
+          div.c.album {$tracks[id].albumName || ''}
           div.c.comments {$tracks[id].comments || ''}
           div.c.genre {$tracks[id].genre || ''}
           div.c.date-added {$tracks[id].dateAdded}
