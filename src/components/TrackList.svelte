@@ -12,7 +12,8 @@
   })
   function getDuration(dur) {
     dur = Math.round(dur)
-    const secs = dur % 60
+    let secs = dur % 60
+    if (secs < 10) secs = '0'+secs
     const mins = (dur - secs)/60
     return mins+':'+secs
   }
