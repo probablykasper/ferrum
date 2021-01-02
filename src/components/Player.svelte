@@ -1,5 +1,6 @@
 <script>
-  import { stopped, playPause, previous, skip, duration, currentTime, seek } from '../stores/player.js'
+  import { tracks } from '../stores/library.js'
+  import { stopped, playPause, previous, skip, duration, currentTime, seek, currentTrackId } from '../stores/player.js'
   let sliderBeingDragged = false
   const sliderSteps = 400
   let sliderValue = 0
@@ -18,6 +19,8 @@
 </script>
 
 <style lang='sass'>
+  .container
+    display: flex
   .stopped
     button, input
       pointer-events: none
@@ -47,10 +50,14 @@
 </style>
 
 <template lang='pug'>
-  div(class:stopped='{$stopped}')
-    button(on:click='{previous}') &lt;
-    button(on:click='{playPause}') Play/Pause
-    button(on:click='{skip}') &gt;
-    div {$stopped ? 'stopped' : ''} duration {$duration} - currentTime {$currentTime}
-    input.slider(tabindex=-1 type='range' min=0 max='{sliderSteps}' bind:value='{sliderValue}' on:mousedown='{sliderMousedown}' on:mouseup='{sliderMouseup}')
+  .container(class:stopped='{$stopped}')
+    div
+      button(on:click='{previous}') &lt;
+      button(on:click='{playPause}') Play/Pause
+      button(on:click='{skip}') &gt;
+      div {$stopped ? 'stopped' : ''} duration {$duration} - currentTime {$currentTime}
+      input.slider(tabindex=-1 type='range' min=0 max='{sliderSteps}' bind:value='{sliderValue}' on:mousedown='{sliderMousedown}' on:mouseup='{sliderMouseup}')
+    div
+      div {$tracks[$currentTrackId].name}
+      div {$tracks[$currentTrackId].artist}
 </template>

@@ -102,7 +102,6 @@ export const trackIds = derived(
     }
     // sort
     const key = $sort.key
-    console.log($sort.desc)
     if (key === 'index') {
       // No need to sort for index. Indexes descend from "first to last"
       // instead of "high to low", so it needs to be reversed

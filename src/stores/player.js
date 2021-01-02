@@ -5,6 +5,17 @@ export const currentTime = writable(0)
 export const duration = writable(0)
 let trackList = []
 let trackIndex = null
+export const currentTrackId = (() => {
+  const { subscribe, set } = writable(null)
+  return {
+    subscribe,
+    setTrackIndex: (index) => {
+      trackIndex = index
+      if (index === null) set(null)
+      else set(trackList[index])
+    },
+  }
+})()
 const getCurrentId = () => trackList[trackIndex]
 export const stopped = writable(true)
 
@@ -32,7 +43,7 @@ audio.onended = (e) => {
   } else {
     stop()
   }
-  trackIndex = newIndex
+  currentTrackId.setTrackIndex(newIndex)
 }
 audio.ontimeupdate = (e) => {
   currentTime.set(audio.currentTime)
@@ -75,7 +86,7 @@ export function previous() {
   } else {
     stop()
   }
-  trackIndex = newIndex
+  currentTrackId.setTrackIndex(newIndex)
 }
 export function skip() {
   window.db.addSkip(getCurrentId())
@@ -85,11 +96,11 @@ export function skip() {
   } else {
     stop()
   }
-  trackIndex = newIndex
+  currentTrackId.setTrackIndex(newIndex)
 }
 export function stop() {
   trackList = []
-  trackIndex = null
+  currentTrackId.setTrackIndex(null)
   window.db.addPlayTime(getCurrentId(), playTimeStart)
   playTimeStart = null
   audio.pause()
@@ -108,7 +119,7 @@ ipcRenderer.on('gonnaQuit', async() => {
 })
 export function playTrack(list, index) {
   trackList = list
-  trackIndex = index
+  currentTrackId.setTrackIndex(index)
   play(index)
 }
 export function seek(to) {
