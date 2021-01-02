@@ -5,6 +5,9 @@ Ferrum is a music library client.
 ## Dev instructions
 
 ### ToDo
+- Fix PlayTime id null bug
+- Make it so when `root` is opened, sort.key is not `index`
+- Reset sorting when new playlist is opened
 - Write tags to files:
   - m4a/aac: https://github.com/Saecki/rust-mp4ameta
   - mp3/mp3: https://github.com/polyfloyd/rust-id3

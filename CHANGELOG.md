@@ -1,6 +1,7 @@
 # Changelog
 
 ## Next
+- Added sorting
 - Removed shortcut for importing iTunes library
 - Fixed album names not showing up
 - Fixed empty tracklist when opening playlist while scrolled down

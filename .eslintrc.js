@@ -24,7 +24,9 @@ module.exports = {
     },
   ],
   rules: {
-    indent: ['error', 2],
+    indent: ['error', 2, {
+      SwitchCase: 1,
+    } ],
     quotes: ['error', 'single', { 'avoidEscape': true } ],
     'comma-dangle': ['error', 'always-multiline'],
     semi: ['error', 'never'],

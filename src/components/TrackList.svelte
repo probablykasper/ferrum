@@ -1,15 +1,16 @@
 <script>
-  import { onMount } from 'svelte'
+  import { onMount, onDestroy } from 'svelte'
   // import VirtualList from '@lionixevolve/svelte-virtual-list-enhanced'
   import VirtualList from './VirtualList.svelte'
   import { tracks } from '../stores/library.js'
   import { playTrack } from '../stores/player.js'
-  import { trackIds } from '../stores/view.js'
+  import { trackIds, sort as sorting } from '../stores/view.js'
   let toTop
-  trackIds.subscribe(() => {
+  const unsubscribe = trackIds.subscribe(() => {
     // Fix empty list when opening playlist while scrolled down
     if (toTop) toTop()
   })
+  onDestroy(unsubscribe)
   function getDuration(dur) {
     dur = Math.round(dur)
     let secs = dur % 60
@@ -37,6 +38,9 @@
       if (prevent) e.preventDefault()
     })
   })
+  function sort(e) {
+    sorting.setKey(e.target.dataset.key, true)
+  }
 </script>
 
 <style lang='sass'>
@@ -44,6 +48,7 @@
     min-height: 0px
     height: 100%
     width: 100%
+    overflow-x: auto
     position: relative
     display: flex
     flex-direction: column
@@ -52,6 +57,20 @@
       height: 100%
       min-height: 0px
       position: relative
+    .row.header
+      .c
+        overflow: visible
+        *
+          pointer-events: none
+      .c.sort span
+        font-weight: bold
+      .c.sort span::after
+        content: '▲'
+        padding-left: 1px
+        transform: scale(0.8, 0.5)
+        display: inline-block
+      &.desc .c.sort span::after
+        content: '▼'
     .row
       display: flex
       $row-height: 24px
@@ -67,16 +86,18 @@
         white-space: nowrap
         overflow: hidden
         text-overflow: ellipsis
-        margin-right: 10px
+        padding-right: 10px
       .c.index, .c.play
-        margin-left: 10px
+        padding-left: 10px
+      &.header .c.index
+        display: initial
       .index, .play
         width: 0px
         min-width: 40px
         text-align: center
       .play
         display: none
-        padding: 0px
+        box-sizing: content-box
         border: none
         background-color: transparent
         outline: none
@@ -92,23 +113,23 @@
         display: flex
       .name
         width: 170%
-      .plays
+      .playCount
         width: 0px
         min-width: 40px
         text-align: right
-      .time
+      .duration
         width: 0px
         min-width: 40px
         text-align: right
       .artist
         width: 120%
-      .album
+      .albumName
         width: 90%
       .genre
         width: 65%
       .comments
         width: 65%
-      .date-added
+      .dateAdded
         width: 130px
         min-width: 130px
       .year
@@ -121,32 +142,41 @@
 
 <template lang='pug'>
   .tracklist(tabindex='0' bind:this='{scrollContainer}')
-    .row.header
-      div.c.index
-      button.c.index.play
-      div.c.name Name
-      div.c.plays Plays
-      div.c.time Time
-      div.c.artist Artist
-      div.c.album Album
-      div.c.comments Comments
-      div.c.genre Genre
-      div.c.date-added Date Added
-      div.c.year Year
+    .row.header(class:desc="{$sorting.desc}")
+      .c.index(class:sort="{$sorting.key === 'index'}" data-key='index' on:click='{sort}')
+        span #
+      .c.name(class:sort="{$sorting.key === 'name'}" data-key='name' on:click='{sort}')
+        span Name
+      .c.playCount(class:sort="{$sorting.key === 'playCount'}" data-key='playCount' on:click='{sort}')
+        span Plays
+      .c.duration(class:sort="{$sorting.key === 'duration'}" data-key='duration' on:click='{sort}')
+        span Time
+      .c.artist(class:sort="{$sorting.key === 'artist'}" data-key='artist' on:click='{sort}')
+        span Artist
+      .c.albumName(class:sort="{$sorting.key === 'albumName'}" data-key='albumName' on:click='{sort}')
+        span Album
+      .c.comments(class:sort="{$sorting.key === 'comments'}" data-key='comments' on:click='{sort}')
+        span Comments
+      .c.genre(class:sort="{$sorting.key === 'genre'}" data-key='genre' on:click='{sort}')
+        span Genre
+      .c.dateAdded(class:sort="{$sorting.key === 'dateAdded'}" data-key='dateAdded' on:click='{sort}')
+        span Date Added
+      .c.year(class:sort="{$sorting.key === 'year'}" data-key='year' on:click='{sort}')
+        span Year
     .body
       VirtualList(bind:toTop='{toTop}' height='100%' items='{$trackIds}' let:item='{id}' let:index)
         .row(on:dblclick='{playRow(index)}' on:mousedown='{rowClick(id)}' class:selected='{selected.has(id)}')
-          div.c.index {index + 1}
+          .c.index {index + 1}
           button.c.index.play(on:click|stopPropagation='{playRow(index)}')
             svg(height='32', role='img', width='32', viewbox='0 0 24 24')
               polygon(points='21.57 12 5.98 3 5.98 21 21.57 12', fill='currentColor')
-          div.c.name {$tracks[id].name || ''}
-          div.c.plays {$tracks[id].playCount || 0}
-          div.c.time {getDuration($tracks[id].duration) || 0}
-          div.c.artist {$tracks[id].artist || ''}
-          div.c.album {$tracks[id].albumName || ''}
-          div.c.comments {$tracks[id].comments || ''}
-          div.c.genre {$tracks[id].genre || ''}
-          div.c.date-added {$tracks[id].dateAdded}
-          div.c.year {$tracks[id].year || ''}
+          .c.name {$tracks[id].name || ''}
+          .c.playCount {$tracks[id].playCount || 0}
+          .c.duration {getDuration($tracks[id].duration) || 0}
+          .c.artist {$tracks[id].artist || ''}
+          .c.albumName {$tracks[id].albumName || ''}
+          .c.comments {$tracks[id].comments || ''}
+          .c.genre {$tracks[id].genre || ''}
+          .c.dateAdded {$tracks[id].dateAdded}
+          .c.year {$tracks[id].year || ''}
 </template>
