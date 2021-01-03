@@ -3,7 +3,7 @@
   "productName": "Ferrum",
   "author": "kasper.space",
   "description": "Music library app",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "repository": "https://github.com/probablykasper/ferrum",
   "build": {
     "appId": "space.kasper.ferrum",

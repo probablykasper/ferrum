@@ -1,6 +1,6 @@
 # Changelog
 
-## Next
+## 0.2.0 - 2020 Jan 3
 - Added currently playing artist and title to player
 - Added sorting
 - Added macOS traffic light to window
