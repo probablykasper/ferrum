@@ -16,6 +16,8 @@
     sliderBeingDragged = false
     seek(e.target.value/sliderSteps*$duration || 0)
   }
+  $: console.log($currentTrackId)
+  $: console.log($tracks[$currentTrackId])
 </script>
 
 <style lang='sass'>
@@ -58,6 +60,7 @@
       div {$stopped ? 'stopped' : ''} duration {$duration} - currentTime {$currentTime}
       input.slider(tabindex=-1 type='range' min=0 max='{sliderSteps}' bind:value='{sliderValue}' on:mousedown='{sliderMousedown}' on:mouseup='{sliderMouseup}')
     div
-      div {$tracks[$currentTrackId].name}
-      div {$tracks[$currentTrackId].artist}
+      +if('$currentTrackId')
+        div {$tracks[$currentTrackId].name}
+        div {$tracks[$currentTrackId].artist}
 </template>
