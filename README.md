@@ -154,14 +154,19 @@ type PlayTime = [ID, StartTime, DurationMs]
 ```
 
 ### Publish new version
-1. Update CHANGELOG.md
-2. Bump the version number
+1. Update `CHANGELOG.md`
+2. Bump the `package.json` version number
     ```
     npm version --no-git-tag <version>
     ```
-3. Commit and tag in format "v#.#.#"
-4. Build the app
+3. Manually bump the version number in `native/Cargo.toml`
+4. Check for errors and bump the `Cargo.lock` version number
+    ```
+    cargo check --manifest-path native/Cargo.toml
+    ```
+5. Commit and tag in format "v#.#.#"
+6. Build the app
     ```
     npm run build
     ```
-5. Create GitHub release with release notes
+7. Create GitHub release with release notes
