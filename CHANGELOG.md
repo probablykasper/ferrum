@@ -3,6 +3,7 @@
 ## Next
 - Added currently playing artist and title to player
 - Added sorting
+- Added macOS traffic light to window
 - Removed shortcut for importing iTunes library
 - Fixed album names not showing up
 - Fixed play time sometimes being incorrectly logged

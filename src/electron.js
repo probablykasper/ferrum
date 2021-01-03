@@ -28,6 +28,7 @@ function ready() {
     minWidth: 850,
     minHeight: 400,
     frame: false,
+    titleBarStyle: 'hidden',
     webPreferences: {
       contextIsolation: false,
       webSecurity: false,

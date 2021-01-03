@@ -1,5 +1,5 @@
 <script>
-  import { onMount } from 'svelte'
+  import { onMount, onDestroy } from 'svelte'
   import styles from './variables.js'
   import TrackList from './components/TrackList.svelte'
   import Player from './components/Player.svelte'
@@ -11,7 +11,7 @@
   let pageStatusWarnings = ''
   let pageStatusErr = ''
   const { ipcRenderer } = window.require('electron')
-  ipcRenderer.on('itunesImport', async() => {
+  async function itunesImport() {
     const result = await db.iTunesImport((status) => {
       pageStatus = status
     }, (warning) => {
@@ -32,6 +32,10 @@
       await db.save()
       pageStatus = ''
     }
+  }
+  ipcRenderer.on('itunesImport', itunesImport)
+  onDestroy(() => {
+    ipcRenderer.off('itunesImport', itunesImport)
   })
 
   $: cssVarStyles = Object.entries(styles)
@@ -73,7 +77,7 @@
   
   .header
     .titlebar
-      height: 24px
+      height: 22px
       background-color: var(--bg-color-2)
       -webkit-app-region: drag
   .meat
