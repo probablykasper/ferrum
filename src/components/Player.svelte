@@ -16,8 +16,6 @@
     sliderBeingDragged = false
     seek(e.target.value/sliderSteps*$duration || 0)
   }
-  $: console.log($currentTrackId)
-  $: console.log($tracks[$currentTrackId])
 </script>
 
 <style lang='sass'>

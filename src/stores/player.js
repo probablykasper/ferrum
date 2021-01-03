@@ -62,8 +62,7 @@ export function playPause() {
   if (audio.paused) {
     audio.play()
     playTimeStart = now()
-  }
-  else {
+  } else {
     window.db.addPlayTime(getCurrentId(), playTimeStart)
     playTimeStart = null
     audio.pause()
@@ -101,20 +100,21 @@ export function skip() {
 export function stop() {
   trackList = []
   currentTrackId.setTrackIndex(null)
-  window.db.addPlayTime(getCurrentId(), playTimeStart)
-  playTimeStart = null
+  if (playTimeStart !== null) {
+    window.db.addPlayTime(getCurrentId(), playTimeStart)
+    playTimeStart = null
+  }
   audio.pause()
   stopped.set(true)
   seek(0)
 }
 ipcRenderer.on('gonnaQuit', async() => {
-  audio.pause()
   stopped.set(true)
-  // check audio.paused just in case:
-  if (playTimeStart !== null && !audio.paused) {
+  if (playTimeStart !== null) {
     await window.db.addPlayTime(getCurrentId(), playTimeStart)
     playTimeStart = null
   }
+  audio.pause()
   window.readyToQuit('addedPlayTime')
 })
 export function playTrack(list, index) {
