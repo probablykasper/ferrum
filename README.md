@@ -20,6 +20,7 @@ Ferrum is a music library client.
   - https://github.com/spacejam/sled
   - https://github.com/Owez/tinydb
 - Gapless audio
+  - https://github.com/RustAudio/rodio
   - https://github.com/regosen/Gapless-5
   - https://github.com/sudara/stitches
   - https://www.npmjs.com/package/gapless.js

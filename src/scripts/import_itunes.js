@@ -359,7 +359,7 @@ async function start(status, warn) {
   const folderIdMap = {}
   for (const xmlPlaylist of xmlPlaylists) {
     if (xmlPlaylist['Folder'] !== true) continue
-    const playlist = { type: 'folder' }
+    const playlist = { type: 'folder', children: [] }
     addCommonPlaylistFields(playlist, xmlPlaylist, startTime)
     let id
     do { // prevent duplicate IDs
@@ -381,7 +381,6 @@ async function start(status, warn) {
       if (!parent) {
         throw new Error(`Could not find folder of playlist "${playlist.name}"`)
       }
-      if (!parent.children) parent.children = []
       parent.children.push(id)
     } else {
       parsedPlaylists.root.children.push(id)
@@ -406,7 +405,6 @@ async function start(status, warn) {
       if (!parent) {
         throw new Error(`Could not find folder of playlist "${playlist.name}"`)
       }
-      if (!parent.children) parent.children = []
       parent.children.push(id)
     } else {
       parsedPlaylists.root.children.push(id)
