@@ -390,7 +390,7 @@ async function start(status, warn) {
   status('Parsing playlists...')
   for (const xmlPlaylist of xmlPlaylists) {
     if (xmlPlaylist['Folder'] === true) continue
-    const playlist = { type: 'playlist' }
+    const playlist = { type: 'playlist', tracks: [] }
     addCommonPlaylistFields(playlist, xmlPlaylist, startTime)
 
     const parentItunesId = xmlPlaylist['Parent Persistent ID']
@@ -410,7 +410,6 @@ async function start(status, warn) {
       parsedPlaylists.root.children.push(id)
     }
     if (xmlPlaylist['Playlist Items']) {
-      playlist.tracks = []
       for (const item of xmlPlaylist['Playlist Items']) {
         const itunesTrackId = item['Track ID']
         const trackId = trackIdMap[itunesTrackId]

@@ -129,7 +129,7 @@ type TrackListBase = {
 
 interface Playlist extends TrackListBase {
   type: 'playlist'
-  tracks?: ID[]
+  tracks: ID[]
 }
 
 interface Folder extends TrackListBase {
