@@ -1,5 +1,4 @@
 const path = require('path')
-const fs = require('fs')
 const { ipcRenderer } = require('electron')
 const iTunesImport = require('./scripts/import_itunes.js')
 const addon = require('./scripts/addon.js')
@@ -10,13 +9,10 @@ const { pathToFileURL } = require('url')
 
 let library = ensureLibExists()
 
-
 let saving = false
 let gonnaQuit = false
-let addedPlayTime = false
 window.readyToQuit = function(status) {
-  if (status === 'addedPlayTime') addedPlayTime = true
-  if (gonnaQuit && addedPlayTime && saving === false) {
+  if (gonnaQuit && saving === false) {
     ipcRenderer.send('readyToQuit')
   }
 }

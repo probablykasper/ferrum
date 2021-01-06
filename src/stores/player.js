@@ -115,7 +115,6 @@ ipcRenderer.on('gonnaQuit', async() => {
     playTimeStart = null
   }
   audio.pause()
-  window.readyToQuit('addedPlayTime')
 })
 export function playTrack(list, index) {
   trackList = list
