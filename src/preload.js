@@ -9,7 +9,7 @@ const { pathToFileURL } = require('url')
 
 let library = ensureLibExists()
 
-let saving = false
+let saving = 0
 let gonnaQuit = false
 window.readyToQuit = function(status) {
   if (gonnaQuit && saving === false) {
@@ -64,7 +64,7 @@ const db = {
     else return trackPath
   },
   save: async function() {
-    saving = true
+    saving++
     const timer = newTimer()
 
     const json = JSON.stringify(library, null, '  ')
@@ -73,7 +73,7 @@ const db = {
     await addon.atomic_file_save(libraryJsonPath, json)
     console.log('Write Rust:', timer.reset())
 
-    saving = false
+    saving--
     window.readyToQuit()
   },
 }
