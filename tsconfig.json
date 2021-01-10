@@ -1,0 +1,27 @@
+{
+  "include": ["src", "types"],
+  "compilerOptions": {
+    "module": "esnext",
+    "target": "esnext",
+    "moduleResolution": "node",
+    "jsx": "preserve",
+    "baseUrl": "./",
+
+    // For snowpack import aliases
+    "paths": {},
+
+    // Snowpack will handle emitting/building
+    "noEmit": true,
+
+    // Additional options
+    "types": ["svelte"],
+    "esModuleInterop": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "useDefineForClassFields": true,
+    "allowSyntheticDefaultImports": true,
+    "importsNotUsedAsValues": "error"
+  }
+}

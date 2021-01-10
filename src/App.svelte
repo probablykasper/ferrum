@@ -1,6 +1,6 @@
 <script>
   import { onMount, onDestroy } from 'svelte'
-  import styles from './variables.js'
+  import styles from './variables.json'
   import TrackList from './components/TrackList.svelte'
   import Player from './components/Player.svelte'
   import Sidebar from './components/Sidebar.svelte'

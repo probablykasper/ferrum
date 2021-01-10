@@ -34,13 +34,13 @@ Ferrum is a music library client.
 ### Commands
 
 #### `npm run start`
-Start Electron + dev server with HMR, using Nollup.
-#### `npm run build:ui`
-Build UI into `public`, then the app into `dist`
-#### `npm run serve:ui`
-Serve UI
+Start dev server + Electron
+#### `npm run build`
+Build UI into `public/build/`, then app into `dist/`
+#### `npm run snowpack:build`
+Build UI into `public/build/`
 #### `npm run lint`
-Lint code
+Format code
 
 ### `Library.json` structure
 Note: This is just a mockup to show the structure of the file, and isn't actual in-use Typescript definitions.

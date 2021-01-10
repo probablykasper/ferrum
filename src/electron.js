@@ -1,5 +1,5 @@
 const { app } = require('electron')
-const dev = process.env.APP_ENV === 'dev'
+const dev = process.env.NODE_ENV === 'development'
 if (dev) app.setName('Ferrum Dev')
 
 const { ipcMain, session, Menu, BrowserWindow, protocol } = require('electron')
@@ -9,7 +9,11 @@ const vars = require('./variables')
 const { electronData } = require('./scripts/paths.js')
 app.setPath('userData', electronData)
 
-const devPort = process.env.DEV_PORT
+let devPort
+if (dev) {
+  const SnowpackUserConfig = require('../snowpack.config.js')
+  devPort = SnowpackUserConfig.devOptions.port
+}
 const isMac = process.platform === 'darwin'
 
 let mainWindow
