@@ -68,5 +68,16 @@
   "dependencies": {
     "music-metadata": "^7.6.2",
     "simple-plist": "^1.1.1"
+  },
+  "prettier": {
+    "printWidth": 100,
+    "semi": false,
+    "singleQuote": true,
+    "htmlWhitespaceSensitivity": "strict",
+    "svelteSortOrder": "options-scripts-styles-markup",
+    "svelteStrictMode": false,
+    "svelteAllowShorthand": true,
+    "svelteBracketNewLine": false,
+    "svelteIndentScriptAndStyle": true
   }
 }
