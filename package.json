@@ -49,6 +49,7 @@
     "sass": "^1.32.2",
     "snowpack": "^2.18.5",
     "svelte": "^3.31.2",
+    "svelte-check": "^1.1.26",
     "svelte-preprocess": "^4.6.1",
     "svelte-routing": "^1.5.0",
     "typescript": "^4.1.3"
@@ -61,7 +62,8 @@
     "app:dev": "npm run napi:dev && NODE_ENV=development electron .",
     "napi:dev": "electron-build-env napi build --cargo-cwd ./native",
     "napi:build": "electron-build-env napi build --cargo-cwd ./native --release",
-    "lint": "prettier --write *.js *.json src public types"
+    "lint": "prettier --write *.js *.json src public types",
+    "check": "svelte-check"
   },
   "dependencies": {
     "music-metadata": "^7.6.2",

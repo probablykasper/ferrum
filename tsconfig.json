@@ -14,7 +14,8 @@
     "noEmit": true,
 
     // Additional options
-    "types": ["svelte"],
+    "types": ["svelte", "node"],
+    "sourceMap": true,
     "esModuleInterop": true,
     "strict": true,
     "skipLibCheck": true,
