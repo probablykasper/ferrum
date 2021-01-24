@@ -24,7 +24,6 @@ pub fn load_data_js(ctx: CallContext) -> NResult<JsObject> {
     .create_threadsafe_function(&func, 0, |ctx: ThreadSafeCallContext<Vec<Event>>| {
       let arr: NResult<Vec<JsUnknown>> = ctx.value.iter()
         .map(|v| {
-          println!("map v: {:?}", v);
           return ctx.env.to_js_value(&*v)
         })
         .collect();
@@ -131,6 +130,13 @@ pub fn play_pause_js(ctx: CallContext) -> NResult<JsUndefined> {
   return ctx.env.get_undefined()
 }
 
+#[js_function(0)]
+pub fn close(ctx: CallContext) -> NResult<JsUndefined> {
+  let data: &mut Data = get_data(&ctx)?;
+  data.player.sender.send(Message::Quit).expect("Error sending Quit event");
+  return ctx.env.get_undefined()
+}
+
 fn init_data_instance(mut exports: JsObject) -> NResult<JsObject> {
   exports.create_named_method("get_track_lists", get_track_lists)?;
   exports.create_named_method("set_open_playlist_id", set_open_playlist_id)?;
@@ -139,6 +145,7 @@ fn init_data_instance(mut exports: JsObject) -> NResult<JsObject> {
   exports.create_named_method("get_open_playlist_info", get_open_playlist_info)?;
   exports.create_named_method("play_open_playlist_index", play_open_playlist_index)?;
   exports.create_named_method("play_pause", play_pause_js)?;
+  exports.create_named_method("close", close)?;
   exports.create_named_method("sort", sort_js)?;
 
   return Ok(exports)

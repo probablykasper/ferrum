@@ -17,7 +17,7 @@ let library = ensureLibExists()
 
 let saving = 0
 let gonnaQuit = false
-window.readyToQuit = function(status) {
+window.readyToQuit = function() {
   if (gonnaQuit && saving === false) {
     ipcRenderer.send('readyToQuit')
   }

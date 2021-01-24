@@ -16,6 +16,7 @@ pub struct Player {
 pub enum Message {
   PlayPause,
   PlayPath(String),
+  Quit,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -32,6 +33,9 @@ pub fn init_player<F: 'static>(event_handler: F) -> Result<Player, &'static str>
 
     while let Ok(msg) = receiver.recv() { // Note: `recv()` always blocks
       println!("Received {:?}", msg);
+      if let Message::Quit = msg {
+        return
+      }
       match msg {
         Message::PlayPause => {
           if sink.is_paused() {
@@ -46,6 +50,7 @@ pub fn init_player<F: 'static>(event_handler: F) -> Result<Player, &'static str>
           let file = File::open(path).unwrap();
           sink.append(rodio::Decoder::new(BufReader::new(file)).unwrap());
         },
+        Message::Quit => {}
       }
     }
 

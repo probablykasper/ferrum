@@ -49,22 +49,41 @@ type Data = {
   get_open_playlist_track_ids: () => Track[]
   play_open_playlist_index: (index: number) => void
   play_pause: () => void
+  close: () => void
   sort: (key: string) => void
 }
 export const data: Data = grabErr(() => {
   return window.addon.load_data(isDev, eventHandler)
 })
+window.addEventListener('beforeunload', (e) => {
+  grabErr(() => {
+    data.close()
+  })
+})
 
-function eventHandler(err: any, msg: string) {
+function eventHandler(err: any, msg: any) {
   grabErr(() => {
     console.log(':::EventHandler', msg, err)
     if (err) {
       err.message = 'Event error: '+err.message
-      throw err
-    }
-    let handled = handlePlayerEvents(msg)
-    if (!handled) {
-      throw new Error(`Unexpected event "${msg}"`)
+      window.showMessageBoxSync({
+        type: 'error',
+        message: err.message,
+        detail: err.stack,
+      })
+    } else if (msg.Error) {
+      window.showMessageBoxSync({
+        type: 'error',
+        message: msg.Error,
+      })
+    } else {
+      let not_handled = handlePlayerEvents(msg)
+      if (not_handled) {
+        window.showMessageBoxSync({
+          type: 'error',
+          message: msg,
+        })
+      }
     }
   })
 }

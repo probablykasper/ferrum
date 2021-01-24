@@ -10,13 +10,13 @@ export const playPause = () => {
   })
 }
 
-export function handlePlayerEvents(msg: string) {
+export function handlePlayerEvents(msg: any) {
   if (msg === 'Play') {
     paused.set(false)
     stopped.set(false)
   } else if (msg === 'Pause') {
     paused.set(true)
   } else {
-    return false
+    return true
   }
 }
