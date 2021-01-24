@@ -1,11 +1,11 @@
 <script>
-  import { onMount, onDestroy } from 'svelte'
+  import { onDestroy } from 'svelte'
   import styles from './variables.json'
-  import TrackList from './components/TrackList.svelte'
+  // import TrackList from './components/TrackListOld.svelte'
+  import NewTrackList from './components/TrackList.svelte'
   import Player from './components/Player.svelte'
   import Sidebar from './components/Sidebar.svelte'
   const db = window.db
-  let library = db.get()
 
   let pageStatus = ''
   let pageStatusWarnings = ''
@@ -43,17 +43,6 @@
     .join(';')
   const root = document.documentElement
   $: root.style.setProperty('--bg-color', styles['--bg-color'])
-
-  let counter = 0 // @hmr:keep
-
-  onMount(() => {
-    const interval = setInterval(() => {
-      counter++
-    }, 1000)
-    return () => {
-      clearInterval(interval)
-    }
-  })
 </script>
 
 <style lang='sass'>
@@ -124,7 +113,8 @@
       input
     .meat
       Sidebar
-      TrackList
+      NewTrackList
+      //- TrackList
     +if('pageStatus || pageStatusWarnings || pageStatusErr')
       .page-status-bg
         .page-status

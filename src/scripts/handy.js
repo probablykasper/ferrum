@@ -6,13 +6,30 @@ function ensureExists(path) {
   if (!fs.existsSync(path)) fs.mkdirSync(path, { recursive: true })
 }
 
+const { performance } = require('perf_hooks')
+function newTimer() {
+  let start = performance.now()
+  return {
+    reset: () => {
+      const time = performance.now() - start
+      start = performance.now()
+      return time
+    },
+  }
+}
+
 function ensureLibExists() {
   ensureExists(libraryPath)
   ensureExists(tracksPath)
   ensureExists(artworksPath)
   let library
   if (fs.existsSync(libraryJsonPath)) {
-    library = JSON.parse(fs.readFileSync(libraryJsonPath))
+    const timer = newTimer()
+    const file = fs.readFileSync(libraryJsonPath)
+    console.log('readfile:', timer.reset())
+    library = JSON.parse(file)
+    console.log('jsonparse:', timer.reset())
+    // library = JSON.parse(fs.readFileSync(libraryJsonPath))
   } else {
     library = {
       version: 1,

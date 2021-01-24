@@ -4,8 +4,6 @@ module.exports = {
     src: { url: '/' },
   },
   plugins: ['@snowpack/plugin-svelte', '@snowpack/plugin-typescript'],
-  install: [],
-  installOptions: {},
   devOptions: {
     port: 8080,
     open: 'none',
@@ -13,16 +11,14 @@ module.exports = {
   },
   buildOptions: {
     out: './public/build',
-    sourceMaps: true,
+    sourcemap: true,
     clean: true,
   },
   alias: {},
-  experiments: {
-    optimize: {
-      entrypoints: ['src/main.js'],
-      bundle: true,
-      target: ['chrome64','es2017'],
-    },
+  optimize: {
+    entrypoints: ['src/main.js'],
+    bundle: true,
+    target: ['chrome64', 'es2020'],
   },
 }
 if (process.env.NODE_ENV === 'development') {

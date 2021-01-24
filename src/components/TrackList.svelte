@@ -1,62 +1,58 @@
-<script>
-  import { onMount, onDestroy } from 'svelte'
-  // import VirtualList from '@lionixevolve/svelte-virtual-list-enhanced'
-  import VirtualList from './VirtualList.svelte'
-  import { tracks } from '../stores/library.js'
-  import { playTrack } from '../stores/player.js'
-  import { trackIds, sort as sorting } from '../stores/view.js'
-  let toTop
-  const unsubscribe = trackIds.subscribe(() => {
-    // Fix empty list when opening playlist while scrolled down
-    if (toTop) toTop()
-  })
-  onDestroy(unsubscribe)
-  function getDuration(dur) {
+<script lang="ts">
+  import VList from './VirtualList.svelte'
+  import { openPlaylist, getOpenPlaylistTrack } from '../stores/data'
+
+  const sortBy = openPlaylist.sortBy
+  $: sortKey = $openPlaylist.sort_key
+
+  let visibleItems: any[] = []
+  let startIndex: number = 0
+  let endIndex: number = 0
+
+  let selected = new Set()
+  function rowClick(index: number) {
+    selected = new Set([index])
+  }
+
+  function playRow(index: number) {
+    openPlaylist.playIndex(index)
+  }
+
+  function getItem(index: number) {
+    try {
+      const track = getOpenPlaylistTrack(index)
+      return track
+    } catch (err) {
+      return {}
+    }
+  }
+
+  function getDuration(dur: number) {
     dur = Math.round(dur)
     let secs = dur % 60
-    if (secs < 10) secs = '0'+secs
-    const mins = (dur - secs)/60
-    return mins+':'+secs
+    let secsText = String(secs)
+    if (secs < 10) secsText = '0' + secs
+    const mins = (dur - secs) / 60
+    return mins + ':' + secsText
   }
-  let selected = new Set()
-  function rowClick(id) {
-    selected = new Set([id])
-  }
-  function playRow(index) {
-    playTrack($trackIds, index)
-  }
-  let scrollContainer
-  onMount(() => {
-    const viewport = scrollContainer.getElementsByTagName('svelte-virtual-list-viewport')[0]
-    scrollContainer.addEventListener('keydown', function(e) {
-      let prevent = true
-      if (e.key == 'Home') viewport.scrollTop = 0
-      else if (e.key == 'End') viewport.scrollTop = viewport.scrollHeight
-      else if (e.key == 'PageUp') viewport.scrollTop -= viewport.clientHeight
-      else if (e.key == 'PageDown') viewport.scrollTop += viewport.clientHeight
-      else prevent = false
-      if (prevent) e.preventDefault()
-    })
+
+  openPlaylist.subscribe(() => {
+    const newItems = []
+    const visibleCount = endIndex - startIndex
+    for (let i = 0; i < visibleCount; i++) {
+      const item = getItem(startIndex + i)
+      newItems.push(item)
+    }
+    visibleItems = newItems
   })
-  function sort(e) {
-    sorting.setKey(e.target.dataset.key, true)
-  }
 </script>
 
-<style lang='sass'>
+<style lang="sass">
   .tracklist
-    min-height: 0px
-    height: 100%
-    width: 100%
-    overflow-x: auto
-    position: relative
     display: flex
     flex-direction: column
-    outline: none
-    .body
-      height: 100%
-      min-height: 0px
-      position: relative
+    min-width: 0px
+    width: 100%
     .row.header
       .c
         overflow: visible
@@ -73,9 +69,10 @@
         content: '▼'
     .row
       display: flex
+      max-width: 100%
       $row-height: 24px
       height: $row-height
-      font-size: 13px
+      font-size: 12px
       line-height: $row-height
       &.selected
         background-color: var(--select-color)
@@ -87,30 +84,13 @@
         overflow: hidden
         text-overflow: ellipsis
         padding-right: 10px
-      .c.index, .c.play
+      .c.index
         padding-left: 10px
       &.header .c.index
         display: initial
-      .index, .play
+      .index
         width: 0px
-        min-width: 40px
-        text-align: center
-      .play
-        display: none
-        box-sizing: content-box
-        border: none
-        background-color: transparent
-        outline: none
-        justify-content: center
-        align-items: center
-        svg
-          width: 16px
-          height: 16px
-          color: var(--icon-color)
-      &:hover .index
-        display: none
-      &:hover .play
-        display: flex
+        min-width: 35px
       .name
         width: 170%
       .playCount
@@ -135,48 +115,53 @@
       .year
         width: 0px
         min-width: 35px
-
-  .row:nth-child(even)
-    background-color: var(--bg-color-2)
 </style>
 
-<template lang='pug'>
-  .tracklist(tabindex='0' bind:this='{scrollContainer}')
-    .row.header(class:desc="{$sorting.desc}")
-      .c.index(class:sort="{$sorting.key === 'index'}" data-key='index' on:click='{sort}')
-        span #
-      .c.name(class:sort="{$sorting.key === 'name'}" data-key='name' on:click='{sort}')
-        span Name
-      .c.playCount(class:sort="{$sorting.key === 'playCount'}" data-key='playCount' on:click='{sort}')
-        span Plays
-      .c.duration(class:sort="{$sorting.key === 'duration'}" data-key='duration' on:click='{sort}')
-        span Time
-      .c.artist(class:sort="{$sorting.key === 'artist'}" data-key='artist' on:click='{sort}')
-        span Artist
-      .c.albumName(class:sort="{$sorting.key === 'albumName'}" data-key='albumName' on:click='{sort}')
-        span Album
-      .c.comments(class:sort="{$sorting.key === 'comments'}" data-key='comments' on:click='{sort}')
-        span Comments
-      .c.genre(class:sort="{$sorting.key === 'genre'}" data-key='genre' on:click='{sort}')
-        span Genre
-      .c.dateAdded(class:sort="{$sorting.key === 'dateAdded'}" data-key='dateAdded' on:click='{sort}')
-        span Date Added
-      .c.year(class:sort="{$sorting.key === 'year'}" data-key='year' on:click='{sort}')
-        span Year
-    .body
-      VirtualList(bind:toTop='{toTop}' height='100%' items='{$trackIds}' let:item='{id}' let:index)
-        .row(on:dblclick='{playRow(index)}' on:mousedown='{rowClick(id)}' class:selected='{selected.has(id)}')
-          .c.index {index + 1}
-          button.c.index.play(on:click|stopPropagation='{playRow(index)}')
-            svg(height='32', role='img', width='32', viewbox='0 0 24 24')
-              polygon(points='21.57 12 5.98 3 5.98 21 21.57 12', fill='currentColor')
-          .c.name {$tracks[id].name || ''}
-          .c.playCount {$tracks[id].playCount || 0}
-          .c.duration {getDuration($tracks[id].duration) || 0}
-          .c.artist {$tracks[id].artist || ''}
-          .c.albumName {$tracks[id].albumName || ''}
-          .c.comments {$tracks[id].comments || ''}
-          .c.genre {$tracks[id].genre || ''}
-          .c.dateAdded {$tracks[id].dateAdded}
-          .c.year {$tracks[id].year || ''}
-</template>
+<div class="tracklist">
+  <div class="row header" class:desc={$openPlaylist.sort_desc}>
+    <div class="c index" class:sort={sortKey === 'index'} on:click={()=>sortBy('index')}>
+      <span>#</span>
+    </div>
+    <div class="c name" class:sort={sortKey === 'name'} on:click={()=>sortBy('name')}>
+      <span>Name</span>
+    </div>
+    <div class="c playCount" class:sort={sortKey === 'playCount'} on:click={()=>sortBy('playCount')}>
+      <span>Plays</span>
+    </div>
+    <div class="c duration" class:sort={sortKey === 'duration'} on:click={()=>sortBy('duration')}>
+      <span>Time</span>
+    </div>
+    <div class="c artist" class:sort={sortKey === 'artist'} on:click={()=>sortBy('artist')}>
+      <span>Artist</span>
+    </div>
+    <div class="c albumName" class:sort={sortKey === 'albumName'} on:click={()=>sortBy('albumName')}>
+      <span>Album</span>
+    </div>
+    <div class="c comments" class:sort={sortKey === 'comments'} on:click={()=>sortBy('comments')}>
+      <span>Comments</span>
+    </div>
+    <div class="c genre" class:sort={sortKey === 'genre'} on:click={()=>sortBy('genre')}>
+      <span>Genre</span>
+    </div>
+    <div class="c dateAdded" class:sort={sortKey === 'dateAdded'} on:click={()=>sortBy('dateAdded')}>
+      <span>Date Added</span>
+    </div>
+    <div class="c year" class:sort={sortKey === 'year'} on:click={()=>sortBy('year')}>
+      <span>Year</span>
+    </div>
+  </div>
+  <VList {getItem} bind:visibleItems itemHeight={24} itemCount={$openPlaylist.length} bind:startIndex bind:endIndex let:item={track} let:index>
+    <div class="row" on:dblclick={() => playRow(index)} on:mousedown={() => rowClick(index)} class:selected={selected.has(index)}>
+      <div class="c index">{index + 1}</div>
+      <div class="c name">{track.name || ''}</div>
+      <div class="c playCount">{track.playCount || ''}</div>
+      <div class="c duration">{getDuration(track.duration || '')}</div>
+      <div class="c artist">{track.artist || ''}</div>
+      <div class="c albumName">{track.albumName || ''}</div>
+      <div class="c comments">{track.comments || ''}</div>
+      <div class="c genre">{track.genre || ''}</div>
+      <div class="c dateAdded">{track.dateAdded || ''}</div>
+      <div class="c year">{track.year || ''}</div>
+    </div>
+  </VList>
+</div>

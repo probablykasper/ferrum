@@ -1,6 +1,5 @@
 <script>
-  import { trackLists } from '../stores/library.js'
-  import { openPlaylist } from '../stores/view.js'
+  import { trackLists, openPlaylist } from '../stores/data.ts'
   // import { Router, navigate, Route, link } from 'svelte-routing'
   export let trackList
   let childLists = []
@@ -48,14 +47,14 @@
 <template lang='pug'>
   +each('childLists as childList')
     +if('childList.type === "folder"')
-      .item(class:show='{childList.show}' on:click!='{e => childList.show = !childList.show }')
+      .item(class:show='{childList.show}' on:click!='{() => childList.show = !childList.show }')
         svg.arrow(xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24")
           path(d='M21 12l-18 12v-24z')
         .text {childList.name}
       .sub(class:show='{childList.show}')
         svelte:self(trackList='{childList}')
       +else()
-        .item(on:click='{openPlaylist.set(childList.id)}' class:active='{$openPlaylist === childList.id}')
+        .item(on:click='{openPlaylist.setId(childList.id)}' class:active='{$openPlaylist.id === childList.id}')
           .arrow
           .text {childList.name}
 </template>

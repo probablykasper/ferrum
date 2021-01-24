@@ -4,7 +4,7 @@ if (dev) app.setName('Ferrum Dev')
 
 const { ipcMain, session, Menu, BrowserWindow, protocol } = require('electron')
 const path = require('path')
-const vars = require('./variables')
+const vars = require('./variables.json')
 
 const { electronData } = require('./scripts/paths.js')
 app.setPath('userData', electronData)

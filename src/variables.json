@@ -2,6 +2,6 @@
   "--bg-color": "#0D1116",
   "--bg-color-2": "#171B21",
   "--text-color": "#DCDCDC",
-  "--select-color": "rgba(132, 148, 174, 0.5)",
+  "--select-color": "#505766",
   "--icon-color": "#FFFFFF"
 }

@@ -6,7 +6,7 @@ const fs = require('fs')
 const mm = require('music-metadata')
 const { tracksPath, artworksPath } = require('./paths.js')
 const { generateFilename, ensureLibExists } = require('./handy.js')
-const addon = require('./addon.js')
+const addon = require('../../native/addon.node')
 
 module.exports = async function(status, warn) {
   const warnings = []
@@ -18,6 +18,7 @@ module.exports = async function(status, warn) {
     result.warnings = warnings
     return result
   } catch(err) {
+    if (!err.message) err.message = err.code
     console.error(err)
     return { err, warnings }
   }
