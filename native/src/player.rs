@@ -1,3 +1,4 @@
+use rodio::{Sink, OutputStream};
 use std::fmt::Debug;
 use crate::data::Data;
 use std::fs::File;
@@ -8,8 +9,6 @@ use serde::{Deserialize, Serialize};
 
 pub struct Player {
   pub sender: Sender<Message>,
-  pub paused: bool,
-  pub stopped: bool,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -23,42 +22,69 @@ pub enum Message {
 pub enum Event {
   Play,
   Pause,
+  Error(String),
 }
 
-pub fn init_player<F: 'static>(event_handler: F) -> Result<Player, &'static str> where F: Fn(Event) + Send {
+fn handle_message(msg: Message, sink: &Sink, send_event: &dyn Fn(Event)) -> Result<(), &'static str> {
+  match msg {
+    Message::PlayPause => {
+      if sink.is_paused() {
+        sink.play();
+        send_event(Event::Play);
+      } else {
+        sink.pause();
+        send_event(Event::Pause);
+      }
+    },
+    Message::PlayPath(path) => {
+      let file = File::open(path)
+        .or(Err("Error opening file"))?;
+      let buf = BufReader::new(file);
+      let decoder = rodio::Decoder::new(buf)
+        .or(Err("Error decoding file"))?;
+      sink.append(decoder);
+      sink.play();
+      send_event(Event::Play);
+    },
+    Message::Quit => {}
+  }
+  return Ok(())
+}
+
+fn create_sink() -> Result<(OutputStream, Sink), &'static str> {
+  let (stream, handle) = rodio::OutputStream::try_default()
+    .or(Err("Error creating output stream"))?;
+  let sink = rodio::Sink::try_new(&handle)
+    .or(Err("Error creating sink"))?;
+  return Ok((stream, sink))
+}
+
+pub fn init_player<F: 'static>(send_event: F) -> Result<Player, &'static str> where F: Fn(Event) + Send {
   let (sender, receiver) = channel();
   thread::spawn(move|| {
-    let (_stream, handle) = rodio::OutputStream::try_default().unwrap();
-    let sink = rodio::Sink::try_new(&handle).unwrap();
+    // _stream needs to be here, otherwise audio will not play
+    let (_stream, sink) = match create_sink() {
+      Ok(vars) => vars,
+      Err(msg) => {
+        send_event(Event::Error(msg.to_string()));
+        return
+      }
+    };
 
-    while let Ok(msg) = receiver.recv() { // Note: `recv()` always blocks
-      println!("Received {:?}", msg);
+    // `recv()` blocks, which allows audio to keep playing
+    while let Ok(msg) = receiver.recv() {
       if let Message::Quit = msg {
         return
       }
-      match msg {
-        Message::PlayPause => {
-          if sink.is_paused() {
-            sink.play();
-            event_handler(Event::Play);
-          } else {
-            sink.pause();
-            event_handler(Event::Pause);
-          }
-        },
-        Message::PlayPath(path) => {
-          let file = File::open(path).unwrap();
-          sink.append(rodio::Decoder::new(BufReader::new(file)).unwrap());
-        },
-        Message::Quit => {}
+      let result = handle_message(msg, &sink, &send_event);
+      if let Err(result) = result {
+        send_event(Event::Error(result.to_string()));
       }
     }
 
   });
   return Ok(Player {
     sender: sender,
-    paused: true,
-    stopped: true,
   })
 }
 

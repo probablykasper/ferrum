@@ -63,7 +63,6 @@ window.addEventListener('beforeunload', (e) => {
 
 function eventHandler(err: any, msg: any) {
   grabErr(() => {
-    console.log(':::EventHandler', msg, err)
     if (err) {
       err.message = 'Event error: '+err.message
       window.showMessageBoxSync({
