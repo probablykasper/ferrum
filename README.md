@@ -9,6 +9,7 @@ Ferrum is a music library client.
 - Write tags to files:
   - m4a/aac: https://github.com/Saecki/rust-mp4ameta
   - mp3/mp3: https://github.com/polyfloyd/rust-id3
+  - audiotags
 - Check if a track is VBR. Can we use codecProfile? What about non-mp3s?
 - Look into playing audio from Rust to reduce CPU usage
 - iTunes Import overwrites library, but old track/artwork files are still kept. Either move or delete them

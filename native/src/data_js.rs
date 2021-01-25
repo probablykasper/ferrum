@@ -78,7 +78,7 @@ pub fn get_open_playlist_track(ctx: CallContext) -> NResult<JsUnknown> {
   let data: &mut Data = get_data(&ctx)?;
   let index: i64 = arg_to_number(&ctx, 0)?;
   let track_id = data.open_playlist_track_ids.get(index as usize)
-    .ok_or(nerr("Track index not found in open playlist"))?;
+    .ok_or(nerr(&format!("Track index {} not found in open playlist", index.to_string())))?;
   let track = data.library.tracks.get(track_id)
     .ok_or(nerr("Track ID not found"))?;
   let js = ctx.env.to_js_value(track)?;

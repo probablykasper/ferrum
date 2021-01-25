@@ -36,10 +36,11 @@
     return mins + ':' + secsText
   }
 
-  openPlaylist.subscribe(() => {
+  openPlaylist.subscribe((openPlaylist) => {
     const newItems = []
     const visibleCount = endIndex - startIndex
     for (let i = 0; i < visibleCount; i++) {
+      if (startIndex + i >= openPlaylist.length) break
       const item = getItem(startIndex + i)
       newItems.push(item)
     }
