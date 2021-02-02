@@ -7,5 +7,8 @@
   "[css]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
   "[sass]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
   "[json]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
-  "editor.formatOnSave": false
+  "editor.formatOnSave": false,
+  "[rust]": {
+    "editor.formatOnSave": true,
+  }
 }

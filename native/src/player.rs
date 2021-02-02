@@ -1,12 +1,11 @@
-use crate::aac_decoder;
 use crate::data::Data;
+use redlux::Decoder as AacDecoder;
 use rodio::{OutputStream, Sink};
+use serde::{Deserialize, Serialize};
 use std::fmt::Debug;
 use std::fs::File;
-use std::io::SeekFrom;
-// use std::io::BufReader;
-use serde::{Deserialize, Serialize};
-use std::io::{BufReader, Error, ErrorKind, Read, Seek};
+use std::io::BufReader;
+// use std::path::Path;
 use std::sync::mpsc::{channel, Sender};
 use std::thread;
 
@@ -28,98 +27,6 @@ pub enum Event {
   Error(String),
 }
 
-struct M4aSamplesReader<R>
-where
-  R: Read + Seek,
-{
-  mp4: mp4::Mp4Reader<R>,
-  track_id: u32,
-  position: u32,
-  bytes: mp4::Bytes,
-  current_byte: usize,
-}
-
-impl<R: Read + Seek> M4aSamplesReader<R> {
-  pub fn new(mp4: mp4::Mp4Reader<R>) -> Result<M4aSamplesReader<R>, &'static str> {
-    for track in mp4.tracks().iter() {
-      let track_id = track.track_id();
-      // let track = mp4.tracks().get(track_id as usize)
-      //   .ok_or("Error getting track id")?;
-      let media_type = track.media_type().or(Err("Error getting media type"))?;
-      match media_type {
-        mp4::MediaType::AAC => {
-          return Ok(M4aSamplesReader {
-            mp4,
-            track_id: track_id,
-            position: 1,
-            bytes: mp4::Bytes::new(),
-            current_byte: 0,
-          })
-        }
-        _ => return Err("Track is not AAC"),
-      }
-    }
-    Err("No aac track found")
-  }
-}
-
-impl<R: Read + Seek> Read for M4aSamplesReader<R> {
-  fn read(&mut self, buf: &mut [u8]) -> Result<usize, Error> {
-    let mut items = 0;
-    println!("BUF len {}", buf.len());
-    println!("buf0: {:?}", buf.get(0));
-    for buf in buf.iter_mut() {
-      if self.current_byte == self.bytes.len() {
-        println!("TID: {}, SID: {}", self.track_id, self.position);
-        let sample = self
-          .mp4
-          .read_sample(self.track_id, self.position)
-          .or(Err(Error::new(ErrorKind::Other, "Error reading sample")))?;
-        match sample {
-          Some(sample) => {
-            // println!("bytes: {:?}", sample.bytes);
-            println!("bytes len: {}", sample.bytes.len());
-            self.bytes = sample.bytes;
-            self.current_byte = 0;
-          }
-          None => {
-            println!("NO SAMPLE OPTION");
-            return Ok(items);
-          }
-        }
-        self.position += 1;
-      }
-      *buf = self.bytes[self.current_byte];
-      self.current_byte += 1;
-      items += 1;
-    }
-    println!("items {}", items);
-    println!("  buf0: {:?}", buf.get(0));
-    // println!("BUF {:?}", buf);
-    Ok(items)
-  }
-}
-
-impl<R: Read + Seek> Seek for M4aSamplesReader<R> {
-  fn seek(&mut self, pos: SeekFrom) -> Result<u64, Error> {
-    match pos {
-      SeekFrom::Start(offset) => {
-        println!("SeekFrom::Start, offset: {}", offset);
-        self.position = offset as u32;
-      }
-      SeekFrom::End(_offset) => {
-        // return Err(Error::new(ErrorKind::Other, "SeekFrom::End not supported"))
-        panic!("SeekFrom::End not supported");
-      }
-      SeekFrom::Current(offset) => {
-        println!("SeekFrom::Current, offset: {}", offset);
-        self.position += offset as u32;
-      }
-    }
-    return Ok(self.position as u64);
-  }
-}
-
 fn handle_message(
   msg: Message,
   sink: &Sink,
@@ -136,24 +43,29 @@ fn handle_message(
       }
     }
     Message::PlayPath(path) => {
-      let f = File::open(path).or(Err("Error opening file"))?;
+      // let mut path = "Krewella - Bitch of the Year.m4a".to_string();
+      // let mut path = "Krewella - Bitch of the Year.aac".to_string();
+      // let mut path = "Simbai & Elke Bay - Energy.m4a".to_string();
+      // let mut path =
+      //   "Kill Paris feat. Big Gigantic & Jimi Tents - Fizzy Lifting Drink.mp3".to_string();
+      // path = "/Users/kasper/Music/Ferrum Dev/Tracks/".to_string() + &path;
 
-      let metadata = f.metadata().or(Err("Error getting file metadata"))?;
-      let size = metadata.len();
-      let m4a_buf = BufReader::new(f);
+      let file = File::open(&path).or(Err("Error opening file"))?;
 
-      let mp4 = mp4::Mp4Reader::read_header(m4a_buf, size).or(Err("Error reading mpeg header"))?;
+      if path.ends_with(".m4a") {
+        let metadata = file.metadata().or(Err("Error getting file metadata"))?;
+        let size = metadata.len();
+        let m4a_buf = BufReader::new(file);
+        let decoder = AacDecoder::new_mpeg4(m4a_buf, size)?;
+        sink.append(decoder);
+      } else {
+        let buf = BufReader::new(file);
+        let decoder = rodio::Decoder::new(buf).or(Err("Error decoding file"))?;
+        sink.append(decoder);
+      };
 
-      let m4a_reader = M4aSamplesReader::new(mp4)?;
-      let decoder = aac_decoder::AacDecoder::new(m4a_reader).or(Err("Error decoding file"))?;
-
-      // let buf = BufReader::new(f);
-      // let decoder = aac_decoder::AacDecoder::new(buf)
-      //   .or(Err("Error decoding file"))?;
-      // let decoder = rodio::Decoder::new(buf)
-      //   .or(Err("Error decoding file"))?;
-      sink.append(decoder);
       sink.play();
+      sink.set_volume(0.01);
       send_event(Event::Play);
     }
     Message::Quit => {}

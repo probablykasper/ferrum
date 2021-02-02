@@ -5,6 +5,7 @@
   import NewTrackList from './components/TrackList.svelte'
   import Player from './components/Player.svelte'
   import Sidebar from './components/Sidebar.svelte'
+  import { isDev } from './stores/data.ts'
   const db = window.db
 
   let pageStatus = ''
@@ -64,8 +65,9 @@
     display: flex
     flex-direction: column
   
-  .header
-    .titlebar
+  .dev .titlebar
+    background-color: #00526b
+  .titlebar
       height: 22px
       background-color: var(--bg-color-2)
       -webkit-app-region: drag
@@ -106,7 +108,7 @@
 <template lang='pug'>
   svelte:head
     title Ferrum
-  main(style='{cssVarStyles}')
+  main(style='{cssVarStyles}' class:dev='{isDev}')
     .header
       .titlebar
       Player

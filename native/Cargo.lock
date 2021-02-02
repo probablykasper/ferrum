@@ -462,12 +462,11 @@ version = "0.2.0"
 dependencies = [
  "alphanumeric-sort",
  "dirs",
- "fdk-aac",
  "jemallocator",
- "mp4",
  "napi",
  "napi-build",
  "napi-derive",
+ "redlux",
  "rodio",
  "serde",
  "serde_json",
@@ -793,9 +792,9 @@ dependencies = [
 
 [[package]]
 name = "mp4"
-version = "0.7.2"
+version = "0.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "29c910918637c870c21305e6eba30c81b2680799d38ccc1adc7a5c724eba0fd5"
+checksum = "999db0cca8fd8c1b2352f362691bdafbd90069efd581144066a7909895d23b86"
 dependencies = [
  "byteorder",
  "bytes 0.5.6",
@@ -807,9 +806,9 @@ dependencies = [
 
 [[package]]
 name = "napi"
-version = "1.1.1"
+version = "1.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fb83dfaec1c32708f32ececeb9bf26267785e22edeb67e33f054260e5fcaa770"
+checksum = "3f4edce30ad5f7a860aee8dcbbe29e6385b09879bfa3134bc66c960b4290eab5"
 dependencies = [
  "napi-build",
  "napi-sys",
@@ -1178,6 +1177,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "redlux"
+version = "0.1.0"
+dependencies = [
+ "fdk-aac",
+ "mp4",
+ "rodio",
+]
+
+[[package]]
 name = "redox_syscall"
 version = "0.1.57"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1355,18 +1363,18 @@ checksum = "388a1df253eca08550bef6c72392cfe7c30914bf41df5269b68cbd6ff8f570a3"
 
 [[package]]
 name = "serde"
-version = "1.0.121"
+version = "1.0.123"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6159e3c76cab06f6bc466244d43b35e77e9500cd685da87620addadc2a4c40b1"
+checksum = "92d5161132722baa40d802cc70b15262b98258453e85e5d1d365c757c73869ae"
 dependencies = [
  "serde_derive",
 ]
 
 [[package]]
 name = "serde_derive"
-version = "1.0.121"
+version = "1.0.123"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f3fcab8778dc651bc65cfab2e4eb64996f3c912b74002fb379c94517e1f27c46"
+checksum = "9391c295d64fc0abb2c556bad848f33cb8296276b1ad2677d1ae1ace4f258f31"
 dependencies = [
  "proc-macro2",
  "quote",

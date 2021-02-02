@@ -1,12 +1,12 @@
-use crate::player::Player;
+use crate::library::load_library;
+use crate::library_types::TrackList::{Folder, Playlist, Special};
+use crate::library_types::{Library, SpecialTrackListName, TrackID, TrackListID};
 use crate::player::init_player;
 use crate::player::Event;
-use std::path::PathBuf;
+use crate::player::Player;
 use crate::sort::sort;
-use crate::library_types::TrackList::{Playlist, Folder, Special};
-use crate::library_types::{Library, TrackListID, TrackID, SpecialTrackListName};
-use crate::library::{load_library};
 use serde::{Deserialize, Serialize};
+use std::path::PathBuf;
 
 #[derive(Serialize, Deserialize)]
 pub struct OpenPlaylistInfo {
@@ -35,21 +35,22 @@ pub struct Data {
 }
 
 pub fn get_open_playlist_tracks(data: &Data) -> Result<Vec<TrackID>, &'static str> {
-  let playlist = data.library.trackLists.get(&data.open_playlist_id)
+  let playlist = data
+    .library
+    .trackLists
+    .get(&data.open_playlist_id)
     .ok_or("Playlist ID not found")?;
   match playlist {
     Playlist(playlist) => return Ok(playlist.tracks.clone()),
     Folder(_) => return Err("Cannot get length of folder"),
-    Special(special) => {
-      match special.name {
-        SpecialTrackListName::Root => {
-          let track_keys = data.library.tracks.keys();
-          let mut list = vec!();
-          for track in track_keys {
-            list.push(track.clone());
-          }
-          return Ok(list)
-        },
+    Special(special) => match special.name {
+      SpecialTrackListName::Root => {
+        let track_keys = data.library.tracks.keys();
+        let mut list = vec![];
+        for track in track_keys {
+          list.push(track.clone());
+        }
+        return Ok(list);
       }
     },
   };
@@ -82,7 +83,7 @@ where
     paths: paths,
     library: loaded_library,
     open_playlist_id: "root".to_string(),
-    open_playlist_track_ids: vec!(),
+    open_playlist_track_ids: vec![],
     sort_key: "index".to_string(),
     sort_desc: true,
   };
@@ -90,5 +91,5 @@ where
   // We need the new sort_key to be different. Otherwise sort() thinks it's
   // already sorted and just reverses it
   sort(&mut data, "dateAdded")?;
-  return Ok(data)
+  return Ok(data);
 }

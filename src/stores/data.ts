@@ -40,7 +40,7 @@ type OpenPlaylistInfo = {
   length: number
 }
 
-const isDev = process?.env?.NODE_ENV === 'development'
+export const isDev = process?.env?.NODE_ENV === 'development'
 type Data = {
   get_track_lists: () => TrackListsHashMap
   set_open_playlist_id: (id: TrackListID) => void

@@ -1,8 +1,7 @@
-mod js;
-mod data_js;
 mod data;
+mod data_js;
+mod js;
+mod library;
+mod library_types;
 mod player;
 mod sort;
-mod library_types;
-mod library;
-mod aac_decoder;
