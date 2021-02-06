@@ -1,4 +1,5 @@
 const path = require('path')
+const fs = require('fs')
 const { ipcRenderer } = require('electron')
 const iTunesImport = require('./scripts/import_itunes.js')
 window.addon = require('../native/addon.node')
@@ -11,6 +12,14 @@ const { dialog, BrowserWindow } = require('electron').remote
 window.showMessageBoxSync = (options) => {
   const focusedWindow = BrowserWindow.getFocusedWindow()
   return dialog.showMessageBox(options)
+}
+
+window.toFileUrl = (...args) => {
+  const combinedPath = path.join(...args)
+  return pathToFileURL(combinedPath).href
+}
+window.existsSync = (path) => {
+  return fs.existsSync(path)
 }
 
 let library = ensureLibExists()

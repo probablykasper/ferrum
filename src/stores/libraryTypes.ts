@@ -8,12 +8,17 @@ export type Library = {
 export type TrackID = string
 export type TrackListID = string
 export type MsSinceUnixEpoch = number
-export type PercentInteger = number // should be 0-100
+/** Should be 0-100 */
+export type PercentInteger = number
+export interface TrackListsHashMap {
+  [TrackListID: string]: TrackList
+}
 
 export enum Version {
   V1 = 1
 }
 
+/** (track id, start time, duration) */
 export type PlayTime = [TrackID, number, number]
 
 export interface TracksHashMap {
@@ -30,7 +35,8 @@ export type Track = {
   dateAdded: MsSinceUnixEpoch
   name?: string
   importedFrom?: string
-  originalId?: string // imported ID, like iTunes Persistent ID
+  /** Imported ID, like iTunes Persistent ID */
+  originalId?: string
   artist?: string
   composer?: string
   sortName?: string
@@ -70,10 +76,6 @@ export type CountObject = {
   toDate: MsSinceUnixEpoch
 }
 
-export interface TrackListsHashMap {
-  [TrackListID: string]: TrackList
-}
-
 type TrackList = Playlist | Folder | Special
 
 type Playlist = {
@@ -95,8 +97,10 @@ type Folder = {
   description?: string
   liked?: string
   disliked?: string
-  importedFrom?: string // like "itunes"
-  originalId?: string // like iTunes Persistent ID
+  /** For example "itunes" */
+  importedFrom?: string
+  /** For example iTunes Persistent ID */
+  originalId?: string
   dateImported?: MsSinceUnixEpoch
   dateCreated?: MsSinceUnixEpoch
   children: TrackListID[]

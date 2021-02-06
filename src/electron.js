@@ -22,8 +22,8 @@ let quitting = false
 function ready() {
 
   protocol.registerFileProtocol('file', (request, callback) => {
-    const pathname = decodeURI(request.url.replace('file:///', ''))
-    callback(pathname)
+    const url = request.url.substr(7)
+    callback(decodeURI(url))
   })
 
   mainWindow = new BrowserWindow({
@@ -35,7 +35,8 @@ function ready() {
     titleBarStyle: 'hidden',
     webPreferences: {
       contextIsolation: false,
-      webSecurity: false,
+      // Allow file:// during development, since the app is loaded via http
+      webSecurity: !dev,
       nodeIntegration: true,
       enableRemoteModule: true,
       preload: path.resolve(__dirname, './preload.js'),
@@ -44,12 +45,8 @@ function ready() {
     show: false,
   })
 
-  if (dev) mainWindow.webContents.openDevTools()
-
-  // Here we set the CSP to allow 'unsafe-eval' for 'self' because Nollup
-  // uses eval(). This causes a security warning, so we disable that. This
-  // should be fine because 'self' won't be an external origin, as we only
-  // index.html locally.
+  // Electron shows a warning when unsafe-eval is enabled, so we disable
+  // security warnings. Somehow devtools doesn't open without unsafe-eval.
   process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = true
   session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
     callback({
@@ -62,6 +59,8 @@ function ready() {
 
   if (dev) mainWindow.loadURL('http://localhost:'+devPort)
   else mainWindow.loadFile(path.resolve(__dirname, '../public/index.html'))
+
+  if (dev) mainWindow.webContents.openDevTools()
 
   mainWindow.once('ready-to-show', () => {
     mainWindow.show()

@@ -134,27 +134,6 @@ pub fn sort<'a>(data: &'a mut Data, sort_key: &str) -> Result<(), &'static str> 
     data.sort_desc = !data.sort_desc;
     return Ok(());
   }
-  // let desc = match sort_key {
-  //   // alphabetical columns should be asc (A-Z)
-  //   "name" => false,
-  //   "artist" => false,
-  //   "composer" => false,
-  //   "albumName" => false,
-  //   "albumArtist" => false,
-  //   "sortName" => false,
-  //   "sortArtist" => false,
-  //   "sortComposer" => false,
-  //   "sortAlbumName" => false,
-  //   "sortAlbumArtist" => false,
-  //   "file" => false,
-  //   "importedFrom" => false,
-  //   "originalId" => false,
-  //   "genre" => false,
-  //   "comments" => false,
-  //   "grouping" => false,
-  //   // numerical and bool columns should be desc
-  //   _ => true,
-  // };
 
   if sort_key == "index" {
     // No need to sort for index. Indexes descend from "first to last"
@@ -233,122 +212,10 @@ pub fn sort<'a>(data: &'a mut Data, sort_key: &str) -> Result<(), &'static str> 
         return bool_a.cmp(&bool_b);
       }
       None => {
-        // return Err(format!("Field type not found for {}", sort_key))
         panic!("Field type not found for {}", sort_key)
       }
     }
   });
-  // let field = get_track_field(sort_key);
-  // data.open_playlist_track_ids.sort_by(|id_a, id_b| {
-  //   let track_a = tracks.get(id_a).expect("Track ID non-existant (1)");
-  //   let track_b = tracks.get(id_b).expect("Track ID non-existant (2)");
-  //   match field {
-  //     TrackFields::Size => {}
-  //     TrackFields::Duration => {}
-  //     TrackFields::Bitrate => {}
-  //     TrackFields::SampleRate => {}
-  //     TrackFields::File => {}
-  //     TrackFields::DateModified => {}
-  //     TrackFields::DateAdded => {}
-  //     TrackFields::Name => {}
-  //     TrackFields::ImportedFrom => {}
-  //     TrackFields::OriginalId => {}
-  //     TrackFields::Artist => {}
-  //     TrackFields::Composer => {}
-  //     TrackFields::SortName => {}
-  //     TrackFields::SortArtist => {}
-  //     TrackFields::SortComposer => {}
-  //     TrackFields::Genre => {}
-  //     TrackFields::Rating => {}
-  //     TrackFields::Year => {}
-  //     TrackFields::Bpm => {}
-  //     TrackFields::Comments => {}
-  //     TrackFields::Grouping => {}
-  //     TrackFields::Liked => {}
-  //     TrackFields::Disliked => {}
-  //     TrackFields::Disabled => {}
-  //     TrackFields::Compilation => {}
-  //     TrackFields::AlbumName => {}
-  //     TrackFields::AlbumArtist => {}
-  //     TrackFields::SortAlbumName => {}
-  //     TrackFields::SortAlbumArtist => {}
-  //     TrackFields::TrackNum => {}
-  //     TrackFields::TrackCount => {}
-  //     TrackFields::DiscNum => {}
-  //     TrackFields::DiscCount => {}
-  //     TrackFields::DateImported => {}
-  //     TrackFields::PlayCount => {}
-  //     TrackFields::SkipCount => {}
-  //     TrackFields::Volume => {}
-  //     Some(XTrackField::String) => {
-  //       match sort_key {
-  //       }
-  //     },
-  //     Some(TrackField::F64) => {
-  //     },
-  //     Some(TrackField::I64) => {
-  //     },
-  //     Some(TrackField::I32) => {
-  //     },
-  //     Some(TrackField::I16) => {
-  //     },
-  //     Some(TrackField::U8) => {
-  //     },
-  //     Some(TrackField::Bool) => {
-  //     },
-  //     None => {
-  //       return Err(format!("Field type not found for {}", sort_key))
-  //     },
-  //   }
-  // });
-
-  // data.open_playlist_track_ids.sort_by(|id_a, id_b| {
-  //   let track_a = match tracks.get(id_a) {
-  //     Some(track) => track,
-  //     None => panic!("Track ID does not exist (1)"),
-  //   };
-  //   let track_b = match tracks.get(id_b) {
-  //     Some(track) => track,
-  //     None => panic!("Track ID does not exist (2)"),
-  //   };
-  //   let field_a = match get_field(track_a, sort_key) {
-  //     Some(field) => field,
-  //     None => return Ordering::Equal, //? Gotta change this
-  //   };
-  //   let field_b = match get_field(track_b, sort_key) {
-  //     Some(field) => field,
-  //     None => return Ordering::Equal, //? Gotta change this
-  //   };
-  //   let x = match (field_a, field_b) {
-  //     (TrackField::String(str_a), TrackField::String(str_b)) => {
-  //       compare_str(str_a, str_b)
-  //     },
-  //     (TrackField::I64(num_a), TrackField::I64(num_b)) => {
-  //       num_a.cmp(&num_b)
-  //     },
-  //     (TrackField::I32(num_a), TrackField::I32(num_b)) => {
-  //       num_a.cmp(&num_b)
-  //     },
-  //     (TrackField::I16(num_a), TrackField::I16(num_b)) => {
-  //       num_a.cmp(&num_b)
-  //     },
-  //     (TrackField::U8(num_a), TrackField::U8(num_b)) => {
-  //       num_a.cmp(&num_b)
-  //     },
-  //     (TrackField::F64(num_a), TrackField::F64(num_b)) => {
-  //       match num_a.partial_cmp(&num_b) {
-  //         Some(v) => v,
-  //         None => Ordering::Equal //? Change this? NaN
-  //       }
-  //     },
-  //     (TrackField::Bool(num_a), TrackField::Bool(num_b)) => {
-  //       num_a.cmp(&num_b)
-  //     },
-  //     (_, _) => Ordering::Equal,
-  //   };
-  //   logged = true;
-  //   return x
-  // });
   if desc {
     data.open_playlist_track_ids.reverse();
   }

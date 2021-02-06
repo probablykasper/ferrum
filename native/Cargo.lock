@@ -1178,7 +1178,9 @@ dependencies = [
 
 [[package]]
 name = "redlux"
-version = "0.1.0"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0eb000fb3736a8e6c4ee48c399f28c00ca376d5924e8fdb30deb89cb7ec0e317"
 dependencies = [
  "fdk-aac",
  "mp4",

@@ -1,6 +1,8 @@
 <script lang="ts">
   import VList from './VirtualList.svelte'
-  import { openPlaylist, getOpenPlaylistTrack } from '../stores/data'
+  import { openPlaylist } from '../stores/data'
+  import { playIndex } from '../stores/player'
+  import { getDuration } from '../scripts/formatting'
 
   const sortBy = openPlaylist.sortBy
   $: sortKey = $openPlaylist.sort_key
@@ -14,26 +16,13 @@
     selected = new Set([index])
   }
 
-  function playRow(index: number) {
-    openPlaylist.playIndex(index)
-  }
-
   function getItem(index: number) {
     try {
-      const track = getOpenPlaylistTrack(index)
+      const track = openPlaylist.getTrack(index)
       return track
     } catch (err) {
       return {}
     }
-  }
-
-  function getDuration(dur: number) {
-    dur = Math.round(dur)
-    let secs = dur % 60
-    let secsText = String(secs)
-    if (secs < 10) secsText = '0' + secs
-    const mins = (dur - secs) / 60
-    return mins + ':' + secsText
   }
 
   openPlaylist.subscribe((openPlaylist) => {
@@ -152,7 +141,7 @@
     </div>
   </div>
   <VList {getItem} bind:visibleItems itemHeight={24} itemCount={$openPlaylist.length} bind:startIndex bind:endIndex let:item={track} let:index>
-    <div class="row" on:dblclick={() => playRow(index)} on:mousedown={() => rowClick(index)} class:selected={selected.has(index)}>
+    <div class="row" on:dblclick={() => playIndex(index)} on:mousedown={() => rowClick(index)} class:selected={selected.has(index)}>
       <div class="c index">{index + 1}</div>
       <div class="c name">{track.name || ''}</div>
       <div class="c playCount">{track.playCount || ''}</div>

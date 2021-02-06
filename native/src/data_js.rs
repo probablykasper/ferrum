@@ -1,13 +1,12 @@
 use crate::data::{get_open_playlist_tracks, OpenPlaylistInfo};
 use crate::data::{load_data, Data};
 use crate::js::{arg_to_bool, arg_to_number, arg_to_string, nerr, nr};
+use crate::library_types::Track;
 use crate::library_types::TrackList;
-use crate::player::*;
 use crate::sort::sort;
-use napi::threadsafe_function::{ThreadSafeCallContext, ThreadsafeFunctionCallMode};
-use napi::{CallContext, JsFunction, JsObject, JsUndefined, JsUnknown, Result as NResult};
+use napi::{CallContext, JsObject, JsString, JsUndefined, JsUnknown, Result as NResult};
 use napi_derive::js_function;
-use std::time::Instant;
+use std::time::{Instant, SystemTime, UNIX_EPOCH};
 
 fn get_data<'a>(ctx: &'a CallContext) -> NResult<&'a mut Data> {
   let this: JsObject = ctx.this()?;
@@ -15,33 +14,40 @@ fn get_data<'a>(ctx: &'a CallContext) -> NResult<&'a mut Data> {
   return Ok(data);
 }
 
-#[js_function(2)]
+fn id_arg_to_track<'a>(ctx: &'a CallContext, arg: usize) -> NResult<&'a mut Track> {
+  let data: &mut Data = get_data(&ctx)?;
+  let id = arg_to_string(&ctx, arg)?;
+  let tracks = &mut data.library.tracks;
+  let track = tracks.get_mut(&id).ok_or(nerr("Track ID not found"))?;
+  return Ok(track);
+}
+
+fn get_now_timestamp() -> i64 {
+  let timestamp = match SystemTime::now().duration_since(UNIX_EPOCH) {
+    Ok(n) => n.as_millis() as i64,
+    Err(_) => panic!("Generated timestamp is earlier than Unix Epoch"),
+  };
+  return timestamp;
+}
+
+#[js_function(1)]
 pub fn load_data_js(ctx: CallContext) -> NResult<JsObject> {
   let is_dev = arg_to_bool(&ctx, 0)?;
-  let func: JsFunction = ctx.get(1)?;
 
-  let tsfn =
-    ctx
-      .env
-      .create_threadsafe_function(&func, 0, |ctx: ThreadSafeCallContext<Vec<Event>>| {
-        let arr: NResult<Vec<JsUnknown>> = ctx
-          .value
-          .iter()
-          .map(|v| return ctx.env.to_js_value(&*v))
-          .collect();
-        return arr;
-      })?;
-  let event_handler = move |event| {
-    let output: Vec<Event> = vec![event];
-    tsfn.call(Ok(output), ThreadsafeFunctionCallMode::Blocking);
-  };
-
-  let data: Data = nr(load_data(&is_dev, event_handler))?;
+  let data: Data = nr(load_data(&is_dev))?;
 
   let mut new_this: JsObject = ctx.env.create_object()?;
   ctx.env.wrap(&mut new_this, data)?;
   new_this = init_data_instance(new_this)?;
   return Ok(new_this);
+}
+
+#[js_function(0)]
+pub fn get_tracks_dir(ctx: CallContext) -> NResult<JsString> {
+  let data: &mut Data = get_data(&ctx)?;
+  let path = &data.paths.tracks_dir;
+  let tracks_dir = path.to_str().ok_or(nerr("Invalid tracks folder path"))?;
+  return ctx.env.create_string(tracks_dir);
 }
 
 #[js_function]
@@ -55,7 +61,47 @@ fn get_track_lists(ctx: CallContext) -> NResult<JsUnknown> {
 }
 
 #[js_function(1)]
-pub fn set_open_playlist_id(ctx: CallContext) -> NResult<JsUndefined> {
+pub fn get_track(ctx: CallContext) -> NResult<JsUnknown> {
+  let data: &mut Data = get_data(&ctx)?;
+  let id = arg_to_string(&ctx, 0)?;
+  let tracks = &data.library.tracks;
+  let track = tracks.get(&id).ok_or(nerr("Track ID not found"))?;
+  let js = ctx.env.to_js_value(&track)?;
+  return Ok(js);
+}
+
+#[js_function(1)]
+pub fn add_play(ctx: CallContext) -> NResult<JsUndefined> {
+  let track = id_arg_to_track(&ctx, 0)?;
+  let timestamp = get_now_timestamp();
+  match &mut track.plays {
+    None => track.plays = Some(vec![timestamp]),
+    Some(plays) => plays.push(timestamp),
+  }
+  match &mut track.playCount {
+    None => track.playCount = Some(1),
+    Some(play_count) => *play_count += 1,
+  }
+  return ctx.env.get_undefined();
+}
+
+#[js_function(1)]
+pub fn add_skip(ctx: CallContext) -> NResult<JsUndefined> {
+  let track = id_arg_to_track(&ctx, 0)?;
+  let timestamp = get_now_timestamp();
+  match &mut track.skips {
+    None => track.skips = Some(vec![timestamp]),
+    Some(skips) => skips.push(timestamp),
+  }
+  match &mut track.skipCount {
+    None => track.skipCount = Some(1),
+    Some(skip_count) => *skip_count += 1,
+  }
+  return ctx.env.get_undefined();
+}
+
+#[js_function(1)]
+pub fn open_playlist(ctx: CallContext) -> NResult<JsUndefined> {
   let data: &mut Data = get_data(&ctx)?;
   data.open_playlist_id = arg_to_string(&ctx, 0)?;
   data.open_playlist_track_ids = nr(get_open_playlist_tracks(data))?;
@@ -98,6 +144,17 @@ pub fn get_open_playlist_track(ctx: CallContext) -> NResult<JsUnknown> {
   return Ok(js);
 }
 
+#[js_function(1)]
+pub fn get_open_playlist_track_id(ctx: CallContext) -> NResult<JsString> {
+  let data: &mut Data = get_data(&ctx)?;
+  let index: i64 = arg_to_number(&ctx, 0)?;
+  let track_id = data
+    .open_playlist_track_ids
+    .get(index as usize)
+    .ok_or(nerr("Track index not found in open playlist"))?;
+  return ctx.env.create_string(track_id);
+}
+
 #[js_function]
 pub fn get_open_playlist_track_ids(ctx: CallContext) -> NResult<JsUnknown> {
   let data: &mut Data = get_data(&ctx)?;
@@ -126,46 +183,20 @@ pub fn sort_js(ctx: CallContext) -> NResult<JsUndefined> {
   return ctx.env.get_undefined();
 }
 
-#[js_function(1)]
-pub fn play_open_playlist_index(ctx: CallContext) -> NResult<JsUndefined> {
-  let data: &mut Data = get_data(&ctx)?;
-  let index: i64 = arg_to_number(&ctx, 0)?;
-  let track_id = data
-    .open_playlist_track_ids
-    .get(index as usize)
-    .ok_or(nerr("Track index not found in open playlist"))?
-    .to_string();
-  nr(play_id(data, &track_id))?;
-  return ctx.env.get_undefined();
-}
-
-#[js_function(0)]
-pub fn play_pause_js(ctx: CallContext) -> NResult<JsUndefined> {
-  let data: &mut Data = get_data(&ctx)?;
-  nr(play_pause(data))?;
-  return ctx.env.get_undefined();
-}
-
-#[js_function(0)]
-pub fn close(ctx: CallContext) -> NResult<JsUndefined> {
-  let data: &mut Data = get_data(&ctx)?;
-  data
-    .player
-    .sender
-    .send(Message::Quit)
-    .expect("Error sending Quit event");
-  return ctx.env.get_undefined();
-}
-
 fn init_data_instance(mut exports: JsObject) -> NResult<JsObject> {
+  exports.create_named_method("get_tracks_dir", get_tracks_dir)?;
+
   exports.create_named_method("get_track_lists", get_track_lists)?;
-  exports.create_named_method("set_open_playlist_id", set_open_playlist_id)?;
+
+  exports.create_named_method("get_track", get_track)?;
+  exports.create_named_method("add_play", add_play)?;
+  exports.create_named_method("add_skip", add_skip)?;
+
+  exports.create_named_method("open_playlist", open_playlist)?;
   exports.create_named_method("get_open_playlist_track", get_open_playlist_track)?;
+  exports.create_named_method("get_open_playlist_track_id", get_open_playlist_track_id)?;
   exports.create_named_method("get_open_playlist_track_ids", get_open_playlist_track_ids)?;
   exports.create_named_method("get_open_playlist_info", get_open_playlist_info)?;
-  exports.create_named_method("play_open_playlist_index", play_open_playlist_index)?;
-  exports.create_named_method("play_pause", play_pause_js)?;
-  exports.create_named_method("close", close)?;
   exports.create_named_method("sort", sort_js)?;
 
   return Ok(exports);

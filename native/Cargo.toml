@@ -23,5 +23,4 @@ serde_json = "1.0.61"
 jemallocator = "0.3.2"
 alphanumeric-sort = "1.4.0"
 rodio = "0.13.0"
-# redlux = "0.1.0"
-redlux = { path = "../../redlux" }
+redlux = "0.2.0"

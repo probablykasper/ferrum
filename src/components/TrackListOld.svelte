@@ -2,9 +2,9 @@
   import { onMount, onDestroy } from 'svelte'
   // import VirtualList from '@lionixevolve/svelte-virtual-list-enhanced'
   import VirtualList from './VirtualListOld.svelte'
-  import { tracks } from '../stores/library.js'
+  import { tracks } from '../stores/libraryOld.js'
   import { playTrack } from '../stores/player.js'
-  import { trackIds, sort as sorting } from '../stores/view.js'
+  import { trackIds, sort as sorting } from '../stores/viewOld.js'
   let toTop
   const unsubscribe = trackIds.subscribe(() => {
     // Fix empty list when opening playlist while scrolled down

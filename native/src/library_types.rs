@@ -16,7 +16,8 @@ pub struct Library {
 pub type TrackID = String;
 pub type TrackListID = String;
 pub type MsSinceUnixEpoch = i64;
-pub type PercentInteger = u8; // should be 0-100
+/// Should be 0-100
+pub type PercentInteger = u8;
 pub type TrackLists = HashMap<TrackListID, TrackList>;
 
 #[derive(Serialize_repr, Deserialize_repr, Debug)]
@@ -25,7 +26,8 @@ pub enum Version {
   V1 = 1,
 }
 
-pub type PlayTime = (TrackID, i64, i64);
+/// (track id, start time, duration)
+pub type PlayTime = (TrackID, MsSinceUnixEpoch, i64);
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Track {
@@ -40,7 +42,7 @@ pub struct Track {
   pub name: Option<String>,
   #[serde(default, skip_serializing_if = "Option::is_none")]
   pub importedFrom: Option<String>,
-  // imported ID, like iTunes Persistent ID:
+  /// Imported ID, like iTunes Persistent ID:
   #[serde(default, skip_serializing_if = "Option::is_none")]
   pub originalId: Option<String>,
   #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -144,8 +146,10 @@ pub struct Folder {
   pub description: Option<String>,
   pub liked: Option<String>,
   pub disliked: Option<String>,
-  pub importedFrom: Option<String>, // like "itunes"
-  pub originalId: Option<String>,   // like iTunes Persistent ID
+  /// For example "itunes"
+  pub importedFrom: Option<String>,
+  /// For example iTunes Persistent ID
+  pub originalId: Option<String>,
   pub dateImported: Option<MsSinceUnixEpoch>,
   pub dateCreated: Option<MsSinceUnixEpoch>,
   pub children: Vec<TrackListID>,

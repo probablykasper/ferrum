@@ -1,9 +1,6 @@
 use crate::library::load_library;
 use crate::library_types::TrackList::{Folder, Playlist, Special};
 use crate::library_types::{Library, SpecialTrackListName, TrackID, TrackListID};
-use crate::player::init_player;
-use crate::player::Event;
-use crate::player::Player;
 use crate::sort::sort;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
@@ -24,7 +21,6 @@ pub struct Paths {
 }
 
 pub struct Data {
-  pub player: Player,
   pub paths: Paths,
   pub is_dev: bool,
   pub library: Library,
@@ -56,10 +52,7 @@ pub fn get_open_playlist_tracks(data: &Data) -> Result<Vec<TrackID>, &'static st
   };
 }
 
-pub fn load_data<F: 'static>(is_dev: &bool, event_handler: F) -> Result<Data, &'static str>
-where
-  F: Fn(Event) + Send,
-{
+pub fn load_data(is_dev: &bool) -> Result<Data, &'static str> {
   let app_name = if *is_dev { "Ferrum Dev" } else { "Ferrum" };
 
   let music_dir = dirs::audio_dir().ok_or("Music folder not found")?;
@@ -75,10 +68,7 @@ where
     library_json: library_json_path,
   };
 
-  let player = init_player(event_handler)?;
-
   let mut data = Data {
-    player: player,
     is_dev: *is_dev,
     paths: paths,
     library: loaded_library,

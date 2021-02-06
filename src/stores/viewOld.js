@@ -1,6 +1,6 @@
 import { writable, derived } from 'svelte/store'
 import { trackLists } from './data.ts'
-import { tracks as libTracks } from './library.js'
+import { tracks as libTracks } from './libraryOld.js'
 
 export const openPlaylist = writable('root')
 
