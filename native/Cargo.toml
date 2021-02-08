@@ -15,7 +15,6 @@ napi-build = "1.0.1"
 [dependencies]
 napi = { version = "1.1.2", features = ["serde-json", "napi4"] }
 napi-derive = "1.0.0"
-tempfile = "3.2.0"
 dirs = "3.0.1"
 serde = { version = "1.0.123", features = ["derive"] }
 serde_repr = "0.1.6"
@@ -24,3 +23,5 @@ jemallocator = "0.3.2"
 alphanumeric-sort = "1.4.0"
 rodio = "0.13.0"
 redlux = "0.2.0"
+linked-hash-map = { version = "0.5.4", features = ["serde_impl"] }
+atomicwrites = "0.2.5"

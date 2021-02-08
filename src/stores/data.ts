@@ -65,7 +65,6 @@ export type Data = {
 const data: Data = grabErr(() => {
   return window.addon.load_data(isDev)
 })
-
 export const trackLists = grabErr(() => {
   const { subscribe, set, update } = writable(data.get_track_lists())
   return {
@@ -78,9 +77,15 @@ export const tracksDir = grabErr(() => {
 })
 
 export const methods = {
-  getTrack: wrapErr(data.get_track),
-  addPlay: wrapErr(data.add_play),
-  addSkip: wrapErr(data.add_skip),
+  getTrack: wrapErr((id: TrackID) => {
+    return data.get_track(id)
+  }),
+  addPlay: wrapErr((id: TrackID) => {
+    data.add_play(id)
+  }),
+  addSkip: wrapErr((id: TrackID) => {
+    data.add_skip(id)
+  }),
 }
 
 export const openPlaylist = grabErr(() => {

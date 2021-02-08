@@ -2,8 +2,12 @@ use crate::library::load_library;
 use crate::library_types::TrackList::{Folder, Playlist, Special};
 use crate::library_types::{Library, SpecialTrackListName, TrackID, TrackListID};
 use crate::sort::sort;
+use atomicwrites::{AllowOverwrite, AtomicFile};
 use serde::{Deserialize, Serialize};
+use std::io::Error;
+use std::io::Write;
 use std::path::PathBuf;
+use std::time::Instant;
 
 #[derive(Serialize, Deserialize)]
 pub struct OpenPlaylistInfo {
@@ -28,6 +32,21 @@ pub struct Data {
   pub open_playlist_id: TrackListID,
   pub sort_key: String,
   pub sort_desc: bool,
+}
+
+impl Data {
+  pub fn save(&mut self) -> Result<(), Error> {
+    let mut now = Instant::now();
+    let json_str = &serde_json::to_string_pretty(&self.library).unwrap();
+    println!("Stringify: {}ms", now.elapsed().as_millis());
+
+    now = Instant::now();
+    let file_path = &self.paths.library_json;
+    let af = AtomicFile::new(file_path, AllowOverwrite);
+    af.write(|f| f.write_all(json_str.as_bytes()))?;
+    println!("Write: {}ms", now.elapsed().as_millis());
+    Ok(())
+  }
 }
 
 pub fn get_open_playlist_tracks(data: &Data) -> Result<Vec<TrackID>, &'static str> {

@@ -1,15 +1,15 @@
 #![allow(non_snake_case)]
 
+use linked_hash_map::LinkedHashMap;
 use serde::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};
-use std::collections::HashMap;
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(deny_unknown_fields)]
 pub struct Library {
   pub version: Version,
   pub playTime: Vec<PlayTime>,
-  pub tracks: HashMap<TrackID, Track>,
+  pub tracks: LinkedHashMap<TrackID, Track>,
   pub trackLists: TrackLists,
 }
 
@@ -18,7 +18,7 @@ pub type TrackListID = String;
 pub type MsSinceUnixEpoch = i64;
 /// Should be 0-100
 pub type PercentInteger = u8;
-pub type TrackLists = HashMap<TrackListID, TrackList>;
+pub type TrackLists = LinkedHashMap<TrackListID, TrackList>;
 
 #[derive(Serialize_repr, Deserialize_repr, Debug)]
 #[repr(u8)]

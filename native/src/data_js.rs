@@ -6,7 +6,7 @@ use crate::library_types::TrackList;
 use crate::sort::sort;
 use napi::{CallContext, JsObject, JsString, JsUndefined, JsUnknown, Result as NResult};
 use napi_derive::js_function;
-use std::time::{Instant, SystemTime, UNIX_EPOCH};
+use std::time::{SystemTime, UNIX_EPOCH};
 
 fn get_data<'a>(ctx: &'a CallContext) -> NResult<&'a mut Data> {
   let this: JsObject = ctx.this()?;
@@ -52,11 +52,9 @@ pub fn get_tracks_dir(ctx: CallContext) -> NResult<JsString> {
 
 #[js_function]
 fn get_track_lists(ctx: CallContext) -> NResult<JsUnknown> {
-  let now = Instant::now();
   let data: &mut Data = get_data(&ctx)?;
   let track_lists = &data.library.trackLists;
   let js = ctx.env.to_js_value(&track_lists)?;
-  println!("Get track lists: {}ms", now.elapsed().as_millis());
   return Ok(js);
 }
 
@@ -72,6 +70,7 @@ pub fn get_track(ctx: CallContext) -> NResult<JsUnknown> {
 
 #[js_function(1)]
 pub fn add_play(ctx: CallContext) -> NResult<JsUndefined> {
+  let data: &mut Data = get_data(&ctx)?;
   let track = id_arg_to_track(&ctx, 0)?;
   let timestamp = get_now_timestamp();
   match &mut track.plays {
@@ -82,11 +81,13 @@ pub fn add_play(ctx: CallContext) -> NResult<JsUndefined> {
     None => track.playCount = Some(1),
     Some(play_count) => *play_count += 1,
   }
+  data.save()?;
   return ctx.env.get_undefined();
 }
 
 #[js_function(1)]
 pub fn add_skip(ctx: CallContext) -> NResult<JsUndefined> {
+  let data: &mut Data = get_data(&ctx)?;
   let track = id_arg_to_track(&ctx, 0)?;
   let timestamp = get_now_timestamp();
   match &mut track.skips {
@@ -97,6 +98,20 @@ pub fn add_skip(ctx: CallContext) -> NResult<JsUndefined> {
     None => track.skipCount = Some(1),
     Some(skip_count) => *skip_count += 1,
   }
+  data.save()?;
+  return ctx.env.get_undefined();
+}
+
+#[js_function(2)]
+pub fn add_play_time(ctx: CallContext) -> NResult<JsUndefined> {
+  let data: &mut Data = get_data(&ctx)?;
+  let tracks = &mut data.library.tracks;
+  let id = arg_to_string(&ctx, 0)?;
+  tracks.get_mut(&id).ok_or(nerr("Track ID not found"))?;
+  let timestamp = get_now_timestamp();
+  let duration: i64 = arg_to_number(&ctx, 1)?;
+  data.library.playTime.push((id, timestamp, duration));
+  data.save()?;
   return ctx.env.get_undefined();
 }
 

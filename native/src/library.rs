@@ -1,10 +1,8 @@
 use crate::library_types::Library;
 use std::fs::File;
-use std::io;
-use std::io::{Read, Write};
+use std::io::Read;
 use std::path::Path;
 use std::time::Instant;
-use tempfile::NamedTempFile;
 
 pub fn load_library(path: &Path) -> Result<Library, &'static str> {
   let mut now = Instant::now();
@@ -27,29 +25,6 @@ pub fn load_library(path: &Path) -> Result<Library, &'static str> {
 
   println!("Parse library: {}ms", now.elapsed().as_millis());
   Ok(library)
-}
-
-fn atomic_file_save(file_path: &str, content: &str) -> Result<(), io::Error> {
-  let mut tmpfile = NamedTempFile::new()?;
-  write!(tmpfile, "{}", content)?;
-  tmpfile.persist(file_path)?;
-  Ok(())
-}
-
-#[allow(dead_code)]
-pub fn save(library: &Library) -> Result<(), String> {
-  let mut now = Instant::now();
-
-  let json_str = &serde_json::to_string_pretty(library).unwrap();
-
-  let file_path = "/Users/kasper/Downloads/serdesavedlib.json";
-  println!("Stringify: {}ms", now.elapsed().as_millis());
-  now = Instant::now();
-
-  atomic_file_save(file_path, json_str).or(Err("Error saving file"))?;
-
-  println!("Write: {}ms", now.elapsed().as_millis());
-  Ok(())
 }
 
 pub enum TrackField {

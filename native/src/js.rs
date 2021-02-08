@@ -4,6 +4,7 @@ use jemallocator::Jemalloc;
 #[global_allocator]
 static GLOBAL: Jemalloc = Jemalloc;
 use crate::data_js::load_data_js;
+use atomicwrites::{AllowOverwrite, AtomicFile};
 use napi::{
   CallContext, Error as NapiError, JsBoolean, JsNumber, JsObject, JsString, JsUndefined,
   Result as NResult,
@@ -13,7 +14,6 @@ use std::convert::TryFrom;
 use std::convert::TryInto;
 use std::fs::copy;
 use std::io::Write;
-use tempfile::NamedTempFile;
 
 // Create NapiError from string
 pub fn nerr(msg: &str) -> NapiError {
@@ -65,11 +65,8 @@ fn copy_file(ctx: CallContext) -> NResult<JsUndefined> {
 fn atomic_file_save(ctx: CallContext) -> NResult<JsUndefined> {
   let file_path = arg_to_string(&ctx, 0)?;
   let content = arg_to_string(&ctx, 1)?;
-
-  let mut tmpfile = NamedTempFile::new().unwrap();
-  write!(tmpfile, "{}", content).unwrap();
-  tmpfile.persist(&file_path).unwrap();
-
+  let af = AtomicFile::new(file_path, AllowOverwrite);
+  af.write(|f| f.write_all(content.as_bytes())).unwrap();
   return ctx.env.get_undefined();
 }
 
