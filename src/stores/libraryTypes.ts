@@ -80,6 +80,7 @@ type TrackList = Playlist | Folder | Special
 
 type Playlist = {
   type: "playlist"
+  id: TrackListID
   name: string
   description?: string
   liked?: string
@@ -93,6 +94,8 @@ type Playlist = {
 
 type Folder = {
   type: "folder"
+  id: TrackListID
+  show: boolean
   name: string
   description?: string
   liked?: string
@@ -108,6 +111,7 @@ type Folder = {
 
 type Special = {
   type: "special"
+  id: TrackListID
   name: SpecialTrackListName
   dateCreated: MsSinceUnixEpoch
   children: TrackListID[]

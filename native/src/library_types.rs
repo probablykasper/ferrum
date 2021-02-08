@@ -129,34 +129,53 @@ pub enum TrackList {
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Playlist {
+  pub id: TrackListID,
   pub name: String,
+  #[serde(default, skip_serializing_if = "Option::is_none")]
   pub description: Option<String>,
+  #[serde(default, skip_serializing_if = "Option::is_none")]
   pub liked: Option<String>,
+  #[serde(default, skip_serializing_if = "Option::is_none")]
   pub disliked: Option<String>,
+  #[serde(default, skip_serializing_if = "Option::is_none")]
   pub importedFrom: Option<String>,
+  #[serde(default, skip_serializing_if = "Option::is_none")]
   pub originalId: Option<String>,
+  #[serde(default, skip_serializing_if = "Option::is_none")]
   pub dateImported: Option<MsSinceUnixEpoch>,
+  #[serde(default, skip_serializing_if = "Option::is_none")]
   pub dateCreated: Option<MsSinceUnixEpoch>,
   pub tracks: Vec<TrackID>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Folder {
+  pub id: TrackListID,
   pub name: String,
+  #[serde(default)]
+  pub show: bool,
+  #[serde(default, skip_serializing_if = "Option::is_none")]
   pub description: Option<String>,
+  #[serde(default, skip_serializing_if = "Option::is_none")]
   pub liked: Option<String>,
+  #[serde(default, skip_serializing_if = "Option::is_none")]
   pub disliked: Option<String>,
   /// For example "itunes"
+  #[serde(default, skip_serializing_if = "Option::is_none")]
   pub importedFrom: Option<String>,
   /// For example iTunes Persistent ID
+  #[serde(default, skip_serializing_if = "Option::is_none")]
   pub originalId: Option<String>,
+  #[serde(default, skip_serializing_if = "Option::is_none")]
   pub dateImported: Option<MsSinceUnixEpoch>,
+  #[serde(default, skip_serializing_if = "Option::is_none")]
   pub dateCreated: Option<MsSinceUnixEpoch>,
   pub children: Vec<TrackListID>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Special {
+  pub id: TrackListID,
   pub name: SpecialTrackListName,
   pub dateCreated: MsSinceUnixEpoch,
   pub children: Vec<TrackListID>,
