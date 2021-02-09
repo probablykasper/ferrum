@@ -26,30 +26,30 @@ let library = ensureLibExists()
 
 let saving = 0
 let gonnaQuit = false
-window.readyToQuit = function() {
+window.readyToQuit = function () {
   if (gonnaQuit && saving === false) {
     ipcRenderer.send('readyToQuit')
   }
 }
-ipcRenderer.on('gonnaQuit', function(event) {
+ipcRenderer.on('gonnaQuit', function (event) {
   gonnaQuit = true
   window.readyToQuit()
 })
 
 const db = {
-  iTunesImport: async function(...args) {
+  iTunesImport: async function (...args) {
     return iTunesImport(...args)
   },
-  get: function() {
+  get: function () {
     return library
   },
-  overwriteLibrary: function(newLib) {
+  overwriteLibrary: function (newLib) {
     library = newLib
   },
-  getTrack: function(id) {
+  getTrack: function (id) {
     return library.tracks[id]
   },
-  addSkip: async function(id) {
+  addSkip: async function (id) {
     const track = db.getTrack(id)
     if (!track.skipCount) track.skipCount = 0
     if (!track.skips) track.skips = []
@@ -57,7 +57,7 @@ const db = {
     track.skips.push(new Date().getTime())
     await db.save()
   },
-  addPlay: async function(id) {
+  addPlay: async function (id) {
     const track = db.getTrack(id)
     if (!track.playCount) track.playCount = 0
     if (!track.plays) track.plays = []
@@ -65,7 +65,7 @@ const db = {
     track.plays.push(new Date().getTime())
     await db.save()
   },
-  addPlayTime: async function(id, startTime) {
+  addPlayTime: async function (id, startTime) {
     const duration = new Date().getTime() - startTime
     // don't bother if the track was played less than 1s
     if (duration >= 1000) {
@@ -73,12 +73,12 @@ const db = {
       await db.save()
     }
   },
-  getTrackPath: function(id, fileUrl) {
+  getTrackPath: function (id, fileUrl) {
     const trackPath = path.join(tracksPath, db.getTrack(id).file)
     if (fileUrl) return pathToFileURL(trackPath)
     else return trackPath
   },
-  save: async function() {
+  save: async function () {
     saving++
     const timer = newTimer()
 

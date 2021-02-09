@@ -71,7 +71,13 @@
     outline: none
 </style>
 
-<div class="viewport" bind:this={viewport} bind:clientHeight={height} on:scroll={handleScroll} tabindex='0' on:keydown={keydown}>
+<div
+  class="viewport"
+  bind:this={viewport}
+  bind:clientHeight={height}
+  on:scroll={handleScroll}
+  tabindex="0"
+  on:keydown={keydown}>
   <div class="content" style="padding-top: {paddingTop}px; padding-bottom: {paddingBottom}px;">
     {#each visibleItems as item, index}
       <slot {item} index={startIndex + index} />

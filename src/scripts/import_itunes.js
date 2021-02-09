@@ -8,7 +8,7 @@ const { tracksPath, artworksPath } = require('./paths.js')
 const { generateFilename, ensureLibExists } = require('./handy.js')
 const addon = require('../../native/addon.node')
 
-module.exports = async function(status, warn) {
+module.exports = async function (status, warn) {
   const warnings = []
   try {
     result = await start(status, (warning) => {
@@ -17,7 +17,7 @@ module.exports = async function(status, warn) {
     })
     result.warnings = warnings
     return result
-  } catch(err) {
+  } catch (err) {
     if (!err.message) err.message = err.code
     console.error(err)
     return { err, warnings }
@@ -48,27 +48,28 @@ function buffersEqual(buf1, buf2) {
 }
 
 async function popup() {
-  m='Select an iTunes "Library.xml" file. To get that file, open iTunes and click on "File > Library > Export Library..."'
-  +'\n'
-  +'\nWARNING: This will reset/delete your Ferrum library!'
-  // +"\nDuplicates will not be checked for, so if there's a song you already have in Ferrum, you'll end up with two."
-  +'\n'
-  +'\nAll your tracks need to be downloaded for this to work.'
-  +' If you have tracks from iTunes Store/Apple Music, it might not work.'
-  +'\n'
-  +'\nThe following will not be imported:'
-  +'\n- Music videos, podcasts, audiobooks, voice memos etc.'
-  +'\n- Smart playlists, Genius playlists and Genius Mix playlists'
-  +'\n- View options'
-  +'\n- Album ratings, album likes and album dislikes'
-  +'\n- The following track metadata:'
-  +'\n    - Lyrics'
-  +'\n    - Equalizer'
-  +'\n    - Skip when shuffling'
-  +'\n    - Remember playback position'
-  +'\n    - Disc Count'
-  +'\n    - Start time'
-  +'\n    - Stop time'
+  m =
+    'Select an iTunes "Library.xml" file. To get that file, open iTunes and click on "File > Library > Export Library..."' +
+    '\n' +
+    '\nWARNING: This will reset/delete your Ferrum library!' +
+    // +"\nDuplicates will not be checked for, so if there's a song you already have in Ferrum, you'll end up with two."
+    '\n' +
+    '\nAll your tracks need to be downloaded for this to work.' +
+    ' If you have tracks from iTunes Store/Apple Music, it might not work.' +
+    '\n' +
+    '\nThe following will not be imported:' +
+    '\n- Music videos, podcasts, audiobooks, voice memos etc.' +
+    '\n- Smart playlists, Genius playlists and Genius Mix playlists' +
+    '\n- View options' +
+    '\n- Album ratings, album likes and album dislikes' +
+    '\n- The following track metadata:' +
+    '\n    - Lyrics' +
+    '\n    - Equalizer' +
+    '\n    - Skip when shuffling' +
+    '\n    - Remember playback position' +
+    '\n    - Disc Count' +
+    '\n    - Start time' +
+    '\n    - Stop time'
   const focusedWindow = BrowserWindow.getFocusedWindow()
   const result = await dialog.showMessageBox(focusedWindow, {
     type: 'info',
@@ -90,18 +91,18 @@ async function popup() {
 
 async function parseTrack(xmlTrack, warn, startTime, dryRun) {
   const track = {}
-  const logPrefix = '['+xmlTrack['Artist']+' - '+xmlTrack['Name']+']'
+  const logPrefix = '[' + xmlTrack['Artist'] + ' - ' + xmlTrack['Name'] + ']'
   const REQUIRED = 1
   const RECOMMENDED = 2
-  const addIfTruthy = function(prop, value, info) {
+  const addIfTruthy = function (prop, value, info) {
     if (value instanceof Date) {
       track[prop] = value.getTime()
     } else if (value) {
       track[prop] = value
     } else if (info === REQUIRED) {
-      throw new Error(logPrefix+` Track missing required field "${prop}"`)
+      throw new Error(logPrefix + ` Track missing required field "${prop}"`)
     } else if (info === RECOMMENDED) {
-      warn(logPrefix+` Missing recommended field "${prop}"`)
+      warn(logPrefix + ` Missing recommended field "${prop}"`)
     }
   }
   addIfTruthy('name', xmlTrack['Name'], RECOMMENDED)
@@ -133,11 +134,13 @@ async function parseTrack(xmlTrack, warn, startTime, dryRun) {
       importedPlayCount--
     }
     if (importedPlayCount >= 1) {
-      track['playsImported'] = [ {
-        count: importedPlayCount,
-        fromDate: xmlTrack['Date Added'].getTime(),
-        toDate: playDate === undefined ? startTime : playDate.getTime(),
-      } ]
+      track['playsImported'] = [
+        {
+          count: importedPlayCount,
+          fromDate: xmlTrack['Date Added'].getTime(),
+          toDate: playDate === undefined ? startTime : playDate.getTime(),
+        },
+      ]
     }
   }
   if (xmlTrack['Skip Count'] && xmlTrack['Skip Count'] >= 1) {
@@ -150,11 +153,13 @@ async function parseTrack(xmlTrack, warn, startTime, dryRun) {
       importedSkipCount--
     }
     if (importedSkipCount >= 1) {
-      track['skipsImported'] = [ {
-        count: importedSkipCount,
-        fromDate: xmlTrack['Date Added'].getTime(),
-        toDate: skipDate === undefined ? startTime : skipDate.getTime(),
-      } ]
+      track['skipsImported'] = [
+        {
+          count: importedSkipCount,
+          fromDate: xmlTrack['Date Added'].getTime(),
+          toDate: skipDate === undefined ? startTime : skipDate.getTime(),
+        },
+      ]
     }
   }
   // Play Time?
@@ -165,11 +170,11 @@ async function parseTrack(xmlTrack, warn, startTime, dryRun) {
     // value Seems like it should go from -255 to 255. However, when set to
     // 100%, I got 255 on one track, but 254 on another. We'll just
     // convert it to a -100 to 100 range and round off decimals.
-    const vol = Math.round(xmlTrack['Volume Adjustment']/2.55)
+    const vol = Math.round(xmlTrack['Volume Adjustment'] / 2.55)
     if (vol && vol >= -100 && vol <= 100) {
       track['volume'] = vol
     } else {
-      warn(logPrefix+` Unable to import Volume Adjustment of value "${vol}"`)
+      warn(logPrefix + ` Unable to import Volume Adjustment of value "${vol}"`)
     }
   }
   addIfTruthy('liked', xmlTrack['Loved'])
@@ -189,14 +194,14 @@ async function parseTrack(xmlTrack, warn, startTime, dryRun) {
 
   if (xmlTrack['Track Type'] !== 'File') {
     const trackType = xmlTrack['Track Type']
-    throw new Error(logPrefix+` Expected track type "File", was "${trackType}"`)
+    throw new Error(logPrefix + ` Expected track type "File", was "${trackType}"`)
   }
   if (!xmlTrack['Location']) {
-    throw new Error(logPrefix+' Missing required field "Location"')
+    throw new Error(logPrefix + ' Missing required field "Location"')
   }
   const xmlTrackPath = url.fileURLToPath(xmlTrack['Location'])
   if (!fs.existsSync(xmlTrackPath)) {
-    throw new Error(logPrefix+' File does not exist')
+    throw new Error(logPrefix + ' File does not exist')
   }
   const stats = fs.statSync(xmlTrackPath)
   track.size = stats.size
@@ -204,13 +209,19 @@ async function parseTrack(xmlTrack, warn, startTime, dryRun) {
   const md = await mm.parseFile(xmlTrackPath)
   // Warnings are in md.quality.warnings
   if (!md.format.duration) {
-    throw new Error(logPrefix+' Could not read duration from file. Probably unusual or badly encoded file')
+    throw new Error(
+      logPrefix + ' Could not read duration from file. Probably unusual or badly encoded file'
+    )
   }
   if (!md.format.bitrate) {
-    throw new Error(logPrefix+' Could not read bitrate from file. Probably unusual or badly encoded file')
+    throw new Error(
+      logPrefix + ' Could not read bitrate from file. Probably unusual or badly encoded file'
+    )
   }
   if (!md.format.sampleRate) {
-    throw new Error(logPrefix+' Could not read sample rate from file. Probably unusual or badly encoded file')
+    throw new Error(
+      logPrefix + ' Could not read sample rate from file. Probably unusual or badly encoded file'
+    )
   }
   track.duration = md.format.duration
   track.bitrate = Math.round(md.format.bitrate)
@@ -225,9 +236,9 @@ async function parseTrack(xmlTrack, warn, startTime, dryRun) {
     if (picture.length > 1) {
       // Start at 1 since we're comparing two elements in the array
       for (let i = 1; i < picture.length; i++) {
-        const equal = buffersEqual(picture[i-1].data, picture[i].data)
+        const equal = buffersEqual(picture[i - 1].data, picture[i].data)
         if (!equal) {
-          warn(logPrefix+' Found multiple unique artworks. Using the first one')
+          warn(logPrefix + ' Found multiple unique artworks. Using the first one')
         }
       }
       // // this code is for writing the multiple artworks
@@ -245,17 +256,17 @@ async function parseTrack(xmlTrack, warn, startTime, dryRun) {
     if (thePicture.format === 'image/png') ext = '.png'
     const imgFormat = thePicture.format
     if (!['image/jpeg', 'image/png'].includes(imgFormat)) {
-      warn(logPrefix+` Skipping unsupported cover format "${imgFormat}"`)
+      warn(logPrefix + ` Skipping unsupported cover format "${imgFormat}"`)
     }
-    artworkPath = path.join(artworksPath, newFilename+ext)
+    artworkPath = path.join(artworksPath, newFilename + ext)
     artworkData = thePicture.data
   }
   const newPath = path.join(tracksPath, newFilename)
   if (fs.existsSync(newPath)) {
-    throw new Error(logPrefix+' File already exists: '+newPath)
+    throw new Error(logPrefix + ' File already exists: ' + newPath)
   }
   if (fs.existsSync(artworkPath)) {
-    throw new Error(logPrefix+' File already exists: '+artworkPath)
+    throw new Error(logPrefix + ' File already exists: ' + artworkPath)
   }
   if (!dryRun) {
     if (artworkPath) fs.writeFileSync(artworkPath, artworkData)
@@ -263,9 +274,9 @@ async function parseTrack(xmlTrack, warn, startTime, dryRun) {
   }
 
   if (
-    xmlTrack['Persistent ID'] === 'A7F64F85A799AA1C' // init.seq
-      || xmlTrack['Persistent ID'] === '033D11C37D8F07CA' // test track
-      || xmlTrack['Persistent ID'] === '7B468E51DD4EC3DB' // test track2
+    xmlTrack['Persistent ID'] === 'A7F64F85A799AA1C' || // init.seq
+    xmlTrack['Persistent ID'] === '033D11C37D8F07CA' || // test track
+    xmlTrack['Persistent ID'] === '7B468E51DD4EC3DB' // test track2
   ) {
     console.log(xmlTrack['Name'], { track, xmlTrack })
   }
@@ -274,7 +285,7 @@ async function parseTrack(xmlTrack, warn, startTime, dryRun) {
 }
 
 function addCommonPlaylistFields(playlist, xmlPlaylist, startTime) {
-  const addIfTruthy = function(prop, value) {
+  const addIfTruthy = function (prop, value) {
     if (value) playlist[prop] = value
   }
   if (!xmlPlaylist['Name']) {
@@ -300,9 +311,11 @@ async function start(status, warn) {
   const xml = await readPlist(filePath)
 
   status('Parsing iTunes Library file...')
-  const version = xml['Major Version']+'.'+xml['Minor Version']
+  const version = xml['Major Version'] + '.' + xml['Minor Version']
   if (version !== '1.1') {
-    warn(`Library.xml version: Expected 1.1, was ${version}. You might have a too new/old iTunes verison`)
+    warn(
+      `Library.xml version: Expected 1.1, was ${version}. You might have a too new/old iTunes verison`
+    )
   }
   console.log('xml:', xml)
   console.log('music folder:', xml['Music Folder'])
@@ -334,14 +347,15 @@ async function start(status, warn) {
   const parsedTracks = {}
   const trackIdMap = {}
   for (let i = 0; i < xmlMusicPlaylistItems.length; i++) {
-    status(`Parsing tracks... (${i+1}/${xmlMusicPlaylistItems.length})`)
+    status(`Parsing tracks... (${i + 1}/${xmlMusicPlaylistItems.length})`)
     const xmlPlaylistItem = xmlMusicPlaylistItems[i]
     const iTunesId = xmlPlaylistItem['Track ID']
     const xmlTrack = xml.Tracks[iTunesId]
     const track = await parseTrack(xmlTrack, warn, startTime, dryRun)
     let id
 
-    do { // prevent duplicate IDs
+    do {
+      // prevent duplicate IDs
       id = makeId(7)
     } while (parsedTracks[id])
     parsedTracks[id] = track
@@ -363,7 +377,8 @@ async function start(status, warn) {
     const playlist = { type: 'folder', children: [] }
     addCommonPlaylistFields(playlist, xmlPlaylist, startTime)
     let id
-    do { // prevent duplicate IDs
+    do {
+      // prevent duplicate IDs
       id = makeId(7)
     } while (parsedPlaylists[id])
     parsedPlaylists[id] = playlist
@@ -397,7 +412,8 @@ async function start(status, warn) {
     const parentItunesId = xmlPlaylist['Parent Persistent ID']
     const parentId = folderIdMap[parentItunesId]
     let id
-    do { // prevent duplicate IDs
+    do {
+      // prevent duplicate IDs
       id = makeId(7)
     } while (parsedTracks[id])
 

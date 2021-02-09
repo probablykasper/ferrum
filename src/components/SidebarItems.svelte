@@ -13,7 +13,7 @@
   }
 </script>
 
-<style lang='sass'>
+<style lang="sass">
   .item
     height: 24px
     white-space: nowrap
@@ -44,7 +44,7 @@
     padding-right: 10px
 </style>
 
-<template lang='pug'>
+<template lang="pug">
   +each('childLists as childList')
     +if('childList.type === "folder"')
       .item(class:show='{childList.show}' on:click!='{() => childList.show = !childList.show }')

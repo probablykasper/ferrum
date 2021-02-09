@@ -14,7 +14,7 @@ export const stopped = (() => {
     set: (value: boolean) => {
       isStopped = value
       set(value)
-    }
+    },
   }
 })()
 export const paused = writable(true)
@@ -22,7 +22,7 @@ export const currentTime = writable(0)
 export const duration = writable(0)
 let queue: TrackID[] = []
 let playingIndex = 0
-export const playingTrack: Writable<Track|null> = writable(null)
+export const playingTrack: Writable<Track | null> = writable(null)
 let waitingToPlay = false
 
 audio.ontimeupdate = (e) => {

@@ -13,12 +13,15 @@
   let pageStatusErr = ''
   const { ipcRenderer } = window.require('electron')
   async function itunesImport() {
-    const result = await db.iTunesImport((status) => {
-      pageStatus = status
-    }, (warning) => {
-      console.warn(warning)
-      pageStatusWarnings += warning+'\n'
-    })
+    const result = await db.iTunesImport(
+      (status) => {
+        pageStatus = status
+      },
+      (warning) => {
+        console.warn(warning)
+        pageStatusWarnings += warning + '\n'
+      }
+    )
     if (result.cancelled) return
     if (result.err) {
       pageStatusErr = result.err.stack
@@ -46,7 +49,7 @@
   $: root.style.setProperty('--bg-color', styles['--bg-color'])
 </script>
 
-<style lang='sass'>
+<style lang="sass">
   :global(html), :global(body)
     background-color: var(--bg-color)
     height: 100%
@@ -105,7 +108,7 @@
         overflow-wrap: anywhere
 </style>
 
-<template lang='pug'>
+<template lang="pug">
   svelte:head
     title Ferrum
   main(style='{cssVarStyles}' class:dev='{isDev}')

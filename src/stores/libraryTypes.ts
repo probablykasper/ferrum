@@ -15,7 +15,7 @@ export interface TrackListsHashMap {
 }
 
 export enum Version {
-  V1 = 1
+  V1 = 1,
 }
 
 /** (track id, start time, duration) */
@@ -79,7 +79,7 @@ export type CountObject = {
 type TrackList = Playlist | Folder | Special
 
 type Playlist = {
-  type: "playlist"
+  type: 'playlist'
   id: TrackListID
   name: string
   description?: string
@@ -93,7 +93,7 @@ type Playlist = {
 }
 
 type Folder = {
-  type: "folder"
+  type: 'folder'
   id: TrackListID
   show: boolean
   name: string
@@ -110,7 +110,7 @@ type Folder = {
 }
 
 type Special = {
-  type: "special"
+  type: 'special'
   id: TrackListID
   name: SpecialTrackListName
   dateCreated: MsSinceUnixEpoch
@@ -118,5 +118,5 @@ type Special = {
 }
 
 enum SpecialTrackListName {
-  Root
+  Root,
 }

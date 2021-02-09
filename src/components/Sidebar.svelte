@@ -3,13 +3,11 @@
   import SidebarItems from './SidebarItems.svelte'
   import { trackLists } from '../stores/data.ts'
   const special = {
-    children: [
-      'root',
-    ],
+    children: ['root'],
   }
   let viewport
   onMount(() => {
-    viewport.addEventListener('keydown', function(e) {
+    viewport.addEventListener('keydown', function (e) {
       let prevent = true
       if (e.key == 'Home') viewport.scrollTop = 0
       else if (e.key == 'End') viewport.scrollTop = viewport.scrollHeight
@@ -21,7 +19,7 @@
   })
 </script>
 
-<style lang='sass'>
+<style lang="sass">
   .sidebar
     width: 230px
     padding-top: 10px
@@ -33,7 +31,7 @@
     outline: none
 </style>
 
-<template lang='pug'>
+<template lang="pug">
   .sidebar(tabindex='0' bind:this='{viewport}')
     SidebarItems(trackList='{special}')
     br

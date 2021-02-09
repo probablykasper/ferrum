@@ -109,39 +109,60 @@
 
 <div class="tracklist">
   <div class="row header" class:desc={$openPlaylist.sort_desc}>
-    <div class="c index" class:sort={sortKey === 'index'} on:click={()=>sortBy('index')}>
+    <div class="c index" class:sort={sortKey === 'index'} on:click={() => sortBy('index')}>
       <span>#</span>
     </div>
-    <div class="c name" class:sort={sortKey === 'name'} on:click={()=>sortBy('name')}>
+    <div class="c name" class:sort={sortKey === 'name'} on:click={() => sortBy('name')}>
       <span>Name</span>
     </div>
-    <div class="c playCount" class:sort={sortKey === 'playCount'} on:click={()=>sortBy('playCount')}>
+    <div
+      class="c playCount"
+      class:sort={sortKey === 'playCount'}
+      on:click={() => sortBy('playCount')}>
       <span>Plays</span>
     </div>
-    <div class="c duration" class:sort={sortKey === 'duration'} on:click={()=>sortBy('duration')}>
+    <div class="c duration" class:sort={sortKey === 'duration'} on:click={() => sortBy('duration')}>
       <span>Time</span>
     </div>
-    <div class="c artist" class:sort={sortKey === 'artist'} on:click={()=>sortBy('artist')}>
+    <div class="c artist" class:sort={sortKey === 'artist'} on:click={() => sortBy('artist')}>
       <span>Artist</span>
     </div>
-    <div class="c albumName" class:sort={sortKey === 'albumName'} on:click={()=>sortBy('albumName')}>
+    <div
+      class="c albumName"
+      class:sort={sortKey === 'albumName'}
+      on:click={() => sortBy('albumName')}>
       <span>Album</span>
     </div>
-    <div class="c comments" class:sort={sortKey === 'comments'} on:click={()=>sortBy('comments')}>
+    <div class="c comments" class:sort={sortKey === 'comments'} on:click={() => sortBy('comments')}>
       <span>Comments</span>
     </div>
-    <div class="c genre" class:sort={sortKey === 'genre'} on:click={()=>sortBy('genre')}>
+    <div class="c genre" class:sort={sortKey === 'genre'} on:click={() => sortBy('genre')}>
       <span>Genre</span>
     </div>
-    <div class="c dateAdded" class:sort={sortKey === 'dateAdded'} on:click={()=>sortBy('dateAdded')}>
+    <div
+      class="c dateAdded"
+      class:sort={sortKey === 'dateAdded'}
+      on:click={() => sortBy('dateAdded')}>
       <span>Date Added</span>
     </div>
-    <div class="c year" class:sort={sortKey === 'year'} on:click={()=>sortBy('year')}>
+    <div class="c year" class:sort={sortKey === 'year'} on:click={() => sortBy('year')}>
       <span>Year</span>
     </div>
   </div>
-  <VList {getItem} bind:visibleItems itemHeight={24} itemCount={$openPlaylist.length} bind:startIndex bind:endIndex let:item={track} let:index>
-    <div class="row" on:dblclick={() => playIndex(index)} on:mousedown={() => rowClick(index)} class:selected={selected.has(index)}>
+  <VList
+    {getItem}
+    bind:visibleItems
+    itemHeight={24}
+    itemCount={$openPlaylist.length}
+    bind:startIndex
+    bind:endIndex
+    let:item={track}
+    let:index>
+    <div
+      class="row"
+      on:dblclick={() => playIndex(index)}
+      on:mousedown={() => rowClick(index)}
+      class:selected={selected.has(index)}>
       <div class="c index">{index + 1}</div>
       <div class="c name">{track.name || ''}</div>
       <div class="c playCount">{track.playCount || ''}</div>

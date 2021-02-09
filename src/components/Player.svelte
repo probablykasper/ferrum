@@ -1,12 +1,22 @@
 <script>
-  import { stopped, paused, playPause, duration, currentTime, seek, playingTrack, previous, next } from '../stores/player.ts'
+  import {
+    stopped,
+    paused,
+    playPause,
+    duration,
+    currentTime,
+    seek,
+    playingTrack,
+    previous,
+    next,
+  } from '../stores/player.ts'
   import { getDuration } from '../scripts/formatting'
   let sliderBeingDragged = false
   const sliderSteps = 400
   let sliderValue = 0
   $: {
     if (!sliderBeingDragged && $duration > 0) {
-      sliderValue = $currentTime/$duration*sliderSteps
+      sliderValue = ($currentTime / $duration) * sliderSteps
     }
   }
   function sliderMousedown() {
@@ -14,11 +24,11 @@
   }
   function sliderMouseup(e) {
     sliderBeingDragged = false
-    seek(e.target.value/sliderSteps*$duration || 0)
+    seek((e.target.value / sliderSteps) * $duration || 0)
   }
 </script>
 
-<style lang='sass'>
+<style lang="sass">
   .container
     display: flex
   .stopped
@@ -51,7 +61,7 @@
       position: relative
 </style>
 
-<template lang='pug'>
+<template lang="pug">
   .container(class:stopped='{$stopped}')
     div
       .buttons

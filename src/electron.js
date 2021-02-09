@@ -20,7 +20,6 @@ let mainWindow
 let quitting = false
 
 function ready() {
-
   protocol.registerFileProtocol('file', (request, callback) => {
     const url = request.url.substr(7)
     callback(decodeURI(url))
@@ -57,7 +56,7 @@ function ready() {
     })
   })
 
-  if (dev) mainWindow.loadURL('http://localhost:'+devPort)
+  if (dev) mainWindow.loadURL('http://localhost:' + devPort)
   else mainWindow.loadFile(path.resolve(__dirname, '../public/index.html'))
 
   if (dev) mainWindow.webContents.openDevTools()
@@ -97,20 +96,24 @@ app.on('activate', () => {
 })
 
 const template = [
-  ...isMac ? [ {
-    label: app.name,
-    submenu: [
-      { role: 'about' },
-      { type: 'separator' },
-      { role: 'services' },
-      { type: 'separator' },
-      { role: 'hide' },
-      { role: 'hideothers' },
-      { role: 'unhide' },
-      { type: 'separator' },
-      { role: 'quit' },
-    ],
-  } ] : [],
+  ...(isMac
+    ? [
+        {
+          label: app.name,
+          submenu: [
+            { role: 'about' },
+            { type: 'separator' },
+            { role: 'services' },
+            { type: 'separator' },
+            { role: 'hide' },
+            { role: 'hideothers' },
+            { role: 'unhide' },
+            { type: 'separator' },
+            { role: 'quit' },
+          ],
+        },
+      ]
+    : []),
   {
     label: 'File',
     submenu: [
@@ -133,30 +136,30 @@ const template = [
       { role: 'cut' },
       { role: 'copy' },
       { role: 'paste' },
-      ...isMac ? [
-        // { role: 'pasteAndMatchStyle' },
-        // { role: 'delete' },
-        { role: 'selectAll' },
-        { type: 'separator' },
-        // {
-        //   label: 'Speech',
-        //   submenu: [
-        //     { role: 'startSpeaking' },
-        //     { role: 'stopSpeaking' },
-        //   ],
-        // },
-      ] : [
-        // { role: 'delete' },
-        { type: 'separator' },
-        { role: 'selectAll' },
-      ],
+      ...(isMac
+        ? [
+            // { role: 'pasteAndMatchStyle' },
+            // { role: 'delete' },
+            { role: 'selectAll' },
+            { type: 'separator' },
+            // {
+            //   label: 'Speech',
+            //   submenu: [
+            //     { role: 'startSpeaking' },
+            //     { role: 'stopSpeaking' },
+            //   ],
+            // },
+          ]
+        : [
+            // { role: 'delete' },
+            { type: 'separator' },
+            { role: 'selectAll' },
+          ]),
     ],
   },
   {
     label: 'Song',
-    submenu: [
-      { label: 'TBA' },
-    ],
+    submenu: [{ label: 'TBA' }],
   },
   {
     label: 'View',
@@ -189,14 +192,14 @@ const template = [
     submenu: [
       { role: 'minimize' },
       { role: 'zoom' },
-      ...isMac ? [
-        { type: 'separator' },
-        { role: 'front' },
-        { type: 'separator' },
-        // { role: 'window' },
-      ] : [
-        { role: 'close' },
-      ],
+      ...(isMac
+        ? [
+            { type: 'separator' },
+            { role: 'front' },
+            { type: 'separator' },
+            // { role: 'window' },
+          ]
+        : [{ role: 'close' }]),
     ],
   },
   {
@@ -204,7 +207,7 @@ const template = [
     submenu: [
       {
         label: 'Learn More',
-        click: async() => {
+        click: async () => {
           const { shell } = require('electron')
           await shell.openExternal('https://github.com/probablykasper/ferrum')
         },

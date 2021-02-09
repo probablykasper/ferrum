@@ -68,7 +68,7 @@ function sanitizeFilename(str) {
 function generateFilename(track, originalPath) {
   const name = track.name || ''
   const artist = track.artist || ''
-  const beginning = sanitizeFilename(artist+' - '+name)
+  const beginning = sanitizeFilename(artist + ' - ' + name)
 
   const ext = path.extname(originalPath)
   const allowedExt = ['.mp3', '.m4a']
@@ -88,11 +88,11 @@ function generateFilename(track, originalPath) {
     if (i === 500) {
       throw new Error('Already got 500 tracks with that artist and title')
     }
-    filename = beginning+ending+ext
+    filename = beginning + ending + ext
     const filepath = path.join(tracksPath, filename)
     if (fs.existsSync(filepath)) {
       fileNum++
-      ending = ' '+fileNum
+      ending = ' ' + fileNum
     } else {
       break
     }
