@@ -1,5 +1,11 @@
 import { writable, readable } from 'svelte/store'
-import type { Track, TrackID, TrackListID, TrackListsHashMap } from './libraryTypes'
+import type {
+  MsSinceUnixEpoch,
+  Track,
+  TrackID,
+  TrackListID,
+  TrackListsHashMap,
+} from './libraryTypes'
 import window from './window'
 
 export function grabErr<T>(cb: () => T): T {
@@ -55,6 +61,7 @@ export type Data = {
   get_track: (id: TrackID) => Track
   add_play: (id: TrackID) => void
   add_skip: (id: TrackID) => void
+  add_play_time: (id: TrackID, startTime: MsSinceUnixEpoch, duration_ms: number) => void
 
   open_playlist: (id: TrackListID) => void
   get_open_playlist_track: (index: number) => Track
@@ -89,6 +96,9 @@ export const methods = {
   }),
   addSkip: wrapErr((id: TrackID) => {
     data.add_skip(id)
+  }),
+  addPlayTime: wrapErr((id: TrackID, startTime: MsSinceUnixEpoch, durationMs: number) => {
+    data.add_play_time(id, startTime, durationMs)
   }),
 }
 

@@ -1,5 +1,9 @@
 # Changelog
 
+## Next
+- **Migration**
+  - Inside the `playTime` key in `library.json`, remove any value that includes `null` from `playTime`.
+
 ## 0.2.0 - 2020 Jan 3
 - Added currently playing artist and title to player
 - Added sorting

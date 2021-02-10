@@ -87,7 +87,7 @@ audio.ondurationchange = () => {
 function savePlayTime() {
   clearInterval(playTimeCounter)
   if (playTime >= 1000) {
-    console.log('    Yep')
+    methods.addPlayTime(queue[playingIndex], startTime, playTime)
   }
   playTime = 0
 }

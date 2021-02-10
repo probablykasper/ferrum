@@ -109,14 +109,14 @@ pub fn add_skip(ctx: CallContext) -> NResult<JsUndefined> {
   return ctx.env.get_undefined();
 }
 
-#[js_function(2)]
+#[js_function(3)]
 pub fn add_play_time(ctx: CallContext) -> NResult<JsUndefined> {
   let data: &mut Data = get_data(&ctx)?;
   let tracks = &mut data.library.tracks;
   let id = arg_to_string(&ctx, 0)?;
   tracks.get_mut(&id).ok_or(nerr("Track ID not found"))?;
-  let timestamp = get_now_timestamp();
-  let duration: i64 = arg_to_number(&ctx, 1)?;
+  let timestamp: i64 = arg_to_number(&ctx, 1)?;
+  let duration: i64 = arg_to_number(&ctx, 2)?;
   data.library.playTime.push((id, timestamp, duration));
   data.save()?;
   return ctx.env.get_undefined();
@@ -214,6 +214,7 @@ fn init_data_instance(mut exports: JsObject) -> NResult<JsObject> {
   exports.create_named_method("get_track", get_track)?;
   exports.create_named_method("add_play", add_play)?;
   exports.create_named_method("add_skip", add_skip)?;
+  exports.create_named_method("add_play_time", add_play_time)?;
 
   exports.create_named_method("open_playlist", open_playlist)?;
   exports.create_named_method("get_open_playlist_track", get_open_playlist_track)?;
