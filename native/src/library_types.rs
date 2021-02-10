@@ -8,9 +8,9 @@ use serde_repr::{Deserialize_repr, Serialize_repr};
 #[serde(deny_unknown_fields)]
 pub struct Library {
   pub version: Version,
-  pub playTime: Vec<PlayTime>,
   pub tracks: LinkedHashMap<TrackID, Track>,
   pub trackLists: TrackLists,
+  pub playTime: Vec<PlayTime>,
 }
 
 pub type TrackID = String;
