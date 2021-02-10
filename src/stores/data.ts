@@ -53,6 +53,12 @@ type OpenPlaylistInfo = {
 
 export const isDev = process?.env?.NODE_ENV === 'development'
 export type Data = {
+  get_paths: () => {
+    library_dir: string
+    tracks_dir: string
+    artworks_dir: string
+    library_json: string
+  }
   get_tracks_dir: () => string
   get_library_json_path: () => string
 
@@ -80,11 +86,8 @@ export const trackLists = grabErr(() => {
   }
 })
 
-export const tracksDir = grabErr(() => {
-  return data.get_tracks_dir()
-})
-export const libraryJsonPath = grabErr(() => {
-  return data.get_library_json_path()
+export const paths = grabErr(() => {
+  return data.get_paths()
 })
 
 export const methods = {

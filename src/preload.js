@@ -1,10 +1,7 @@
 const path = require('path')
 const fs = require('fs')
-const { ipcRenderer } = require('electron')
 const iTunesImport = require('./scripts/import_itunes.js')
 window.addon = require('../native/addon.node')
-const { ensureLibExists } = require('./scripts/handy.js')
-const { tracksPath, libraryJsonPath } = require('./scripts/paths.js')
 const { pathToFileURL } = require('url')
 
 const { dialog, BrowserWindow } = require('electron').remote
@@ -21,8 +18,6 @@ window.toFileUrl = (...args) => {
 window.existsSync = (path) => {
   return fs.existsSync(path)
 }
-
-let library = ensureLibExists()
 
 window.iTunesImport = iTunesImport
 

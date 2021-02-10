@@ -2,7 +2,7 @@ import { writable, get } from 'svelte/store'
 import type { Writable } from 'svelte/store'
 const { ipcRenderer } = window.require('electron')
 import quit from './quit'
-import { methods, openPlaylist, tracksDir } from './data'
+import { methods, openPlaylist, paths } from './data'
 import type { Track, TrackID } from './libraryTypes'
 import window from './window'
 
@@ -64,7 +64,7 @@ function startPlayback() {
 function startPlayingIndex(index: number) {
   const id = queue[index]
   const track = methods.getTrack(id)
-  const fileUrl = window.toFileUrl(tracksDir, track.file)
+  const fileUrl = window.toFileUrl(paths.tracks_dir, track.file)
   waitingToPlay = true
   audio.src = fileUrl
   playingIndex = index

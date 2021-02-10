@@ -1,7 +1,7 @@
 <script>
   import { onMount } from 'svelte'
   import SidebarItems from './SidebarItems.svelte'
-  import { trackLists } from '../stores/data.ts'
+  import { trackLists } from '../stores/data'
   const special = {
     children: ['root'],
   }

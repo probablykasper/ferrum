@@ -1,12 +1,10 @@
-use crate::library::load_library;
+use crate::library::{load_library, Paths};
 use crate::library_types::TrackList::{Folder, Playlist, Special};
 use crate::library_types::{Library, SpecialTrackListName, TrackID, TrackListID};
 use crate::sort::sort;
 use atomicwrites::{AllowOverwrite, AtomicFile};
 use serde::{Deserialize, Serialize};
-use std::io::Error;
-use std::io::Write;
-use std::path::PathBuf;
+use std::io::{Error, Write};
 use std::time::Instant;
 
 #[derive(Serialize, Deserialize)]
@@ -15,13 +13,6 @@ pub struct OpenPlaylistInfo {
   pub sort_key: String,
   pub sort_desc: bool,
   pub length: usize,
-}
-
-pub struct Paths {
-  pub library_dir: PathBuf,
-  pub tracks_dir: PathBuf,
-  pub artworks_dir: PathBuf,
-  pub library_json: PathBuf,
 }
 
 pub struct Data {
@@ -78,14 +69,14 @@ pub fn load_data(is_dev: &bool) -> Result<Data, &'static str> {
   let library_dir = music_dir.join(app_name);
   let library_json_path = library_dir.clone().join("Library.json");
 
-  let loaded_library = load_library(&library_json_path)?;
-
   let paths = Paths {
     library_dir: library_dir.clone(),
     tracks_dir: library_dir.join("Tracks"),
     artworks_dir: library_dir.join("Artworks"),
     library_json: library_json_path,
   };
+
+  let loaded_library = load_library(&paths);
 
   let mut data = Data {
     is_dev: *is_dev,

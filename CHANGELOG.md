@@ -2,9 +2,11 @@
 
 ## Next
 - **Migration**
-  - Inside the `playTime` key in `library.json`, remove any value that includes `null` from `playTime`.
+  - Inside the `playTime` key in `library.json`, remove any value that includes `null` from `playTime`
 
 ## 0.2.0 - 2020 Jan 3
+- **Migration**
+  - There may have been breaking changes to `library.json`
 - Added currently playing artist and title to player
 - Added sorting
 - Added macOS traffic light to window

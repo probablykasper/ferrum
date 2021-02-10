@@ -5,7 +5,7 @@
   import NewTrackList from './components/TrackList.svelte'
   import Player from './components/Player.svelte'
   import Sidebar from './components/Sidebar.svelte'
-  import { isDev, libraryJsonPath } from './stores/data.ts'
+  import { isDev, paths } from './stores/data'
 
   let pageStatus = ''
   let pageStatusWarnings = ''
@@ -13,7 +13,7 @@
   const { ipcRenderer } = window.require('electron')
   async function itunesImport() {
     const result = await window.iTunesImport(
-      libraryJsonPath,
+      paths,
       (status) => {
         pageStatus = status
       },

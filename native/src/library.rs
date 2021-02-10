@@ -1,30 +1,72 @@
-use crate::library_types::Library;
-use std::fs::File;
-use std::io::Read;
-use std::path::Path;
+use crate::get_now_timestamp;
+use crate::library_types::{Library, Special, SpecialTrackListName, TrackList, Version};
+use linked_hash_map::LinkedHashMap;
+use serde::{Deserialize, Serialize};
+use std::fs::{create_dir_all, File};
+use std::io::{Error, ErrorKind, Read};
+use std::path::PathBuf;
 use std::time::Instant;
 
-pub fn load_library(path: &Path) -> Result<Library, &'static str> {
+#[derive(Serialize, Deserialize)]
+pub struct Paths {
+  pub library_dir: PathBuf,
+  pub tracks_dir: PathBuf,
+  pub artworks_dir: PathBuf,
+  pub library_json: PathBuf,
+}
+fn ensure_dirs_exists(paths: &Paths) -> Result<(), Error> {
+  create_dir_all(&paths.library_dir)?;
+  create_dir_all(&paths.tracks_dir)?;
+  create_dir_all(&paths.artworks_dir)?;
+  return Ok(());
+}
+
+pub fn load_library(paths: &Paths) -> Library {
   let mut now = Instant::now();
 
-  let mut json_str = String::new();
-  File::open(path)
-    .or(Err("Error opening library file"))?
-    .read_to_string(&mut json_str)
-    .or(Err("Error reading library file"))?;
-
-  println!("Read library: {}ms", now.elapsed().as_millis());
-  now = Instant::now();
-  let library = match serde_json::from_str(&mut json_str) {
-    Ok(library) => library,
-    Err(err) => {
-      println!("{:?}", err);
-      return Err("Error parsing library file");
-    }
+  match ensure_dirs_exists(&paths) {
+    Ok(_) => {}
+    Err(err) => panic!("Error ensuring folder exists: {}", err),
   };
 
-  println!("Parse library: {}ms", now.elapsed().as_millis());
-  Ok(library)
+  match File::open(&paths.library_json) {
+    Ok(mut file) => {
+      let mut json_str = String::new();
+      match file.read_to_string(&mut json_str) {
+        Ok(_) => {}
+        Err(err) => panic!("Error reading library file: {}", err),
+      };
+      println!("Read library: {}ms", now.elapsed().as_millis());
+      now = Instant::now();
+
+      let library = match serde_json::from_str(&mut json_str) {
+        Ok(library) => library,
+        Err(err) => panic!("Error parsing library file: {:?}", err),
+      };
+
+      println!("Parse library: {}ms", now.elapsed().as_millis());
+      return library;
+    }
+    Err(err) => match err.kind() {
+      ErrorKind::NotFound => {
+        let mut track_lists = LinkedHashMap::new();
+        let root = Special {
+          id: "root".to_string(),
+          name: SpecialTrackListName::Root,
+          dateCreated: get_now_timestamp(),
+          children: Vec::new(),
+        };
+        track_lists.insert("root".to_string(), TrackList::Special(root));
+        return Library {
+          version: Version::V1,
+          playTime: Vec::new(),
+          tracks: LinkedHashMap::new(),
+          trackLists: track_lists,
+        };
+      }
+      _err_kind => panic!("Error opening library file: {}", err),
+    },
+  };
 }
 
 pub enum TrackField {

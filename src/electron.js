@@ -6,8 +6,9 @@ const { ipcMain, session, Menu, BrowserWindow, protocol } = require('electron')
 const path = require('path')
 const vars = require('./variables.json')
 
-const { electronData } = require('./scripts/paths.js')
-app.setPath('userData', electronData)
+const appData = app.getPath('appData')
+const electronDataPath = path.join(appData, app.name, 'Electron Data')
+app.setPath('userData', electronDataPath)
 
 let devPort
 if (dev) {

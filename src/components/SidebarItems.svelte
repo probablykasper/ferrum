@@ -1,5 +1,5 @@
 <script>
-  import { trackLists, openPlaylist } from '../stores/data.ts'
+  import { trackLists, openPlaylist } from '../stores/data'
   // import { Router, navigate, Route, link } from 'svelte-routing'
   export let trackList
   let childLists = []

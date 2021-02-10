@@ -4,38 +4,74 @@ const path = require('path')
 const url = require('url')
 const fs = require('fs')
 const mm = require('music-metadata')
-const { tracksPath, artworksPath } = require('./paths.js')
-const { generateFilename, ensureLibExists } = require('./handy.js')
 const addon = require('../../native/addon.node')
 
 module.exports = iTunesImport
-async function iTunesImport(libraryJsonPath, status, warn) {
+async function iTunesImport(paths, status, warn) {
   const warnings = []
   try {
-    result = await start(libraryJsonPath, status, (warning) => {
+    result = await start(paths, status, (warning) => {
       warnings.push(warning)
       warn(warning)
     })
     result.warnings = warnings
-    if (result.cancelled) {
-      return result
-    } else {
-      status('Saving...')
-      let newLibrary = {
-        version: 1,
-        tracks: result.tracks,
-        trackLists: result.trackLists,
-        playTime: [],
-      }
-      const json = JSON.stringify(newLibrary, null, '  ')
-      await addon.atomic_file_save(libraryJsonPath, json)
-      return result
-    }
+    return result
   } catch (err) {
     if (!err.message) err.message = err.code
     console.error(err)
     return { err, warnings }
   }
+}
+
+function sanitizeFilename(str) {
+  str = str.replaceAll('/', '_')
+  str = str.replaceAll('?', '_')
+  str = str.replaceAll('<', '_')
+  str = str.replaceAll('>', '_')
+  str = str.replaceAll('\\', '_')
+  str = str.replaceAll(':', '_')
+  str = str.replaceAll('*', '_')
+  str = str.replaceAll('"', '_')
+  // prevent control characters:
+  str = str.replaceAll('0x', '__')
+  // Filenames can be max 255 bytes. We use 230 to give
+  // margin for the fileNum and file extension.
+  return str.substring(0, 230)
+}
+
+function generateFilename(track, originalPath, tracksDir) {
+  const name = track.name || ''
+  const artist = track.artist || ''
+  const beginning = sanitizeFilename(artist + ' - ' + name)
+
+  const ext = path.extname(originalPath)
+  const allowedExt = ['.mp3', '.m4a']
+  if (!allowedExt.includes(ext)) {
+    // by having an approved set of file extensions, we avoid unsafe filenames:
+    //    - Unix reserved filenames `.` and `..`
+    //    - Windows reserved filenames `CON`, `PRN` etc.
+    //    - Trailing `.` and ` `
+    throw new Error(`Unsupported file extension "${ext}"`)
+  }
+
+  let fileNum = 0
+  let ending = ''
+
+  let filename
+  for (let i = 0; i < 999; i++) {
+    if (i === 500) {
+      throw new Error('Already got 500 tracks with that artist and title')
+    }
+    filename = beginning + ending + ext
+    const filepath = path.join(tracksDir, filename)
+    if (fs.existsSync(filepath)) {
+      fileNum++
+      ending = ' ' + fileNum
+    } else {
+      break
+    }
+  }
+  return filename
 }
 
 function readPlist(filePath) {
@@ -240,7 +276,7 @@ async function parseTrack(xmlTrack, warn, startTime, dryRun) {
   track.bitrate = Math.round(md.format.bitrate)
   track.sampleRate = md.format.sampleRate
   const picture = md.common.picture
-  const newFilename = generateFilename(track, xmlTrackPath)
+  const newFilename = generateFilename(track, xmlTrackPath, paths.tracks_dir)
   track.file = newFilename
   let artworkPath, artworkData
   if (picture && picture[0]) {
@@ -271,10 +307,10 @@ async function parseTrack(xmlTrack, warn, startTime, dryRun) {
     if (!['image/jpeg', 'image/png'].includes(imgFormat)) {
       warn(logPrefix + ` Skipping unsupported cover format "${imgFormat}"`)
     }
-    artworkPath = path.join(artworksPath, newFilename + ext)
+    artworkPath = path.join(paths.artworks_dir, newFilename + ext)
     artworkData = thePicture.data
   }
-  const newPath = path.join(tracksPath, newFilename)
+  const newPath = path.join(paths.tracks_dir, newFilename)
   if (fs.existsSync(newPath)) {
     throw new Error(logPrefix + ' File already exists: ' + newPath)
   }
@@ -313,9 +349,7 @@ function addCommonPlaylistFields(playlist, xmlPlaylist, startTime) {
   playlist.dateImported = startTime
 }
 
-function save(path, tracks, playlists) {}
-
-async function start(libraryJsonPath, status, warn) {
+async function start(paths, status, warn) {
   // const filePath = '/Users/kasper/Downloads/Library.xml'
   // const dryRun = false
   const { filePath, dryRun } = await popup()
@@ -381,6 +415,7 @@ async function start(libraryJsonPath, status, warn) {
   const parsedPlaylists = {
     root: {
       name: 'Root',
+      id: 'root',
       type: 'special',
       dateCreated: startTime,
       children: [],
@@ -466,6 +501,6 @@ async function start(libraryJsonPath, status, warn) {
     playTime: [],
   }
   const json = JSON.stringify(newLibrary, null, '  ')
-  await addon.atomic_file_save(libraryJsonPath, json)
+  await addon.atomic_file_save(paths.library_json, json)
   return result
 }

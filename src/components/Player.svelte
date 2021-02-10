@@ -9,7 +9,7 @@
     playingTrack,
     previous,
     next,
-  } from '../stores/player.ts'
+  } from '../stores/player'
   import { getDuration } from '../scripts/formatting'
   let sliderBeingDragged = false
   const sliderSteps = 400

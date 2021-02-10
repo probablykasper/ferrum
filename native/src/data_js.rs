@@ -1,12 +1,12 @@
 use crate::data::{get_open_playlist_tracks, OpenPlaylistInfo};
 use crate::data::{load_data, Data};
+use crate::get_now_timestamp;
 use crate::js::{arg_to_bool, arg_to_number, arg_to_string, nerr, nr};
 use crate::library_types::Track;
 use crate::library_types::TrackList;
 use crate::sort::sort;
 use napi::{CallContext, JsObject, JsString, JsUndefined, JsUnknown, Result as NResult};
 use napi_derive::js_function;
-use std::time::{SystemTime, UNIX_EPOCH};
 
 fn get_data<'a>(ctx: &'a CallContext) -> NResult<&'a mut Data> {
   let this: JsObject = ctx.this()?;
@@ -22,14 +22,6 @@ fn id_arg_to_track<'a>(ctx: &'a CallContext, arg: usize) -> NResult<&'a mut Trac
   return Ok(track);
 }
 
-fn get_now_timestamp() -> i64 {
-  let timestamp = match SystemTime::now().duration_since(UNIX_EPOCH) {
-    Ok(n) => n.as_millis() as i64,
-    Err(_) => panic!("Generated timestamp is earlier than Unix Epoch"),
-  };
-  return timestamp;
-}
-
 #[js_function(1)]
 pub fn load_data_js(ctx: CallContext) -> NResult<JsObject> {
   let is_dev = arg_to_bool(&ctx, 0)?;
@@ -43,18 +35,10 @@ pub fn load_data_js(ctx: CallContext) -> NResult<JsObject> {
 }
 
 #[js_function(0)]
-pub fn get_tracks_dir(ctx: CallContext) -> NResult<JsString> {
+pub fn get_paths(ctx: CallContext) -> NResult<JsUnknown> {
   let data: &mut Data = get_data(&ctx)?;
-  let path = &data.paths.tracks_dir;
-  let tracks_dir = path.to_str().ok_or(nerr("Invalid tracks folder path"))?;
-  return ctx.env.create_string(tracks_dir);
-}
-#[js_function(0)]
-pub fn get_library_json_path(ctx: CallContext) -> NResult<JsString> {
-  let data: &mut Data = get_data(&ctx)?;
-  let path = &data.paths.library_json;
-  let tracks_dir = path.to_str().ok_or(nerr("Invalid library.json path"))?;
-  return ctx.env.create_string(tracks_dir);
+  let js_obj = ctx.env.to_js_value(&data.paths);
+  return js_obj;
 }
 
 #[js_function(0)]
@@ -206,8 +190,7 @@ pub fn sort_js(ctx: CallContext) -> NResult<JsUndefined> {
 }
 
 fn init_data_instance(mut exports: JsObject) -> NResult<JsObject> {
-  exports.create_named_method("get_tracks_dir", get_tracks_dir)?;
-  exports.create_named_method("get_library_json_path", get_library_json_path)?;
+  exports.create_named_method("get_paths", get_paths)?;
 
   exports.create_named_method("get_track_lists", get_track_lists)?;
 
