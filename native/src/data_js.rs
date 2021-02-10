@@ -49,8 +49,15 @@ pub fn get_tracks_dir(ctx: CallContext) -> NResult<JsString> {
   let tracks_dir = path.to_str().ok_or(nerr("Invalid tracks folder path"))?;
   return ctx.env.create_string(tracks_dir);
 }
+#[js_function(0)]
+pub fn get_library_json_path(ctx: CallContext) -> NResult<JsString> {
+  let data: &mut Data = get_data(&ctx)?;
+  let path = &data.paths.library_json;
+  let tracks_dir = path.to_str().ok_or(nerr("Invalid library.json path"))?;
+  return ctx.env.create_string(tracks_dir);
+}
 
-#[js_function]
+#[js_function(0)]
 fn get_track_lists(ctx: CallContext) -> NResult<JsUnknown> {
   let data: &mut Data = get_data(&ctx)?;
   let track_lists = &data.library.trackLists;
@@ -170,14 +177,14 @@ pub fn get_open_playlist_track_id(ctx: CallContext) -> NResult<JsString> {
   return ctx.env.create_string(track_id);
 }
 
-#[js_function]
+#[js_function(0)]
 pub fn get_open_playlist_track_ids(ctx: CallContext) -> NResult<JsUnknown> {
   let data: &mut Data = get_data(&ctx)?;
   let js = ctx.env.to_js_value(&data.open_playlist_track_ids)?;
   return Ok(js);
 }
 
-#[js_function]
+#[js_function(0)]
 pub fn get_open_playlist_info(ctx: CallContext) -> NResult<JsUnknown> {
   let data: &mut Data = get_data(&ctx)?;
   let info = OpenPlaylistInfo {
@@ -200,6 +207,7 @@ pub fn sort_js(ctx: CallContext) -> NResult<JsUndefined> {
 
 fn init_data_instance(mut exports: JsObject) -> NResult<JsObject> {
   exports.create_named_method("get_tracks_dir", get_tracks_dir)?;
+  exports.create_named_method("get_library_json_path", get_library_json_path)?;
 
   exports.create_named_method("get_track_lists", get_track_lists)?;
 

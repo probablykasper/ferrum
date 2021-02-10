@@ -79,7 +79,6 @@ function ready() {
 app.on('ready', ready)
 
 app.on('before-quit', () => {
-  mainWindow.hide()
   mainWindow.webContents.send('gonnaQuit')
   ipcMain.once('readyToQuit', () => {
     quitting = true

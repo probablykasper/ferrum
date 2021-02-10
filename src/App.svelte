@@ -5,15 +5,15 @@
   import NewTrackList from './components/TrackList.svelte'
   import Player from './components/Player.svelte'
   import Sidebar from './components/Sidebar.svelte'
-  import { isDev } from './stores/data.ts'
-  const db = window.db
+  import { isDev, libraryJsonPath } from './stores/data.ts'
 
   let pageStatus = ''
   let pageStatusWarnings = ''
   let pageStatusErr = ''
   const { ipcRenderer } = window.require('electron')
   async function itunesImport() {
-    const result = await db.iTunesImport(
+    const result = await window.iTunesImport(
+      libraryJsonPath,
       (status) => {
         pageStatus = status
       },
@@ -22,20 +22,9 @@
         pageStatusWarnings += warning + '\n'
       }
     )
-    if (result.cancelled) return
-    if (result.err) {
-      pageStatusErr = result.err.stack
-    } else {
-      db.overwriteLibrary({
-        version: 1,
-        tracks: result.tracks,
-        trackLists: result.trackLists,
-        playTime: [],
-      })
-      pageStatus = 'SAVING'
-      await db.save()
-      pageStatus = ''
-    }
+    if (result.err) pageStatusErr = result.err.stack
+    else if (result.cancelled) pageStatus = ''
+    else pageStatus = 'Done. Restart Ferrum'
   }
   ipcRenderer.on('itunesImport', itunesImport)
   onDestroy(() => {

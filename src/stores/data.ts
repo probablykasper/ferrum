@@ -48,6 +48,7 @@ type OpenPlaylistInfo = {
 export const isDev = process?.env?.NODE_ENV === 'development'
 export type Data = {
   get_tracks_dir: () => string
+  get_library_json_path: () => string
 
   get_track_lists: () => TrackListsHashMap
 
@@ -74,6 +75,9 @@ export const trackLists = grabErr(() => {
 
 export const tracksDir = grabErr(() => {
   return data.get_tracks_dir()
+})
+export const libraryJsonPath = grabErr(() => {
+  return data.get_library_json_path()
 })
 
 export const methods = {

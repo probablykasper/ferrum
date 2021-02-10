@@ -8,15 +8,29 @@ const { tracksPath, artworksPath } = require('./paths.js')
 const { generateFilename, ensureLibExists } = require('./handy.js')
 const addon = require('../../native/addon.node')
 
-module.exports = async function (status, warn) {
+module.exports = iTunesImport
+async function iTunesImport(libraryJsonPath, status, warn) {
   const warnings = []
   try {
-    result = await start(status, (warning) => {
+    result = await start(libraryJsonPath, status, (warning) => {
       warnings.push(warning)
       warn(warning)
     })
     result.warnings = warnings
-    return result
+    if (result.cancelled) {
+      return result
+    } else {
+      status('Saving...')
+      let newLibrary = {
+        version: 1,
+        tracks: result.tracks,
+        trackLists: result.trackLists,
+        playTime: [],
+      }
+      const json = JSON.stringify(newLibrary, null, '  ')
+      await addon.atomic_file_save(libraryJsonPath, json)
+      return result
+    }
   } catch (err) {
     if (!err.message) err.message = err.code
     console.error(err)
@@ -49,10 +63,9 @@ function buffersEqual(buf1, buf2) {
 
 async function popup() {
   m =
-    'Select an iTunes "Library.xml" file. To get that file, open iTunes and click on "File > Library > Export Library..."' +
+    'WARNING: This will reset/delete your Ferrum library!' +
     '\n' +
-    '\nWARNING: This will reset/delete your Ferrum library!' +
-    // +"\nDuplicates will not be checked for, so if there's a song you already have in Ferrum, you'll end up with two."
+    '\nSelect an iTunes "Library.xml" file. To get that file, open iTunes and click on "File > Library > Export Library..."' +
     '\n' +
     '\nAll your tracks need to be downloaded for this to work.' +
     ' If you have tracks from iTunes Store/Apple Music, it might not work.' +
@@ -300,7 +313,9 @@ function addCommonPlaylistFields(playlist, xmlPlaylist, startTime) {
   playlist.dateImported = startTime
 }
 
-async function start(status, warn) {
+function save(path, tracks, playlists) {}
+
+async function start(libraryJsonPath, status, warn) {
   // const filePath = '/Users/kasper/Downloads/Library.xml'
   // const dryRun = false
   const { filePath, dryRun } = await popup()
@@ -440,11 +455,17 @@ async function start(status, warn) {
   }
   console.log('parsedPlaylists:', parsedPlaylists)
 
-  status('')
   console.log('LIB', { tracks: parsedTracks, trackLists: parsedPlaylists })
   if (dryRun) return { cancelled: true }
-  return {
+
+  status('Saving...')
+  let newLibrary = {
+    version: 1,
     tracks: parsedTracks,
     trackLists: parsedPlaylists,
+    playTime: [],
   }
+  const json = JSON.stringify(newLibrary, null, '  ')
+  await addon.atomic_file_save(libraryJsonPath, json)
+  return result
 }

@@ -12,6 +12,7 @@ declare global {
     readyToQuit: Function
     toFileUrl: (...args: string[]) => string
     existsSync: (path: string) => boolean
+    iTunesImport: Function
   }
 }
 

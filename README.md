@@ -14,6 +14,7 @@ Ferrum is a music library client.
 - Look into playing audio from Rust to reduce CPU usage
 - iTunes Import overwrites library, but old track/artwork files are still kept. Either move or delete them
 - Volume normalization
+- For Windows version, we will want to save before system shutdown. Using `session-end` event might work, but to actually delay shutdown, see this: https://github.com/electron/electron/issues/8762
 - Databases
   - https://github.com/TheNeikos/rustbreak
   - https://github.com/spacejam/sled

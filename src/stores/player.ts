@@ -1,6 +1,7 @@
 import { writable, get } from 'svelte/store'
 import type { Writable } from 'svelte/store'
 const { ipcRenderer } = window.require('electron')
+import quit from './quit'
 import { methods, openPlaylist, tracksDir } from './data'
 import type { Track, TrackID } from './libraryTypes'
 import window from './window'
@@ -104,6 +105,15 @@ export function playIndex(index: number) {
   startPlayingIndex(index)
 }
 
+export function playPause() {
+  if (audio.paused) startPlayback()
+  else pausePlayback()
+}
+
+ipcRenderer.on('playPause', () => {
+  playPause()
+})
+
 export function stop() {
   waitingToPlay = false
   audio.pause()
@@ -113,10 +123,9 @@ export function stop() {
   seek(0)
 }
 
-export function playPause() {
-  if (audio.paused) startPlayback()
-  else pausePlayback()
-}
+quit.setHandler('player', () => {
+  stop()
+})
 
 audio.onended = (e) => {
   const newIndex = playingIndex + 1
@@ -150,10 +159,6 @@ export function previous() {
   }
 }
 
-ipcRenderer.on('gonnaQuit', () => {
-  stop()
-})
-
 document.addEventListener('keydown', (e) => {
   let el = e.target as HTMLAudioElement
   if (el && el.tagName === 'INPUT') return
@@ -161,9 +166,6 @@ document.addEventListener('keydown', (e) => {
   if (e.key === ' ') {
     playPause()
   }
-})
-ipcRenderer.on('playPause', () => {
-  playPause()
 })
 
 export function seek(to: number) {
