@@ -2,7 +2,8 @@
 
 ## Next
 - **Migration**
-  - Inside the `playTime` key in `library.json`, remove any value that includes `null` from `playTime`
+  - The `playTime` key in `library.json` might have some values that include `null`. Remove these
+  - The `playTime` key in `library.json` probably has a bunch of durations that are way too long. Run the script `src/scripts/fix_play_time.js` to fix this
 
 ## 0.2.0 - 2020 Jan 3
 - **Migration**

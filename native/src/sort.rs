@@ -5,48 +5,6 @@ use alphanumeric_sort::compare_str;
 use std::cmp::Ordering;
 use std::time::Instant;
 
-// fn merge(l_arr: &[String], r_arr: &[String], sorted: &mut [String]) {
-//   // Current loop position in left half, right half, and sorted vector
-//   let (mut left, mut right, mut i) = (0, 0, 0);
-
-//   while left < l_arr.len() && right < r_arr.len() {
-//     if l_arr[left] <= r_arr[right] {
-//       sorted[i] = l_arr[left];
-//       i += 1;
-//       left += 1;
-//     } else {
-//       sorted[i] = r_arr[right];
-//       i += 1;
-//       right += 1;
-//     }
-//   }
-
-//   if left < l_arr.len() {
-//     // If there is anything left in the left half append it after sorted members
-//     sorted[i..].copy_from_slice(&l_arr[left..]);
-//   }
-
-//   if right < r_arr.len() {
-//     // If there is anything left in the right half append it after sorted members
-//     sorted[i..].copy_from_slice(&r_arr[right..]);
-//   }
-// }
-
-// fn merge_sort(array: &mut [String], compareFunc: &Fn() -> ()) {
-//   if array.len() <= 1 {
-//     return
-//   }
-//   let middle = array.len() / 2;
-
-//   merge_sort(&mut array[..middle], compareFunc);
-//   merge_sort(&mut array[middle..], compareFunc);
-
-//   let mut sorted = array.to_vec();
-//   merge(&array[..middle], &array[middle..], &mut sorted);
-
-//   array.copy_from_slice(&sorted);
-// }
-
 fn get_field_str<'a>(track: &'a Track, sort_key: &str) -> Option<&'a String> {
   match sort_key {
     "file" => Some(&track.file),
