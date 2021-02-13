@@ -1,3 +1,4 @@
+//! When requiring new files, add them in package.json build.files
 const { app } = require('electron')
 const dev = process.env.NODE_ENV === 'development'
 if (dev) app.setName('Ferrum Dev')
@@ -39,7 +40,7 @@ function ready() {
       webSecurity: !dev,
       nodeIntegration: true,
       enableRemoteModule: true,
-      preload: path.resolve(__dirname, './preload.js'),
+      preload: path.resolve(__dirname, './electron/preload.js'),
     },
     backgroundColor: vars['--bg-color'],
     show: false,
