@@ -1,6 +1,6 @@
 # Changelog
 
-## Next
+## 0.3.0 - 2021 Feb 13
 - Converted some code to Rust
 - Errors will now show up as popups
 - Fixed error when opening a smaller playlist than what's currently visible
