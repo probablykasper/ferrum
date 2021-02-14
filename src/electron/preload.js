@@ -1,4 +1,3 @@
-//! When requiring new files, add them in package.json build.files
 const path = require('path')
 const fs = require('fs')
 const iTunesImport = require('./import_itunes.js')

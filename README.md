@@ -26,8 +26,8 @@ Ferrum is a music library client.
 
 ### Get started
 
-1. Install Node.js (v12 works)
-2. Install Rust (v1.48 works)
+1. Install Node.js (v14 works)
+2. Install Rust (v1.49 works)
 3. Run `npm install`
 
 ### Commands
