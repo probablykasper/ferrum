@@ -14,7 +14,7 @@
     "noEmit": true,
 
     // Additional options
-    "types": ["svelte", "node"],
+    "types": ["svelte", "node", "wicg-mediasession"],
     "sourceMap": true,
     "esModuleInterop": true,
     "strict": true,

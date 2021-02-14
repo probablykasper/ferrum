@@ -22,8 +22,8 @@
     "files": [
       "public",
       "src/electron.js",
-      "src/variables.json",
       "src/electron/**/*.js",
+      "src/variables.json",
       "native/addon.node"
     ],
     "directories": {
@@ -40,6 +40,7 @@
     "@snowpack/plugin-svelte": "^3.5.2",
     "@snowpack/plugin-typescript": "^1.2.1",
     "@types/snowpack-env": "^2.3.3",
+    "@types/wicg-mediasession": "^1.1.0",
     "concurrently": "^5.3.0",
     "electron": "^11.2.3",
     "electron-build-env": "^0.2.0",

@@ -1,4 +1,4 @@
-import { writable, get } from 'svelte/store'
+import { writable } from 'svelte/store'
 import type { Writable } from 'svelte/store'
 const { ipcRenderer } = window.require('electron')
 import quit from './quit'
@@ -25,6 +25,7 @@ let queue: TrackID[] = []
 let playingIndex = 0
 export const playingTrack: Writable<Track | null> = writable(null)
 let waitingToPlay = false
+const mediaSession = navigator.mediaSession
 
 audio.ontimeupdate = (e) => {
   currentTime.set(audio.currentTime)
@@ -59,6 +60,7 @@ function startPlayback() {
   }, 50)
   playTime = 0
   paused.set(false)
+  if (mediaSession) mediaSession.playbackState = 'playing'
 }
 
 function startPlayingIndex(index: number) {
@@ -69,6 +71,14 @@ function startPlayingIndex(index: number) {
   audio.src = fileUrl
   playingIndex = index
   playingTrack.set(track)
+  if (mediaSession) {
+    mediaSession.metadata = new MediaMetadata({
+      title: track.name || '',
+      artist: track.artist || '',
+      album: track.albumName || '',
+      // artwork: [{ src: 'podcast.jpg' }],
+    })
+  }
 }
 
 audio.oncanplay = (e) => {
@@ -97,6 +107,7 @@ function pausePlayback() {
   audio.pause()
   paused.set(true)
   savePlayTime()
+  if (mediaSession) mediaSession.playbackState = 'paused'
 }
 
 export function playIndex(index: number) {
@@ -106,7 +117,8 @@ export function playIndex(index: number) {
 }
 
 export function playPause() {
-  if (audio.paused) startPlayback()
+  if (isStopped) return
+  else if (audio.paused) startPlayback()
   else pausePlayback()
 }
 
@@ -121,6 +133,10 @@ export function stop() {
   savePlayTime()
   stopped.set(true)
   seek(0)
+  if (mediaSession) {
+    mediaSession.playbackState = 'none'
+    mediaSession.metadata = null
+  }
 }
 
 quit.setHandler('player', () => {
@@ -163,12 +179,33 @@ document.addEventListener('keydown', (e) => {
   let el = e.target as HTMLAudioElement
   if (el && el.tagName === 'INPUT') return
   if (el && el.tagName === 'TEXTAREA') return
-  if (e.key === ' ') {
-    playPause()
-  }
+  if (e.key === ' ') playPause()
 })
 
-export function seek(to: number) {
-  audio.currentTime = to
-  currentTime.set(to)
+export function seek(to: number, fastSeek: boolean = false) {
+  const newTime = Math.min(to, audio.duration || 0)
+  if (fastSeek && audio.fastSeek) {
+    audio.fastSeek(to)
+  } else {
+    audio.currentTime = newTime
+  }
+  currentTime.set(newTime)
+}
+
+if (navigator.mediaSession) {
+  const mediaSession = navigator.mediaSession
+  mediaSession.setActionHandler('play', startPlayback)
+  mediaSession.setActionHandler('pause', pausePlayback)
+  mediaSession.setActionHandler('stop', stop)
+  mediaSession.setActionHandler('seekbackward', (details) => {
+    seek(audio.currentTime - (details.seekOffset || 5))
+  })
+  mediaSession.setActionHandler('seekforward', (details) => {
+    seek(audio.currentTime + (details.seekOffset || 5))
+  })
+  mediaSession.setActionHandler('seekto', (details) => {
+    seek(details.seekTime, details.fastSeek)
+  })
+  mediaSession.setActionHandler('previoustrack', previous)
+  mediaSession.setActionHandler('nexttrack', next)
 }
