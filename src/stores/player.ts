@@ -56,8 +56,8 @@ let playTimeCounter: NodeJS.Timeout
 function startPlayback() {
   audio.play()
   playTimeCounter = setInterval(() => {
-    playTime += 50
-  }, 50)
+    playTime += 20
+  }, 20)
   playTime = 0
   paused.set(false)
   if (mediaSession) mediaSession.playbackState = 'playing'
