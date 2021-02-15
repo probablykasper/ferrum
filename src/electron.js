@@ -3,6 +3,7 @@ const is = require('./electron/is.js')
 if (is.dev) app.setName('Ferrum Dev')
 
 const menubar = require('./electron/menubar.js')
+const shortcuts = require('./electron/shortcuts.js')
 const path = require('path')
 const vars = require('./variables.json')
 
@@ -46,6 +47,9 @@ app.on('ready', () => {
     backgroundColor: vars['--bg-color'],
     show: false,
   })
+
+  const openSysPref = shortcuts.initMediaKeys(mainWindow)
+  if (openSysPref) return app.quit()
 
   // Electron shows a warning when unsafe-eval is enabled, so we disable
   // security warnings. Somehow devtools doesn't open without unsafe-eval.

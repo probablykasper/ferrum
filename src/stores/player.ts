@@ -122,10 +122,6 @@ export function playPause() {
   else pausePlayback()
 }
 
-ipcRenderer.on('playPause', () => {
-  playPause()
-})
-
 export function stop() {
   waitingToPlay = false
   audio.pause()
@@ -209,3 +205,8 @@ if (navigator.mediaSession) {
   mediaSession.setActionHandler('previoustrack', previous)
   mediaSession.setActionHandler('nexttrack', next)
 }
+
+ipcRenderer.on('playPause', playPause)
+ipcRenderer.on('next', next)
+ipcRenderer.on('previous', previous)
+ipcRenderer.on('stop', stop)

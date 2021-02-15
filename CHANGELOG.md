@@ -1,5 +1,9 @@
 # Changelog
 
+## Next
+- Add mediaSession support
+- Add support for exclusively taking over media keys
+
 ## 0.3.0 - 2021 Feb 13
 - Converted some code to Rust
 - Errors will now show up as popups
