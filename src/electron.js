@@ -29,7 +29,7 @@ app.on('ready', () => {
     callback(decodeURI(url))
   })
 
-  const mainWindow = new BrowserWindow({
+  let mainWindow = new BrowserWindow({
     width: 1300,
     height: 1000,
     minWidth: 850,
