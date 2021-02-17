@@ -1,11 +1,14 @@
 use std::time::{SystemTime, UNIX_EPOCH};
 
-mod data;
-mod data_js;
 mod js;
 mod library;
 mod library_types;
 mod sort;
+
+mod data;
+mod data_js;
+mod open_playlist;
+mod tracks;
 
 fn get_now_timestamp() -> i64 {
   let timestamp = match SystemTime::now().duration_since(UNIX_EPOCH) {

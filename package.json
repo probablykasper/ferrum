@@ -64,7 +64,7 @@
     "app:dev": "npm run napi:dev && NODE_ENV=development electron .",
     "napi:dev": "electron-build-env napi build --cargo-cwd ./native",
     "napi:build": "electron-build-env napi build --cargo-cwd ./native --release",
-    "lint": "prettier --write *.js *.json src public types",
+    "lint": "prettier --write --ignore-path .gitignore *.js *.json src public types",
     "check": "svelte-check"
   },
   "dependencies": {

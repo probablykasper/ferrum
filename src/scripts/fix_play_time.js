@@ -1,4 +1,3 @@
-const { kMaxLength } = require('buffer')
 const fs = require('fs')
 
 const green = '\033[32m'
