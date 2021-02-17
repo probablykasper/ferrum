@@ -43,25 +43,19 @@ fn get_field_i64(track: &Track, sort_key: &str) -> Option<i64> {
     "dateModified" => Some(track.dateModified),
     "dateAdded" => Some(track.dateAdded),
     "dateImported" => track.dateImported,
-    _ => panic!("Field type not found for {}", sort_key),
-  }
-}
-
-fn get_field_i32(track: &Track, sort_key: &str) -> Option<i32> {
-  match sort_key {
-    "playCount" => track.playCount,
-    "skipCount" => track.skipCount,
-    _ => panic!("Field type not found for {}", sort_key),
-  }
-}
-
-fn get_field_i16(track: &Track, sort_key: &str) -> Option<i16> {
-  match sort_key {
     "year" => track.year,
+    _ => panic!("Field type not found for {}", sort_key),
+  }
+}
+
+fn get_field_u32(track: &Track, sort_key: &str) -> Option<u32> {
+  match sort_key {
     "trackNum" => track.trackNum,
     "trackCount" => track.trackCount,
     "discNum" => track.discNum,
     "discCount" => track.discCount,
+    "playCount" => track.playCount,
+    "skipCount" => track.skipCount,
     _ => panic!("Field type not found for {}", sort_key),
   }
 }
@@ -149,14 +143,9 @@ pub fn sort<'a>(data: &'a mut Data, sort_key: &str) -> Result<(), &'static str> 
         let num_b = get_field_i64(track_b, sort_key).unwrap_or(0);
         return num_a.cmp(&num_b);
       }
-      Some(TrackField::I32) => {
-        let num_a = get_field_i32(track_a, sort_key).unwrap_or(0);
-        let num_b = get_field_i32(track_b, sort_key).unwrap_or(0);
-        return num_a.cmp(&num_b);
-      }
-      Some(TrackField::I16) => {
-        let num_a = get_field_i16(track_a, sort_key).unwrap_or(0);
-        let num_b = get_field_i16(track_b, sort_key).unwrap_or(0);
+      Some(TrackField::U32) => {
+        let num_a = get_field_u32(track_a, sort_key).unwrap_or(0);
+        let num_b = get_field_u32(track_b, sort_key).unwrap_or(0);
         return num_a.cmp(&num_b);
       }
       Some(TrackField::U8) => {

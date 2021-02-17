@@ -60,7 +60,7 @@ pub struct Track {
   #[serde(default, skip_serializing_if = "Option::is_none")]
   pub rating: Option<PercentInteger>,
   #[serde(default, skip_serializing_if = "Option::is_none")]
-  pub year: Option<i16>,
+  pub year: Option<i64>,
   #[serde(default, skip_serializing_if = "Option::is_none")]
   pub bpm: Option<f64>,
   #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -84,23 +84,23 @@ pub struct Track {
   #[serde(default, skip_serializing_if = "Option::is_none")]
   pub sortAlbumArtist: Option<String>,
   #[serde(default, skip_serializing_if = "Option::is_none")]
-  pub trackNum: Option<i16>,
+  pub trackNum: Option<u32>,
   #[serde(default, skip_serializing_if = "Option::is_none")]
-  pub trackCount: Option<i16>,
+  pub trackCount: Option<u32>,
   #[serde(default, skip_serializing_if = "Option::is_none")]
-  pub discNum: Option<i16>,
+  pub discNum: Option<u32>,
   #[serde(default, skip_serializing_if = "Option::is_none")]
-  pub discCount: Option<i16>,
+  pub discCount: Option<u32>,
   #[serde(default, skip_serializing_if = "Option::is_none")]
   pub dateImported: Option<MsSinceUnixEpoch>,
   #[serde(default, skip_serializing_if = "Option::is_none")]
-  pub playCount: Option<i32>,
+  pub playCount: Option<u32>,
   #[serde(default, skip_serializing_if = "Option::is_none")]
   pub plays: Option<Vec<MsSinceUnixEpoch>>,
   #[serde(default, skip_serializing_if = "Option::is_none")]
   pub playsImported: Option<Vec<CountObject>>,
   #[serde(default, skip_serializing_if = "Option::is_none")]
-  pub skipCount: Option<i32>,
+  pub skipCount: Option<u32>,
   #[serde(default, skip_serializing_if = "Option::is_none")]
   pub skips: Option<Vec<MsSinceUnixEpoch>>,
   #[serde(default, skip_serializing_if = "Option::is_none")]
