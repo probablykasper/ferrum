@@ -1,6 +1,6 @@
 use crate::library::{load_library, Paths};
-use crate::library_types::TrackList::{Folder, Playlist, Special};
-use crate::library_types::{Library, SpecialTrackListName, TrackID, TrackListID};
+use crate::library_types::{Library, TrackID, TrackListID};
+use crate::open_playlist;
 use crate::sort::sort;
 use atomicwrites::{AllowOverwrite, AtomicFile};
 use rand::Rng;
@@ -65,28 +65,6 @@ pub fn make_id(library: &Library) -> String {
   panic!("Error generating ID: Generated IDs already exist")
 }
 
-pub fn get_open_playlist_tracks(data: &Data) -> Result<Vec<TrackID>, &'static str> {
-  let playlist = data
-    .library
-    .trackLists
-    .get(&data.open_playlist_id)
-    .ok_or("Playlist ID not found")?;
-  match playlist {
-    Playlist(playlist) => return Ok(playlist.tracks.clone()),
-    Folder(_) => return Err("Cannot get length of folder"),
-    Special(special) => match special.name {
-      SpecialTrackListName::Root => {
-        let track_keys = data.library.tracks.keys();
-        let mut list = vec![];
-        for track in track_keys {
-          list.push(track.clone());
-        }
-        return Ok(list);
-      }
-    },
-  };
-}
-
 pub fn load_data(is_dev: &bool) -> Result<Data, &'static str> {
   let app_name = if *is_dev { "Ferrum Dev" } else { "Ferrum" };
 
@@ -112,9 +90,7 @@ pub fn load_data(is_dev: &bool) -> Result<Data, &'static str> {
     sort_key: "index".to_string(),
     sort_desc: true,
   };
-  data.open_playlist_track_ids = get_open_playlist_tracks(&data)?;
-  // We need the new sort_key to be different. Otherwise sort() thinks it's
-  // already sorted and just reverses it
-  sort(&mut data, "dateAdded")?;
+  data.open_playlist_track_ids = open_playlist::get_track_ids(&data)?;
+  sort(&mut data, "dateAdded", true)?;
   return Ok(data);
 }

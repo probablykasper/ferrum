@@ -1,6 +1,7 @@
-use crate::data::{get_open_playlist_tracks, Data};
+use crate::data::Data;
 use crate::library::{get_track_field_type, TrackField};
 use crate::library_types::{Track, TrackList};
+use crate::open_playlist;
 use alphanumeric_sort::compare_str;
 use std::cmp::Ordering;
 use std::time::Instant;
@@ -78,14 +79,8 @@ fn get_field_bool(track: &Track, sort_key: &str) -> Option<bool> {
   }
 }
 
-pub fn sort<'a>(data: &'a mut Data, sort_key: &str) -> Result<(), &'static str> {
+pub fn sort(data: &mut Data, sort_key: &str, desc: bool) -> Result<(), &'static str> {
   let now = Instant::now();
-  let old_sort_key = &data.sort_key;
-  if sort_key == old_sort_key {
-    data.open_playlist_track_ids.reverse();
-    data.sort_desc = !data.sort_desc;
-    return Ok(());
-  }
 
   if sort_key == "index" {
     // No need to sort for index. Indexes descend from "first to last"
@@ -97,9 +92,7 @@ pub fn sort<'a>(data: &'a mut Data, sort_key: &str) -> Result<(), &'static str> 
       .ok_or("Playlist ID not found (2)")?;
     match playlist {
       TrackList::Playlist(_) => {
-        data.open_playlist_track_ids = get_open_playlist_tracks(data)?;
-        data.sort_key = "index".to_string();
-        data.sort_desc = true;
+        data.open_playlist_track_ids = open_playlist::get_track_ids(&data)?;
         println!("Sort: {}ms", now.elapsed().as_millis());
         return Ok(());
       }
@@ -107,18 +100,18 @@ pub fn sort<'a>(data: &'a mut Data, sort_key: &str) -> Result<(), &'static str> 
     }
   }
 
+  data.open_playlist_track_ids = open_playlist::get_track_ids(&data)?;
+
   let tracks = &data.library.tracks;
   let field = get_track_field_type(sort_key);
-  let mut desc = true;
   data.open_playlist_track_ids.sort_by(|id_a, id_b| {
     let track_a = tracks.get(id_a).expect("Track ID non-existant (1)");
     let track_b = tracks.get(id_b).expect("Track ID non-existant (2)");
     match field {
       Some(TrackField::String) => {
-        desc = false;
-        let default_str = "".to_string();
-        let str_a = get_field_str(track_a, sort_key).unwrap_or(&default_str);
-        let str_b = get_field_str(track_b, sort_key).unwrap_or(&default_str);
+        let empty_str = &"".to_string();
+        let str_a = get_field_str(track_a, sort_key).unwrap_or(empty_str);
+        let str_b = get_field_str(track_b, sort_key).unwrap_or(empty_str);
         if str_a == "" && str_b == "" {
           return Ordering::Equal;
         }

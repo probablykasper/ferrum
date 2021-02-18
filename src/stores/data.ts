@@ -71,10 +71,11 @@ export type Data = {
   add_skip: (id: TrackID) => void
   add_play_time: (id: TrackID, startTime: MsSinceUnixEpoch, duration_ms: number) => void
 
+  refresh_open_playlist: () => void
   open_playlist: (id: TrackListID) => void
+  get_open_playlist_sorted_track_ids: () => void
   get_open_playlist_track: (index: number) => Track
   get_open_playlist_track_id: (index: number) => string
-  get_open_playlist_track_ids: () => TrackID[]
   get_open_playlist_info: () => OpenPlaylistInfo
   sort: (key: string) => void
 }
@@ -115,6 +116,7 @@ export function importTracks(paths: [string]) {
     }
   }
   methods.save()
+  openPlaylist.refresh()
 }
 
 export const methods = {
@@ -130,14 +132,17 @@ export const methods = {
   addPlay: wrapErr((id: TrackID) => {
     data.add_play(id)
     methods.save()
+    openPlaylist.refresh()
   }),
   addSkip: wrapErr((id: TrackID) => {
     data.add_skip(id)
     methods.save()
+    openPlaylist.refresh()
   }),
   addPlayTime: wrapErr((id: TrackID, startTime: MsSinceUnixEpoch, durationMs: number) => {
     data.add_play_time(id, startTime, durationMs)
     methods.save()
+    openPlaylist.refresh()
   }),
 }
 
@@ -155,6 +160,10 @@ export const openPlaylist = grabErr(() => {
   const { subscribe, set, update } = writable(get())
   return {
     subscribe,
+    refresh: () => {
+      data.refresh_open_playlist()
+      set(get())
+    },
     setId: (id: string) => {
       data.open_playlist(id)
       set(get())
@@ -170,7 +179,7 @@ export const openPlaylist = grabErr(() => {
       return data.get_open_playlist_track_id(index)
     },
     getTrackIds: () => {
-      return data.get_open_playlist_track_ids()
+      return data.get_open_playlist_sorted_track_ids()
     },
   }
 })

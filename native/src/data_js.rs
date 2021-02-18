@@ -57,7 +57,12 @@ fn init_data_instance(mut exports: JsObject) -> NResult<JsObject> {
   exports.create_named_method("add_skip", tracks::add_skip)?;
   exports.create_named_method("add_play_time", tracks::add_play_time)?;
 
+  exports.create_named_method("refresh_open_playlist", open_playlist::refresh)?;
   exports.create_named_method("open_playlist", open_playlist::open_playlist)?;
+  exports.create_named_method(
+    "get_open_playlist_sorted_track_ids",
+    open_playlist::get_sorted_track_ids,
+  )?;
   exports.create_named_method(
     "get_open_playlist_track",
     open_playlist::get_open_playlist_track,
@@ -65,10 +70,6 @@ fn init_data_instance(mut exports: JsObject) -> NResult<JsObject> {
   exports.create_named_method(
     "get_open_playlist_track_id",
     open_playlist::get_open_playlist_track_id,
-  )?;
-  exports.create_named_method(
-    "get_open_playlist_track_ids",
-    open_playlist::get_open_playlist_track_ids,
   )?;
   exports.create_named_method(
     "get_open_playlist_info",
