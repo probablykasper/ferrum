@@ -157,7 +157,7 @@
     title Ferrum
   main(style='{cssVarStyles}' class:dev='{isDev}' on:dragenter|capture='{dragEnter}')
     .header
-      .titlebar
+      .titlebar(on:mousedown|self|preventDefault)
       Player
       input
     .meat

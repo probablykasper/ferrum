@@ -62,15 +62,15 @@
 </style>
 
 <template lang="pug">
-  .container(class:stopped='{$stopped}')
+  .container(class:stopped='{$stopped}')(on:mousedown|self|preventDefault)
     div
-      .buttons
+      .buttons(on:mousedown|preventDefault)
         button(tabindex=-1 on:click='{previous}') &lt;
         +if('$paused')
           button(tabindex=-1 on:click='{playPause}') Play
           +else
             button(tabindex=-1 on:click='{playPause}') Pause
-        button(on:click='{next}') &gt;
+        button(tabindex=-1  on:click='{next}') &gt;
       div {getDuration($currentTime)} / {getDuration($duration)}
       input.slider(tabindex=-1 type='range' min=0 max='{sliderSteps}' bind:value='{sliderValue}' on:mousedown='{sliderMousedown}' on:mouseup='{sliderMouseup}')
       +if('!$stopped')
