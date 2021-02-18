@@ -32,7 +32,6 @@ pub fn get_track(ctx: CallContext) -> NResult<JsUnknown> {
 
 #[js_function(1)]
 pub fn add_play(ctx: CallContext) -> NResult<JsUndefined> {
-  let data: &mut Data = get_data(&ctx)?;
   let track = id_arg_to_track(&ctx, 0)?;
   let timestamp = get_now_timestamp();
   match &mut track.plays {
@@ -43,13 +42,11 @@ pub fn add_play(ctx: CallContext) -> NResult<JsUndefined> {
     None => track.playCount = Some(1),
     Some(play_count) => *play_count += 1,
   }
-  data.save()?;
   return ctx.env.get_undefined();
 }
 
 #[js_function(1)]
 pub fn add_skip(ctx: CallContext) -> NResult<JsUndefined> {
-  let data: &mut Data = get_data(&ctx)?;
   let track = id_arg_to_track(&ctx, 0)?;
   let timestamp = get_now_timestamp();
   match &mut track.skips {
@@ -60,7 +57,6 @@ pub fn add_skip(ctx: CallContext) -> NResult<JsUndefined> {
     None => track.skipCount = Some(1),
     Some(skip_count) => *skip_count += 1,
   }
-  data.save()?;
   return ctx.env.get_undefined();
 }
 
@@ -73,7 +69,6 @@ pub fn add_play_time(ctx: CallContext) -> NResult<JsUndefined> {
   let timestamp: i64 = arg_to_number(&ctx, 1)?;
   let duration: i64 = arg_to_number(&ctx, 2)?;
   data.library.playTime.push((id, timestamp, duration));
-  data.save()?;
   return ctx.env.get_undefined();
 }
 

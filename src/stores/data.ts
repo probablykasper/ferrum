@@ -59,6 +59,7 @@ export type Data = {
     artworks_dir: string
     library_json: string
   }
+  save: () => void
   get_tracks_dir: () => string
   get_library_json_path: () => string
 
@@ -113,23 +114,30 @@ export function importTracks(paths: [string]) {
       else errState = 'skippable'
     }
   }
+  methods.save()
 }
 
 export const methods = {
   importTrack: wrapErr((path: string) => {
-    return data.import_track(path)
+    data.import_track(path)
   }),
   getTrack: wrapErr((id: TrackID) => {
     return data.get_track(id)
   }),
+  save: wrapErr(() => {
+    data.save()
+  }),
   addPlay: wrapErr((id: TrackID) => {
     data.add_play(id)
+    methods.save()
   }),
   addSkip: wrapErr((id: TrackID) => {
     data.add_skip(id)
+    methods.save()
   }),
   addPlayTime: wrapErr((id: TrackID, startTime: MsSinceUnixEpoch, durationMs: number) => {
     data.add_play_time(id, startTime, durationMs)
+    methods.save()
   }),
 }
 

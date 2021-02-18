@@ -2,7 +2,7 @@ use crate::data::{load_data, Data};
 use crate::js::{arg_to_bool, nr};
 use crate::open_playlist;
 use crate::tracks;
-use napi::{CallContext, JsObject, JsUnknown, Result as NResult};
+use napi::{CallContext, JsObject, JsUndefined, JsUnknown, Result as NResult};
 use napi_derive::js_function;
 
 pub fn get_data<'a>(ctx: &'a CallContext) -> NResult<&'a mut Data> {
@@ -31,6 +31,13 @@ pub fn get_paths(ctx: CallContext) -> NResult<JsUnknown> {
 }
 
 #[js_function(0)]
+pub fn save(ctx: CallContext) -> NResult<JsUndefined> {
+  let data: &mut Data = get_data(&ctx)?;
+  data.save()?;
+  return ctx.env.get_undefined();
+}
+
+#[js_function(0)]
 fn get_track_lists(ctx: CallContext) -> NResult<JsUnknown> {
   let data: &mut Data = get_data(&ctx)?;
   let track_lists = &data.library.trackLists;
@@ -40,6 +47,7 @@ fn get_track_lists(ctx: CallContext) -> NResult<JsUnknown> {
 
 fn init_data_instance(mut exports: JsObject) -> NResult<JsObject> {
   exports.create_named_method("get_paths", get_paths)?;
+  exports.create_named_method("save", save)?;
 
   exports.create_named_method("get_track_lists", get_track_lists)?;
 
