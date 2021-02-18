@@ -65,11 +65,11 @@
   .container(class:stopped='{$stopped}')
     div
       .buttons
-        button(on:click='{previous}') &lt;
+        button(tabindex=-1 on:click='{previous}') &lt;
         +if('$paused')
-          button(on:click='{playPause}') Play
+          button(tabindex=-1 on:click='{playPause}') Play
           +else
-            button(on:click='{playPause}') Pause
+            button(tabindex=-1 on:click='{playPause}') Pause
         button(on:click='{next}') &gt;
       div {getDuration($currentTime)} / {getDuration($duration)}
       input.slider(tabindex=-1 type='range' min=0 max='{sliderSteps}' bind:value='{sliderValue}' on:mousedown='{sliderMousedown}' on:mouseup='{sliderMouseup}')

@@ -58,11 +58,12 @@
   },
   "scripts": {
     "start": "concurrently npm:snowpack:dev npm:app:dev",
+    "start:release": "concurrently npm:snowpack:dev npm:app:dev-release",
     "build": "npm run snowpack:build && npm run napi:build && electron-builder",
     "snowpack:dev": "snowpack dev",
     "snowpack:build": "snowpack build",
-    "app:dev": "npm run napi:dev && NODE_ENV=development electron .",
-    "napi:dev": "electron-build-env napi build --cargo-cwd ./native",
+    "app:dev": "electron-build-env napi build --cargo-cwd ./native && NODE_ENV=development electron .",
+    "app:dev-release": "electron-build-env napi build --cargo-cwd ./native --release && NODE_ENV=development electron .",
     "napi:build": "electron-build-env napi build --cargo-cwd ./native --release",
     "lint": "prettier --write --ignore-path .gitignore *.js *.json src public types",
     "check": "svelte-check"
