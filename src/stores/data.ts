@@ -73,7 +73,7 @@ export type Data = {
 
   refresh_open_playlist: () => void
   open_playlist: (id: TrackListID) => void
-  get_open_playlist_sorted_track_ids: () => void
+  get_open_playlist_sorted_track_ids: () => [TrackID]
   get_open_playlist_track: (index: number) => Track
   get_open_playlist_track_id: (index: number) => string
   get_open_playlist_info: () => OpenPlaylistInfo

@@ -1,11 +1,12 @@
 # Changelog
 
-## Next
+## 0.4.0 - 2021 Feb 19
 - Added support for importing mp3s
 - Added support for exclusively taking over media keys
 - Added mediaSession support
 - Made library.json track `name` field required
 - Changed the number types of some library.json track fields
+- Fixed tracklist not refreshing after things change
 
 ## 0.3.0 - 2021 Feb 13
 - Converted some code to Rust
