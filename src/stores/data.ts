@@ -64,6 +64,7 @@ export type Data = {
 
   get_track_lists: () => TrackListsHashMap
 
+  import_track: (path: string) => void
   get_track: (id: TrackID) => Track
   add_play: (id: TrackID) => void
   add_skip: (id: TrackID) => void
@@ -90,7 +91,34 @@ export const paths = grabErr(() => {
   return data.get_paths()
 })
 
+export function importTracks(paths: [string]) {
+  let errState = null
+  for (const path of paths) {
+    try {
+      data.import_track(path)
+    } catch (err) {
+      if (!err.message) {
+        if (err.code) err.message = 'Code: ' + err.code
+        else err.message = 'No reason or code provided'
+      }
+      if (errState === 'skip') continue
+      const clickedButton = window.showMessageBoxSync({
+        type: 'error',
+        message: 'Error importing track ' + path,
+        detail: err.message,
+        buttons: errState ? ['OK', 'Skip all errors'] : ['OK'],
+        defaultId: 0,
+      })
+      if (clickedButton === 1) errState = 'skip'
+      else errState = 'skippable'
+    }
+  }
+}
+
 export const methods = {
+  importTrack: wrapErr((path: string) => {
+    return data.import_track(path)
+  }),
   getTrack: wrapErr((id: TrackID) => {
     return data.get_track(id)
   }),

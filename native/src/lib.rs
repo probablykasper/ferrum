@@ -17,3 +17,11 @@ fn get_now_timestamp() -> i64 {
   };
   return timestamp;
 }
+
+fn sys_time_to_timestamp(sys_time: &SystemTime) -> i64 {
+  let timestamp = match sys_time.duration_since(UNIX_EPOCH) {
+    Ok(n) => n.as_millis() as i64,
+    Err(_) => panic!("Timestamp is earlier than Unix Epoch"),
+  };
+  return timestamp;
+}

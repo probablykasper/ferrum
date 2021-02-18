@@ -43,6 +43,7 @@ fn init_data_instance(mut exports: JsObject) -> NResult<JsObject> {
 
   exports.create_named_method("get_track_lists", get_track_lists)?;
 
+  exports.create_named_method("import_track", tracks::import)?;
   exports.create_named_method("get_track", tracks::get_track)?;
   exports.create_named_method("add_play", tracks::add_play)?;
   exports.create_named_method("add_skip", tracks::add_skip)?;

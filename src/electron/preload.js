@@ -8,7 +8,7 @@ const { dialog, BrowserWindow } = require('electron').remote
 
 window.showMessageBoxSync = (options) => {
   const focusedWindow = BrowserWindow.getFocusedWindow()
-  return dialog.showMessageBox(options)
+  return dialog.showMessageBoxSync(options)
 }
 
 window.toFileUrl = (...args) => {

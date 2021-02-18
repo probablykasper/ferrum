@@ -3,6 +3,7 @@ use crate::library_types::TrackList::{Folder, Playlist, Special};
 use crate::library_types::{Library, SpecialTrackListName, TrackID, TrackListID};
 use crate::sort::sort;
 use atomicwrites::{AllowOverwrite, AtomicFile};
+use rand::Rng;
 use serde::{Deserialize, Serialize};
 use std::io::{Error, Write};
 use std::time::Instant;
@@ -38,6 +39,30 @@ impl Data {
     println!("Write: {}ms", now.elapsed().as_millis());
     Ok(())
   }
+}
+
+pub fn make_id(library: &Library) -> String {
+  let length = 7;
+  for _i in 0..1000 {
+    let mut id = "".to_owned();
+    let characters = [
+      'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r',
+      's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '2', '3', '4', '5', '6', '7',
+    ];
+    let characters_len = characters.len();
+    for _i in 1..length {
+      let mut rng = rand::thread_rng();
+      let rand_number = rng.gen_range(0..characters_len);
+      let rand_char = characters
+        .get(rand_number)
+        .expect("Error generating ID: Char out of range");
+      id.push(rand_char.clone());
+    }
+    if !library.tracks.contains_key(&id) {
+      return id;
+    }
+  }
+  panic!("Error generating ID: Generated IDs already exist")
 }
 
 pub fn get_open_playlist_tracks(data: &Data) -> Result<Vec<TrackID>, &'static str> {

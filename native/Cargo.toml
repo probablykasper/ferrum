@@ -18,8 +18,12 @@ napi-derive = "1.0.0"
 dirs = "3.0.1"
 serde = { version = "1.0.123", features = ["derive"] }
 serde_repr = "0.1.6"
+# switch to official id3 crate if PR gets merged
+id3 = { git = "https://github.com/probablykasper/rust-id3", rev ="f099e18" }
 serde_json = "1.0.62"
 jemallocator = "0.3.2"
+mp3-metadata = "0.3.3"
+rand = "0.8.0"
 alphanumeric-sort = "1.4.0"
 rodio = "0.13.0"
 redlux = "0.2.0"

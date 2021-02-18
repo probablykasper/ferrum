@@ -5,7 +5,7 @@
   import NewTrackList from './components/TrackList.svelte'
   import Player from './components/Player.svelte'
   import Sidebar from './components/Sidebar.svelte'
-  import { isDev, paths } from './stores/data'
+  import { isDev, paths, importTracks } from './stores/data'
 
   let pageStatus = ''
   let pageStatusWarnings = ''
@@ -36,6 +36,41 @@
     .join(';')
   const root = document.documentElement
   $: root.style.setProperty('--bg-color', styles['--bg-color'])
+
+  let droppable = false
+  function getFiles(files) {
+    const allowedMimes = ['audio/mpeg']
+    let validFiles = []
+    for (const file of files) {
+      if (allowedMimes.includes(file.type)) validFiles.push(file)
+      else return
+    }
+    if (validFiles.length > 0) return validFiles
+  }
+  function dragEnter(e) {
+    e.preventDefault()
+    const files = getFiles(e.dataTransfer.items)
+    droppable = !!files
+  }
+  function dragOver(e) {
+    e.preventDefault()
+    const files = getFiles(e.dataTransfer.items)
+    droppable = !!files
+  }
+  function dragLeave(e) {
+    e.preventDefault()
+    droppable = false
+  }
+  function drop(e) {
+    e.preventDefault()
+    droppable = false
+    const files = getFiles(e.dataTransfer.files)
+    const paths = []
+    for (const file of files) {
+      paths.push(file.path)
+    }
+    importTracks(paths)
+  }
 </script>
 
 <style lang="sass">
@@ -47,6 +82,24 @@
     width: 100%
     margin: 0
     box-sizing: border-box
+  .drag-overlay
+    opacity: 1
+    position: absolute
+    width: 100%
+    height: 100%
+    top: 0px
+    left: 0px
+    background: rgba(#10161e, 0.9)
+    transition: all 100ms ease-in-out
+    display: flex
+    align-items: center
+    justify-content: center
+    // backdrop-filter: blur(20px)
+    &:not(.show)
+      pointer-events: none
+      opacity: 0
+  :global(h1), :global(h2), :global(h3)
+    font-weight: 400
 
   main
     height: 100%
@@ -100,7 +153,7 @@
 <template lang="pug">
   svelte:head
     title Ferrum
-  main(style='{cssVarStyles}' class:dev='{isDev}')
+  main(style='{cssVarStyles}' class:dev='{isDev}' on:dragenter|capture='{dragEnter}')
     .header
       .titlebar
       Player
@@ -122,4 +175,6 @@
             .page-status-item
               b Error:
               pre {pageStatusErr}
+    .drag-overlay(class:show='{droppable}' on:dragleave='{dragLeave}' on:drop='{drop}' on:dragover='{dragOver}')
+      h1 Drop files to import
 </template>
