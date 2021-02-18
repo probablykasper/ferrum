@@ -8,7 +8,7 @@ use std::time::Instant;
 fn get_field_str<'a>(track: &'a Track, sort_key: &str) -> Option<&'a String> {
   match sort_key {
     "file" => Some(&track.file),
-    "name" => track.name.as_ref(),
+    "name" => Some(&track.name),
     "importedFrom" => track.importedFrom.as_ref(),
     "originalId" => track.originalId.as_ref(),
     "artist" => track.artist.as_ref(),

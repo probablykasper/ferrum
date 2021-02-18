@@ -245,7 +245,7 @@ fn import_mp3(data: &Data, track_path: &Path) -> Track {
     file: filename,
     dateModified: date_modified,
     dateAdded: now,
-    name: Some(title.to_string()),
+    name: title.to_string(),
     importedFrom: None,
     originalId: None,
     artist: artist.map(|s| s.to_owned()),

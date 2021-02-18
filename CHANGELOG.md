@@ -1,8 +1,11 @@
 # Changelog
 
 ## Next
-- Add mediaSession support
-- Add support for exclusively taking over media keys
+- Added support for importing mp3s
+- Added support for exclusively taking over media keys
+- Added mediaSession support
+- Made library.json track `name` field required
+- Changed the number types of some library.json track fields
 
 ## 0.3.0 - 2021 Feb 13
 - Converted some code to Rust

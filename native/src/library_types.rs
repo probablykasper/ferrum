@@ -38,8 +38,7 @@ pub struct Track {
   pub file: String,
   pub dateModified: MsSinceUnixEpoch,
   pub dateAdded: MsSinceUnixEpoch,
-  #[serde(default, skip_serializing_if = "Option::is_none")]
-  pub name: Option<String>,
+  pub name: String,
   #[serde(default, skip_serializing_if = "Option::is_none")]
   pub importedFrom: Option<String>,
   /// Imported ID, like iTunes Persistent ID:
