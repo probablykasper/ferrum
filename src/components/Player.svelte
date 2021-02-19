@@ -62,7 +62,7 @@
 </style>
 
 <template lang="pug">
-  .container(class:stopped='{$stopped}')(on:mousedown|self|preventDefault)
+  .container(class:stopped='{$stopped}' on:mousedown|self|preventDefault)
     div
       .buttons(on:mousedown|preventDefault)
         button(tabindex=-1 on:click='{previous}') &lt;

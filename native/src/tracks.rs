@@ -128,6 +128,17 @@ pub fn import(ctx: CallContext) -> NResult<JsUndefined> {
   return ctx.env.get_undefined();
 }
 
+fn timestamp_from_year(year: i32) -> id3::Timestamp {
+  return id3::Timestamp {
+    year,
+    month: None,
+    day: None,
+    hour: None,
+    minute: None,
+    second: None,
+  };
+}
+
 fn import_mp3(data: &Data, track_path: &Path) -> Track {
   fn get_frame_text(tag: &id3::Tag, id: &str) -> Option<String> {
     let frame = tag.get(id)?;
@@ -163,6 +174,24 @@ fn import_mp3(data: &Data, track_path: &Path) -> Track {
   let mut tag = match id3::Tag::read_from_path(&track_path) {
     Ok(tag) => tag,
     Err(_) => id3::Tag::new(),
+  };
+
+  let year = match tag.date_recorded() {
+    Some(n) => Some(i64::from(n.year)),
+    None => match tag.year() {
+      Some(n) => {
+        let x = timestamp_from_year(n);
+        tag.set_date_recorded(x);
+        Some(i64::from(n))
+      }
+      None => match tag.date_released() {
+        Some(n) => {
+          tag.set_date_recorded(timestamp_from_year(n.year));
+          Some(i64::from(n.year))
+        }
+        None => None,
+      },
+    },
   };
 
   let title = match tag.title() {
@@ -250,7 +279,7 @@ fn import_mp3(data: &Data, track_path: &Path) -> Track {
     sortComposer: get_frame_text(&tag, "TSOC"),
     genre: tag.genre().map(|s| s.to_owned()),
     rating: None,
-    year: tag.year().map(|n| i64::from(n)),
+    year: year,
     bpm: match get_frame_text(&tag, "TBPM") {
       Some(n) => n.parse().ok(),
       None => None,
