@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.4.1 - 2021 Feb 19
+- Fixed year metadata not being imported for mp3s using id3v2.4
+
 ## 0.4.0 - 2021 Feb 19
 - Added support for importing mp3s
 - Added support for exclusively taking over media keys
@@ -13,8 +16,8 @@
 - Errors will now show up as popups
 - Fixed error when opening a smaller playlist than what's currently visible
 - Fixed some play times being incorrectly logged with `null` values
-- Fixed play times often being logged with too big durations. For play times already logged incorrectly, run the script `src/scripts/fix_play_time.js` to fix those.
-- Fixed `tracks` and `playlists` properties of playlists missing during iTunes import.
+- Fixed play times often being logged with too big durations. For play times already logged incorrectly, run the script `src/scripts/fix_play_time.js` to fix those
+- Fixed `tracks` and `playlists` properties of playlists missing during iTunes import
 
 ## 0.2.0 - 2021 Jan 3
 - Added currently playing artist and title to player
