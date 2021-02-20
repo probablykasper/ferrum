@@ -1,7 +1,7 @@
 const { globalShortcut, dialog, systemPreferences } = require('electron')
 const is = require('./is.js')
 
-module.exports.initMediaKeys = (mainWindow) => {
+module.exports.initMediaKeys = async (mainWindow) => {
   function tryRegistering() {
     globalShortcut.register('MediaPlayPause', () => {
       mainWindow.webContents.send('playPause')
@@ -18,7 +18,7 @@ module.exports.initMediaKeys = (mainWindow) => {
   }
   tryRegistering()
   if (is.mac && !globalShortcut.isRegistered('MediaPlayPause')) {
-    const id = dialog.showMessageBoxSync({
+    const id = await dialog.showMessageBox({
       type: 'info',
       message: 'Ferrum needs accessibility permissions to exclusively take over media keys',
       buttons: ['Continue', 'Ignore'],

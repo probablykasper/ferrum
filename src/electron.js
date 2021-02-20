@@ -23,12 +23,7 @@ app.on('window-all-closed', () => {
   app.quit()
 })
 
-app.on('ready', () => {
-  protocol.registerFileProtocol('file', (request, callback) => {
-    const url = request.url.substr(7)
-    callback(decodeURI(url))
-  })
-
+app.on('ready', async () => {
   let mainWindow = new BrowserWindow({
     width: 1300,
     height: 1000,
@@ -48,8 +43,15 @@ app.on('ready', () => {
     show: false,
   })
 
-  const openSysPref = shortcuts.initMediaKeys(mainWindow)
-  if (openSysPref) return app.quit()
+  protocol.registerFileProtocol('file', (request, callback) => {
+    const url = request.url.substr(7)
+    callback(decodeURI(url))
+  })
+
+  if (!is.dev) {
+    const openSysPref = await shortcuts.initMediaKeys(mainWindow)
+    if (openSysPref) return app.quit()
+  }
 
   // Electron shows a warning when unsafe-eval is enabled, so we disable
   // security warnings. Somehow devtools doesn't open without unsafe-eval.

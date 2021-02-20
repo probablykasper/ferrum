@@ -10,6 +10,7 @@
     "productName": "Ferrum",
     "artifactName": "${productName}-v${version}-${os}.${ext}",
     "mac": {
+      "asar": false,
       "category": "public.app-category.music",
       "icon": "assets/Logo 1024.png",
       "target": [
