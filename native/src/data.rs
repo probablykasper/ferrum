@@ -5,7 +5,7 @@ use crate::sort::sort;
 use atomicwrites::{AllowOverwrite, AtomicFile};
 use rand::Rng;
 use serde::{Deserialize, Serialize};
-use std::io::{Error, Write};
+use std::io::{Error, ErrorKind, Write};
 use std::time::Instant;
 
 #[derive(Serialize, Deserialize)]
@@ -29,13 +29,26 @@ pub struct Data {
 impl Data {
   pub fn save(&mut self) -> Result<(), Error> {
     let mut now = Instant::now();
-    let json_str = &serde_json::to_string_pretty(&self.library).unwrap();
+    let formatter = serde_json::ser::PrettyFormatter::with_indent(b"	"); // tab
+
+    let mut json = Vec::new();
+    let mut ser = serde_json::Serializer::with_formatter(&mut json, formatter);
+    self.library.serialize(&mut ser)?;
     println!("Stringify: {}ms", now.elapsed().as_millis());
 
     now = Instant::now();
     let file_path = &self.paths.library_json;
     let af = AtomicFile::new(file_path, AllowOverwrite);
-    af.write(|f| f.write_all(json_str.as_bytes()))?;
+    let result = af.write(|f| f.write_all(&json));
+    match result {
+      Ok(_) => {}
+      Err(err) => {
+        return Err(Error::new(
+          ErrorKind::Other,
+          format!("Error saving: {}", err),
+        ))
+      }
+    }
     println!("Write: {}ms", now.elapsed().as_millis());
     Ok(())
   }
