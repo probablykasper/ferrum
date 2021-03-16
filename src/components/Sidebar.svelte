@@ -6,17 +6,17 @@
     children: ['root'],
   }
   let viewport
-  onMount(() => {
-    viewport.addEventListener('keydown', function (e) {
-      let prevent = true
-      if (e.key == 'Home') viewport.scrollTop = 0
-      else if (e.key == 'End') viewport.scrollTop = viewport.scrollHeight
-      else if (e.key == 'PageUp') viewport.scrollTop -= viewport.clientHeight
-      else if (e.key == 'PageDown') viewport.scrollTop += viewport.clientHeight
-      else prevent = false
-      if (prevent) e.preventDefault()
-    })
-  })
+  function handleKeydown(e) {
+    if (e.key === ' ') return e.preventDefault()
+
+    let prevent = true
+    if (e.key == 'Home') viewport.scrollTop = 0
+    else if (e.key == 'End') viewport.scrollTop = viewport.scrollHeight
+    else if (e.key == 'PageUp') viewport.scrollTop -= viewport.clientHeight
+    else if (e.key == 'PageDown') viewport.scrollTop += viewport.clientHeight
+    else prevent = false
+    if (prevent) e.preventDefault()
+  }
 </script>
 
 <style lang="sass">
@@ -32,7 +32,7 @@
 </style>
 
 <template lang="pug">
-  .sidebar(tabindex='0' bind:this='{viewport}')
+  .sidebar(tabindex='0' on:keydown='{handleKeydown}' bind:this='{viewport}')
     SidebarItems(trackList='{special}')
     br
     SidebarItems(trackList='{$trackLists.root}')

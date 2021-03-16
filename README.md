@@ -5,12 +5,12 @@ Ferrum is a music library client.
 ## Dev instructions
 
 ### ToDo
+
+- Arrow up/down to move selection
 - Write tags to files:
   - m4a/aac: https://github.com/Saecki/rust-mp4ameta
   - mp3/mp3: https://github.com/polyfloyd/rust-id3
   - audiotags
-- Check if a track is VBR. Can we use codecProfile? What about non-mp3s?
-- Look into playing audio from Rust to reduce CPU usage
 - iTunes Import overwrites library, but old track/artwork files are still kept. Either move or delete them
 - Volume normalization
 - For Windows version, we will want to save before system shutdown. Using `session-end` event might work, but to actually delay shutdown, see this: https://github.com/electron/electron/issues/8762

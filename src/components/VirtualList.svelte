@@ -19,11 +19,13 @@
   }
 
   function keydown(e: KeyboardEvent) {
+    if (e.key === ' ') return e.preventDefault()
+
     let prevent = true
-    if (e.key == 'Home') viewport.scrollTop = 0
-    else if (e.key == 'End') viewport.scrollTop = viewport.scrollHeight
-    else if (e.key == 'PageUp') viewport.scrollTop -= viewport.clientHeight
-    else if (e.key == 'PageDown') viewport.scrollTop += viewport.clientHeight
+    if (e.key === 'Home') viewport.scrollTop = 0
+    else if (e.key === 'End') viewport.scrollTop = viewport.scrollHeight
+    else if (e.key === 'PageUp') viewport.scrollTop -= viewport.clientHeight
+    else if (e.key === 'PageDown') viewport.scrollTop += viewport.clientHeight
     else prevent = false
     if (prevent) e.preventDefault()
   }
