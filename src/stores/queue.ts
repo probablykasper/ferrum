@@ -8,6 +8,10 @@ const getCurrent = () => queue[currentIndex]
 const getPrevious = () => queue[currentIndex - 1]
 const getNext = () => queue[currentIndex + 1]
 
+function prependToUserQueue(trackIds: TrackID[]) {
+  queue.splice(currentIndex + 1, 0, ...trackIds)
+  userQueueLength += trackIds.length
+}
 function appendToUserQueue(trackIds: TrackID[]) {
   queue.splice(currentIndex + userQueueLength + 1, 0, ...trackIds)
   userQueueLength += trackIds.length
@@ -35,6 +39,7 @@ export default {
   getCurrent,
   getPrevious,
   getNext,
+  prependToUserQueue,
   appendToUserQueue,
   next,
   prev,

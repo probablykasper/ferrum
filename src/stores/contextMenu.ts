@@ -7,6 +7,10 @@ export function showTrackMenu(id: string) {
       label: 'Add to Queue',
       click: () => queue.appendToUserQueue([id]),
     },
+    {
+      label: 'Play Next',
+      click: () => queue.prependToUserQueue([id]),
+    },
   ])
   menu.popup()
 }
