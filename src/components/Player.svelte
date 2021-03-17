@@ -31,14 +31,57 @@
 <style lang="sass">
   .container
     display: flex
+    height: 70px
+    align-items: center
   .stopped
     button, input
       pointer-events: none
       opacity: 0.5
-  .buttons
+  .left
+    width: 30%
+    .name
+      margin-left: 20px
+      font-size: 14px
+    .artist
+      margin-left: 20px
+      font-size: 12px
+      opacity: 0.8
+  .middle
+    width: 40%
+  .right
+    width: 30%
+  button
+    background-color: transparent
+    border: none
+    padding: 0px
+    opacity: 0.7
+    &:hover
+      opacity: 1
+    svg
+      fill: var(--icon-color)
+      width: 100%
+      height: 100%
+      // width: 32px
+      // width: 32px
+  button.play, button.pause
+    width: 36px
+    height: 36px
+    margin: 0px 15px
+    // opacity: 0.8
+  .controls
     display: flex
-  input.slider
-    width: 400px
+    justify-content: center
+  .time-bar
+    display: flex
+    .current-time
+      text-align: right
+    small
+      font-size: 13px
+      opacity: 0.5
+      min-width: 40px
+      font-family: 'Open Sans' // for monospace digits
+  input.time
+    width: 100%
     -webkit-appearance: none
     background: transparent
     padding: 4px 10px
@@ -63,17 +106,33 @@
 
 <template lang="pug">
   .container(class:stopped='{$stopped}' on:mousedown|self|preventDefault)
-    div
-      .buttons(on:mousedown|preventDefault)
-        button(tabindex=-1 on:click='{previous}') &lt;
-        +if('$paused')
-          button(tabindex=-1 on:click='{playPause}') Play
-          +else
-            button(tabindex=-1 on:click='{playPause}') Pause
-        button(tabindex=-1  on:click='{next}') &gt;
-      div {getDuration($currentTime)} / {getDuration($duration)}
-      input.slider(tabindex=-1 type='range' min=0 max='{sliderSteps}' bind:value='{sliderValue}' on:mousedown='{sliderMousedown}' on:mouseup='{sliderMouseup}')
+    .left
       +if('!$stopped')
-        div {$playingTrack.name}
-        div {$playingTrack.artist}
+        .name {$playingTrack.name}
+        .artist {$playingTrack.artist}
+    .middle
+      .controls(on:mousedown|preventDefault)
+        button(tabindex=-1 on:click='{previous}')
+          svg(xmlns='http://www.w3.org/2000/svg' height='24' viewbox='0 0 24 24' width='24')
+            path(d='M0 0h24v24H0z' fill='none')
+            path(d='M6 6h2v12H6zm3.5 6l8.5 6V6z')
+        +if('$paused')
+          button.play(tabindex=-1 on:click='{playPause}')
+            svg(xmlns='http://www.w3.org/2000/svg' height='24' viewbox='0 0 24 24' width='24')
+              path(d='M0 0h24v24H0z' fill='none')
+              path(d='M8 5v14l11-7z')
+          +else
+            button.pause(tabindex=-1 on:click='{playPause}')
+              svg(xmlns='http://www.w3.org/2000/svg' height='24' viewbox='0 0 24 24' width='24')
+                path(d='M0 0h24v24H0z' fill='none')
+                path(d='M6 19h4V5H6v14zm8-14v14h4V5h-4z')
+        button(tabindex=-1 on:click='{next}')
+          svg(xmlns='http://www.w3.org/2000/svg' height='24' viewbox='0 0 24 24' width='24')
+            path(d='M0 0h24v24H0z' fill='none')
+            path(d='M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z')
+      .time-bar
+        small.current-time {getDuration($currentTime)}
+        input.time(tabindex=-1 type='range' min=0 max='{sliderSteps}' bind:value='{sliderValue}' on:mousedown='{sliderMousedown}' on:mouseup='{sliderMouseup}')
+        small.duration {getDuration($duration)}
+    .right
 </template>

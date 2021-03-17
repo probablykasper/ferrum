@@ -158,12 +158,12 @@
   main(style='{cssVarStyles}' class:dev='{isDev}' on:dragenter|capture='{dragEnter}')
     .header
       .titlebar(on:mousedown|self|preventDefault)
-      Player
       input
     .meat
       Sidebar
       NewTrackList
       //- TrackList
+    Player
     +if('pageStatus || pageStatusWarnings || pageStatusErr')
       .page-status-bg
         .page-status
