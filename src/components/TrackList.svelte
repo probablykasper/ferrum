@@ -1,8 +1,9 @@
 <script lang="ts">
   import VList from './VirtualList.svelte'
   import { openPlaylist } from '../stores/data'
-  import { playIndex } from '../stores/player'
+  import { newPlaybackInstance } from '../stores/player'
   import { getDuration } from '../scripts/formatting'
+  import { showTrackMenu } from '../stores/contextMenu'
 
   const sortBy = openPlaylist.sortBy
   $: sortKey = $openPlaylist.sort_key
@@ -14,6 +15,10 @@
   let selected = new Set()
   function rowClick(index: number) {
     selected = new Set([index])
+  }
+
+  function playRow(index: number) {
+    newPlaybackInstance(openPlaylist.getTrackIds(), index)
   }
 
   function getItem(index: number) {
@@ -160,8 +165,9 @@
     let:index>
     <div
       class="row"
-      on:dblclick={() => playIndex(index)}
+      on:dblclick={() => playRow(index)}
       on:mousedown={() => rowClick(index)}
+      on:contextmenu={() => showTrackMenu(openPlaylist.getTrackId(index))}
       class:selected={selected.has(index)}>
       <div class="c index">{index + 1}</div>
       <div class="c name">{track.name || ''}</div>

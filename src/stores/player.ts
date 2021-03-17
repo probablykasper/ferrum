@@ -5,6 +5,7 @@ import quit from './quit'
 import { methods, openPlaylist, paths } from './data'
 import type { Track, TrackID } from './libraryTypes'
 import window from './window'
+import queue from './queue'
 
 const audio = new Audio()
 let isStopped = true
@@ -21,8 +22,6 @@ export const stopped = (() => {
 export const paused = writable(true)
 export const currentTime = writable(0)
 export const duration = writable(0)
-let queue: TrackID[] = []
-let playingIndex = 0
 export const playingTrack: Writable<Track | null> = writable(null)
 let waitingToPlay = false
 const mediaSession = navigator.mediaSession
@@ -63,13 +62,11 @@ function startPlayback() {
   if (mediaSession) mediaSession.playbackState = 'playing'
 }
 
-function startPlayingIndex(index: number) {
-  const id = queue[index]
+function startPlayingId(id: TrackID) {
   const track = methods.getTrack(id)
   const fileUrl = window.toFileUrl(paths.tracks_dir, track.file)
   waitingToPlay = true
   audio.src = fileUrl
-  playingIndex = index
   playingTrack.set(track)
   if (mediaSession) {
     mediaSession.metadata = new MediaMetadata({
@@ -97,7 +94,7 @@ audio.ondurationchange = () => {
 function savePlayTime() {
   clearInterval(playTimeCounter)
   if (playTime >= 1000) {
-    methods.addPlayTime(queue[playingIndex], startTime, playTime)
+    methods.addPlayTime(queue.getCurrent(), startTime, playTime)
   }
   playTime = 0
 }
@@ -110,10 +107,10 @@ function pausePlayback() {
   if (mediaSession) mediaSession.playbackState = 'paused'
 }
 
-export function playIndex(index: number) {
+export function newPlaybackInstance(newQueue: TrackID[], index: number) {
   if (!isStopped) pausePlayback()
-  queue = openPlaylist.getTrackIds()
-  startPlayingIndex(index)
+  queue.setNewQueue(newQueue, index)
+  startPlayingId(queue.getCurrent())
 }
 
 export function playPause() {
@@ -140,32 +137,35 @@ quit.setHandler('player', () => {
 })
 
 audio.onended = (e) => {
-  const newIndex = playingIndex + 1
-  if (newIndex < queue.length) {
+  const nextId = queue.getNext()
+  if (nextId) {
     savePlayTime()
-    methods.addPlay(queue[playingIndex])
-    startPlayingIndex(newIndex)
+    methods.addPlay(queue.getCurrent())
+    startPlayingId(nextId)
+    queue.next()
   } else {
     stop()
   }
 }
 
 export function next() {
-  const newIndex = playingIndex + 1
-  if (newIndex < queue.length) {
+  const nextId = queue.getNext()
+  if (nextId) {
     savePlayTime()
-    methods.addSkip(queue[playingIndex])
-    startPlayingIndex(newIndex)
+    methods.addSkip(queue.getCurrent())
+    startPlayingId(nextId)
+    queue.next()
   } else {
     stop()
   }
 }
 export function previous() {
-  const newIndex = playingIndex - 1
-  if (newIndex >= 0) {
+  const prevId = queue.getPrevious()
+  if (prevId) {
     savePlayTime()
-    methods.addSkip(queue[playingIndex])
-    startPlayingIndex(newIndex)
+    methods.addSkip(queue.getCurrent())
+    startPlayingId(prevId)
+    queue.prev()
   } else {
     stop()
   }
