@@ -23,6 +23,7 @@ export const paused = writable(true)
 export const currentTime = writable(0)
 export const duration = writable(0)
 export const playingTrack: Writable<Track | null> = writable(null)
+export const playingId: Writable<TrackID | null> = writable(null)
 let waitingToPlay = false
 const mediaSession = navigator.mediaSession
 
@@ -68,6 +69,7 @@ function startPlayingId(id: TrackID) {
   waitingToPlay = true
   audio.src = fileUrl
   playingTrack.set(track)
+  playingId.set(id)
   if (mediaSession) {
     mediaSession.metadata = new MediaMetadata({
       title: track.name || '',

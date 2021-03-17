@@ -1,7 +1,7 @@
 <script lang="ts">
   import VList from './VirtualList.svelte'
   import { openPlaylist } from '../stores/data'
-  import { newPlaybackInstance } from '../stores/player'
+  import { newPlaybackInstance, playingId } from '../stores/player'
   import { getDuration } from '../scripts/formatting'
   import { showTrackMenu } from '../stores/contextMenu'
 
@@ -79,13 +79,14 @@
         overflow: hidden
         text-overflow: ellipsis
         padding-right: 10px
-      .c.index
-        padding-left: 10px
-      &.header .c.index
-        display: initial
       .index
         width: 0px
-        min-width: 35px
+        min-width: 36px
+        text-align: right
+        svg
+          fill: var(--icon-color)
+          width: 16px
+          height: 100%
       .name
         width: 170%
       .playCount
@@ -169,7 +170,17 @@
       on:mousedown={() => rowClick(index)}
       on:contextmenu={() => showTrackMenu(openPlaylist.getTrackId(index))}
       class:selected={selected.has(index)}>
-      <div class="c index">{index + 1}</div>
+      <div class="c index">
+        {#if openPlaylist.getTrackId(index) === $playingId}
+          <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24">
+            <path d="M0 0h24v24H0z" fill="none" />
+            <path
+              d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z" />
+          </svg>
+        {:else}
+          {index + 1}
+        {/if}
+      </div>
       <div class="c name">{track.name || ''}</div>
       <div class="c playCount">{track.playCount || ''}</div>
       <div class="c duration">{getDuration(track.duration || '')}</div>

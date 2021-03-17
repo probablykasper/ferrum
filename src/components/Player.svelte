@@ -33,6 +33,7 @@
     display: flex
     height: 70px
     align-items: center
+    background-color: var(--bg-color-3)
   .stopped
     button, input
       pointer-events: none
