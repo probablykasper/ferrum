@@ -12,9 +12,14 @@
   let startIndex: number = 0
   let endIndex: number = 0
 
-  let selected = new Set()
+  let selected: number | null
   function rowClick(index: number) {
-    selected = new Set([index])
+    selected = index
+  }
+  function rowKeydown(e: KeyboardEvent) {
+    if (e.key === 'Enter' && selected !== null) {
+      playRow(selected)
+    }
   }
 
   function playRow(index: number) {
@@ -162,6 +167,7 @@
     itemCount={$openPlaylist.length}
     bind:startIndex
     bind:endIndex
+    on:keydown={rowKeydown}
     let:item={track}
     let:index>
     <div
@@ -169,7 +175,7 @@
       on:dblclick={() => playRow(index)}
       on:mousedown={() => rowClick(index)}
       on:contextmenu={() => showTrackMenu(openPlaylist.getTrackId(index))}
-      class:selected={selected.has(index)}>
+      class:selected={selected === index}>
       <div class="c index">
         {#if openPlaylist.getTrackId(index) === $playingId}
           <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24">

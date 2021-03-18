@@ -78,6 +78,7 @@
   bind:this={viewport}
   bind:clientHeight={height}
   on:scroll={handleScroll}
+  on:keydown
   tabindex="0"
   on:keydown={keydown}>
   <div class="content" style="padding-top: {paddingTop}px; padding-bottom: {paddingBottom}px;">
