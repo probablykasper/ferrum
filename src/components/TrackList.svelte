@@ -19,6 +19,12 @@
   function rowKeydown(e: KeyboardEvent) {
     if (e.key === 'Enter' && selected !== null) {
       playRow(selected)
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault()
+      if (selected !== null && selected > 0) selected -= 1
+    } else if (e.key === 'ArrowDown') {
+      e.preventDefault()
+      if (selected !== null && selected < $openPlaylist.length - 1) selected += 1
     }
   }
 
