@@ -1,7 +1,6 @@
 <script>
   import { onDestroy } from 'svelte'
   import styles from './variables.json'
-  // import TrackList from './components/TrackListOld.svelte'
   import NewTrackList from './components/TrackList.svelte'
   import Player from './components/Player.svelte'
   import Sidebar from './components/Sidebar.svelte'
@@ -162,7 +161,6 @@
     .meat
       Sidebar
       NewTrackList
-      //- TrackList
     Player
     +if('pageStatus || pageStatusWarnings || pageStatusErr')
       .page-status-bg

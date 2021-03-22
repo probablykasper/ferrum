@@ -1,28 +1,68 @@
 {
-  "include": ["src", "types"],
   "compilerOptions": {
-    "module": "esnext",
-    "target": "esnext",
     "moduleResolution": "node",
-    "jsx": "preserve",
-    "baseUrl": "./",
-
-    // For snowpack import aliases
-    "paths": {},
-
-    // Snowpack will handle emitting/building
-    "noEmit": true,
-
-    // Additional options
-    "types": ["svelte", "node", "wicg-mediasession"],
+    "target": "esnext",
+    "module": "esnext",
+    /**
+     * svelte-preprocess cannot figure out whether you have
+     * a value or a type, so tell TypeScript to enforce using
+     * `import type` instead of `import` for Types.
+     */
+    "importsNotUsedAsValues": "error",
+    "isolatedModules": true,
+    /**
+     * To have warnings / errors of the Svelte compiler at the
+     * correct position, enable source maps by default.
+     */
     "sourceMap": true,
     "esModuleInterop": true,
-    "strict": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "resolveJsonModule": true,
-    "useDefineForClassFields": true,
-    "allowSyntheticDefaultImports": true,
-    "importsNotUsedAsValues": "error"
-  }
+    "baseUrl": "."
+    /**
+     * Typecheck JS in `.svelte` and `.js` files by default.
+     * Disable checkJs if you'd like to use dynamic types in JS.
+     * Note that setting allowJs false does not prevent the use
+     * of JS in `.svelte` files.
+     */
+    // "allowJs": true,
+    // "checkJs": true
+  },
+  /**
+   * Use globals.d.ts instead of compilerOptions.types
+   * to avoid limiting type declarations.
+   */
+  // "include": ["globals.d.ts", "src/**/*.ts", "src/**/*.js", "src/**/*.svelte"]
+  // "include": ["globals.d.ts", "src/**/*.ts", "src/**/*.svelte"]
+  "include": ["src/**/*.ts", "src/**/*.svelte"]
 }
+
+// // Old tsconfig:
+// {
+//   "include": ["src", "types"],
+//   "compilerOptions": {
+//     "module": "esnext",
+//     "target": "esnext",
+//     "moduleResolution": "node",
+//     "jsx": "preserve",
+//     "baseUrl": "./",
+
+//     // For snowpack import aliases
+//     "paths": {},
+
+//     // Snowpack will handle emitting/building
+//     "noEmit": true,
+
+//     // Additional options
+//     "types": ["svelte", "node", "wicg-mediasession"],
+//     "sourceMap": true,
+//     "esModuleInterop": true,
+//     "strict": true,
+//     "skipLibCheck": true,
+//     "forceConsistentCasingInFileNames": true,
+//     "resolveJsonModule": true,
+//     "useDefineForClassFields": true,
+//     "allowSyntheticDefaultImports": true,
+//     "importsNotUsedAsValues": "error"
+//   }
+// }

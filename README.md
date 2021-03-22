@@ -33,16 +33,18 @@ Ferrum is a music library client.
 
 ### Commands
 
-#### `npm run start`
-Start dev server + Electron
+#### `npm run dev`
+Build napi, start dev server + Electron
+#### `npm run dev-release`
+Build napi in release mode, start dev server + Electron
 #### `npm run build`
-Build UI into `public/build/`, then app into `dist/`
-#### `npm run snowpack:build`
-Build UI into `public/build/`
+Build napi, build web into `/build/`, then app into `dist/`
+#### `npm run build:web`
+Build web into `/build/`
 #### `npm run lint`
 Format code
 #### `npm run check`
-Check for compiler errors and unused css
+Run `svelte-check`
 
 ### Publish new version
 1. Update `CHANGELOG.md`

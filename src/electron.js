@@ -11,12 +11,6 @@ const appData = app.getPath('appData')
 const electronDataPath = path.join(appData, app.name, 'Electron Data')
 app.setPath('userData', electronDataPath)
 
-let devPort
-if (is.dev) {
-  const SnowpackUserConfig = require('../snowpack.config.js')
-  devPort = SnowpackUserConfig.devOptions.port
-}
-
 let quitting = false
 
 app.on('window-all-closed', () => {
@@ -65,7 +59,7 @@ app.on('ready', async () => {
     })
   })
 
-  if (is.dev) mainWindow.loadURL('http://localhost:' + devPort)
+  if (is.dev) mainWindow.loadURL('http://localhost:' + vars.port)
   else mainWindow.loadFile(path.resolve(__dirname, '../public/index.html'))
 
   if (is.dev) mainWindow.webContents.openDevTools()
