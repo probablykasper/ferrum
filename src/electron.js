@@ -60,7 +60,7 @@ app.on('ready', async () => {
   })
 
   if (is.dev) mainWindow.loadURL('http://localhost:' + vars.port)
-  else mainWindow.loadFile(path.resolve(__dirname, '../public/index.html'))
+  else mainWindow.loadFile(path.resolve(__dirname, '../build/index.html'))
 
   if (is.dev) mainWindow.webContents.openDevTools()
 

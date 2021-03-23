@@ -5,6 +5,7 @@ import { port } from './src/variables.json'
 
 export default defineConfig({
   root: './src',
+  base: './', // use relative paths
   publicDir: '../public',
   clearScreen: false,
   server: {
