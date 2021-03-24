@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.5.0 - 2021 Mar 24
+- Added "Add to Queue" context menu item
+- Added "Play Next" context menu item
+- Make player prettier
+- Added "currently playing" indicator icon in track list
+- Added enter shortcut for playing selected track
+- Added support for selecting tracks with up/down arrow keys
+
 ## 0.4.1 - 2021 Feb 19
 - Fixed year metadata not being imported for mp3s using id3v2.4
 
