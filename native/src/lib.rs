@@ -7,7 +7,8 @@ mod sort;
 
 mod data;
 mod data_js;
-mod open_playlist;
+mod filter;
+mod page;
 mod tracks;
 
 fn get_now_timestamp() -> i64 {

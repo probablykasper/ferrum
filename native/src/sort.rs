@@ -1,7 +1,7 @@
 use crate::data::Data;
 use crate::library::{get_track_field_type, TrackField};
 use crate::library_types::{Track, TrackList};
-use crate::open_playlist;
+use crate::page;
 use alphanumeric_sort::compare_str;
 use std::cmp::Ordering;
 use std::time::Instant;
@@ -92,7 +92,7 @@ pub fn sort(data: &mut Data, sort_key: &str, desc: bool) -> Result<(), &'static 
       .ok_or("Playlist ID not found (2)")?;
     match playlist {
       TrackList::Playlist(_) => {
-        data.open_playlist_track_ids = open_playlist::get_track_ids(&data)?;
+        data.open_playlist_track_ids = page::get_track_ids(&data)?;
         println!("Sort: {}ms", now.elapsed().as_millis());
         return Ok(());
       }
@@ -100,7 +100,7 @@ pub fn sort(data: &mut Data, sort_key: &str, desc: bool) -> Result<(), &'static 
     }
   }
 
-  data.open_playlist_track_ids = open_playlist::get_track_ids(&data)?;
+  data.open_playlist_track_ids = page::get_track_ids(&data)?;
 
   let tracks = &data.library.tracks;
   let field = get_track_field_type(sort_key);

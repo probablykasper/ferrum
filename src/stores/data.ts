@@ -1,4 +1,4 @@
-import { writable, readable } from 'svelte/store'
+import { writable, readable, derived } from 'svelte/store'
 import type {
   MsSinceUnixEpoch,
   Track,
@@ -44,7 +44,7 @@ export function wrapErr<T, A extends Array<any>>(cb: (...args: A) => T): (...arg
   }
 }
 
-type OpenPlaylistInfo = {
+type PageInfo = {
   id: TrackListID
   sort_key: string
   sort_desc: boolean
@@ -71,13 +71,14 @@ export type Data = {
   add_skip: (id: TrackID) => void
   add_play_time: (id: TrackID, startTime: MsSinceUnixEpoch, duration_ms: number) => void
 
-  refresh_open_playlist: () => void
+  refresh_page: () => void
   open_playlist: (id: TrackListID) => void
-  get_open_playlist_sorted_track_ids: () => [TrackID]
-  get_open_playlist_track: (index: number) => Track
-  get_open_playlist_track_id: (index: number) => string
-  get_open_playlist_info: () => OpenPlaylistInfo
-  sort: (key: string) => void
+  get_page_track_ids: () => TrackID[]
+  filter_open_playlist: (query: string) => TrackID[]
+  get_page_track: (index: number) => Track
+  get_page_track_id: (index: number) => string
+  get_page_info: () => PageInfo
+  sort: (key: string, keep_filter: boolean) => void
 }
 const data: Data = grabErr(() => {
   return window.addon.load_data(isDev)
@@ -116,7 +117,7 @@ export function importTracks(paths: [string]) {
     }
   }
   methods.save()
-  openPlaylist.refresh()
+  page.refresh()
 }
 
 export const methods = {
@@ -132,23 +133,24 @@ export const methods = {
   addPlay: wrapErr((id: TrackID) => {
     data.add_play(id)
     methods.save()
-    openPlaylist.refresh()
+    page.refresh()
   }),
   addSkip: wrapErr((id: TrackID) => {
     data.add_skip(id)
     methods.save()
-    openPlaylist.refresh()
+    page.refresh()
   }),
   addPlayTime: wrapErr((id: TrackID, startTime: MsSinceUnixEpoch, durationMs: number) => {
     data.add_play_time(id, startTime, durationMs)
     methods.save()
-    openPlaylist.refresh()
+    page.refresh()
   }),
 }
 
-export const openPlaylist = grabErr(() => {
+export const filterQuery = writable('')
+export const page = grabErr(() => {
   function get() {
-    const info = data.get_open_playlist_info()
+    const info = data.get_page_info()
     return {
       id: info.id,
       length: info.length,
@@ -161,25 +163,30 @@ export const openPlaylist = grabErr(() => {
   return {
     subscribe,
     refresh: () => {
-      data.refresh_open_playlist()
+      data.refresh_page()
       set(get())
     },
-    setId: (id: string) => {
+    openPlaylist: (id: string) => {
       data.open_playlist(id)
       set(get())
+      filterQuery.set('')
     },
     sortBy: (key: string) => {
-      data.sort(key)
+      data.sort(key, true)
+      set(get())
+    },
+    filter: (query: string) => {
+      data.filter_open_playlist(query)
       set(get())
     },
     getTrack: (index: number): Track => {
-      return data.get_open_playlist_track(index)
+      return data.get_page_track(index)
     },
     getTrackId: (index: number) => {
-      return data.get_open_playlist_track_id(index)
+      return data.get_page_track_id(index)
     },
     getTrackIds: () => {
-      return data.get_open_playlist_sorted_track_ids()
+      return data.get_page_track_ids()
     },
   }
 })

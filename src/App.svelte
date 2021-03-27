@@ -3,6 +3,7 @@
   import styles from './variables.json'
   import NewTrackList from './components/TrackList.svelte'
   import Player from './components/Player.svelte'
+  import Titlebar from './components/Titlebar.svelte'
   import Sidebar from './components/Sidebar.svelte'
   import { isDev, paths, importTracks } from './stores/data'
 
@@ -83,6 +84,7 @@
     box-sizing: border-box
   :global(:focus)
     --select-color: var(--select-color-focus)
+    --select-color-sidebar: var(--select-color-focus)
   .drag-overlay
     opacity: 1
     position: absolute
@@ -110,13 +112,7 @@
     user-select: none
     display: flex
     flex-direction: column
-  
-  .dev .titlebar
-    background-color: #00526b
-  .titlebar
-      height: 22px
-      background-color: var(--bg-color-2)
-      -webkit-app-region: drag
+
   .meat
     position: relative
     height: 0px
@@ -154,10 +150,7 @@
 <template lang="pug">
   svelte:head
     title Ferrum
-  main(style='{cssVarStyles}' class:dev='{isDev}' on:dragenter|capture='{dragEnter}')
-    .header
-      .titlebar(on:mousedown|self|preventDefault)
-      input
+  main(style='{cssVarStyles}' on:dragenter|capture='{dragEnter}')
     .meat
       Sidebar
       NewTrackList
@@ -177,4 +170,5 @@
               pre {pageStatusErr}
     .drag-overlay(class:show='{droppable}' on:dragleave='{dragLeave}' on:drop='{drop}' on:dragover='{dragOver}')
       h1 Drop files to import
+    Titlebar(dev='{isDev}')
 </template>

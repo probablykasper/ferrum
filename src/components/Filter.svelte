@@ -1,0 +1,47 @@
+<script lang="ts">
+  import { page, filterQuery } from '../stores/data'
+  const { ipcRenderer } = window.require('electron')
+  function filter(node: HTMLInputElement) {
+    function handler() {
+      node.select()
+    }
+    ipcRenderer.on('filter', handler)
+    return {
+      destroy: () => ipcRenderer.off('filter', handler),
+    }
+  }
+  function onInput(e: InputEvent) {
+    // console.log(e.data)
+    // console.log(e.inputType)
+    page.filter($filterQuery)
+  }
+</script>
+
+<style lang="sass">
+  .container
+    // border-radius: 3px
+    // transition: border 150ms cubic-bezier(0.0, 0.0, 0.2, 1)
+    // border: 3px solid transparent
+      // border: 3px solid var(--select-color-focus)
+      .search
+      // background-color: var(--select-color-focus)
+  .search
+    display: block
+    width: calc(100% - 15px*2)
+    margin: auto
+    transition: border 150ms cubic-bezier(0.0, 0.0, 0.2, 1)
+    font-family: inherit
+    padding: 3px 12px
+    box-sizing: border-box
+    color: var(--text-color)
+    background-color: rgba(#ffffff, 0.15)
+    border-radius: 3px
+    outline: none
+    border: 3px solid transparent
+    &.on
+        border: 3px solid var(--select-color-focus)
+</style>
+
+<template lang="pug">
+  input.search(type='text' class:on='{$filterQuery}' use:filter bind:value='{$filterQuery}' on:input='{onInput}' placeholder='Search')
+</template>

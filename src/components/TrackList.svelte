@@ -1,12 +1,12 @@
 <script lang="ts">
   import VList from './VirtualList.svelte'
-  import { openPlaylist } from '../stores/data'
+  import { page } from '../stores/data'
   import { newPlaybackInstance, playingId } from '../stores/player'
   import { getDuration } from '../scripts/formatting'
   import { showTrackMenu } from '../stores/contextMenu'
 
-  const sortBy = openPlaylist.sortBy
-  $: sortKey = $openPlaylist.sort_key
+  const sortBy = page.sortBy
+  $: sortKey = $page.sort_key
 
   let visibleItems: any[] = []
   let startIndex: number = 0
@@ -24,28 +24,28 @@
       if (selected !== null && selected > 0) selected -= 1
     } else if (e.key === 'ArrowDown') {
       e.preventDefault()
-      if (selected !== null && selected < $openPlaylist.length - 1) selected += 1
+      if (selected !== null && selected < $page.length - 1) selected += 1
     }
   }
 
   function playRow(index: number) {
-    newPlaybackInstance(openPlaylist.getTrackIds(), index)
+    newPlaybackInstance(page.getTrackIds(), index)
   }
 
   function getItem(index: number) {
     try {
-      const track = openPlaylist.getTrack(index)
+      const track = page.getTrack(index)
       return track
     } catch (err) {
       return {}
     }
   }
 
-  openPlaylist.subscribe((openPlaylist) => {
+  page.subscribe((page) => {
     const newItems = []
     const visibleCount = endIndex - startIndex
     for (let i = 0; i < visibleCount; i++) {
-      if (startIndex + i >= openPlaylist.length) break
+      if (startIndex + i >= page.length) break
       const item = getItem(startIndex + i)
       newItems.push(item)
     }
@@ -56,6 +56,7 @@
 <style lang="sass">
   .tracklist
     display: flex
+    margin-top: var(--titlebar-height)
     flex-direction: column
     min-width: 0px
     width: 100%
@@ -125,7 +126,7 @@
 </style>
 
 <div class="tracklist">
-  <div class="row header" class:desc={$openPlaylist.sort_desc}>
+  <div class="row header" class:desc={$page.sort_desc}>
     <div class="c index" class:sort={sortKey === 'index'} on:click={() => sortBy('index')}>
       <span>#</span>
     </div>
@@ -170,7 +171,7 @@
     {getItem}
     bind:visibleItems
     itemHeight={24}
-    itemCount={$openPlaylist.length}
+    itemCount={$page.length}
     bind:startIndex
     bind:endIndex
     on:keydown={rowKeydown}
@@ -180,10 +181,10 @@
       class="row"
       on:dblclick={() => playRow(index)}
       on:mousedown={() => rowClick(index)}
-      on:contextmenu={() => showTrackMenu(openPlaylist.getTrackId(index))}
+      on:contextmenu={() => showTrackMenu(page.getTrackId(index))}
       class:selected={selected === index}>
       <div class="c index">
-        {#if openPlaylist.getTrackId(index) === $playingId}
+        {#if page.getTrackId(index) === $playingId}
           <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24">
             <path d="M0 0h24v24H0z" fill="none" />
             <path

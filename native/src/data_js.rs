@@ -1,7 +1,6 @@
 use crate::data::{load_data, Data};
 use crate::js::{arg_to_bool, nr};
-use crate::open_playlist;
-use crate::tracks;
+use crate::{filter, page, tracks};
 use napi::{CallContext, JsObject, JsUndefined, JsUnknown, Result as NResult};
 use napi_derive::js_function;
 
@@ -57,25 +56,14 @@ fn init_data_instance(mut exports: JsObject) -> NResult<JsObject> {
   exports.create_named_method("add_skip", tracks::add_skip)?;
   exports.create_named_method("add_play_time", tracks::add_play_time)?;
 
-  exports.create_named_method("refresh_open_playlist", open_playlist::refresh)?;
-  exports.create_named_method("open_playlist", open_playlist::open_playlist)?;
-  exports.create_named_method(
-    "get_open_playlist_sorted_track_ids",
-    open_playlist::get_sorted_track_ids,
-  )?;
-  exports.create_named_method(
-    "get_open_playlist_track",
-    open_playlist::get_open_playlist_track,
-  )?;
-  exports.create_named_method(
-    "get_open_playlist_track_id",
-    open_playlist::get_open_playlist_track_id,
-  )?;
-  exports.create_named_method(
-    "get_open_playlist_info",
-    open_playlist::get_open_playlist_info,
-  )?;
-  exports.create_named_method("sort", open_playlist::sort_js)?;
+  exports.create_named_method("refresh_page", page::refresh)?;
+  exports.create_named_method("open_playlist", page::open_playlist)?;
+  exports.create_named_method("get_page_track_ids", page::get_page_track_ids)?;
+  exports.create_named_method("filter_open_playlist", filter::filter_js)?;
+  exports.create_named_method("get_page_track", page::get_page_track)?;
+  exports.create_named_method("get_page_track_id", page::get_page_track_id)?;
+  exports.create_named_method("get_page_info", page::get_page_info)?;
+  exports.create_named_method("sort", page::sort_js)?;
 
   return Ok(exports);
 }

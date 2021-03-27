@@ -1,5 +1,5 @@
 <script>
-  import { trackLists, openPlaylist } from '../stores/data'
+  import { trackLists, page } from '../stores/data'
   // import { Router, navigate, Route, link } from 'svelte-routing'
   export let trackList
   let childLists = []
@@ -23,7 +23,7 @@
     display: flex
     align-items: center
     &.active
-      background-color: var(--select-color)
+      background-color: var(--select-color-sidebar)
   .sub
     margin-left: calc(2px + 6px*2)
     display: none
@@ -54,7 +54,7 @@
       .sub(class:show='{childList.show}')
         svelte:self(trackList='{childList}')
       +else()
-        .item(on:click='{openPlaylist.setId(childList.id)}' class:active='{$openPlaylist.id === childList.id}')
+        .item(on:click='{page.openPlaylist(childList.id)}' class:active='{$page.id === childList.id}')
           .arrow
           .text {childList.name}
 </template>

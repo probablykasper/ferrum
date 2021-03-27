@@ -2,7 +2,7 @@ import { writable } from 'svelte/store'
 import type { Writable } from 'svelte/store'
 const { ipcRenderer } = window.require('electron')
 import quit from './quit'
-import { methods, openPlaylist, paths } from './data'
+import { methods, paths } from './data'
 import type { Track, TrackID } from './libraryTypes'
 import window from './window'
 import queue from './queue'

@@ -36,33 +36,31 @@ module.exports.initMenuBar = (app, mainWindow) => {
     },
     {
       label: 'Edit',
-      submenu: [
-        { role: 'undo' },
-        { role: 'redo' },
-        { type: 'separator' },
-        { role: 'cut' },
-        { role: 'copy' },
-        { role: 'paste' },
-        ...(is.mac
-          ? [
-              // { role: 'pasteAndMatchStyle' },
-              // { role: 'delete' },
-              { role: 'selectAll' },
-              { type: 'separator' },
-              // {
-              //   label: 'Speech',
-              //   submenu: [
-              //     { role: 'startSpeaking' },
-              //     { role: 'stopSpeaking' },
-              //   ],
-              // },
-            ]
-          : [
-              // { role: 'delete' },
-              { type: 'separator' },
-              { role: 'selectAll' },
-            ]),
-      ],
+      submenu: (() => {
+        const menu = [
+          { role: 'undo' },
+          { role: 'redo' },
+          { type: 'separator' },
+          { role: 'cut' },
+          { role: 'copy' },
+          { role: 'paste' },
+        ]
+        if (is.mac) {
+          menu.push({ role: 'selectAll' })
+          menu.push({ type: 'separator' })
+        } else {
+          menu.push({ type: 'separator' })
+          menu.push({ role: 'selectAll' })
+        }
+        menu.push({
+          label: 'Filter',
+          accelerator: 'CommandOrControl+F',
+          click: () => {
+            mainWindow.webContents.send('filter')
+          },
+        })
+        return menu
+      })(),
     },
     {
       label: 'Song',

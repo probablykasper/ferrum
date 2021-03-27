@@ -1,6 +1,6 @@
 use crate::library::{load_library, Paths};
 use crate::library_types::{Library, TrackID, TrackListID};
-use crate::open_playlist;
+use crate::page;
 use crate::sort::sort;
 use atomicwrites::{AllowOverwrite, AtomicFile};
 use rand::Rng;
@@ -9,7 +9,7 @@ use std::io::{Error, ErrorKind, Write};
 use std::time::Instant;
 
 #[derive(Serialize, Deserialize)]
-pub struct OpenPlaylistInfo {
+pub struct PageInfo {
   pub id: TrackListID,
   pub sort_key: String,
   pub sort_desc: bool,
@@ -21,7 +21,9 @@ pub struct Data {
   pub is_dev: bool,
   pub library: Library,
   pub open_playlist_track_ids: Vec<TrackID>,
+  pub page_track_ids: Option<Vec<TrackID>>,
   pub open_playlist_id: TrackListID,
+  pub filter: String,
   pub sort_key: String,
   pub sort_desc: bool,
 }
@@ -100,10 +102,12 @@ pub fn load_data(is_dev: &bool) -> Result<Data, &'static str> {
     library: loaded_library,
     open_playlist_id: "root".to_string(),
     open_playlist_track_ids: vec![],
+    page_track_ids: None,
+    filter: "".to_string(),
     sort_key: "index".to_string(),
     sort_desc: true,
   };
-  data.open_playlist_track_ids = open_playlist::get_track_ids(&data)?;
+  data.open_playlist_track_ids = page::get_track_ids(&data)?;
   sort(&mut data, "dateAdded", true)?;
   return Ok(data);
 }
