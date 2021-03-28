@@ -1,5 +1,12 @@
 use std::time::{SystemTime, UNIX_EPOCH};
 
+#[macro_use]
+macro_rules! nerr {
+  ($($arg:tt)*) => {
+    napi::Error::from_reason(format!($($arg)*).to_owned())
+  }
+}
+
 mod js;
 mod library;
 mod library_types;

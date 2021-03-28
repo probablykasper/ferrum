@@ -44,10 +44,10 @@ pub fn get_page_track(ctx: CallContext) -> NResult<JsUnknown> {
   let data: &mut Data = get_data(&ctx)?;
   let index: i64 = arg_to_number(&ctx, 0)?;
   let page_track_ids = get_page_tracks(data);
-  let track_id = page_track_ids.get(index as usize).ok_or(nerr(&format!(
+  let track_id = page_track_ids.get(index as usize).ok_or(nerr!(
     "Track index {} not found in open playlist",
     index.to_string()
-  )))?;
+  ))?;
   let tracks = &data.library.tracks;
   let track = tracks.get(track_id).ok_or(nerr("Track ID not found"))?;
   let js = ctx.env.to_js_value(track)?;
@@ -59,10 +59,10 @@ pub fn get_page_track_id(ctx: CallContext) -> NResult<JsString> {
   let data: &mut Data = get_data(&ctx)?;
   let index: i64 = arg_to_number(&ctx, 0)?;
   let page_track_ids = get_page_tracks(data);
-  let track_id = page_track_ids.get(index as usize).ok_or(nerr(&format!(
+  let track_id = page_track_ids.get(index as usize).ok_or(nerr!(
     "Track index {} not found in open playlist",
     index.to_string()
-  )))?;
+  ))?;
   return ctx.env.create_string(track_id);
 }
 

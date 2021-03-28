@@ -75,54 +75,71 @@ pub fn add_play_time(ctx: CallContext) -> NResult<JsUndefined> {
   return ctx.env.get_undefined();
 }
 
+enum CoverReadError {
+  NoJpegOrPngFound,
+  TagReadError(String),
+  InvalidFileExtension,
+}
+fn read_cover(path: &PathBuf) -> Result<Vec<u8>, CoverReadError> {
+  if path.to_string_lossy().ends_with(".mp3") {
+    let tag = match id3::Tag::read_from_path(&path) {
+      Ok(tag) => tag,
+      Err(e) => {
+        return Err(CoverReadError::TagReadError(e.to_string()));
+      }
+    };
+    for picture in tag.pictures() {
+      match picture.mime_type.as_str() {
+        "image/jpeg" => ".jpg",
+        "image/png" => ".png",
+        _ => continue
+      };
+      match picture.picture_type {
+        id3::frame::PictureType::Other => {}
+        id3::frame::PictureType::Undefined(_) => {}
+        id3::frame::PictureType::CoverFront => {}
+        _ => continue
+      }
+      return Ok(picture.data.clone());
+    }
+    return Err(CoverReadError::NoJpegOrPngFound);
+  } else if path.to_string_lossy().ends_with(".m4a") {
+    let tag = match mp4ameta::Tag::read_from_path(&path) {
+      Ok(tag) => tag,
+      Err(e) => {
+        return Err(CoverReadError::TagReadError(e.to_string()));
+      }
+    };
+    match tag.artwork() {
+      Some(data) => match data {
+        mp4ameta::Data::Jpeg(jpeg_data) => return Ok(jpeg_data.clone()),
+        mp4ameta::Data::Png(png_data) => return Ok(png_data.clone()),
+        _ => return Err(CoverReadError::NoJpegOrPngFound)
+      },
+      None => {
+        return Err(CoverReadError::NoJpegOrPngFound);
+      }
+    }
+  } else {
+    return Err(CoverReadError::InvalidFileExtension);
+  }
+}
+
 struct ReadCover(PathBuf);
 impl Task for ReadCover {
   type Output = Vec<u8>;
   type JsValue = JsArrayBuffer;
   fn compute(&mut self) -> NResult<Self::Output> {
     let path = &self.0;
-    println!("PATH {:?}", path);
-    if path.to_string_lossy().ends_with(".mp3") {
-      println!("mp3");
-      let tag = match id3::Tag::read_from_path(path) {
-        Ok(tag) => tag,
-        Err(_) => return Err(nerr("No cover found: Error reading id3 tag")),
-      };
-      for picture in tag.pictures() {
-        match picture.mime_type.as_str() {
-          "image/jpeg" => ".jpg",
-          "image/png" => ".png",
-          _ => continue,
-        };
-        match picture.picture_type {
-          id3::frame::PictureType::Other => {}
-          id3::frame::PictureType::Undefined(_) => {}
-          id3::frame::PictureType::CoverFront => {}
-          _ => continue,
-        }
-        return Ok(picture.data.clone());
-      }
-    } else if path.to_string_lossy().ends_with(".m4a") {
-      println!("m4a");
-      let tag = match mp4ameta::Tag::read_from_path(path) {
-        Ok(tag) => tag,
-        Err(e) => {
-          println!("m4a tag e {:?}", e);
-          return Err(nerr("No cover found: Error reading m4a tag"));
-        }
-      };
-      println!("m4a tag {:?}", tag);
-      println!("m4a artwork() {:?}", tag.artwork());
-      match tag.artwork() {
-        Some(data) => match data {
-          mp4ameta::Data::Jpeg(data) => return Ok(data.clone()),
-          mp4ameta::Data::Png(data) => return Ok(data.clone()),
-          _ => {}
-        },
-        None => {}
-      }
-    }
-    return Err(nerr("No cover found"));
+    return match read_cover(path) {
+      Ok(data) => Ok(data),
+      Err(CoverReadError::NoJpegOrPngFound) => Err(nerr("Artwork not found")),
+      Err(CoverReadError::InvalidFileExtension) => Err(nerr("Invalid File Extension")),
+      Err(CoverReadError::TagReadError(string)) => {
+        let x = nerr!("Error reading tag: {}", string);
+        Err(x)
+      },
+    };
   }
   fn resolve(self, env: Env, output: Self::Output) -> NResult<Self::JsValue> {
     let result = env.create_arraybuffer_with_data(output)?;

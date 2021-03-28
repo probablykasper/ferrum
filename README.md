@@ -6,8 +6,6 @@ Ferrum is a music library client.
 
 ### ToDo
 
-- Currently playing icon
-- Arrow up/down to move selection
 - Write tags to files:
   - m4a/aac: https://github.com/Saecki/rust-mp4ameta
   - mp3/mp3: https://github.com/polyfloyd/rust-id3
