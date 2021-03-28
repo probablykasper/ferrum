@@ -34,10 +34,19 @@
   .container
     display: flex
     height: 80px
-    // padding: 5px
+    padding: 8px
     box-sizing: border-box
     align-items: center
     background-color: var(--bg-color-3)
+    background: linear-gradient(90deg, #151829, #181c2f, #151829)
+    background: linear-gradient(90deg, #1a1c28, #1d202f, #1a1c28)
+    // --gradient: linear-gradient(-90deg, #606c88, #3f4c6b)
+    // --gradient: linear-gradient(-90deg, #ea7bb8, #BB377D)
+    // --gradient: linear-gradient(90deg, #2847e2, #872edc)
+    // --gradient: linear-gradient(90deg, #4C48F6, #4F7CF7)
+    // --gradient: linear-gradient(90deg, #2d44b9, #2847e2, #2d44b9)
+    // --gradient: linear-gradient(90deg, #EE6957, #F2C251)
+    // --gradient: linear-gradient(90deg, #1599a8, #00c295)
   .stopped
     button, input
       pointer-events: none
@@ -48,6 +57,7 @@
     height: 100%
     img.cover
       height: 100%
+      border-radius: 2px
     svg.cover
       height: 100%
       padding: 24px
@@ -56,6 +66,7 @@
       background: var(--empty-cover-bg-color)
       fill: var(--icon-color-70)
       opacity: 0.2
+      border-radius: 2px
     .track-info
       margin-left: 15px
       display: flex

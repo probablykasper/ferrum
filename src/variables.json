@@ -1,7 +1,7 @@
 {
-  "--bg-color": "#090B0F",
-  "--bg-color-2": "#0D1116",
-  "--bg-color-3": "#202327",
+  "--bg-color": "#0D1115",
+  "--bg-color-2": "#101119",
+  "--bg-color-3": "#15182A",
   "--line-color": "#22262c",
   "--text-color": "#e6e6e6",
   "--select-color": "#505766",

@@ -82,9 +82,6 @@
     width: 100%
     margin: 0
     box-sizing: border-box
-  :global(:focus)
-    --select-color: var(--select-color-focus)
-    --select-color-sidebar: var(--select-color-focus)
   .drag-overlay
     opacity: 1
     position: absolute

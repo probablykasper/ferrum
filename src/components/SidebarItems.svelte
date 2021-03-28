@@ -11,9 +11,24 @@
       childLists.push(tl)
     }
   }
+  function open(id) {
+    if ($page.id !== id) page.openPlaylist(id)
+  }
 </script>
 
 <style lang="sass">
+  :global(.active)
+    // --sidebar-gradient: linear-gradient(90deg, #3f4c6b, #606c88)
+    --sidebar-gradient: linear-gradient(90deg, #1599a8b3, #00c295b3)
+  :global(:focus .active)
+    --sidebar-gradient: linear-gradient(90deg, #1599a8, #00c295)
+    // --gradient: linear-gradient(-90deg, #606c88, #3f4c6b)
+    // --gradient: linear-gradient(-90deg, #ea7bb8, #BB377D)
+    // --gradient: linear-gradient(90deg, #2847e2, #872edc)
+    // --gradient: linear-gradient(90deg, #4C48F6, #4F7CF7)
+    // --gradient: linear-gradient(90deg, #2d44b9, #2847e2, #2d44b9)
+    // --gradient: linear-gradient(90deg, #EE6957, #F2C251)
+    // --gradient: linear-gradient(90deg, #1599a8, #00c295)
   .item
     height: 24px
     white-space: nowrap
@@ -22,8 +37,11 @@
     position: relative
     display: flex
     align-items: center
+    border-top-right-radius: 3px
+    border-bottom-right-radius: 3px
+    margin-right: 10px
     &.active
-      background-color: var(--select-color-sidebar)
+      background: var(--sidebar-gradient)
   .sub
     margin-left: calc(2px + 6px*2)
     display: none
@@ -54,7 +72,7 @@
       .sub(class:show='{childList.show}')
         svelte:self(trackList='{childList}')
       +else()
-        .item(on:click='{page.openPlaylist(childList.id)}' class:active='{$page.id === childList.id}')
+        .item(on:click='{open(childList.id)}' class:active='{$page.id === childList.id}')
           .arrow
           .text {childList.name}
 </template>

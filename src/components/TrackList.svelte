@@ -54,6 +54,18 @@
 </script>
 
 <style lang="sass">
+  :global(.selected)
+    --sidebar-gradient: linear-gradient(90deg, #3f4c6b, #606c88)
+    --tracklist-gradient: linear-gradient(90deg, #2d44b9b3, #2847e2b3, #2d44b9b3)
+  :global(:focus .selected)
+    --tracklist-gradient: linear-gradient(90deg, #2d44b9, #2847e2, #2d44b9)
+    // --gradient: linear-gradient(-90deg, #606c88, #3f4c6b)
+    // --gradient: linear-gradient(-90deg, #ea7bb8, #BB377D)
+    // --gradient: linear-gradient(90deg, #2847e2, #872edc)
+    // --gradient: linear-gradient(90deg, #4C48F6, #4F7CF7)
+    // --gradient: linear-gradient(90deg, #2d44b9, #2847e2, #2d44b9)
+    // --gradient: linear-gradient(90deg, #EE6957, #F2C251)
+    // --gradient: linear-gradient(90deg, #1599a8, #00c295)
   .tracklist
     display: flex
     margin-top: var(--titlebar-height)
@@ -81,8 +93,14 @@
       height: $row-height
       font-size: 12px
       line-height: $row-height
+      // background-color: #181920
+      border-radius: 3px
+      background-color: #171B21
+      &:nth-child(2n+1)
+        // background-color: #101014
+        background-color: #0D1116
       &.selected
-        background-color: var(--select-color)
+        background: var(--tracklist-gradient)
       .c
         display: inline-block
         vertical-align: top
