@@ -1,19 +1,39 @@
 import type { Data } from './data'
+import type { MessageBoxOptions } from 'electron'
+export const { ipcRenderer, remote } = window.require('electron')
+const { invoke } = ipcRenderer
 
 type addon = {
   copy_file: Function
   atomic_file_save: Function
   load_data: (isDev: boolean) => Data
+  load_data_async: (isDev: boolean) => Promise<Data>
 }
 declare global {
   interface Window {
     addon: addon
-    showMessageBoxSync: Function
-    readyToQuit: Function
     toFileUrl: (...args: string[]) => string
-    existsSync: (path: string) => boolean
     iTunesImport: Function
   }
 }
 
-export default window
+export async function showMessageBox(options: MessageBoxOptions) {
+  type RV = Electron.MessageBoxReturnValue
+  const result: RV = await invoke('showMessageBox', options)
+  return {
+    buttonClicked: result.response,
+    checkboxChecked: result.checkboxChecked,
+  }
+}
+export async function showMessageBoxAttached(attached: boolean, options: MessageBoxOptions) {
+  type RV = Electron.MessageBoxReturnValue
+  const result: RV = await invoke('showMessageBoxAttached', attached, options)
+  return {
+    buttonClicked: result.response,
+    checkboxChecked: result.checkboxChecked,
+  }
+}
+
+export const addon = window.addon
+export const iTunesImport = window.iTunesImport
+export const toFileUrl = window.toFileUrl

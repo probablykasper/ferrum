@@ -6,7 +6,7 @@ import type {
   TrackListID,
   TrackListsHashMap,
 } from './libraryTypes'
-import window from './window'
+import { showMessageBox, addon } from './window'
 
 export function grabErr<T>(cb: () => T): T {
   try {
@@ -16,7 +16,7 @@ export function grabErr<T>(cb: () => T): T {
       if (err.code) err.message = 'Code: ' + err.code
       else err.message = 'No reason or code provided'
     }
-    window.showMessageBoxSync({
+    showMessageBox({
       type: 'error',
       message: err.message,
       detail: err.stack,
@@ -34,7 +34,7 @@ export function wrapErr<T, A extends Array<any>>(cb: (...args: A) => T): (...arg
         if (err.code) err.message = 'Code: ' + err.code
         else err.message = 'No reason or code provided'
       }
-      window.showMessageBoxSync({
+      showMessageBox({
         type: 'error',
         message: err.message,
         detail: err.stack,
@@ -51,7 +51,7 @@ type PageInfo = {
   length: number
 }
 
-export const isDev = process?.env?.NODE_ENV === 'development'
+export const isDev = process.env.NODE_ENV === 'development'
 export type Data = {
   get_paths: () => {
     library_dir: string
@@ -82,7 +82,7 @@ export type Data = {
   sort: (key: string, keep_filter: boolean) => void
 }
 const data: Data = grabErr(() => {
-  return window.addon.load_data(isDev)
+  return addon.load_data(isDev)
 })
 export const trackLists = grabErr(() => {
   const { subscribe, set, update } = writable(data.get_track_lists())
@@ -95,7 +95,7 @@ export const paths = grabErr(() => {
   return data.get_paths()
 })
 
-export function importTracks(paths: [string]) {
+export async function importTracks(paths: [string]) {
   let errState = null
   for (const path of paths) {
     try {
@@ -106,14 +106,14 @@ export function importTracks(paths: [string]) {
         else err.message = 'No reason or code provided'
       }
       if (errState === 'skip') continue
-      const clickedButton = window.showMessageBoxSync({
+      const result = await showMessageBox({
         type: 'error',
         message: 'Error importing track ' + path,
         detail: err.message,
         buttons: errState ? ['OK', 'Skip all errors'] : ['OK'],
         defaultId: 0,
       })
-      if (clickedButton === 1) errState = 'skip'
+      if (result.buttonClicked === 1) errState = 'skip'
       else errState = 'skippable'
     }
   }

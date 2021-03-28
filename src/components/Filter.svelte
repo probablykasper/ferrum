@@ -1,6 +1,6 @@
 <script lang="ts">
   import { page, filterQuery } from '../stores/data'
-  const { ipcRenderer } = window.require('electron')
+  import { ipcRenderer } from '../stores/window'
   function filter(node: HTMLInputElement) {
     function handler() {
       node.select()

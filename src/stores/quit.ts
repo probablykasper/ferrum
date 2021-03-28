@@ -1,4 +1,4 @@
-const { ipcRenderer } = window.require('electron')
+import { ipcRenderer } from './window'
 
 let unfinishedTasks = 0
 export function notReady() {

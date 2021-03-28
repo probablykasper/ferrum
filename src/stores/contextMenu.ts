@@ -1,4 +1,4 @@
-const { ipcRenderer, remote } = window.require('electron')
+import { remote } from './window'
 import queue from './queue'
 
 export function showTrackMenu(id: string) {

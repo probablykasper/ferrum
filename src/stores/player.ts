@@ -1,10 +1,9 @@
 import { writable, derived } from 'svelte/store'
 import type { Writable } from 'svelte/store'
-const { ipcRenderer } = window.require('electron')
 import quit from './quit'
 import { methods, paths } from './data'
 import type { Track, TrackID } from './libraryTypes'
-import window from './window'
+import { showMessageBox, toFileUrl, ipcRenderer } from './window'
 import queue from './queue'
 
 const audio = new Audio()
@@ -44,7 +43,7 @@ export const coverSrc = (() => {
         let buf = await methods.readCoverAsync(id)
         let url = URL.createObjectURL(new Blob([buf], {}))
         set(url)
-      } catch(e) {
+      } catch (e) {
         set(null)
       }
     },
@@ -56,21 +55,21 @@ audio.ontimeupdate = (e) => {
   currentTime.set(audio.currentTime)
 }
 
-audio.addEventListener('error', (e) => {
+audio.addEventListener('error', async (e) => {
   stop()
   let message = 'Audio playback error'
-  let detail = ''
-  let el = e.target as HTMLAudioElement
-  if (!window.existsSync(audio.src)) {
-    message = 'File not found'
-  } else if (el && el.error && !window.existsSync(audio.src)) {
-    detail = el.error.message
-  } else if (el) {
-    detail = 'Unknown error, no audio error found'
-  } else {
-    detail = 'Unknown error, no audio element found'
+  let detail = 'Unknown error'
+  let audio = e.target as HTMLAudioElement
+  if (audio && audio.error) {
+    detail = audio.error.message
+    if (audio.error.code === audio.error.MEDIA_ERR_SRC_NOT_SUPPORTED) {
+      if (audio.networkState === audio.NETWORK_NO_SOURCE) {
+        message = 'File not found'
+        detail = ''
+      }
+    }
   }
-  window.showMessageBoxSync({ type: 'error', message, detail })
+  await showMessageBox({ type: 'error', message, detail })
 })
 
 let startTime = 0
@@ -90,7 +89,7 @@ function startPlayback() {
 
 function startPlayingId(id: TrackID) {
   const track = methods.getTrack(id)
-  const fileUrl = window.toFileUrl(paths.tracks_dir, track.file)
+  const fileUrl = toFileUrl(paths.tracks_dir, track.file)
   waitingToPlay = true
   audio.src = fileUrl
   playingTrack.set(track)

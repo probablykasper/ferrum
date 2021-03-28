@@ -1,9 +1,11 @@
 const { app, ipcMain, session, BrowserWindow, protocol } = require('electron')
 const is = require('./electron/is.js')
+const fs = require('fs').promises
 if (is.dev) app.setName('Ferrum Dev')
 
 const menubar = require('./electron/menubar.js')
 const shortcuts = require('./electron/shortcuts.js')
+const ipc = require('./electron/ipc.js')
 const path = require('path')
 const vars = require('./variables.json')
 
@@ -38,8 +40,9 @@ app.on('ready', async () => {
   })
 
   protocol.registerFileProtocol('file', (request, callback) => {
-    const url = request.url.substr(7)
-    callback(decodeURI(url))
+    const url = decodeURI(request.url)
+    const path = url.substr(7)
+    callback(path)
   })
 
   if (!is.dev) {

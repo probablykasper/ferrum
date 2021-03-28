@@ -5,6 +5,7 @@
   import Player from './components/Player.svelte'
   import Titlebar from './components/Titlebar.svelte'
   import Sidebar from './components/Sidebar.svelte'
+  import { iTunesImport } from './stores/window'
   import { isDev, paths, importTracks } from './stores/data'
 
   let pageStatus = ''
@@ -12,7 +13,7 @@
   let pageStatusErr = ''
   const { ipcRenderer } = window.require('electron')
   async function itunesImport() {
-    const result = await window.iTunesImport(
+    const result = await iTunesImport(
       paths,
       (status) => {
         pageStatus = status
