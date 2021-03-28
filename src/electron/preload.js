@@ -4,10 +4,9 @@ const iTunesImport = require('./import_itunes.js')
 window.addon = require('../../native/addon.node')
 const { pathToFileURL } = require('url')
 
-const { dialog, BrowserWindow } = require('electron').remote
+const { dialog } = require('electron').remote
 
 window.showMessageBoxSync = (options) => {
-  const focusedWindow = BrowserWindow.getFocusedWindow()
   return dialog.showMessageBoxSync(options)
 }
 

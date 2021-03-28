@@ -1,4 +1,4 @@
-import { writable } from 'svelte/store'
+import { writable, derived } from 'svelte/store'
 import type { Writable } from 'svelte/store'
 const { ipcRenderer } = window.require('electron')
 import quit from './quit'
@@ -23,9 +23,34 @@ export const paused = writable(true)
 export const currentTime = writable(0)
 export const duration = writable(0)
 export const playingTrack: Writable<Track | null> = writable(null)
-export const playingId: Writable<TrackID | null> = writable(null)
+export const playingId = (() => {
+  const store: Writable<TrackID | null> = writable(null)
+  return {
+    set(id: TrackID) {
+      store.set(id)
+      coverSrc.newFromTrackId(id)
+    },
+    subscribe: store.subscribe,
+  }
+})()
 let waitingToPlay = false
 const mediaSession = navigator.mediaSession
+
+export const coverSrc = (() => {
+  const { set, subscribe }: Writable<string | null> = writable(null)
+  return {
+    async newFromTrackId(id: TrackID) {
+      try {
+        let buf = await methods.readCoverAsync(id)
+        let url = URL.createObjectURL(new Blob([buf], {}))
+        set(url)
+      } catch(e) {
+        set(null)
+      }
+    },
+    subscribe,
+  }
+})()
 
 audio.ontimeupdate = (e) => {
   currentTime.set(audio.currentTime)

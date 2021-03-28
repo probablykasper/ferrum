@@ -18,13 +18,6 @@
 </script>
 
 <style lang="sass">
-  .container
-    // border-radius: 3px
-    // transition: border 150ms cubic-bezier(0.0, 0.0, 0.2, 1)
-    // border: 3px solid transparent
-      // border: 3px solid var(--select-color-focus)
-      .search
-      // background-color: var(--select-color-focus)
   .search
     display: block
     width: calc(100% - 15px*2)

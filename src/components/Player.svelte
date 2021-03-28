@@ -9,6 +9,8 @@
     playingTrack,
     previous,
     next,
+    playingId,
+    coverSrc,
   } from '../stores/player'
   import { getDuration } from '../scripts/formatting'
   let sliderBeingDragged = false
@@ -31,7 +33,9 @@
 <style lang="sass">
   .container
     display: flex
-    height: 70px
+    height: 80px
+    // padding: 5px
+    box-sizing: border-box
     align-items: center
     background-color: var(--bg-color-3)
   .stopped
@@ -40,13 +44,28 @@
       opacity: 0.5
   .left
     width: 30%
-    .name
-      margin-left: 20px
-      font-size: 14px
-    .artist
-      margin-left: 20px
-      font-size: 12px
-      opacity: 0.8
+    display: flex
+    height: 100%
+    img.cover
+      height: 100%
+    svg.cover
+      height: 100%
+      padding: 24px
+      width: auto
+      box-sizing: border-box
+      background: var(--empty-cover-bg-color)
+      fill: var(--icon-color-70)
+      opacity: 0.2
+    .track-info
+      margin-left: 15px
+      display: flex
+      flex-direction: column
+      justify-content: center
+      .name
+        font-size: 14px
+      .artist
+        font-size: 12px
+        opacity: 0.8
   .middle
     width: 40%
   .right
@@ -62,13 +81,10 @@
       fill: var(--icon-color)
       width: 100%
       height: 100%
-      // width: 32px
-      // width: 32px
   button.play, button.pause
     width: 36px
     height: 36px
     margin: 0px 15px
-    // opacity: 0.8
   .controls
     display: flex
     justify-content: center
@@ -109,38 +125,33 @@
   .container(class:stopped='{$stopped}' on:mousedown|self|preventDefault)
     .left
       +if('!$stopped')
-        .name {$playingTrack.name}
-        .artist {$playingTrack.artist}
+        +if('$coverSrc')
+          img.cover(alt="" src='{$coverSrc}')
+          +else
+            //- img.cover(alt="" src='{$coverSrc}')
+            svg.cover(xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewbox='0 0 24 24')
+              path(d='M23 0l-15.996 3.585v13.04c-2.979-.589-6.004 1.671-6.004 4.154 0 2.137 1.671 3.221 3.485 3.221 2.155 0 4.512-1.528 4.515-4.638v-10.9l12-2.459v8.624c-2.975-.587-6 1.664-6 4.141 0 2.143 1.715 3.232 3.521 3.232 2.14 0 4.476-1.526 4.479-4.636v-17.364z')
+
+        .track-info
+          .name {$playingTrack.name}
+          .artist {$playingTrack.artist}
     .middle
       .controls(on:mousedown|preventDefault)
         button(tabindex=-1 on:click='{previous}')
-          //- svg(xmlns='http://www.w3.org/2000/svg' height='24' viewbox='0 0 24 24' width='24')
-          //-   path(d='M0 0h24v24H0z' fill='none')
-          //-   path(d='M6 6h2v12H6zm3.5 6l8.5 6V6z')
           svg(xmlns='http://www.w3.org/2000/svg' height='24' viewbox='0 0 24 24' width='24')
             path(d='M7 6c.55 0 1 .45 1 1v10c0 .55-.45 1-1 1s-1-.45-1-1V7c0-.55.45-1 1-1zm3.66 6.82l5.77 4.07c.66.47 1.58-.01 1.58-.82V7.93c0-.81-.91-1.28-1.58-.82l-5.77 4.07c-.57.4-.57 1.24 0 1.64z')
 
         +if('$paused')
           button.play(tabindex=-1 on:click='{playPause}')
-            //- svg(xmlns='http://www.w3.org/2000/svg' height='24' viewbox='0 0 24 24' width='24')
-            //-   path(d='M0 0h24v24H0z' fill='none')
-            //-   path(d='M8 5v14l11-7z')
             svg(xmlns='http://www.w3.org/2000/svg' height='24' viewbox='0 0 24 24' width='24')
               path(d='M8 6.82v10.36c0 .79.87 1.27 1.54.84l8.14-5.18c.62-.39.62-1.29 0-1.69L9.54 5.98C8.87 5.55 8 6.03 8 6.82z')
 
           +else
             button.pause(tabindex=-1 on:click='{playPause}')
-              //- svg(xmlns='http://www.w3.org/2000/svg' height='24' viewbox='0 0 24 24' width='24')
-              //-   path(d='M0 0h24v24H0z' fill='none')
-              //-   path(d='M6 19h4V5H6v14zm8-14v14h4V5h-4z')
               svg(xmlns='http://www.w3.org/2000/svg' height='24' viewbox='0 0 24 24' width='24')
                 path(d='M8 19c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2s-2 .9-2 2v10c0 1.1.9 2 2 2zm6-12v10c0 1.1.9 2 2 2s2-.9 2-2V7c0-1.1-.9-2-2-2s-2 .9-2 2z')
 
-
         button(tabindex=-1 on:click='{next}')
-          //- svg(xmlns='http://www.w3.org/2000/svg' height='24' viewbox='0 0 24 24' width='24')
-          //-   path(d='M0 0h24v24H0z' fill='none')
-          //-   path(d='M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z')
           svg(xmlns='http://www.w3.org/2000/svg' height='24' viewbox='0 0 24 24' width='24')
             path(d='M7.58 16.89l5.77-4.07c.56-.4.56-1.24 0-1.63L7.58 7.11C6.91 6.65 6 7.12 6 7.93v8.14c0 .81.91 1.28 1.58.82zM16 7v10c0 .55.45 1 1 1s1-.45 1-1V7c0-.55-.45-1-1-1s-1 .45-1 1z')
       .time-bar

@@ -24,25 +24,29 @@
 </script>
 
 <style lang="sass">
+  .bg
+    width: 230px
+    min-width: 230px
+    padding-top: var(--titlebar-height)
+    background-color: var(--bg-color-2)
   .spacer
     height: 10px
   .sidebar
-    width: 230px
-    padding-top: var(--titlebar-height)
+    width: 100%
+    height: 100%
     font-size: 14px
-    min-width: 230px
     overflow-y: scroll
-    background-color: var(--bg-color-2)
     outline: none
 </style>
 
 <template lang="pug">
-  .sidebar(tabindex='0' on:keydown='{handleKeydown}' bind:this='{viewport}')
-    .spacer
-    Filter
-    .spacer
-    SidebarItems(trackList='{special}')
-    .spacer
-    SidebarItems(trackList='{$trackLists.root}')
-    .spacer
+  .bg
+    .sidebar(tabindex='0' on:keydown='{handleKeydown}' bind:this='{viewport}')
+      .spacer
+      Filter
+      .spacer
+      SidebarItems(trackList='{special}')
+      .spacer
+      SidebarItems(trackList='{$trackLists.root}')
+      .spacer
 </template>

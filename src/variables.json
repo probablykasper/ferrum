@@ -2,12 +2,14 @@
   "--bg-color": "#090B0F",
   "--bg-color-2": "#0D1116",
   "--bg-color-3": "#202327",
-  "--titlebar-height": "22px",
   "--line-color": "#22262c",
   "--text-color": "#e6e6e6",
   "--select-color": "#505766",
+  "--empty-cover-bg-color": "#393a3c",
   "--select-color-sidebar": "#464e5d",
   "--select-color-focus": "#344c7f",
   "--icon-color": "#FFFFFF",
+  "--icon-color-70": "#b3b3b3",
+  "--titlebar-height": "22px",
   "port": 8089
 }

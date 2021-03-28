@@ -55,6 +55,7 @@ fn init_data_instance(mut exports: JsObject) -> NResult<JsObject> {
   exports.create_named_method("add_play", tracks::add_play)?;
   exports.create_named_method("add_skip", tracks::add_skip)?;
   exports.create_named_method("add_play_time", tracks::add_play_time)?;
+  exports.create_named_method("read_cover_async", tracks::read_cover_async)?;
 
   exports.create_named_method("refresh_page", page::refresh)?;
   exports.create_named_method("open_playlist", page::open_playlist)?;

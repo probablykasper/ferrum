@@ -6,11 +6,14 @@ use crate::{get_now_timestamp, sys_time_to_timestamp};
 use atomicwrites::{AtomicFile, DisallowOverwrite};
 use id3;
 use mp3_metadata;
-use napi::{CallContext, JsUndefined, JsUnknown, Result as NResult};
+use mp4ameta;
+use napi::{
+  CallContext, Env, JsArrayBuffer, JsObject, JsUndefined, JsUnknown, Result as NResult, Task,
+};
 use napi_derive::js_function;
 use std::fs;
 use std::io::Write;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 fn id_arg_to_track<'a>(ctx: &'a CallContext, arg: usize) -> NResult<&'a mut Track> {
   let data: &mut Data = get_data(&ctx)?;
@@ -70,6 +73,70 @@ pub fn add_play_time(ctx: CallContext) -> NResult<JsUndefined> {
   let duration: i64 = arg_to_number(&ctx, 2)?;
   data.library.playTime.push((id, timestamp, duration));
   return ctx.env.get_undefined();
+}
+
+struct ReadCover(PathBuf);
+impl Task for ReadCover {
+  type Output = Vec<u8>;
+  type JsValue = JsArrayBuffer;
+  fn compute(&mut self) -> NResult<Self::Output> {
+    let path = &self.0;
+    println!("PATH {:?}", path);
+    if path.to_string_lossy().ends_with(".mp3") {
+      println!("mp3");
+      let tag = match id3::Tag::read_from_path(path) {
+        Ok(tag) => tag,
+        Err(_) => return Err(nerr("No cover found: Error reading id3 tag")),
+      };
+      for picture in tag.pictures() {
+        match picture.mime_type.as_str() {
+          "image/jpeg" => ".jpg",
+          "image/png" => ".png",
+          _ => continue,
+        };
+        match picture.picture_type {
+          id3::frame::PictureType::Other => {}
+          id3::frame::PictureType::Undefined(_) => {}
+          id3::frame::PictureType::CoverFront => {}
+          _ => continue,
+        }
+        return Ok(picture.data.clone());
+      }
+    } else if path.to_string_lossy().ends_with(".m4a") {
+      println!("m4a");
+      let tag = match mp4ameta::Tag::read_from_path(path) {
+        Ok(tag) => tag,
+        Err(e) => {
+          println!("m4a tag e {:?}", e);
+          return Err(nerr("No cover found: Error reading m4a tag"));
+        }
+      };
+      println!("m4a tag {:?}", tag);
+      println!("m4a artwork() {:?}", tag.artwork());
+      match tag.artwork() {
+        Some(data) => match data {
+          mp4ameta::Data::Jpeg(data) => return Ok(data.clone()),
+          mp4ameta::Data::Png(data) => return Ok(data.clone()),
+          _ => {}
+        },
+        None => {}
+      }
+    }
+    return Err(nerr("No cover found"));
+  }
+  fn resolve(self, env: Env, output: Self::Output) -> NResult<Self::JsValue> {
+    let result = env.create_arraybuffer_with_data(output)?;
+    return Ok(result.into_raw());
+  }
+}
+#[js_function(1)]
+pub fn read_cover_async(ctx: CallContext) -> NResult<JsObject> {
+  let data: &mut Data = get_data(&ctx)?;
+  let track = id_arg_to_track(&ctx, 0)?;
+  let tracks_dir = &data.paths.tracks_dir;
+  let file_path = tracks_dir.join(&track.file);
+  let task = ReadCover(file_path);
+  ctx.env.spawn(task).map(|t| t.promise_object())
 }
 
 fn sanitize_filename(input: &String) -> String {

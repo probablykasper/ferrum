@@ -70,6 +70,7 @@ export type Data = {
   add_play: (id: TrackID) => void
   add_skip: (id: TrackID) => void
   add_play_time: (id: TrackID, startTime: MsSinceUnixEpoch, duration_ms: number) => void
+  read_cover_async: (id: TrackID) => Promise<ArrayBuffer>
 
   refresh_page: () => void
   open_playlist: (id: TrackListID) => void
@@ -127,9 +128,7 @@ export const methods = {
   getTrack: wrapErr((id: TrackID) => {
     return data.get_track(id)
   }),
-  save: wrapErr(() => {
-    data.save()
-  }),
+  save: wrapErr(() => data.save()),
   addPlay: wrapErr((id: TrackID) => {
     data.add_play(id)
     methods.save()
@@ -145,6 +144,7 @@ export const methods = {
     methods.save()
     page.refresh()
   }),
+  readCoverAsync: wrapErr((id: TrackID) => data.read_cover_async(id)),
 }
 
 export const filterQuery = writable('')
