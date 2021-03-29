@@ -1,4 +1,4 @@
-const { dialog, BrowserWindow } = require('electron').remote
+const { ipcRenderer } = require('electron')
 const simplePlist = require('simple-plist')
 const path = require('path')
 const url = require('url')
@@ -119,8 +119,7 @@ async function popup() {
     '\n    - Disc Count' +
     '\n    - Start time' +
     '\n    - Stop time'
-  const focusedWindow = BrowserWindow.getFocusedWindow()
-  const result = await dialog.showMessageBox(focusedWindow, {
+  const info = await ipcRenderer.invoke('showMessageBox', {
     type: 'info',
     title: 'iTunes Import',
     message: m,
@@ -128,12 +127,13 @@ async function popup() {
     checkboxChecked: true,
     buttons: ['OK', 'Cancel'],
   })
-  if (result.response === 1) return {}
-  const filePaths = dialog.showOpenDialogSync(focusedWindow, {
+  if (info.response === 1) return {}
+  const dryRun = info.checkboxChecked
+  const open = await ipcRenderer.invoke('showOpenDialogAttached', {
     properties: ['openFile'],
   })
-  if (filePaths && filePaths[0]) {
-    return { filePath: filePaths[0], dryRun: result.checkboxChecked }
+  if (!open.canceled && canceled.filePaths && filePaths[0]) {
+    return { dryRun, filePath: filePaths[0] }
   }
   return {}
 }

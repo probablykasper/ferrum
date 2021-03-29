@@ -32,7 +32,6 @@ app.on('ready', async () => {
       // Allow file:// during development, since the app is loaded via http
       webSecurity: !is.dev,
       nodeIntegration: true,
-      enableRemoteModule: true,
       preload: path.resolve(__dirname, './electron/preload.js'),
     },
     backgroundColor: vars['--bg-color'],

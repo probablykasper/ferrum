@@ -9,6 +9,11 @@ ipcMain.handle('showMessageBoxAttached', async (e, options) => {
   return await dialog.showMessageBox(window, options)
 })
 
+ipcMain.handle('showOpenDialogAttached', async (e, options) => {
+  const window = e.sender.getOwnerBrowserWindow()
+  return await dialog.showOpenDialog(window, options)
+})
+
 ipcMain.handle('showTrackMenu', (e) => {
   return new Promise((resolve, reject) => {
     const menu = Menu.buildFromTemplate([
