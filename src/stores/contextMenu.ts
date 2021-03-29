@@ -1,16 +1,14 @@
-import { remote } from './window'
+import { ipcRenderer } from './window'
 import queue from './queue'
 
-export function showTrackMenu(id: string) {
-  const menu = remote.Menu.buildFromTemplate([
-    {
-      label: 'Add to Queue',
-      click: () => queue.appendToUserQueue([id]),
-    },
-    {
-      label: 'Play Next',
-      click: () => queue.prependToUserQueue([id]),
-    },
-  ])
-  menu.popup()
+export async function showTrackMenu(id: string) {
+  const clickedId = await ipcRenderer.invoke('showTrackMenu')
+  if (clickedId === null) return
+  if (clickedId === 'Add to Queue') {
+    queue.appendToUserQueue([id])
+  } else if (clickedId === 'Play Next') {
+    queue.prependToUserQueue([id])
+  } else {
+    console.error('Unknown contextMenu ID', clickedId)
+  }
 }

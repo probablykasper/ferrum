@@ -1,5 +1,4 @@
 const path = require('path')
-const fs = require('fs')
 const iTunesImport = require('./import_itunes.js')
 window.addon = require('../../native/addon.node')
 const { pathToFileURL } = require('url')

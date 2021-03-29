@@ -21,6 +21,8 @@ serde_repr = "0.1.6"
 # switch to official id3 crate when it's past v0.6.2 and my merged PR is out
 id3 = { git = "https://github.com/probablykasper/rust-id3", rev ="f099e18" }
 mp3-metadata = "0.3.3"
+# mp4ameta <=0.9.1 doesn't support m4a files with 64-bit chunk offsets.
+# Issue: https://github.com/Saecki/rust-mp4ameta/issues/17
 mp4ameta = "0.9.1"
 serde_json = "1.0.62"
 jemallocator = "0.3.2"

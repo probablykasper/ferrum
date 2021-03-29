@@ -50,7 +50,7 @@
   .stopped
     button, input
       pointer-events: none
-      opacity: 0.5
+      opacity: 0.25
   .left
     width: 30%
     display: flex

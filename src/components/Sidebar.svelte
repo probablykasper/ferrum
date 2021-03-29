@@ -27,6 +27,8 @@
   .bg
     width: 230px
     min-width: 230px
+    display: flex
+    flex-direction: column
     padding-top: var(--titlebar-height)
     background-color: var(--bg-color-2)
   .spacer
@@ -40,10 +42,10 @@
 </style>
 
 <template lang="pug">
-  .bg
+  .bg(on:mousedown|self|preventDefault)
+    .spacer(on:mousedown|self|preventDefault)
+    Filter
     .sidebar(tabindex='0' on:keydown='{handleKeydown}' bind:this='{viewport}')
-      .spacer
-      Filter
       .spacer
       SidebarItems(trackList='{special}')
       .spacer

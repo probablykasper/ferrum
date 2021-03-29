@@ -1,7 +1,10 @@
 import type { Data } from './data'
 import type { MessageBoxOptions } from 'electron'
-export const { ipcRenderer, remote } = window.require('electron')
-const { invoke } = ipcRenderer
+const electron = window.require('electron')
+
+export const ipcRenderer = electron.ipcRenderer
+
+const invoke = ipcRenderer.invoke
 
 type addon = {
   copy_file: Function

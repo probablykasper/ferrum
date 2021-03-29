@@ -72,6 +72,7 @@
     flex-direction: column
     min-width: 0px
     width: 100%
+    background-color: hsl(240, 20%, 7%)
     .row.header
       .c
         overflow: visible
@@ -86,6 +87,8 @@
         display: inline-block
       &.desc .c.sort span::after
         content: '▼'
+    .row.header:first-child
+      background-color: inherit
     .row
       display: flex
       max-width: 100%
@@ -93,12 +96,9 @@
       height: $row-height
       font-size: 12px
       line-height: $row-height
-      // background-color: #181920
       border-radius: 3px
-      background-color: #171B21
       &:nth-child(2n+1)
-        // background-color: #101014
-        background-color: #0D1116
+        background-color: #171B21
       &.selected
         background: var(--tracklist-gradient)
       .c
