@@ -3,7 +3,7 @@ use jemallocator::Jemalloc;
 #[cfg(not(target_env = "msvc"))]
 #[global_allocator]
 static GLOBAL: Jemalloc = Jemalloc;
-use crate::data_js::load_data_js;
+use crate::data_js::{load_data_js,load_data_async};
 use atomicwrites::{AllowOverwrite, AtomicFile};
 use napi::{
   CallContext, Error as NapiError, JsBoolean, JsNumber, JsObject, JsString, JsUndefined,
@@ -75,5 +75,6 @@ fn init(mut exports: JsObject) -> NResult<()> {
   exports.create_named_method("copy_file", copy_file)?;
   exports.create_named_method("atomic_file_save", atomic_file_save)?;
   exports.create_named_method("load_data", load_data_js)?;
+  exports.create_named_method("load_data_async", load_data_async)?;
   Ok(())
 }
