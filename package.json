@@ -35,7 +35,7 @@
       "build",
       "src/electron.js",
       "src/electron/**/*.js",
-      "src/variables.json",
+      "src/variables.mjs",
       "native/addon.node"
     ],
     "directories": {

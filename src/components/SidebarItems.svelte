@@ -19,9 +19,10 @@
 <style lang="sass">
   :global(.active)
     // --sidebar-gradient: linear-gradient(90deg, #3f4c6b, #606c88)
-    --sidebar-gradient: linear-gradient(90deg, #1599a8b3, #00c295b3)
+    --sidebar-gradient: linear-gradient(90deg, #1599a8b3, #0cb08ab3)
   :global(:focus .active)
     --sidebar-gradient: linear-gradient(90deg, #1599a8, #00c295)
+    --sidebar-gradient: linear-gradient(90deg, #038a98, #00ad75)
     // --gradient: linear-gradient(-90deg, #606c88, #3f4c6b)
     // --gradient: linear-gradient(-90deg, #ea7bb8, #BB377D)
     // --gradient: linear-gradient(90deg, #2847e2, #872edc)

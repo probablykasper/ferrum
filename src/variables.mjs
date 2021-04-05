@@ -1,0 +1,21 @@
+export default {
+  port: 8089,
+  cssVars: {
+    // '--window-bg-color': '#0D1115',
+    '--window-bg-color': '#0D1115',
+    // '--tracklist-2n-bg-color': '#171B21',
+    '--tracklist-2n-bg-color': '#1E1F24',
+    // '--sidebar-bg-color': '#101119',
+    '--sidebar-bg-color': '#000000',
+    // '--player-bg-color': '#15182A',
+    // '--player-bg-color': 'hsl(230, 9%, 13%)',
+    '--player-bg-color': 'hsl(230deg 9% 10%)',
+    '--text-color': '#e6e6e6',
+    '--empty-cover-bg-color': 'hsl(230, 6%, 18%)',
+    '--empty-cover-color': 'hsl(228, 4%, 28%)',
+    '--outline-color-disabled': '#505766',
+    '--outline-color': '#344c7f',
+    '--icon-color': '#FFFFFF',
+    '--titlebar-height': '22px',
+  },
+}

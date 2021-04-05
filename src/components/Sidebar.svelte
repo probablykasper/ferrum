@@ -30,7 +30,7 @@
     display: flex
     flex-direction: column
     padding-top: var(--titlebar-height)
-    background-color: var(--bg-color-2)
+    background-color: var(--sidebar-bg-color)
   .spacer
     height: 10px
   .sidebar

@@ -1,7 +1,7 @@
 use crate::data::{load_data, Data};
 use crate::js::{arg_to_bool, nr};
 use crate::{filter, page, tracks};
-use napi::{CallContext, JsObject, JsUndefined, JsUnknown, Result as NResult};
+use napi::{CallContext, Env, JsObject, JsUndefined, JsUnknown, Result as NResult, Task};
 use napi_derive::js_function;
 
 pub fn get_data<'a>(ctx: &'a CallContext) -> NResult<&'a mut Data> {
@@ -12,6 +12,34 @@ pub fn get_data<'a>(ctx: &'a CallContext) -> NResult<&'a mut Data> {
 
 #[js_function(1)]
 pub fn load_data_js(ctx: CallContext) -> NResult<JsObject> {
+  let is_dev = arg_to_bool(&ctx, 0)?;
+
+  let data: Data = nr(load_data(&is_dev))?;
+
+  let mut new_this: JsObject = ctx.env.create_object()?;
+  ctx.env.wrap(&mut new_this, data)?;
+  new_this = init_data_instance(new_this)?;
+  return Ok(new_this);
+}
+
+struct LoadData(bool);
+impl Task for LoadData {
+  type Output = Data;
+  type JsValue = JsObject;
+  fn compute(&mut self) -> NResult<Self::Output> {
+    let is_dev = &self.0;
+    let data: Data = nr(load_data(&is_dev))?;
+    return Ok(data)
+  }
+  fn resolve(self, env: Env, output: Self::Output) -> NResult<Self::JsValue> {
+    let mut new_this: JsObject = env.create_object()?;
+    env.wrap(&mut new_this, output)?;
+    new_this = init_data_instance(new_this)?;
+    return Ok(new_this);
+  }
+}
+#[js_function(1)]
+pub fn load_data_async(ctx: CallContext) -> NResult<JsObject> {
   let is_dev = arg_to_bool(&ctx, 0)?;
 
   let data: Data = nr(load_data(&is_dev))?;

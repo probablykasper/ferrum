@@ -37,9 +37,8 @@
     padding: 8px
     box-sizing: border-box
     align-items: center
-    background-color: var(--bg-color-3)
-    background: linear-gradient(90deg, #151829, #181c2f, #151829)
-    background: linear-gradient(90deg, #1a1c28, #1d202f, #1a1c28)
+    border-top: 1px solid rgba(#FFFFFF, 0.1)
+    background-color: var(--player-bg-color)
     // --gradient: linear-gradient(-90deg, #606c88, #3f4c6b)
     // --gradient: linear-gradient(-90deg, #ea7bb8, #BB377D)
     // --gradient: linear-gradient(90deg, #2847e2, #872edc)
@@ -57,15 +56,15 @@
     height: 100%
     img.cover
       height: 100%
-      border-radius: 2px
+      max-width: 120px
+      object-fit: contain
     svg.cover
       height: 100%
-      padding: 24px
+      padding: 18px
       width: auto
       box-sizing: border-box
       background: var(--empty-cover-bg-color)
-      fill: var(--icon-color-70)
-      opacity: 0.2
+      fill: var(--empty-cover-color)
       border-radius: 2px
     .track-info
       margin-left: 15px

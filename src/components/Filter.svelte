@@ -32,9 +32,9 @@
     outline: none
     border: 3px solid transparent
     &.on:focus
-      border: 3px solid var(--select-color-focus)
+      border: 3px solid var(--outline-color)
     &.on
-      border: 3px solid var(--select-color)
+      border: 3px solid var(--outline-color-disabled)
 </style>
 
 <template lang="pug">

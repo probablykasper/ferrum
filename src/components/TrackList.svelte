@@ -98,7 +98,7 @@
       line-height: $row-height
       border-radius: 3px
       &:nth-child(2n+1)
-        background-color: #171B21
+        background-color: var(--tracklist-2n-bg-color)
       &.selected
         background: var(--tracklist-gradient)
       .c

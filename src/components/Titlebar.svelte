@@ -3,9 +3,9 @@
 </script>
 
 <style lang="sass">
-  // .titlebar.dev
-  //   background-color: #0b9fcb
-  //   opacity: 0.5
+  .titlebar.dev
+    background: linear-gradient(90deg, #0fb3ff, #9417e8)
+    opacity: 0.5
   .titlebar
     height: 21px
     width: 100%

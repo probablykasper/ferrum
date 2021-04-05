@@ -1,12 +1,12 @@
 <script>
   import { onDestroy } from 'svelte'
-  import styles from './variables.json'
   import NewTrackList from './components/TrackList.svelte'
   import Player from './components/Player.svelte'
   import Titlebar from './components/Titlebar.svelte'
   import Sidebar from './components/Sidebar.svelte'
   import { iTunesImport } from './stores/window'
   import { isDev, paths, importTracks } from './stores/data'
+  import vars from './variables.mjs'
 
   let pageStatus = ''
   let pageStatusWarnings = ''
@@ -32,11 +32,9 @@
     ipcRenderer.off('itunesImport', itunesImport)
   })
 
-  $: cssVarStyles = Object.entries(styles)
+  $: cssVarStyles = Object.entries(vars.cssVars)
     .map(([key, value]) => `${key}:${value}`)
     .join(';')
-  const root = document.documentElement
-  $: root.style.setProperty('--bg-color', styles['--bg-color'])
 
   let droppable = false
   function getFiles(files) {
@@ -76,7 +74,7 @@
 
 <style lang="sass">
   :global(html), :global(body)
-    background-color: var(--bg-color)
+    background-color: var(--window-bg-color)
     height: 100%
   :global(body)
     position: relative
@@ -90,7 +88,7 @@
     height: 100%
     top: 0px
     left: 0px
-    background: rgba(#10161e, 0.9)
+    background-color: rgba(#10161e, 0.9)
     transition: all 100ms ease-in-out
     display: flex
     align-items: center

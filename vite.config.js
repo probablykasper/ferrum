@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite'
 import svelte from '@svitejs/vite-plugin-svelte'
 import sveltePreprocess from 'svelte-preprocess'
-import { port } from './src/variables.json'
+import vars from './src/variables.mjs'
 
 export default defineConfig({
   root: './src',
@@ -9,7 +9,7 @@ export default defineConfig({
   publicDir: '../public',
   clearScreen: false,
   server: {
-    port: port,
+    port: vars.port,
     strictPort: true,
   },
   build: {
