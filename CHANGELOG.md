@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.6.0 - 2021 Apr 6
+- Added filter feature
+- Added artworks to player
+- Design changes
+- Fixed accessibility permisions flow
+
 ## 0.5.0 - 2021 Mar 24
 - Added "Add to Queue" context menu item
 - Added "Play Next" context menu item
