@@ -1,4 +1,4 @@
-const { app, ipcMain, session, BrowserWindow, protocol } = require('electron')
+const { app, ipcMain, session, BrowserWindow, dialog, protocol } = require('electron')
 const is = require('./electron/is.js')
 const fs = require('fs').promises
 if (is.dev) app.setName('Ferrum Dev')
@@ -8,6 +8,27 @@ const shortcuts = require('./electron/shortcuts.js')
 const ipc = require('./electron/ipc.js')
 const path = require('path')
 const vars = require('./variables.json')
+
+async function errHandler(msg, error) {
+  if (app.isReady()) {
+    dialog.showMessageBoxSync({
+      type: 'error',
+      message: msg,
+      detail: error.stack,
+      title: 'Error',
+    })
+  } else {
+    app.on('msg, error', () => {
+      errHandler(msg, error)
+    })
+  }
+}
+process.on('uncaughtException', (error) => {
+  errHandler('Unhandled Error', error)
+})
+process.on('unhandledRejection', (error) => {
+  errHandler('Unhandled Promise Rejection', error)
+})
 
 const appData = app.getPath('appData')
 const electronDataPath = path.join(appData, app.name, 'Electron Data')
