@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.6.1 - 2021 Apr 6
+- Fix media keys shortcuts
+
 ## 0.6.0 - 2021 Apr 6
 - Added filter feature
 - Added artworks to player
