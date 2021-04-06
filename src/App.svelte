@@ -6,7 +6,7 @@
   import Sidebar from './components/Sidebar.svelte'
   import { iTunesImport } from './stores/window'
   import { isDev, paths, importTracks } from './stores/data'
-  import vars from './variables.mjs'
+  import vars from './variables.json'
 
   let pageStatus = ''
   let pageStatusWarnings = ''

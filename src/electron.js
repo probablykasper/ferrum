@@ -7,7 +7,7 @@ const menubar = require('./electron/menubar.js')
 const shortcuts = require('./electron/shortcuts.js')
 const ipc = require('./electron/ipc.js')
 const path = require('path')
-const varsPromise = import('./variables.mjs')
+const vars = require('./variables.json')
 
 const appData = app.getPath('appData')
 const electronDataPath = path.join(appData, app.name, 'Electron Data')
@@ -20,7 +20,6 @@ app.on('window-all-closed', () => {
 })
 
 app.on('ready', async () => {
-  const vars = (await varsPromise).default
   let mainWindow = new BrowserWindow({
     width: 1300,
     height: 1000,

@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite'
 import svelte from '@svitejs/vite-plugin-svelte'
 import sveltePreprocess from 'svelte-preprocess'
-import vars from './src/variables.mjs'
+import vars from './src/variables.json'
 
 export default defineConfig({
   root: './src',

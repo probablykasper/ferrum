@@ -29,13 +29,14 @@
       ],
       "extendInfo": {
         "NSRequiresAquaSystemAppearance": false
-      }
+      },
+      "identity": null
     },
     "files": [
       "build",
       "src/electron.js",
       "src/electron/**/*.js",
-      "src/variables.mjs",
+      "src/variables.json",
       "native/addon.node"
     ],
     "directories": {
