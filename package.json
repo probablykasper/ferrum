@@ -27,9 +27,7 @@
       "target": [
         "dmg"
       ],
-      "extendInfo": {
-        "NSRequiresAquaSystemAppearance": false
-      },
+      "darkModeSupport": true,
       "identity": null
     },
     "files": [
