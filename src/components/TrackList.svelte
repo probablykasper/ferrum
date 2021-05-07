@@ -42,6 +42,7 @@
   }
 
   page.subscribe((page) => {
+    selected = null
     const newItems = []
     const visibleCount = endIndex - startIndex
     for (let i = 0; i < visibleCount; i++) {
