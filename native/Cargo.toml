@@ -18,8 +18,7 @@ napi-derive = "1.0.0"
 dirs = "3.0.1"
 serde = { version = "1.0.123", features = ["derive"] }
 serde_repr = "0.1.6"
-# switch to official id3 crate when it's past v0.6.2 and my merged PR is out
-id3 = { git = "https://github.com/probablykasper/rust-id3", rev ="f099e18" }
+id3 = "0.6.3"
 mp3-metadata = "0.3.3"
 mp4ameta = "0.10.0"
 serde_json = "1.0.62"

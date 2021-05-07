@@ -97,7 +97,7 @@
       font-size: 12px
       line-height: $row-height
       border-radius: 3px
-      &:nth-child(2n+1)
+      &.odd
         background-color: var(--tracklist-2n-bg-color)
       &.selected
         background: var(--tracklist-gradient)
@@ -200,6 +200,7 @@
       on:dblclick={() => playRow(index)}
       on:mousedown={() => rowClick(index)}
       on:contextmenu={() => showTrackMenu(page.getTrackId(index))}
+      class:odd={index % 2 === 0}
       class:selected={selected === index}>
       <div class="c index">
         {#if page.getTrackId(index) === $playingId}
