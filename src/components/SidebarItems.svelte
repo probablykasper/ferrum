@@ -1,6 +1,5 @@
 <script>
   import { trackLists, page } from '../stores/data'
-  // import { Router, navigate, Route, link } from 'svelte-routing'
   export let trackList
   let childLists = []
   $: {
@@ -73,7 +72,7 @@
       .sub(class:show='{childList.show}')
         svelte:self(trackList='{childList}')
       +else()
-        .item(on:click='{open(childList.id)}' class:active='{$page.id === childList.id}')
+        .item(on:mousedown='{open(childList.id)}' class:active='{$page.id === childList.id}')
           .arrow
           .text {childList.name}
 </template>
