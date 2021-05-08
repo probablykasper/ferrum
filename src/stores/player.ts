@@ -4,7 +4,7 @@ import quit from './quit'
 import { methods, paths } from './data'
 import type { Track, TrackID } from './libraryTypes'
 import { showMessageBox, toFileUrl, ipcRenderer } from './window'
-import queue from './queue'
+import * as queue from './queue'
 
 const audio = new Audio()
 let isStopped = true

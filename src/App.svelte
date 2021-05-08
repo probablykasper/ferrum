@@ -1,9 +1,11 @@
 <script>
   import { onDestroy } from 'svelte'
-  import NewTrackList from './components/TrackList.svelte'
+  import TrackList from './components/TrackList.svelte'
   import Player from './components/Player.svelte'
   import Titlebar from './components/Titlebar.svelte'
   import Sidebar from './components/Sidebar.svelte'
+  import Queue from './components/Queue.svelte'
+  import { queueVisible } from './stores/queue'
   import { iTunesImport } from './stores/window'
   import { isDev, paths, importTracks } from './stores/data'
   import vars from './variables.json'
@@ -149,7 +151,9 @@
   main(style='{cssVarStyles}' on:dragenter|capture='{dragEnter}')
     .meat
       Sidebar
-      NewTrackList
+      TrackList
+      +if('$queueVisible')
+        Queue
     Player
     +if('pageStatus || pageStatusWarnings || pageStatusErr')
       .page-status-bg

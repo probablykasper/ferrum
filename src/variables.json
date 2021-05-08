@@ -9,6 +9,7 @@
     "--empty-cover-bg-color": "hsl(230,6%,18%)",
     "--empty-cover-color": "hsl(228,4%,28%)",
     "--outline-color-disabled": "#505766",
+    "--border-color": "#333333",
     "--outline-color": "#344c7f",
     "--icon-color": "#FFFFFF",
     "--titlebar-height": "22px"
