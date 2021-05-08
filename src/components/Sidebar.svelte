@@ -24,7 +24,7 @@
 </script>
 
 <style lang="sass">
-  .bg
+  .sidebar
     width: 230px
     min-width: 230px
     display: flex
@@ -33,19 +33,20 @@
     background-color: var(--sidebar-bg-color)
   .spacer
     height: 10px
-  .sidebar
+  .items
     width: 100%
     height: 100%
     font-size: 14px
     overflow-y: scroll
     outline: none
+    background-color: inherit
 </style>
 
 <template lang="pug">
-  .bg(on:mousedown|self|preventDefault)
+  .sidebar(on:mousedown|self|preventDefault)
     .spacer(on:mousedown|self|preventDefault)
     Filter
-    .sidebar(tabindex='0' on:keydown='{handleKeydown}' bind:this='{viewport}')
+    .items(tabindex='0' on:keydown='{handleKeydown}' bind:this='{viewport}')
       .spacer
       SidebarItems(trackList='{special}')
       .spacer

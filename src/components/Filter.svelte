@@ -11,8 +11,6 @@
     }
   }
   function onInput(e: InputEvent) {
-    // console.log(e.data)
-    // console.log(e.inputType)
     page.filter($filterQuery)
   }
 </script>
@@ -38,5 +36,5 @@
 </style>
 
 <template lang="pug">
-  input.search(type='text' class:on='{$filterQuery}' use:filter bind:value='{$filterQuery}' on:input='{onInput}' placeholder='Search')
+  input.search(type='text' class:on='{$filterQuery}' use:filter bind:value='{$filterQuery}' on:input='{onInput}' placeholder='Filter')
 </template>

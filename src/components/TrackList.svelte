@@ -8,10 +8,6 @@
   const sortBy = page.sortBy
   $: sortKey = $page.sort_key
 
-  let visibleItems: any[] = []
-  let startIndex: number = 0
-  let endIndex: number = 0
-
   let selected: number | null
   function rowClick(index: number) {
     selected = index
@@ -41,16 +37,13 @@
     }
   }
 
+  let refresh = () => {}
+
+  let itemCount = 0
   page.subscribe((page) => {
+    itemCount = page.length
+    refresh()
     selected = null
-    const newItems = []
-    const visibleCount = endIndex - startIndex
-    for (let i = 0; i < visibleCount; i++) {
-      if (startIndex + i >= page.length) break
-      const item = getItem(startIndex + i)
-      newItems.push(item)
-    }
-    visibleItems = newItems
   })
 </script>
 
@@ -188,11 +181,9 @@
   </div>
   <VList
     {getItem}
-    bind:visibleItems
     itemHeight={24}
-    itemCount={$page.length}
-    bind:startIndex
-    bind:endIndex
+    {itemCount}
+    bind:refresh
     on:keydown={rowKeydown}
     let:item={track}
     let:index>

@@ -37,6 +37,12 @@
   })
 
   $: if (mounted) updateView(height, scrollTop, itemHeight, itemCount)
+  let refresher = 1
+  export function refresh() {
+    if (mounted) updateView(height, scrollTop, itemHeight, itemCount)
+    if (refresher < 10000) refresher++
+    else refresher = 1
+  }
   function updateView(height: number, scrollTop: number, itemHeight: number, itemCount: number) {
     const newHeight = itemCount * itemHeight
 
@@ -51,10 +57,9 @@
     const lastIndexes = itemCount - endIndex
     paddingTop = startIndex * itemHeight
     paddingBottom = lastIndexes * itemHeight
-    return { startIndex, endIndex }
   }
 
-  $: getItems(startIndex, endIndex)
+  $: if (refresher !== 0) getItems(startIndex, endIndex)
   function getItems(startIndex: number, endIndex: number) {
     const newItems = []
     const visibleCount = endIndex - startIndex
@@ -71,6 +76,7 @@
     height: 100%
     overflow-y: scroll
     outline: none
+    background-color: inherit
 </style>
 
 <div
