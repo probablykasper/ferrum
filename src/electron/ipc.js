@@ -18,12 +18,12 @@ ipcMain.handle('showTrackMenu', (e) => {
   return new Promise((resolve, reject) => {
     const menu = Menu.buildFromTemplate([
       {
-        label: 'Add to Queue',
-        click: () => resolve('Add to Queue'),
-      },
-      {
         label: 'Play Next',
         click: () => resolve('Play Next'),
+      },
+      {
+        label: 'Add to Queue',
+        click: () => resolve('Add to Queue'),
       },
     ])
     menu.once('will-close', () => resolve())

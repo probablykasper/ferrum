@@ -2,25 +2,60 @@
   import VList from './VirtualList.svelte'
   import { page } from '../stores/data'
   import { newPlaybackInstance, playingId } from '../stores/player'
-  import { getDuration } from '../scripts/formatting'
+  import { getDuration, checkShortcut, checkMouseShortcut } from '../scripts/helpers'
   import { showTrackMenu } from '../stores/contextMenu'
+  import { newSelection } from '../stores/selection'
 
   const sortBy = page.sortBy
   $: sortKey = $page.sort_key
 
-  let selected: number | null
-  function rowClick(index: number) {
-    selected = index
+  let selection = newSelection()
+  function rowClick(e: MouseEvent, index: number) {
+    if (e.button !== 0) return
+    if (checkMouseShortcut(e)) {
+      selection.clear()
+      selection.add(index)
+    } else if (checkMouseShortcut(e, { cmdOrCtrl: true })) {
+      selection.toggle(index)
+    } else if (checkMouseShortcut(e, { shift: true })) {
+      selection.selectTo(index)
+    }
+  }
+  function onContextMenu(e: MouseEvent, index: number) {
+    if (checkMouseShortcut(e) && !$selection.list[index]) {
+      selection.clear()
+      selection.add(index)
+    } else if (checkMouseShortcut(e, { cmdOrCtrl: true })) {
+      selection.toggle(index)
+    } else if (checkMouseShortcut(e, { shift: true })) {
+      selection.selectTo(index)
+    }
+    const ids = []
+    for (let i = 0; i < $selection.list.length; i++) {
+      if ($selection.list[i]) {
+        ids.push(page.getTrackId(i))
+      }
+    }
+    showTrackMenu(ids)
   }
   function rowKeydown(e: KeyboardEvent) {
-    if (e.key === 'Enter' && selected !== null) {
-      playRow(selected)
+    if (e.key === 'Enter') {
+      let firstIndex = selection.findFirst($selection.list) || 0
+      playRow(firstIndex)
     } else if (e.key === 'ArrowUp') {
       e.preventDefault()
-      if (selected !== null && selected > 0) selected -= 1
+      const lastAdded = $selection.lastAdded
+      if (lastAdded !== null && lastAdded > 0) {
+        selection.clear()
+        selection.add(lastAdded - 1)
+      }
     } else if (e.key === 'ArrowDown') {
       e.preventDefault()
-      if (selected !== null && selected < $page.length - 1) selected += 1
+      const lastAdded = $selection.lastAdded
+      if (lastAdded !== null && lastAdded < $page.length) {
+        selection.clear()
+        selection.add(lastAdded + 1)
+      }
     }
   }
 
@@ -43,7 +78,7 @@
   page.subscribe((page) => {
     itemCount = page.length
     refresh()
-    selected = null
+    selection.clear()
   })
 </script>
 
@@ -190,10 +225,10 @@
     <div
       class="row"
       on:dblclick={() => playRow(index)}
-      on:mousedown={() => rowClick(index)}
-      on:contextmenu={() => showTrackMenu(page.getTrackId(index))}
+      on:mousedown={(e) => rowClick(e, index)}
+      on:contextmenu={(e) => onContextMenu(e, index)}
       class:odd={index % 2 === 0}
-      class:selected={selected === index}>
+      class:selected={$selection.list[index] === true}>
       <div class="c index">
         {#if page.getTrackId(index) === $playingId}
           <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24">

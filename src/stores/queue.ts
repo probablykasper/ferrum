@@ -7,7 +7,7 @@ export function toggleQueueVisibility() {
 }
 
 let ids = [] as TrackID[]
-let currentIndex = 0
+let currentIndex = -1
 let userQueueLength = 0
 export const queue = writable({ ids, currentIndex, userQueueLength })
 function updateStore() {
@@ -19,14 +19,22 @@ export const getPrevious = () => ids[currentIndex - 1]
 export const getNext = () => ids[currentIndex + 1]
 
 export function prependToUserQueue(trackIds: TrackID[]) {
-  ids.splice(currentIndex + 1, 0, ...trackIds)
-  userQueueLength += trackIds.length
-  updateStore()
+  if (ids.length === 0) {
+    setNewQueue(trackIds, -1)
+  } else {
+    ids.splice(currentIndex + 1, 0, ...trackIds)
+    userQueueLength += trackIds.length
+    updateStore()
+  }
 }
 export function appendToUserQueue(trackIds: TrackID[]) {
-  ids.splice(currentIndex + userQueueLength + 1, 0, ...trackIds)
-  userQueueLength += trackIds.length
-  updateStore()
+  if (ids.length === 0) {
+    setNewQueue(trackIds, -1)
+  } else {
+    ids.splice(currentIndex + userQueueLength + 1, 0, ...trackIds)
+    userQueueLength += trackIds.length
+    updateStore()
+  }
 }
 
 export function next() {
