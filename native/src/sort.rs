@@ -93,6 +93,8 @@ pub fn sort(data: &mut Data, sort_key: &str, desc: bool) -> Result<(), &'static 
     match playlist {
       TrackList::Playlist(_) => {
         data.open_playlist_track_ids = page::get_track_ids(&data)?;
+        data.sort_key = sort_key.to_string();
+        data.sort_desc = true;
         println!("Sort: {}ms", now.elapsed().as_millis());
         return Ok(());
       }
