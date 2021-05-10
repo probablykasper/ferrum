@@ -1,7 +1,7 @@
 import type { TrackID } from './libraryTypes'
 import { writable } from 'svelte/store'
 
-export const queueVisible = writable(true)
+export const queueVisible = writable(false)
 export function toggleQueueVisibility() {
   queueVisible.update((v) => !v)
 }

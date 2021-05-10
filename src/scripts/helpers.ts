@@ -7,6 +7,26 @@ export function getDuration(dur: number) {
   return mins + ':' + secsText
 }
 
+export function formatDate(timestamp: number) {
+  const date = new Date(timestamp)
+  const month = date.getMonth() + 1
+  const monthText = (month < 10 ? '0' : '') + month
+  const day = date.getDate()
+  const dayText = (day < 10 ? '0' : '') + day
+  let hours = date.getHours()
+  const mins = date.getMinutes()
+  const minsText = (mins < 10 ? '0' : '') + mins
+  let ampm = 'AM'
+  if (hours > 11) {
+    hours -= 12
+    ampm = 'PM'
+  }
+  if (hours === 0) hours = 12
+  return (
+    date.getFullYear() + '/' + monthText + '/' + dayText + ' ' + hours + ':' + minsText + ' ' + ampm
+  )
+}
+
 type ShortcutOptions = {
   shift?: boolean
   alt?: boolean

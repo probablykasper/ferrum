@@ -1,18 +1,12 @@
 <script lang="ts">
   import { queue } from '../stores/queue'
   import { methods } from '../stores/data'
-  import { fade, crossfade, blur, draw, fly, scale, slide } from 'svelte/transition'
+  import { fade } from 'svelte/transition'
 
-  let a = 0
-  let b = 0
   async function loadCover(id: string) {
     try {
-      let now = Date.now()
       let buf = await methods.readCoverAsync(id)
-      a += Date.now() - now
-      now = Date.now()
       let url = URL.createObjectURL(new Blob([buf], {}))
-      b += Date.now() - now
       return url
     } catch (e) {
       throw null

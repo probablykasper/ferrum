@@ -2,7 +2,7 @@
   import VList from './VirtualList.svelte'
   import { page } from '../stores/data'
   import { newPlaybackInstance, playingId } from '../stores/player'
-  import { getDuration, checkShortcut, checkMouseShortcut } from '../scripts/helpers'
+  import { getDuration, formatDate, checkMouseShortcut } from '../scripts/helpers'
   import { showTrackMenu } from '../stores/contextMenu'
   import { newSelection } from '../stores/selection'
 
@@ -247,7 +247,7 @@
       <div class="c albumName">{track.albumName || ''}</div>
       <div class="c comments">{track.comments || ''}</div>
       <div class="c genre">{track.genre || ''}</div>
-      <div class="c dateAdded">{track.dateAdded || ''}</div>
+      <div class="c dateAdded">{formatDate(track.dateAdded)}</div>
       <div class="c year">{track.year || ''}</div>
     </div>
   </VList>
