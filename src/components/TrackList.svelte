@@ -5,14 +5,18 @@
   import { getDuration, formatDate, checkMouseShortcut } from '../scripts/helpers'
   import { showTrackMenu } from '../stores/contextMenu'
   import { newSelection } from '../stores/selection'
+  import { onMount } from 'svelte'
 
   const sortBy = page.sortBy
   $: sortKey = $page.sort_key
 
   let selection = newSelection()
-  function rowClick(e: MouseEvent, index: number) {
-    if (e.button !== 0) return
-    if (checkMouseShortcut(e)) {
+  let possibleRowClick = false
+  function rowMouseDown(e: MouseEvent, index: number, ctx = false) {
+    if (e.button !== 0 && !ctx) return
+    if ($selection.list[index]) {
+      possibleRowClick = true
+    } else if (checkMouseShortcut(e)) {
       selection.clear()
       selection.add(index)
     } else if (checkMouseShortcut(e, { cmdOrCtrl: true })) {
@@ -21,15 +25,19 @@
       selection.selectTo(index)
     }
   }
-  function onContextMenu(e: MouseEvent, index: number) {
-    if (checkMouseShortcut(e) && !$selection.list[index]) {
-      selection.clear()
-      selection.add(index)
-    } else if (checkMouseShortcut(e, { cmdOrCtrl: true })) {
-      selection.toggle(index)
-    } else if (checkMouseShortcut(e, { shift: true })) {
-      selection.selectTo(index)
+  function rowClick(e: MouseEvent, index: number) {
+    if (possibleRowClick && e.button === 0) {
+      if (checkMouseShortcut(e)) {
+        selection.clear()
+        selection.add(index)
+      } else if (checkMouseShortcut(e, { cmdOrCtrl: true })) {
+        selection.toggle(index)
+      }
     }
+    possibleRowClick = false
+  }
+  function onContextMenu(e: MouseEvent, index: number) {
+    rowMouseDown(e, index, true)
     const ids = []
     for (let i = 0; i < $selection.list.length; i++) {
       if ($selection.list[i]) {
@@ -61,6 +69,67 @@
 
   function playRow(index: number) {
     newPlaybackInstance(page.getTrackIds(), index)
+  }
+
+  let dragEl: HTMLElement
+  let dragElDiv: HTMLElement
+  let dragging = false
+  function onDragStart(e: DragEvent) {
+    const indexes = []
+    for (let i = 0; i < $selection.list.length; i++) {
+      if ($selection.list[i]) {
+        indexes.push(i)
+      }
+    }
+    if (e.dataTransfer) {
+      dragging = true
+      e.dataTransfer.effectAllowed = 'move'
+      dragEl.style.display = ''
+      if (indexes.length === 1) {
+        const track = page.getTrack(indexes[0])
+        dragElDiv.innerText = track.artist + ' - ' + track.name
+      } else {
+        dragElDiv.innerText = indexes.length + ' items'
+      }
+      e.dataTransfer.setDragImage(dragEl, 0, 0)
+      e.dataTransfer.setData('ferrumtracks', '')
+    }
+  }
+  let lineIndex: number | null = null
+  let lineTop = false
+  onMount(() => {
+    function dragOverHandler(e: DragEvent) {
+      if (dragging && e.dataTransfer && e.dataTransfer.types[0] === 'ferrumtracks') {
+        e.preventDefault()
+      }
+    }
+    document.addEventListener('dragover', dragOverHandler)
+    return () => document.removeEventListener('dragover', dragOverHandler)
+  })
+  function onDragOver(e: DragEvent, index: number) {
+    if (
+      dragging &&
+      e.currentTarget &&
+      e.dataTransfer &&
+      e.dataTransfer.types[0] === 'ferrumtracks'
+    ) {
+      const rowEl = e.currentTarget as HTMLDivElement
+      lineTop = false
+      if (e.offsetY < rowEl.clientHeight / 2) {
+        if (index === 0) {
+          lineIndex = 0
+          lineTop = true
+        } else {
+          lineIndex = index - 1
+        }
+      } else {
+        lineIndex = index
+      }
+    }
+  }
+  function dragEndHandler() {
+    lineIndex = null
+    dragging = false
   }
 
   function getItem(index: number) {
@@ -102,7 +171,8 @@
     min-width: 0px
     width: 100%
     background-color: hsl(240, 20%, 7%)
-    .row.header
+    overflow: hidden
+    .header
       .c
         overflow: visible
         *
@@ -116,8 +186,9 @@
         display: inline-block
       &.desc .c.sort span::after
         content: '▼'
-    .row.header:first-child
-      background-color: inherit
+    &.line-top
+      .drag-line::before
+        top: 0px
     .row
       display: flex
       max-width: 100%
@@ -126,6 +197,16 @@
       font-size: 12px
       line-height: $row-height
       border-radius: 3px
+      box-sizing: border-box
+      position: relative
+      &.drag-line::before
+        content: ''
+        position: absolute
+        bottom: -1px
+        height: 2px
+        width: 100%
+        background-color: #0083f5
+        pointer-events: none
       &.odd
         background-color: var(--tracklist-2n-bg-color)
       &.selected
@@ -170,9 +251,24 @@
       .year
         width: 0px
         min-width: 35px
+  .drag-ghost
+    font-size: 14px
+    top: -1000px
+    position: absolute
+    background-color: transparent
+    padding-left: 3px
+    div
+      background-color: var(--drag-bg-color)
+      padding: 4px 8px
+      max-width: 300px
+      border-radius: 3px
 </style>
 
-<div class="tracklist">
+<div class="drag-ghost" bind:this={dragEl}>
+  <div bind:this={dragElDiv} />
+</div>
+
+<div class="tracklist" class:line-top={lineTop} on:dragleave={() => (lineIndex = null)}>
   <div class="row header" class:desc={$page.sort_desc}>
     <div class="c index" class:sort={sortKey === 'index'} on:click={() => sortBy('index')}>
       <span>#</span>
@@ -225,9 +321,15 @@
     <div
       class="row"
       on:dblclick={() => playRow(index)}
-      on:mousedown={(e) => rowClick(e, index)}
+      on:mousedown={(e) => rowMouseDown(e, index)}
+      on:click={(e) => rowClick(e, index)}
       on:contextmenu={(e) => onContextMenu(e, index)}
+      draggable="true"
+      on:dragstart={onDragStart}
+      on:dragover={(e) => onDragOver(e, index)}
+      on:dragend={dragEndHandler}
       class:odd={index % 2 === 0}
+      class:drag-line={index === lineIndex}
       class:selected={$selection.list[index] === true}>
       <div class="c index">
         {#if page.getTrackId(index) === $playingId}

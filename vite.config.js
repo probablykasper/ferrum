@@ -11,6 +11,9 @@ export default defineConfig({
   server: {
     port: vars.port,
     strictPort: true,
+    fsServe: {
+      root: '../',
+    },
   },
   build: {
     outDir: '../build',

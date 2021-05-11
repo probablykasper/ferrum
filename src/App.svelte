@@ -1,5 +1,6 @@
 <script>
   import { onDestroy } from 'svelte'
+  import { fade } from 'svelte/transition'
   import TrackList from './components/TrackList.svelte'
   import Player from './components/Player.svelte'
   import Titlebar from './components/Titlebar.svelte'
@@ -85,7 +86,7 @@
     box-sizing: border-box
   .drag-overlay
     opacity: 1
-    position: absolute
+    position: fixed
     width: 100%
     height: 100%
     top: 0px
@@ -95,10 +96,7 @@
     display: flex
     align-items: center
     justify-content: center
-    // backdrop-filter: blur(20px)
-    &:not(.show)
-      pointer-events: none
-      opacity: 0
+    display: flex
   :global(h1), :global(h2), :global(h3)
     font-weight: 400
 
@@ -168,7 +166,9 @@
             .page-status-item
               b Error:
               pre {pageStatusErr}
-    .drag-overlay(class:show='{droppable}' on:dragleave='{dragLeave}' on:drop='{drop}' on:dragover='{dragOver}')
-      h1 Drop files to import
+    +if('droppable')
+      //- if the overlay is always visible, it's not possible to scroll while dragging tracks
+      .drag-overlay(on:dragleave='{dragLeave}' on:drop='{drop}' on:dragover='{dragOver}' in:fade='{{ duration: 100 }}')
+        h1 Drop files to import
     Titlebar(dev='{isDev}')
 </template>

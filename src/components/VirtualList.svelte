@@ -84,6 +84,7 @@
   bind:this={viewport}
   bind:clientHeight={height}
   on:scroll={handleScroll}
+  on:dragleave
   on:keydown
   tabindex="0"
   on:keydown={keydown}>
