@@ -60,7 +60,7 @@
     } else if (e.key === 'ArrowDown') {
       e.preventDefault()
       const lastAdded = $selection.lastAdded
-      if (lastAdded !== null && lastAdded < $page.length) {
+      if (lastAdded !== null && lastAdded + 1 < $page.length) {
         selection.clear()
         selection.add(lastAdded + 1)
       }
@@ -73,6 +73,7 @@
 
   let dragEl: HTMLElement
   let dragElDiv: HTMLElement
+  let dragLine: HTMLElement
   let dragging = false
   function onDragStart(e: DragEvent) {
     const indexes = []
@@ -84,7 +85,6 @@
     if (e.dataTransfer) {
       dragging = true
       e.dataTransfer.effectAllowed = 'move'
-      dragEl.style.display = ''
       if (indexes.length === 1) {
         const track = page.getTrack(indexes[0])
         dragElDiv.innerText = track.artist + ' - ' + track.name
@@ -95,8 +95,7 @@
       e.dataTransfer.setData('ferrumtracks', '')
     }
   }
-  let lineIndex: number | null = null
-  let lineTop = false
+  let showDragLine = false
   onMount(() => {
     function dragOverHandler(e: DragEvent) {
       if (dragging && e.dataTransfer && e.dataTransfer.types[0] === 'ferrumtracks') {
@@ -106,7 +105,7 @@
     document.addEventListener('dragover', dragOverHandler)
     return () => document.removeEventListener('dragover', dragOverHandler)
   })
-  function onDragOver(e: DragEvent, index: number) {
+  function onDragOver(e: DragEvent) {
     if (
       dragging &&
       e.currentTarget &&
@@ -114,21 +113,17 @@
       e.dataTransfer.types[0] === 'ferrumtracks'
     ) {
       const rowEl = e.currentTarget as HTMLDivElement
-      lineTop = false
+      const dim = rowEl.getBoundingClientRect()
+      showDragLine = true
       if (e.offsetY < rowEl.clientHeight / 2) {
-        if (index === 0) {
-          lineIndex = 0
-          lineTop = true
-        } else {
-          lineIndex = index - 1
-        }
+        dragLine.style.top = dim.top - 1 + 'px'
       } else {
-        lineIndex = index
+        dragLine.style.top = dim.bottom - 1 + 'px'
       }
     }
   }
   function dragEndHandler() {
-    lineIndex = null
+    showDragLine = false
     dragging = false
   }
 
@@ -186,9 +181,6 @@
         display: inline-block
       &.desc .c.sort span::after
         content: '▼'
-    &.line-top
-      .drag-line::before
-        top: 0px
     .row
       display: flex
       max-width: 100%
@@ -199,14 +191,6 @@
       border-radius: 3px
       box-sizing: border-box
       position: relative
-      &.drag-line::before
-        content: ''
-        position: absolute
-        bottom: -1px
-        height: 2px
-        width: 100%
-        background-color: #0083f5
-        pointer-events: none
       &.odd
         background-color: var(--tracklist-2n-bg-color)
       &.selected
@@ -262,13 +246,22 @@
       padding: 4px 8px
       max-width: 300px
       border-radius: 3px
+  .drag-line
+    position: absolute
+    width: 100%
+    height: 2px
+    background-color: #0083f5
+    pointer-events: none
+    display: none
+    &.show
+      display: block
 </style>
 
 <div class="drag-ghost" bind:this={dragEl}>
   <div bind:this={dragElDiv} />
 </div>
 
-<div class="tracklist" class:line-top={lineTop} on:dragleave={() => (lineIndex = null)}>
+<div class="tracklist" on:dragleave={() => (showDragLine = false)}>
   <div class="row header" class:desc={$page.sort_desc}>
     <div class="c index" class:sort={sortKey === 'index'} on:click={() => sortBy('index')}>
       <span>#</span>
@@ -326,10 +319,9 @@
       on:contextmenu={(e) => onContextMenu(e, index)}
       draggable="true"
       on:dragstart={onDragStart}
-      on:dragover={(e) => onDragOver(e, index)}
+      on:dragover={onDragOver}
       on:dragend={dragEndHandler}
       class:odd={index % 2 === 0}
-      class:drag-line={index === lineIndex}
       class:selected={$selection.list[index] === true}>
       <div class="c index">
         {#if page.getTrackId(index) === $playingId}
@@ -353,4 +345,5 @@
       <div class="c year">{track.year || ''}</div>
     </div>
   </VList>
+  <div class="drag-line" class:show={showDragLine} bind:this={dragLine} />
 </div>
