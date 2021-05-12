@@ -8,42 +8,6 @@ import type {
 } from './libraryTypes'
 import { showMessageBox, addon } from './window'
 
-export function grabErr<T>(cb: () => T): T {
-  try {
-    return cb()
-  } catch (err) {
-    if (!err.message) {
-      if (err.code) err.message = 'Code: ' + err.code
-      else err.message = 'No reason or code provided'
-    }
-    showMessageBox({
-      type: 'error',
-      message: err.message,
-      detail: err.stack,
-    })
-    throw err
-  }
-}
-
-export function wrapErr<T, A extends Array<any>>(cb: (...args: A) => T): (...args: A) => T {
-  return (...args) => {
-    try {
-      return cb(...args)
-    } catch (err) {
-      if (!err.message) {
-        if (err.code) err.message = 'Code: ' + err.code
-        else err.message = 'No reason or code provided'
-      }
-      showMessageBox({
-        type: 'error',
-        message: err.message,
-        detail: err.stack,
-      })
-      throw err
-    }
-  }
-}
-
 type PageInfo = {
   id: TrackListID
   sort_key: string
@@ -81,19 +45,60 @@ export type Data = {
   get_page_info: () => PageInfo
   sort: (key: string, keep_filter: boolean) => void
 }
-const data: Data = grabErr(() => {
+// const data: Data = grabErr(() => {
+//   return addon.load_data(isDev)
+// })
+
+function runWrapped<T>(cb: () => T): T {
+  try {
+    return cb()
+  } catch (err) {
+    if (!err.message) {
+      if (err.code) err.message = 'Code: ' + err.code
+      else err.message = 'No reason or code provided'
+    }
+    showMessageBox({
+      type: 'error',
+      message: err.message,
+      detail: err.stack,
+    })
+    throw err
+  }
+}
+
+const dataInternal: Data = runWrapped(() => {
   return addon.load_data(isDev)
 })
-export const trackLists = grabErr(() => {
-  const { subscribe, set, update } = writable(data.get_track_lists())
+
+const data = dataInternal
+export function call<T>(cb: (data: Data) => T): T {
+  try {
+    return cb(dataInternal)
+  } catch (err) {
+    if (!err.message) {
+      if (err.code) err.message = 'Code: ' + err.code
+      else err.message = 'No reason or code provided'
+    }
+    showMessageBox({
+      type: 'error',
+      message: err.message,
+      detail: err.stack,
+    })
+    throw err
+  }
+}
+
+export const trackLists = (() => {
+  const initial = call((data) => data.get_track_lists())
+  const { subscribe, set, update } = writable(initial)
   return {
     subscribe,
   }
-})
+})()
 
-export const paths = grabErr(() => {
-  return data.get_paths()
-})
+export const paths = (() => {
+  return call((data) => data.get_paths())
+})()
 
 export async function importTracks(paths: [string]) {
   let errState = null
@@ -122,35 +127,35 @@ export async function importTracks(paths: [string]) {
 }
 
 export const methods = {
-  importTrack: wrapErr((path: string) => {
-    data.import_track(path)
-  }),
-  getTrack: wrapErr((id: TrackID) => {
-    return data.get_track(id)
-  }),
-  save: wrapErr(() => data.save()),
-  addPlay: wrapErr((id: TrackID) => {
-    data.add_play(id)
+  importTrack: (path: string) => {
+    call((data) => data.import_track(path))
+  },
+  getTrack: (id: TrackID) => {
+    return call((data) => data.get_track(id))
+  },
+  save: () => data.save(),
+  addPlay: (id: TrackID) => {
+    call((data) => data.add_play(id))
     methods.save()
     page.refresh()
-  }),
-  addSkip: wrapErr((id: TrackID) => {
-    data.add_skip(id)
+  },
+  addSkip: (id: TrackID) => {
+    call((data) => data.add_skip(id))
     methods.save()
     page.refresh()
-  }),
-  addPlayTime: wrapErr((id: TrackID, startTime: MsSinceUnixEpoch, durationMs: number) => {
-    data.add_play_time(id, startTime, durationMs)
+  },
+  addPlayTime: (id: TrackID, startTime: MsSinceUnixEpoch, durationMs: number) => {
+    call((data) => data.add_play_time(id, startTime, durationMs))
     methods.save()
     page.refresh()
-  }),
-  readCoverAsync: wrapErr((id: TrackID) => data.read_cover_async(id)),
+  },
+  readCoverAsync: (id: TrackID) => data.read_cover_async(id),
 }
 
 export const filterQuery = writable('')
-export const page = grabErr(() => {
+export const page = (() => {
   function get() {
-    const info = data.get_page_info()
+    const info = call((data) => data.get_page_info())
     return {
       id: info.id,
       length: info.length,
@@ -163,30 +168,30 @@ export const page = grabErr(() => {
   return {
     subscribe,
     refresh: () => {
-      data.refresh_page()
+      call((data) => data.refresh_page())
       set(get())
     },
     openPlaylist: (id: string) => {
-      data.open_playlist(id)
+      call((data) => data.open_playlist(id))
       set(get())
       filterQuery.set('')
     },
     sortBy: (key: string) => {
-      data.sort(key, true)
+      call((data) => data.sort(key, true))
       set(get())
     },
     filter: (query: string) => {
-      data.filter_open_playlist(query)
+      call((data) => data.filter_open_playlist(query))
       set(get())
     },
     getTrack: (index: number): Track => {
-      return data.get_page_track(index)
+      return call((data) => data.get_page_track(index))
     },
     getTrackId: (index: number) => {
-      return data.get_page_track_id(index)
+      return call((data) => data.get_page_track_id(index))
     },
     getTrackIds: () => {
-      return data.get_page_track_ids()
+      return call((data) => data.get_page_track_ids())
     },
   }
-})
+})()
