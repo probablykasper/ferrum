@@ -44,6 +44,7 @@ export type Data = {
   get_page_track_id: (index: number) => string
   get_page_info: () => PageInfo
   sort: (key: string, keep_filter: boolean) => void
+  move_tracks: (indexes: number[], to_index: number) => void
 }
 // const data: Data = grabErr(() => {
 //   return addon.load_data(isDev)
@@ -192,6 +193,14 @@ export const page = (() => {
     },
     getTrackIds: () => {
       return call((data) => data.get_page_track_ids())
+    },
+    moveTracks: (indexes: number[], toIndex: number) => {
+      call((data) => {
+        data.move_tracks(indexes, toIndex)
+        data.refresh_page()
+      })
+      set(get())
+      methods.save()
     },
   }
 })()

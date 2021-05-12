@@ -75,8 +75,9 @@
   let dragElDiv: HTMLElement
   let dragLine: HTMLElement
   let dragging = false
+  let indexes: number[] = []
   function onDragStart(e: DragEvent) {
-    const indexes = []
+    indexes = []
     for (let i = 0; i < $selection.list.length; i++) {
       if ($selection.list[i]) {
         indexes.push(i)
@@ -95,7 +96,6 @@
       e.dataTransfer.setData('ferrumtracks', '')
     }
   }
-  let showDragLine = false
   onMount(() => {
     function dragOverHandler(e: DragEvent) {
       if (dragging && e.dataTransfer && e.dataTransfer.types[0] === 'ferrumtracks') {
@@ -105,7 +105,12 @@
     document.addEventListener('dragover', dragOverHandler)
     return () => document.removeEventListener('dragover', dragOverHandler)
   })
-  function onDragOver(e: DragEvent) {
+  let dragToIndex: null | number = null
+  function onDragOver(e: DragEvent, index: number) {
+    if (!$page.sort_desc || $page.sort_key !== 'index') {
+      dragToIndex = null
+      return
+    }
     if (
       dragging &&
       e.currentTarget &&
@@ -114,17 +119,21 @@
     ) {
       const rowEl = e.currentTarget as HTMLDivElement
       const dim = rowEl.getBoundingClientRect()
-      showDragLine = true
       if (e.offsetY < rowEl.clientHeight / 2) {
         dragLine.style.top = dim.top - 1 + 'px'
+        dragToIndex = index
       } else {
         dragLine.style.top = dim.bottom - 1 + 'px'
+        dragToIndex = index + 1
       }
     }
   }
   function dragEndHandler() {
-    showDragLine = false
     dragging = false
+    if (dragToIndex !== null) {
+      page.moveTracks(indexes, dragToIndex)
+      dragToIndex = null
+    }
   }
 
   function getItem(index: number) {
@@ -261,7 +270,7 @@
   <div bind:this={dragElDiv} />
 </div>
 
-<div class="tracklist" on:dragleave={() => (showDragLine = false)}>
+<div class="tracklist" on:dragleave={() => (dragToIndex = null)}>
   <div class="row header" class:desc={$page.sort_desc}>
     <div class="c index" class:sort={sortKey === 'index'} on:click={() => sortBy('index')}>
       <span>#</span>
@@ -319,7 +328,7 @@
       on:contextmenu={(e) => onContextMenu(e, index)}
       draggable="true"
       on:dragstart={onDragStart}
-      on:dragover={onDragOver}
+      on:dragover={(e) => onDragOver(e, index)}
       on:dragend={dragEndHandler}
       class:odd={index % 2 === 0}
       class:selected={$selection.list[index] === true}>
@@ -345,5 +354,5 @@
       <div class="c year">{track.year || ''}</div>
     </div>
   </VList>
-  <div class="drag-line" class:show={showDragLine} bind:this={dragLine} />
+  <div class="drag-line" class:show={dragToIndex !== null} bind:this={dragLine} />
 </div>

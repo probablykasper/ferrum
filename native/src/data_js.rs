@@ -29,7 +29,7 @@ impl Task for LoadData {
   fn compute(&mut self) -> NResult<Self::Output> {
     let is_dev = &self.0;
     let data: Data = nr(load_data(&is_dev))?;
-    return Ok(data)
+    return Ok(data);
   }
   fn resolve(self, env: Env, output: Self::Output) -> NResult<Self::JsValue> {
     let mut new_this: JsObject = env.create_object()?;
@@ -93,6 +93,7 @@ fn init_data_instance(mut exports: JsObject) -> NResult<JsObject> {
   exports.create_named_method("get_page_track_id", page::get_page_track_id)?;
   exports.create_named_method("get_page_info", page::get_page_info)?;
   exports.create_named_method("sort", page::sort_js)?;
+  exports.create_named_method("move_tracks", page::move_tracks)?;
 
   return Ok(exports);
 }

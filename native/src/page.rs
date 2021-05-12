@@ -1,6 +1,6 @@
 use crate::data::{Data, PageInfo};
 use crate::data_js::get_data;
-use crate::js::{arg_to_bool, arg_to_number, arg_to_string, nerr, nr};
+use crate::js::{arg_to_bool, arg_to_number, arg_to_number_vector, arg_to_string, nerr, nr};
 use crate::library::{get_track_field_type, TrackField};
 use crate::library_types::{SpecialTrackListName, TrackID, TrackList};
 use crate::sort::sort;
@@ -147,5 +147,48 @@ pub fn sort_js(ctx: CallContext) -> NResult<JsUndefined> {
   if keep_filter {
     filter::filter(data, data.filter.clone());
   }
+  return ctx.env.get_undefined();
+}
+
+#[js_function(2)]
+pub fn move_tracks(ctx: CallContext) -> NResult<JsUndefined> {
+  let data: &mut Data = get_data(&ctx)?;
+  let mut indexes_to_move: Vec<u32> = arg_to_number_vector(&ctx, 0)?;
+  indexes_to_move.sort_unstable();
+  indexes_to_move.dedup();
+  let to_index: u32 = arg_to_number(&ctx, 1)?;
+  let tracklist = data
+    .library
+    .trackLists
+    .get_mut(&data.open_playlist_id)
+    .ok_or(nerr!("Playlist ID not found"))?;
+  if data.sort_key != "index" || data.sort_desc != true {
+    return Err(nerr!("Cannot rearrange when custom sorting is used"));
+  }
+  let playlist = match tracklist {
+    TrackList::Playlist(playlist) => playlist,
+    TrackList::Folder(_) => return Err(nerr!("Cannot rearrange tracks in folder")),
+    TrackList::Special(_) => return Err(nerr!("Cannot rearrange tracks in special playlist")),
+  };
+  let mut start_ids = Vec::new();
+  let mut moved_ids = Vec::new();
+  let mut end_ids = Vec::new();
+
+  let mut indexes_to_move = indexes_to_move.iter();
+  let mut next_index = indexes_to_move.next().map(|n| *n as usize);
+  for i in 0..playlist.tracks.len() {
+    let id = playlist.tracks.remove(0);
+    if Some(i) == next_index {
+      next_index = indexes_to_move.next().map(|n| *n as usize);
+      moved_ids.push(id);
+    } else if i < to_index as usize {
+      start_ids.push(id);
+    } else {
+      end_ids.push(id);
+    }
+  }
+  start_ids.append(&mut moved_ids);
+  start_ids.append(&mut end_ids);
+  playlist.tracks = start_ids;
   return ctx.env.get_undefined();
 }

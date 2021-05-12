@@ -3,11 +3,11 @@ use jemallocator::Jemalloc;
 #[cfg(not(target_env = "msvc"))]
 #[global_allocator]
 static GLOBAL: Jemalloc = Jemalloc;
-use crate::data_js::{load_data_js,load_data_async};
+use crate::data_js::{load_data_async, load_data_js};
 use atomicwrites::{AllowOverwrite, AtomicFile};
 use napi::{
-  CallContext, Error as NapiError, JsBoolean, JsNumber, JsObject, JsString, JsUndefined,
-  Result as NResult,
+  CallContext, Error as NapiError, JsBoolean, JsNumber, JsObject, JsString, JsTypedArray,
+  JsUndefined, Result as NResult,
 };
 use napi_derive::{js_function, module_exports};
 use std::convert::TryFrom;
@@ -51,6 +51,23 @@ pub fn arg_to_number<N: TryFrom<JsNumber, Error = napi::Error>>(
     Err(err) => return Err(err),
   };
   return Ok(number);
+}
+
+pub fn arg_to_number_vector<N: TryFrom<JsNumber, Error = napi::Error>>(
+  ctx: &CallContext,
+  arg: usize,
+) -> NResult<Vec<N>> {
+  let js_array: JsTypedArray = ctx.get(arg)?;
+  let length: u32 = js_array.get_array_length()?;
+  let mut vector: Vec<N> = Vec::new();
+  for i in 0..length {
+    let js_number: JsNumber = js_array.get_element(i)?;
+    match js_number.try_into() {
+      Ok(n) => vector.push(n),
+      Err(err) => return Err(err),
+    };
+  }
+  return Ok(vector);
 }
 
 #[js_function(2)]
