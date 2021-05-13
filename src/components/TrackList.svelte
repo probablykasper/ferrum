@@ -131,7 +131,10 @@
   function dragEndHandler() {
     dragging = false
     if (dragToIndex !== null) {
-      page.moveTracks(indexes, dragToIndex)
+      const newSelection = page.moveTracks(indexes, dragToIndex)
+      for (let i = newSelection.from; i <= newSelection.to; i++) {
+        selection.add(i)
+      }
       dragToIndex = null
     }
   }

@@ -5,7 +5,7 @@ use crate::library::{get_track_field_type, TrackField};
 use crate::library_types::{SpecialTrackListName, TrackID, TrackList};
 use crate::sort::sort;
 use crate::{filter, page};
-use napi::{CallContext, JsString, JsUndefined, JsUnknown, Result as NResult};
+use napi::{CallContext, JsObject, JsString, JsUndefined, JsUnknown, Result as NResult};
 use napi_derive::js_function;
 
 #[js_function(1)]
@@ -151,7 +151,7 @@ pub fn sort_js(ctx: CallContext) -> NResult<JsUndefined> {
 }
 
 #[js_function(2)]
-pub fn move_tracks(ctx: CallContext) -> NResult<JsUndefined> {
+pub fn move_tracks(ctx: CallContext) -> NResult<JsObject> {
   let data: &mut Data = get_data(&ctx)?;
   let mut indexes_to_move: Vec<u32> = arg_to_number_vector(&ctx, 0)?;
   indexes_to_move.sort_unstable();
@@ -187,8 +187,13 @@ pub fn move_tracks(ctx: CallContext) -> NResult<JsUndefined> {
       end_ids.push(id);
     }
   }
+  let new_from = start_ids.len() as u32;
+  let new_to = new_from + moved_ids.len() as u32 - 1;
   start_ids.append(&mut moved_ids);
   start_ids.append(&mut end_ids);
   playlist.tracks = start_ids;
-  return ctx.env.get_undefined();
+  let mut new_selection = ctx.env.create_object()?;
+  new_selection.set_named_property("from", ctx.env.create_uint32(new_from)?)?;
+  new_selection.set_named_property("to", ctx.env.create_uint32(new_to)?)?;
+  return Ok(new_selection);
 }

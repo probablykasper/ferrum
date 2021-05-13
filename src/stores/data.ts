@@ -44,7 +44,7 @@ export type Data = {
   get_page_track_id: (index: number) => string
   get_page_info: () => PageInfo
   sort: (key: string, keep_filter: boolean) => void
-  move_tracks: (indexes: number[], to_index: number) => void
+  move_tracks: (indexes: number[], to_index: number) => { from: number; to: number }
 }
 // const data: Data = grabErr(() => {
 //   return addon.load_data(isDev)
@@ -195,12 +195,11 @@ export const page = (() => {
       return call((data) => data.get_page_track_ids())
     },
     moveTracks: (indexes: number[], toIndex: number) => {
-      call((data) => {
-        data.move_tracks(indexes, toIndex)
-        data.refresh_page()
-      })
+      const newSelection = call((data) => data.move_tracks(indexes, toIndex))
+      call((data) => data.refresh_page())
       set(get())
       methods.save()
+      return newSelection
     },
   }
 })()
