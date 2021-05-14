@@ -164,7 +164,17 @@ export const methods = {
   readCoverAsync: (id: TrackID) => data.read_cover_async(id),
 }
 
-export const filterQuery = writable('')
+export const filter = (() => {
+  const store = writable('')
+  return {
+    subscribe: store.subscribe,
+    set: (query: string) => {
+      call((data) => data.filter_open_playlist(query))
+      store.set(query)
+      page.setGet()
+    },
+  }
+})()
 export const page = (() => {
   function get() {
     const info = call((data) => data.get_page_info())
@@ -183,10 +193,13 @@ export const page = (() => {
       call((data) => data.refresh_page())
       set(get())
     },
+    setGet: () => {
+      set(get())
+    },
     openPlaylist: (id: string) => {
       call((data) => data.open_playlist(id))
       set(get())
-      filterQuery.set('')
+      filter.set('')
     },
     sortBy: (key: string) => {
       call((data) => data.sort(key, true))

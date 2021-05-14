@@ -1,7 +1,7 @@
 <script lang="ts">
-  import { page, filterQuery } from '../stores/data'
+  import { page, filter } from '../stores/data'
   import { ipcRenderer } from '../stores/window'
-  function filter(node: HTMLInputElement) {
+  function filterCmd(node: HTMLInputElement) {
     function handler() {
       node.select()
     }
@@ -9,9 +9,6 @@
     return {
       destroy: () => ipcRenderer.off('filter', handler),
     }
-  }
-  function onInput(e: InputEvent) {
-    page.filter($filterQuery)
   }
 </script>
 
@@ -36,5 +33,5 @@
 </style>
 
 <template lang="pug">
-  input.search(type='text' class:on='{$filterQuery}' use:filter bind:value='{$filterQuery}' on:input='{onInput}' placeholder='Filter')
+  input.search(type='text' class:on='{$filter}' use:filterCmd bind:value='{$filter}' placeholder='Filter')
 </template>
