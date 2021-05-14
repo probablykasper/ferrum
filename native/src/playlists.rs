@@ -43,6 +43,12 @@ pub fn remove_from_open(ctx: CallContext) -> NResult<JsUndefined> {
     .trackLists
     .get_mut(&data.open_playlist_id)
     .ok_or(nerr!("Playlist ID not found"))?;
+  if data.sort_key != "index" || data.sort_desc != true {
+    return Err(nerr!("Cannot remove track when custom sorting is used"));
+  }
+  if data.filter != "" {
+    return Err(nerr!("Cannot remove track when filter is used"));
+  }
   let playlist = match open_playlist {
     TrackList::Playlist(playlist) => playlist,
     TrackList::Folder(_) => return Err(nerr!("Cannot remove track from folder")),

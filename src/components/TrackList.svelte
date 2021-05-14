@@ -67,7 +67,7 @@
         selection.clear()
         selection.add(lastAdded + 1)
       }
-    } else if (e.key === 'Backspace' && $selection.count > 0) {
+    } else if (e.key === 'Backspace' && $selection.count > 0 && !$filter) {
       e.preventDefault()
       const s = $selection.count > 1 ? 's' : ''
       const result = await showMessageBox({
