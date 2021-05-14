@@ -165,6 +165,9 @@ pub fn move_tracks(ctx: CallContext) -> NResult<JsObject> {
   if data.sort_key != "index" || data.sort_desc != true {
     return Err(nerr!("Cannot rearrange when custom sorting is used"));
   }
+  if data.filter != "" {
+    return Err(nerr!("Cannot rearrange when filter is used"));
+  }
   let playlist = match tracklist {
     TrackList::Playlist(playlist) => playlist,
     TrackList::Folder(_) => return Err(nerr!("Cannot rearrange tracks in folder")),

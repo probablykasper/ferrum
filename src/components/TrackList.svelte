@@ -1,6 +1,6 @@
 <script lang="ts">
   import VList from './VirtualList.svelte'
-  import { page, removeFromOpenPlaylist } from '../stores/data'
+  import { page, removeFromOpenPlaylist, filter } from '../stores/data'
   import { newPlaybackInstance, playingId } from '../stores/player'
   import { getDuration, formatDate, checkMouseShortcut } from '../scripts/helpers'
   import { showTrackMenu } from '../stores/contextMenu'
@@ -98,13 +98,13 @@
   let dragging = false
   let indexes: number[] = []
   function onDragStart(e: DragEvent) {
-    indexes = []
-    for (let i = 0; i < $selection.list.length; i++) {
-      if ($selection.list[i]) {
-        indexes.push(i)
-      }
-    }
     if (e.dataTransfer) {
+      indexes = []
+      for (let i = 0; i < $selection.list.length; i++) {
+        if ($selection.list[i]) {
+          indexes.push(i)
+        }
+      }
       dragging = true
       e.dataTransfer.effectAllowed = 'move'
       if (indexes.length === 1) {
@@ -119,7 +119,7 @@
   }
   onMount(() => {
     function dragOverHandler(e: DragEvent) {
-      if (dragging && e.dataTransfer && e.dataTransfer.types[0] === 'ferrumtracks') {
+      if (dragging) {
         e.preventDefault()
       }
     }
@@ -128,7 +128,7 @@
   })
   let dragToIndex: null | number = null
   function onDragOver(e: DragEvent, index: number) {
-    if (!$page.sort_desc || $page.sort_key !== 'index') {
+    if (!$page.sort_desc || $page.sort_key !== 'index' || $filter) {
       dragToIndex = null
       return
     }
@@ -152,6 +152,7 @@
   function dragEndHandler() {
     dragging = false
     if (dragToIndex !== null) {
+      console.log(indexes, dragToIndex)
       const newSelection = page.moveTracks(indexes, dragToIndex)
       for (let i = newSelection.from; i <= newSelection.to; i++) {
         selection.add(i)
