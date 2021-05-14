@@ -1,7 +1,7 @@
 import { ipcRenderer } from './window'
 import type { TrackID, Folder, Special, TrackListsHashMap } from './libraryTypes'
 import { appendToUserQueue, prependToUserQueue } from './queue'
-import { trackLists as trackListsStore, addTracksToPlaylist } from './data'
+import { trackLists as trackListsStore, addTracksToPlaylist, removeFromOpenPlaylist } from './data'
 
 function flattenChildLists(
   trackList: Folder | Special,
@@ -31,7 +31,7 @@ function flattenChildLists(
   return flat
 }
 
-export async function showTrackMenu(ids: TrackID[]) {
+export async function showTrackMenu(ids: TrackID[], indexes: number[]) {
   const trackLists = trackListsStore.getOnce()
   const flat = flattenChildLists(trackLists.root as Special, trackLists, '', 'add-to-')
 
@@ -44,6 +44,8 @@ export async function showTrackMenu(ids: TrackID[]) {
   } else if (clickedId.startsWith('add-to-')) {
     const pId = clickedId.substring('add-to-'.length)
     addTracksToPlaylist(pId, ids)
+  } else if (clickedId === 'Remove from Playlist') {
+    removeFromOpenPlaylist(indexes)
   } else {
     console.error('Unknown contextMenu ID', clickedId)
   }

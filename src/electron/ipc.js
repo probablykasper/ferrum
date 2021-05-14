@@ -33,6 +33,10 @@ ipcMain.handle('showTrackMenu', (e, list) => {
         label: 'Add to Playlist',
         submenu: list,
       },
+      {
+        label: 'Remove from Playlist',
+        click: () => resolve('Remove from Playlist'),
+      },
     ])
     menu.once('will-close', () => resolve())
     menu.popup()

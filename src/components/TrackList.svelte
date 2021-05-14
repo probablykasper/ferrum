@@ -1,10 +1,11 @@
 <script lang="ts">
   import VList from './VirtualList.svelte'
-  import { page } from '../stores/data'
+  import { page, removeFromOpenPlaylist } from '../stores/data'
   import { newPlaybackInstance, playingId } from '../stores/player'
   import { getDuration, formatDate, checkMouseShortcut } from '../scripts/helpers'
   import { showTrackMenu } from '../stores/contextMenu'
   import { newSelection } from '../stores/selection'
+  import { showMessageBox } from '../stores/window'
   import { onMount } from 'svelte'
 
   const sortBy = page.sortBy
@@ -39,14 +40,16 @@
   function onContextMenu(e: MouseEvent, index: number) {
     rowMouseDown(e, index, true)
     const ids = []
+    const indexes = []
     for (let i = 0; i < $selection.list.length; i++) {
       if ($selection.list[i]) {
         ids.push(page.getTrackId(i))
+        indexes.push(i)
       }
     }
-    showTrackMenu(ids)
+    showTrackMenu(ids, indexes)
   }
-  function rowKeydown(e: KeyboardEvent) {
+  async function rowKeydown(e: KeyboardEvent) {
     if (e.key === 'Enter') {
       let firstIndex = selection.findFirst($selection.list) || 0
       playRow(firstIndex)
@@ -63,6 +66,24 @@
       if (lastAdded !== null && lastAdded + 1 < $page.length) {
         selection.clear()
         selection.add(lastAdded + 1)
+      }
+    } else if (e.key === 'Backspace' && $selection.count > 0) {
+      e.preventDefault()
+      const s = $selection.count > 1 ? 's' : ''
+      const result = await showMessageBox({
+        type: 'info',
+        message: `Remove the selected song${s} from the list?`,
+        buttons: ['Remove Song' + s, 'Cancel'],
+        defaultId: 0,
+      })
+      const indexes = []
+      for (let i = 0; i < $selection.list.length; i++) {
+        if ($selection.list[i]) {
+          indexes.push(i)
+        }
+      }
+      if (result.buttonClicked === 0) {
+        removeFromOpenPlaylist(indexes)
       }
     }
   }

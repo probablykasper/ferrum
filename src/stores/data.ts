@@ -34,6 +34,7 @@ export type Data = {
 
   get_track_lists: () => TrackListsHashMap
   add_tracks_to_playlist: (playlistId: TrackListID, trackIds: TrackID[]) => void
+  remove_from_open_playlist: (indexes: number[]) => void
 
   refresh_page: () => void
   open_playlist: (id: TrackListID) => void
@@ -96,9 +97,15 @@ export const trackLists = (() => {
     getOnce: () => initial,
   }
 })()
-
 export function addTracksToPlaylist(playlistId: TrackListID, trackIds: TrackID[]) {
   call((data) => data.add_tracks_to_playlist(playlistId, trackIds))
+  page.refresh()
+  methods.save()
+}
+export function removeFromOpenPlaylist(indexes: number[]) {
+  call((data) => data.remove_from_open_playlist(indexes))
+  page.refresh()
+  methods.save()
 }
 
 export const paths = (() => {
