@@ -164,7 +164,7 @@
   function getItem(index: number) {
     try {
       const track = page.getTrack(index)
-      return track
+      return { ...track, id: page.getTrackId(index) }
     } catch (err) {
       return {}
     }
@@ -237,12 +237,14 @@
         overflow: hidden
         text-overflow: ellipsis
         padding-right: 10px
+      &.selected .index svg
+        fill: var(--icon-color)
       .index
         width: 0px
         min-width: 36px
         text-align: right
         svg
-          fill: var(--icon-color)
+          fill: #2efac7
           width: 16px
           height: 100%
       .name
@@ -284,7 +286,7 @@
     position: absolute
     width: 100%
     height: 2px
-    background-color: #0083f5
+    background-color: var(--drag-line-color)
     pointer-events: none
     display: none
     &.show
@@ -358,7 +360,7 @@
       class:odd={index % 2 === 0}
       class:selected={$selection.list[index] === true}>
       <div class="c index">
-        {#if page.getTrackId(index) === $playingId}
+        {#if track.id === $playingId}
           <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24">
             <path d="M0 0h24v24H0z" fill="none" />
             <path

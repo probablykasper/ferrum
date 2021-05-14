@@ -136,7 +136,7 @@
       border-radius: 100px
       position: relative
   .on svg
-      fill: #20f39f
+      fill: var(--icon-highlight-color)
 </style>
 
 <template lang="pug">
