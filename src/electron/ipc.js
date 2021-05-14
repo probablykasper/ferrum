@@ -14,8 +14,11 @@ ipcMain.handle('showOpenDialogAttached', async (e, options) => {
   return await dialog.showOpenDialog(window, options)
 })
 
-ipcMain.handle('showTrackMenu', (e) => {
+ipcMain.handle('showTrackMenu', (e, list) => {
   return new Promise((resolve, reject) => {
+    for (const item of list) {
+      item.click = () => resolve(item.id)
+    }
     const menu = Menu.buildFromTemplate([
       {
         label: 'Play Next',
@@ -24,6 +27,11 @@ ipcMain.handle('showTrackMenu', (e) => {
       {
         label: 'Add to Queue',
         click: () => resolve('Add to Queue'),
+      },
+      { type: 'separator' },
+      {
+        label: 'Add to Playlist',
+        submenu: list,
       },
     ])
     menu.once('will-close', () => resolve())

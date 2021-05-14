@@ -18,7 +18,7 @@ pub fn open_playlist(ctx: CallContext) -> NResult<JsUndefined> {
     .library
     .trackLists
     .get(&data.open_playlist_id)
-    .ok_or(nerr("Playlist ID not found (2)"))?;
+    .ok_or(nerr("Playlist ID not found"))?;
   match playlist {
     TrackList::Special(_) => {
       nr(sort(data, "dateAdded", true))?;

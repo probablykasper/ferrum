@@ -1,6 +1,6 @@
 use crate::data::{load_data, Data};
 use crate::js::{arg_to_bool, nr};
-use crate::{filter, page, tracks};
+use crate::{filter, page, playlists, tracks};
 use napi::{CallContext, Env, JsObject, JsUndefined, JsUnknown, Result as NResult, Task};
 use napi_derive::js_function;
 
@@ -64,19 +64,9 @@ pub fn save(ctx: CallContext) -> NResult<JsUndefined> {
   return ctx.env.get_undefined();
 }
 
-#[js_function(0)]
-fn get_track_lists(ctx: CallContext) -> NResult<JsUnknown> {
-  let data: &mut Data = get_data(&ctx)?;
-  let track_lists = &data.library.trackLists;
-  let js = ctx.env.to_js_value(&track_lists)?;
-  return Ok(js);
-}
-
 fn init_data_instance(mut exports: JsObject) -> NResult<JsObject> {
   exports.create_named_method("get_paths", get_paths)?;
   exports.create_named_method("save", save)?;
-
-  exports.create_named_method("get_track_lists", get_track_lists)?;
 
   exports.create_named_method("import_track", tracks::import)?;
   exports.create_named_method("get_track", tracks::get_track)?;
@@ -84,6 +74,9 @@ fn init_data_instance(mut exports: JsObject) -> NResult<JsObject> {
   exports.create_named_method("add_skip", tracks::add_skip)?;
   exports.create_named_method("add_play_time", tracks::add_play_time)?;
   exports.create_named_method("read_cover_async", tracks::read_cover_async)?;
+
+  exports.create_named_method("get_track_lists", playlists::get_track_lists)?;
+  exports.create_named_method("add_tracks_to_playlist", playlists::add_tracks)?;
 
   exports.create_named_method("refresh_page", page::refresh)?;
   exports.create_named_method("open_playlist", page::open_playlist)?;

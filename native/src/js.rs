@@ -70,6 +70,19 @@ pub fn arg_to_number_vector<N: TryFrom<JsNumber, Error = napi::Error>>(
   return Ok(vector);
 }
 
+pub fn arg_to_string_vector(ctx: &CallContext, arg: usize) -> NResult<Vec<String>> {
+  let js_array: JsTypedArray = ctx.get(arg)?;
+  let length: u32 = js_array.get_array_length()?;
+  let mut vector: Vec<String> = Vec::new();
+  for i in 0..length {
+    let js_string: JsString = js_array.get_element(i)?;
+    let js_utf8_string = js_string.into_utf8()?;
+    let rust_string = js_utf8_string.as_str()?.to_string();
+    vector.push(rust_string);
+  }
+  return Ok(vector);
+}
+
 #[js_function(2)]
 fn copy_file(ctx: CallContext) -> NResult<JsUndefined> {
   let from = arg_to_string(&ctx, 0)?;

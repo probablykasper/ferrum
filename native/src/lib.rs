@@ -16,6 +16,7 @@ mod data;
 mod data_js;
 mod filter;
 mod page;
+mod playlists;
 mod tracks;
 
 fn get_now_timestamp() -> i64 {

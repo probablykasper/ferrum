@@ -24,10 +24,6 @@ export type Data = {
     library_json: string
   }
   save: () => void
-  get_tracks_dir: () => string
-  get_library_json_path: () => string
-
-  get_track_lists: () => TrackListsHashMap
 
   import_track: (path: string) => void
   get_track: (id: TrackID) => Track
@@ -35,6 +31,9 @@ export type Data = {
   add_skip: (id: TrackID) => void
   add_play_time: (id: TrackID, startTime: MsSinceUnixEpoch, duration_ms: number) => void
   read_cover_async: (id: TrackID) => Promise<ArrayBuffer>
+
+  get_track_lists: () => TrackListsHashMap
+  add_tracks_to_playlist: (playlistId: TrackListID, trackIds: TrackID[]) => void
 
   refresh_page: () => void
   open_playlist: (id: TrackListID) => void
@@ -94,8 +93,13 @@ export const trackLists = (() => {
   const { subscribe, set, update } = writable(initial)
   return {
     subscribe,
+    getOnce: () => initial,
   }
 })()
+
+export function addTracksToPlaylist(playlistId: TrackListID, trackIds: TrackID[]) {
+  call((data) => data.add_tracks_to_playlist(playlistId, trackIds))
+}
 
 export const paths = (() => {
   return call((data) => data.get_paths())

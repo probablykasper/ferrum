@@ -89,7 +89,7 @@ pub fn sort(data: &mut Data, sort_key: &str, desc: bool) -> Result<(), &'static 
       .library
       .trackLists
       .get(&data.open_playlist_id)
-      .ok_or("Playlist ID not found (2)")?;
+      .ok_or("Playlist ID not found")?;
     match playlist {
       TrackList::Playlist(_) => {
         data.open_playlist_track_ids = page::get_track_ids(&data)?;

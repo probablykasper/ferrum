@@ -76,9 +76,9 @@ export type CountObject = {
   toDate: MsSinceUnixEpoch
 }
 
-type TrackList = Playlist | Folder | Special
+export type TrackList = Playlist | Folder | Special
 
-type Playlist = {
+export type Playlist = {
   type: 'playlist'
   id: TrackListID
   name: string
@@ -92,7 +92,7 @@ type Playlist = {
   tracks: TrackID[]
 }
 
-type Folder = {
+export type Folder = {
   type: 'folder'
   id: TrackListID
   show: boolean
@@ -109,7 +109,7 @@ type Folder = {
   children: TrackListID[]
 }
 
-type Special = {
+export type Special = {
   type: 'special'
   id: TrackListID
   name: SpecialTrackListName
