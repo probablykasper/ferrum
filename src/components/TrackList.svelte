@@ -152,7 +152,6 @@
   function dragEndHandler() {
     dragging = false
     if (dragToIndex !== null) {
-      console.log(indexes, dragToIndex)
       const newSelection = page.moveTracks(indexes, dragToIndex)
       for (let i = newSelection.from; i <= newSelection.to; i++) {
         selection.add(i)

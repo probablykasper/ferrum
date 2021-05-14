@@ -162,17 +162,17 @@ pub fn move_tracks(ctx: CallContext) -> NResult<JsObject> {
     .trackLists
     .get_mut(&data.open_playlist_id)
     .ok_or(nerr!("Playlist ID not found"))?;
+  let playlist = match tracklist {
+    TrackList::Playlist(playlist) => playlist,
+    TrackList::Folder(_) => return Err(nerr!("Cannot rearrange tracks in folder")),
+    TrackList::Special(_) => return Err(nerr!("Cannot rearrange tracks in special playlist")),
+  };
   if data.sort_key != "index" || data.sort_desc != true {
     return Err(nerr!("Cannot rearrange when custom sorting is used"));
   }
   if data.filter != "" {
     return Err(nerr!("Cannot rearrange when filter is used"));
   }
-  let playlist = match tracklist {
-    TrackList::Playlist(playlist) => playlist,
-    TrackList::Folder(_) => return Err(nerr!("Cannot rearrange tracks in folder")),
-    TrackList::Special(_) => return Err(nerr!("Cannot rearrange tracks in special playlist")),
-  };
   let mut start_ids = Vec::new();
   let mut moved_ids = Vec::new();
   let mut end_ids = Vec::new();

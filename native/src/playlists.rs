@@ -43,17 +43,17 @@ pub fn remove_from_open(ctx: CallContext) -> NResult<JsUndefined> {
     .trackLists
     .get_mut(&data.open_playlist_id)
     .ok_or(nerr!("Playlist ID not found"))?;
+  let playlist = match open_playlist {
+    TrackList::Playlist(playlist) => playlist,
+    TrackList::Folder(_) => return Err(nerr!("Cannot remove track from folder")),
+    TrackList::Special(_) => return Err(nerr!("Cannot remove track from special playlist")),
+  };
   if data.sort_key != "index" || data.sort_desc != true {
     return Err(nerr!("Cannot remove track when custom sorting is used"));
   }
   if data.filter != "" {
     return Err(nerr!("Cannot remove track when filter is used"));
   }
-  let playlist = match open_playlist {
-    TrackList::Playlist(playlist) => playlist,
-    TrackList::Folder(_) => return Err(nerr!("Cannot remove track from folder")),
-    TrackList::Special(_) => return Err(nerr!("Cannot remove track from special playlist")),
-  };
   let mut new_list = Vec::new();
   let mut indexes_to_remove = indexes_to_remove.iter();
   let mut next_index = indexes_to_remove.next().map(|n| *n as usize);
