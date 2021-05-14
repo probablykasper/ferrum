@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.7.0 - 2021 May 14
+- Add queue panel
+- Add multi-selection support
+- Add support for dragging/rearranging tracks
+- Add ability to add tracks to playlists (via context menu)
+- Ability to remove tracks from playlists via backspace or context menu (for now only possible when no filter or custom sorting is used)
+- Change date added to show date instead of number timestamp
+- Fix selection not clearing when page changes
+- Fix reading metadata for some m4a files
+- Fix row colors changing as you scroll
+- Fix sorting icon not updating when switching to sorting by "index"
+- Fix error popups not always triggering
+- Fix "currently playing" icon showing incorrectly
+
 ## 0.6.1 - 2021 Apr 6
 - Fix media keys shortcuts
 
