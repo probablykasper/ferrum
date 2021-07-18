@@ -92,13 +92,13 @@ fn read_cover(path: &PathBuf) -> Result<Vec<u8>, CoverReadError> {
       match picture.mime_type.as_str() {
         "image/jpeg" => ".jpg",
         "image/png" => ".png",
-        _ => continue
+        _ => continue,
       };
       match picture.picture_type {
         id3::frame::PictureType::Other => {}
         id3::frame::PictureType::Undefined(_) => {}
         id3::frame::PictureType::CoverFront => {}
-        _ => continue
+        _ => continue,
       }
       return Ok(picture.data.clone());
     }
@@ -114,7 +114,7 @@ fn read_cover(path: &PathBuf) -> Result<Vec<u8>, CoverReadError> {
       Some(data) => match data {
         mp4ameta::Data::Jpeg(jpeg_data) => return Ok(jpeg_data.clone()),
         mp4ameta::Data::Png(png_data) => return Ok(png_data.clone()),
-        _ => return Err(CoverReadError::NoJpegOrPngFound)
+        _ => return Err(CoverReadError::NoJpegOrPngFound),
       },
       None => {
         return Err(CoverReadError::NoJpegOrPngFound);
@@ -138,7 +138,7 @@ impl Task for ReadCover {
       Err(CoverReadError::TagReadError(string)) => {
         let x = nerr!("Error reading tag: {}", string);
         Err(x)
-      },
+      }
     };
   }
   fn resolve(self, env: Env, output: Self::Output) -> NResult<Self::JsValue> {

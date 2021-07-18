@@ -43,7 +43,7 @@
   function getEndIndex(scrollTop: number, height: number, itemHeight: number, itemCount: number) {
     let bottomPixel = scrollTop + height
     let index = Math.ceil(bottomPixel / itemHeight) + buffer
-    return Math.min(itemCount, index)
+    return Math.min(itemCount - 1, index)
   }
 
   $: if (mounted) updateView(scrollTop, height, itemHeight, itemCount)
