@@ -2,21 +2,25 @@
   import { onMount } from 'svelte'
 
   export let getItem: Function
-  export let visibleItems: any[] = []
   export let itemCount: number = 0
   export let itemHeight: number = 0
-  export let startIndex: number = 0
-  export let endIndex: number = 0
-  let height: number = 0
-  let scrollTop: number = 0
-  let paddingTop: number = 0
-  let paddingBottom: number = 0
+  let startIndex = -1
+  let endIndex = -1
+  let height = 0
+  let scrollTop = 0
+  let visibleItems: any[] = []
 
   let viewport: HTMLDivElement
   function handleScroll(e: Event) {
     const target = e.target as HTMLTextAreaElement
     scrollTop = target.scrollTop
   }
+
+  let mounted = false
+  onMount(() => {
+    scrollTop = viewport.scrollTop
+    mounted = true
+  })
 
   function keydown(e: KeyboardEvent) {
     if (e.key === ' ') return e.preventDefault()
@@ -30,44 +34,44 @@
     if (prevent) e.preventDefault()
   }
 
-  let mounted: boolean
-  onMount(() => {
-    scrollTop = viewport.scrollTop
-    mounted = true
-  })
-
-  $: if (mounted) updateView(height, scrollTop, itemHeight, itemCount)
-  let refresher = 1
-  export function refresh() {
-    if (mounted) updateView(height, scrollTop, itemHeight, itemCount)
-    if (refresher < 10000) refresher++
-    else refresher = 1
+  const buffer = 0
+  function getStartIndex(scrollTop: number, itemHeight: number) {
+    let topPixel = scrollTop
+    let index = Math.floor(topPixel / itemHeight) - buffer
+    return Math.max(0, index)
   }
-  function updateView(height: number, scrollTop: number, itemHeight: number, itemCount: number) {
-    const newHeight = itemCount * itemHeight
-
+  function getEndIndex(scrollTop: number, height: number, itemHeight: number, itemCount: number) {
     let bottomPixel = scrollTop + height
-    if (bottomPixel > newHeight) bottomPixel = newHeight
-    let topPixel = bottomPixel - height
-    if (topPixel < 0) topPixel = 0
-
-    startIndex = Math.floor(topPixel / itemHeight)
-    endIndex = Math.ceil(bottomPixel / itemHeight)
-
-    const lastIndexes = itemCount - endIndex
-    paddingTop = startIndex * itemHeight
-    paddingBottom = lastIndexes * itemHeight
+    let index = Math.ceil(bottomPixel / itemHeight) + buffer
+    return Math.min(itemCount, index)
   }
 
-  $: if (refresher !== 0) getItems(startIndex, endIndex)
-  function getItems(startIndex: number, endIndex: number) {
-    const newItems = []
-    const visibleCount = endIndex - startIndex
-    for (let i = 0; i < visibleCount; i++) {
-      const item = getItem(startIndex + i)
-      newItems.push(item)
+  $: if (mounted) updateView(scrollTop, height, itemHeight, itemCount)
+  function updateView(scrollTop: number, height: number, itemHeight: number, itemCount: number) {
+    const newStartIndex = getStartIndex(scrollTop, itemHeight)
+    const newEndIndex = getEndIndex(scrollTop, height, itemHeight, itemCount)
+
+    let newVisibleItems = []
+    for (let i = newStartIndex; i <= newEndIndex; i++) {
+      if (i >= startIndex && i <= endIndex) {
+        newVisibleItems.push(visibleItems[i - startIndex])
+      } else {
+        newVisibleItems.push(getItem(i))
+      }
     }
-    visibleItems = newItems
+    visibleItems = newVisibleItems
+    startIndex = newStartIndex
+    endIndex = newEndIndex
+  }
+
+  export function refresh() {
+    if (mounted) {
+      let newVisibleItems = []
+      for (let i = startIndex; i <= endIndex; i++) {
+        newVisibleItems.push(getItem(i))
+      }
+      visibleItems = newVisibleItems
+    }
   }
 </script>
 
@@ -77,6 +81,8 @@
     overflow-y: scroll
     outline: none
     background-color: inherit
+  .content
+    box-sizing: border-box
 </style>
 
 <div
@@ -88,9 +94,11 @@
   on:keydown
   tabindex="0"
   on:keydown={keydown}>
-  <div class="content" style="padding-top: {paddingTop}px; padding-bottom: {paddingBottom}px;">
-    {#each visibleItems as item, index}
-      <slot {item} index={startIndex + index} />
+  <div
+    class="content"
+    style="height: {itemCount * itemHeight}px; padding-top: {startIndex * itemHeight}px;">
+    {#each visibleItems as item, i}
+      <slot {item} index={startIndex + i} />
     {/each}
   </div>
 </div>
