@@ -169,12 +169,12 @@
     }
   }
 
-  let refresh = () => {}
+  let vlist: VList
 
   let itemCount = 0
   page.subscribe((page) => {
     itemCount = page.length
-    refresh()
+    if (vlist) vlist.refresh()
     selection.clear()
   })
 </script>
@@ -342,7 +342,7 @@
     {getItem}
     itemHeight={24}
     {itemCount}
-    bind:refresh
+    bind:this={vlist}
     on:keydown={rowKeydown}
     let:item={track}
     let:index>

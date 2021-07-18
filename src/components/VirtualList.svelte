@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from 'svelte'
+  import { onMount, tick } from 'svelte'
 
   export let getItem: Function
   export let itemCount: number = 0
@@ -64,13 +64,14 @@
     endIndex = newEndIndex
   }
 
-  export function refresh() {
+  export async function refresh() {
     if (mounted) {
-      let newVisibleItems = []
-      for (let i = startIndex; i <= endIndex; i++) {
-        newVisibleItems.push(getItem(i))
-      }
-      visibleItems = newVisibleItems
+      startIndex = -1
+      endIndex = -1
+      visibleItems = []
+      await tick()
+      // we need to wait a tick so properties can finish updating
+      updateView(scrollTop, height, itemHeight, itemCount)
     }
   }
 </script>
