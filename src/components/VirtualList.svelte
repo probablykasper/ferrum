@@ -76,16 +76,6 @@
   }
 </script>
 
-<style lang="sass">
-  .viewport
-    height: 100%
-    overflow-y: scroll
-    outline: none
-    background-color: inherit
-  .content
-    box-sizing: border-box
-</style>
-
 <div
   class="viewport"
   bind:this={viewport}
@@ -103,3 +93,13 @@
     {/each}
   </div>
 </div>
+
+<style lang="sass">
+  .viewport
+    height: 100%
+    overflow-y: scroll
+    outline: none
+    background-color: inherit
+  .content
+    box-sizing: border-box
+</style>

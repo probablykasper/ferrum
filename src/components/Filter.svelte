@@ -12,6 +12,10 @@
   }
 </script>
 
+<template lang="pug">
+  input.search(type='text' class:on='{$filter}' use:filterCmd bind:value='{$filter}' placeholder='Filter')
+</template>
+
 <style lang="sass">
   .search
     display: block
@@ -31,7 +35,3 @@
     &.on
       border: 3px solid var(--outline-color-disabled)
 </style>
-
-<template lang="pug">
-  input.search(type='text' class:on='{$filter}' use:filterCmd bind:value='{$filter}' placeholder='Filter')
-</template>

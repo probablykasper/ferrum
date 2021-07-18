@@ -75,6 +75,36 @@
   }
 </script>
 
+<template lang="pug">
+  svelte:head
+    title Ferrum
+  main(style='{cssVarStyles}' on:dragenter|capture='{dragEnter}')
+    .meat
+      Sidebar
+      TrackList
+      +if('$queueVisible')
+        Queue
+    Player
+    +if('pageStatus || pageStatusWarnings || pageStatusErr')
+      .page-status-bg
+        .page-status
+          +if('pageStatus')
+            .page-status-item {pageStatus}
+          +if('pageStatusWarnings')
+            .page-status-item
+              b Warnings:
+              pre {pageStatusWarnings}
+          +if('pageStatusErr')
+            .page-status-item
+              b Error:
+              pre {pageStatusErr}
+    +if('droppable')
+      //- if the overlay is always visible, it's not possible to scroll while dragging tracks
+      .drag-overlay(on:dragleave='{dragLeave}' on:drop='{drop}' on:dragover='{dragOver}' in:fade='{{ duration: 100 }}')
+        h1 Drop files to import
+    Titlebar(dev='{isDev}')
+</template>
+
 <style lang="sass">
   :global(html), :global(body)
     background-color: var(--window-bg-color)
@@ -142,33 +172,3 @@
         overflow: hidden
         overflow-wrap: anywhere
 </style>
-
-<template lang="pug">
-  svelte:head
-    title Ferrum
-  main(style='{cssVarStyles}' on:dragenter|capture='{dragEnter}')
-    .meat
-      Sidebar
-      TrackList
-      +if('$queueVisible')
-        Queue
-    Player
-    +if('pageStatus || pageStatusWarnings || pageStatusErr')
-      .page-status-bg
-        .page-status
-          +if('pageStatus')
-            .page-status-item {pageStatus}
-          +if('pageStatusWarnings')
-            .page-status-item
-              b Warnings:
-              pre {pageStatusWarnings}
-          +if('pageStatusErr')
-            .page-status-item
-              b Error:
-              pre {pageStatusErr}
-    +if('droppable')
-      //- if the overlay is always visible, it's not possible to scroll while dragging tracks
-      .drag-overlay(on:dragleave='{dragLeave}' on:drop='{drop}' on:dragover='{dragOver}' in:fade='{{ duration: 100 }}')
-        h1 Drop files to import
-    Titlebar(dev='{isDev}')
-</template>

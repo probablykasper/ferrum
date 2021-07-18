@@ -14,7 +14,7 @@
     "napi:dev": "electron-build-env napi build --cargo-cwd ./native",
     "build": "npm run napi && npm run build:web && electron-builder",
     "build:web": "vite build",
-    "lint": "prettier --write --ignore-path .gitignore *.js *.json src public types",
+    "lint": "prettier --write --ignore-path .gitignore *.js *.json src",
     "check": "svelte-check"
   },
   "build": {
@@ -73,7 +73,7 @@
     "semi": false,
     "singleQuote": true,
     "htmlWhitespaceSensitivity": "strict",
-    "svelteSortOrder": "options-scripts-styles-markup",
+    "svelteSortOrder": "options-scripts-markup-styles",
     "svelteStrictMode": false,
     "svelteAllowShorthand": true,
     "svelteBracketNewLine": false,

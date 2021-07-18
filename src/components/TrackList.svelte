@@ -179,6 +179,97 @@
   })
 </script>
 
+<div class="drag-ghost" bind:this={dragEl}>
+  <div bind:this={dragElDiv} />
+</div>
+
+<div class="tracklist" on:dragleave={() => (dragToIndex = null)}>
+  <div class="row header" class:desc={$page.sort_desc}>
+    <div class="c index" class:sort={sortKey === 'index'} on:click={() => sortBy('index')}>
+      <span>#</span>
+    </div>
+    <div class="c name" class:sort={sortKey === 'name'} on:click={() => sortBy('name')}>
+      <span>Name</span>
+    </div>
+    <div
+      class="c playCount"
+      class:sort={sortKey === 'playCount'}
+      on:click={() => sortBy('playCount')}>
+      <span>Plays</span>
+    </div>
+    <div class="c duration" class:sort={sortKey === 'duration'} on:click={() => sortBy('duration')}>
+      <span>Time</span>
+    </div>
+    <div class="c artist" class:sort={sortKey === 'artist'} on:click={() => sortBy('artist')}>
+      <span>Artist</span>
+    </div>
+    <div
+      class="c albumName"
+      class:sort={sortKey === 'albumName'}
+      on:click={() => sortBy('albumName')}>
+      <span>Album</span>
+    </div>
+    <div class="c comments" class:sort={sortKey === 'comments'} on:click={() => sortBy('comments')}>
+      <span>Comments</span>
+    </div>
+    <div class="c genre" class:sort={sortKey === 'genre'} on:click={() => sortBy('genre')}>
+      <span>Genre</span>
+    </div>
+    <div
+      class="c dateAdded"
+      class:sort={sortKey === 'dateAdded'}
+      on:click={() => sortBy('dateAdded')}>
+      <span>Date Added</span>
+    </div>
+    <div class="c year" class:sort={sortKey === 'year'} on:click={() => sortBy('year')}>
+      <span>Year</span>
+    </div>
+  </div>
+  <VList
+    {getItem}
+    itemHeight={24}
+    {itemCount}
+    bind:this={vlist}
+    on:keydown={rowKeydown}
+    let:item={track}
+    let:index>
+    <div
+      class="row"
+      on:dblclick={() => playRow(index)}
+      on:mousedown={(e) => rowMouseDown(e, index)}
+      on:click={(e) => rowClick(e, index)}
+      on:contextmenu={(e) => onContextMenu(e, index)}
+      draggable="true"
+      on:dragstart={onDragStart}
+      on:dragover={(e) => onDragOver(e, index)}
+      on:dragend={dragEndHandler}
+      class:odd={index % 2 === 0}
+      class:selected={$selection.list[index] === true}>
+      <div class="c index">
+        {#if track.id === $playingId}
+          <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24">
+            <path d="M0 0h24v24H0z" fill="none" />
+            <path
+              d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z" />
+          </svg>
+        {:else}
+          {index + 1}
+        {/if}
+      </div>
+      <div class="c name">{track.name || ''}</div>
+      <div class="c playCount">{track.playCount || ''}</div>
+      <div class="c duration">{getDuration(track.duration || '')}</div>
+      <div class="c artist">{track.artist || ''}</div>
+      <div class="c albumName">{track.albumName || ''}</div>
+      <div class="c comments">{track.comments || ''}</div>
+      <div class="c genre">{track.genre || ''}</div>
+      <div class="c dateAdded">{formatDate(track.dateAdded)}</div>
+      <div class="c year">{track.year || ''}</div>
+    </div>
+  </VList>
+  <div class="drag-line" class:show={dragToIndex !== null} bind:this={dragLine} />
+</div>
+
 <style lang="sass">
   :global(.selected)
     --sidebar-gradient: linear-gradient(90deg, #3f4c6b, #606c88)
@@ -291,94 +382,3 @@
     &.show
       display: block
 </style>
-
-<div class="drag-ghost" bind:this={dragEl}>
-  <div bind:this={dragElDiv} />
-</div>
-
-<div class="tracklist" on:dragleave={() => (dragToIndex = null)}>
-  <div class="row header" class:desc={$page.sort_desc}>
-    <div class="c index" class:sort={sortKey === 'index'} on:click={() => sortBy('index')}>
-      <span>#</span>
-    </div>
-    <div class="c name" class:sort={sortKey === 'name'} on:click={() => sortBy('name')}>
-      <span>Name</span>
-    </div>
-    <div
-      class="c playCount"
-      class:sort={sortKey === 'playCount'}
-      on:click={() => sortBy('playCount')}>
-      <span>Plays</span>
-    </div>
-    <div class="c duration" class:sort={sortKey === 'duration'} on:click={() => sortBy('duration')}>
-      <span>Time</span>
-    </div>
-    <div class="c artist" class:sort={sortKey === 'artist'} on:click={() => sortBy('artist')}>
-      <span>Artist</span>
-    </div>
-    <div
-      class="c albumName"
-      class:sort={sortKey === 'albumName'}
-      on:click={() => sortBy('albumName')}>
-      <span>Album</span>
-    </div>
-    <div class="c comments" class:sort={sortKey === 'comments'} on:click={() => sortBy('comments')}>
-      <span>Comments</span>
-    </div>
-    <div class="c genre" class:sort={sortKey === 'genre'} on:click={() => sortBy('genre')}>
-      <span>Genre</span>
-    </div>
-    <div
-      class="c dateAdded"
-      class:sort={sortKey === 'dateAdded'}
-      on:click={() => sortBy('dateAdded')}>
-      <span>Date Added</span>
-    </div>
-    <div class="c year" class:sort={sortKey === 'year'} on:click={() => sortBy('year')}>
-      <span>Year</span>
-    </div>
-  </div>
-  <VList
-    {getItem}
-    itemHeight={24}
-    {itemCount}
-    bind:this={vlist}
-    on:keydown={rowKeydown}
-    let:item={track}
-    let:index>
-    <div
-      class="row"
-      on:dblclick={() => playRow(index)}
-      on:mousedown={(e) => rowMouseDown(e, index)}
-      on:click={(e) => rowClick(e, index)}
-      on:contextmenu={(e) => onContextMenu(e, index)}
-      draggable="true"
-      on:dragstart={onDragStart}
-      on:dragover={(e) => onDragOver(e, index)}
-      on:dragend={dragEndHandler}
-      class:odd={index % 2 === 0}
-      class:selected={$selection.list[index] === true}>
-      <div class="c index">
-        {#if track.id === $playingId}
-          <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24">
-            <path d="M0 0h24v24H0z" fill="none" />
-            <path
-              d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z" />
-          </svg>
-        {:else}
-          {index + 1}
-        {/if}
-      </div>
-      <div class="c name">{track.name || ''}</div>
-      <div class="c playCount">{track.playCount || ''}</div>
-      <div class="c duration">{getDuration(track.duration || '')}</div>
-      <div class="c artist">{track.artist || ''}</div>
-      <div class="c albumName">{track.albumName || ''}</div>
-      <div class="c comments">{track.comments || ''}</div>
-      <div class="c genre">{track.genre || ''}</div>
-      <div class="c dateAdded">{formatDate(track.dateAdded)}</div>
-      <div class="c year">{track.year || ''}</div>
-    </div>
-  </VList>
-  <div class="drag-line" class:show={dragToIndex !== null} bind:this={dragLine} />
-</div>

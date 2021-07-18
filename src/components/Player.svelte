@@ -31,6 +31,48 @@
   }
 </script>
 
+<template lang="pug">
+  .player(class:stopped='{$stopped}' on:mousedown|self|preventDefault)
+    .left
+      +if('!$stopped')
+        +if('$coverSrc')
+          img.cover(alt="" src='{$coverSrc}')
+          +else
+            svg.cover(xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24')
+              path(d='M23 0l-15.996 3.585v13.04c-2.979-.589-6.004 1.671-6.004 4.154 0 2.137 1.671 3.221 3.485 3.221 2.155 0 4.512-1.528 4.515-4.638v-10.9l12-2.459v8.624c-2.975-.587-6 1.664-6 4.141 0 2.143 1.715 3.232 3.521 3.232 2.14 0 4.476-1.526 4.479-4.636v-17.364z')
+
+        .track-info
+          .name {$playingTrack.name}
+          .artist {$playingTrack.artist}
+    .middle
+      .controls(on:mousedown|preventDefault)
+        button(tabindex=-1 on:click='{previous}')
+          svg(xmlns='http://www.w3.org/2000/svg' height='24' viewBox='0 0 24 24' width='24')
+            path(d='M7 6c.55 0 1 .45 1 1v10c0 .55-.45 1-1 1s-1-.45-1-1V7c0-.55.45-1 1-1zm3.66 6.82l5.77 4.07c.66.47 1.58-.01 1.58-.82V7.93c0-.81-.91-1.28-1.58-.82l-5.77 4.07c-.57.4-.57 1.24 0 1.64z')
+
+        +if('$paused')
+          button.play(tabindex=-1 on:click='{playPause}')
+            svg(xmlns='http://www.w3.org/2000/svg' height='24' viewBox='0 0 24 24' width='24')
+              path(d='M8 6.82v10.36c0 .79.87 1.27 1.54.84l8.14-5.18c.62-.39.62-1.29 0-1.69L9.54 5.98C8.87 5.55 8 6.03 8 6.82z')
+
+          +else
+            button.pause(tabindex=-1 on:click='{playPause}')
+              svg(xmlns='http://www.w3.org/2000/svg' height='24' viewBox='0 0 24 24' width='24')
+                path(d='M8 19c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2s-2 .9-2 2v10c0 1.1.9 2 2 2zm6-12v10c0 1.1.9 2 2 2s2-.9 2-2V7c0-1.1-.9-2-2-2s-2 .9-2 2z')
+
+        button(tabindex=-1 on:click='{next}')
+          svg(xmlns='http://www.w3.org/2000/svg' height='24' viewBox='0 0 24 24' width='24')
+            path(d='M7.58 16.89l5.77-4.07c.56-.4.56-1.24 0-1.63L7.58 7.11C6.91 6.65 6 7.12 6 7.93v8.14c0 .81.91 1.28 1.58.82zM16 7v10c0 .55.45 1 1 1s1-.45 1-1V7c0-.55-.45-1-1-1s-1 .45-1 1z')
+      .time-bar
+        small.current-time {getDuration($currentTime)}
+        input.time(tabindex=-1 type='range' min=0 max='{sliderSteps}' bind:value='{sliderValue}' on:mousedown='{sliderMousedown}' on:mouseup='{sliderMouseup}')
+        small.duration {getDuration($duration)}
+    .right
+      button.queue(tabindex=-1 on:click='{toggleQueueVisibility}' class:on='{$queueVisible}')
+        svg(xmlns='http://www.w3.org/2000/svg' height='24px' viewBox='0 0 24 24' width='24px')
+          path(d='M5 10h10c.55 0 1 .45 1 1s-.45 1-1 1H5c-.55 0-1-.45-1-1s.45-1 1-1zm0-4h10c.55 0 1 .45 1 1s-.45 1-1 1H5c-.55 0-1-.45-1-1s.45-1 1-1zm0 8h6c.55 0 1 .45 1 1s-.45 1-1 1H5c-.55 0-1-.45-1-1s.45-1 1-1zm9 .88v4.23c0 .39.42.63.76.43l3.53-2.12c.32-.19.32-.66 0-.86l-3.53-2.12c-.34-.19-.76.05-.76.44z')
+</template>
+
 <style lang="sass">
   svg
     fill: var(--icon-color)
@@ -138,45 +180,3 @@
   .on svg
       fill: var(--icon-highlight-color)
 </style>
-
-<template lang="pug">
-  .player(class:stopped='{$stopped}' on:mousedown|self|preventDefault)
-    .left
-      +if('!$stopped')
-        +if('$coverSrc')
-          img.cover(alt="" src='{$coverSrc}')
-          +else
-            svg.cover(xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24')
-              path(d='M23 0l-15.996 3.585v13.04c-2.979-.589-6.004 1.671-6.004 4.154 0 2.137 1.671 3.221 3.485 3.221 2.155 0 4.512-1.528 4.515-4.638v-10.9l12-2.459v8.624c-2.975-.587-6 1.664-6 4.141 0 2.143 1.715 3.232 3.521 3.232 2.14 0 4.476-1.526 4.479-4.636v-17.364z')
-
-        .track-info
-          .name {$playingTrack.name}
-          .artist {$playingTrack.artist}
-    .middle
-      .controls(on:mousedown|preventDefault)
-        button(tabindex=-1 on:click='{previous}')
-          svg(xmlns='http://www.w3.org/2000/svg' height='24' viewBox='0 0 24 24' width='24')
-            path(d='M7 6c.55 0 1 .45 1 1v10c0 .55-.45 1-1 1s-1-.45-1-1V7c0-.55.45-1 1-1zm3.66 6.82l5.77 4.07c.66.47 1.58-.01 1.58-.82V7.93c0-.81-.91-1.28-1.58-.82l-5.77 4.07c-.57.4-.57 1.24 0 1.64z')
-
-        +if('$paused')
-          button.play(tabindex=-1 on:click='{playPause}')
-            svg(xmlns='http://www.w3.org/2000/svg' height='24' viewBox='0 0 24 24' width='24')
-              path(d='M8 6.82v10.36c0 .79.87 1.27 1.54.84l8.14-5.18c.62-.39.62-1.29 0-1.69L9.54 5.98C8.87 5.55 8 6.03 8 6.82z')
-
-          +else
-            button.pause(tabindex=-1 on:click='{playPause}')
-              svg(xmlns='http://www.w3.org/2000/svg' height='24' viewBox='0 0 24 24' width='24')
-                path(d='M8 19c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2s-2 .9-2 2v10c0 1.1.9 2 2 2zm6-12v10c0 1.1.9 2 2 2s2-.9 2-2V7c0-1.1-.9-2-2-2s-2 .9-2 2z')
-
-        button(tabindex=-1 on:click='{next}')
-          svg(xmlns='http://www.w3.org/2000/svg' height='24' viewBox='0 0 24 24' width='24')
-            path(d='M7.58 16.89l5.77-4.07c.56-.4.56-1.24 0-1.63L7.58 7.11C6.91 6.65 6 7.12 6 7.93v8.14c0 .81.91 1.28 1.58.82zM16 7v10c0 .55.45 1 1 1s1-.45 1-1V7c0-.55-.45-1-1-1s-1 .45-1 1z')
-      .time-bar
-        small.current-time {getDuration($currentTime)}
-        input.time(tabindex=-1 type='range' min=0 max='{sliderSteps}' bind:value='{sliderValue}' on:mousedown='{sliderMousedown}' on:mouseup='{sliderMouseup}')
-        small.duration {getDuration($duration)}
-    .right
-      button.queue(tabindex=-1 on:click='{toggleQueueVisibility}' class:on='{$queueVisible}')
-        svg(xmlns='http://www.w3.org/2000/svg' height='24px' viewBox='0 0 24 24' width='24px')
-          path(d='M5 10h10c.55 0 1 .45 1 1s-.45 1-1 1H5c-.55 0-1-.45-1-1s.45-1 1-1zm0-4h10c.55 0 1 .45 1 1s-.45 1-1 1H5c-.55 0-1-.45-1-1s.45-1 1-1zm0 8h6c.55 0 1 .45 1 1s-.45 1-1 1H5c-.55 0-1-.45-1-1s.45-1 1-1zm9 .88v4.23c0 .39.42.63.76.43l3.53-2.12c.32-.19.32-.66 0-.86l-3.53-2.12c-.34-.19-.76.05-.76.44z')
-</template>

@@ -23,6 +23,18 @@
   }
 </script>
 
+<template lang="pug">
+  .sidebar(on:mousedown|self|preventDefault)
+    .spacer(on:mousedown|self|preventDefault)
+    Filter
+    .items(tabindex='0' on:keydown='{handleKeydown}' bind:this='{viewport}')
+      .spacer
+      SidebarItems(trackList='{special}')
+      .spacer
+      SidebarItems(trackList='{$trackLists.root}')
+      .spacer
+</template>
+
 <style lang="sass">
   .sidebar
     width: 230px
@@ -41,15 +53,3 @@
     outline: none
     background-color: inherit
 </style>
-
-<template lang="pug">
-  .sidebar(on:mousedown|self|preventDefault)
-    .spacer(on:mousedown|self|preventDefault)
-    Filter
-    .items(tabindex='0' on:keydown='{handleKeydown}' bind:this='{viewport}')
-      .spacer
-      SidebarItems(trackList='{special}')
-      .spacer
-      SidebarItems(trackList='{$trackLists.root}')
-      .spacer
-</template>
