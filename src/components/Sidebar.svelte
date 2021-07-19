@@ -43,12 +43,14 @@
     flex-direction: column
     padding-top: var(--titlebar-height)
     background-color: var(--sidebar-bg-color)
+    // background-color: #151518
+    // background: linear-gradient(#23232a, #151519)
   .spacer
     height: 10px
   .items
     width: 100%
     height: 100%
-    font-size: 14px
+    font-size: 13px
     overflow-y: scroll
     outline: none
     background-color: inherit

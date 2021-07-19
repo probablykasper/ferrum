@@ -312,7 +312,6 @@
       height: $row-height
       font-size: 12px
       line-height: $row-height
-      border-radius: 3px
       box-sizing: border-box
       position: relative
       &.odd

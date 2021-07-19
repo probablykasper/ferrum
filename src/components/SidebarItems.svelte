@@ -1,3 +1,15 @@
+<script context="module">
+  const hue = Math.round(Math.random() * 360)
+  function getStyle(isActive) {
+    if (!isActive) return ''
+    return (
+      `--box-shadow: inset 2px 0px 0px 0px hsl(${hue}, 70%, 60%);` +
+      `--background-active: linear-gradient(90deg, hsl(${hue}, 35%, 30%) 30%, #ffffff00);` +
+      `--background-normal: linear-gradient(90deg, hsl(${hue}, 35%, 25%) 30%, #ffffff00);`
+    )
+  }
+</script>
+
 <script>
   import { trackLists, page } from '../stores/data'
   export let trackList
@@ -25,25 +37,19 @@
       .sub(class:show='{childList.show}')
         svelte:self(trackList='{childList}')
       +else()
-        .item(on:mousedown='{open(childList.id)}' class:active='{$page.id === childList.id}')
+        .item(
+          on:mousedown='{open(childList.id)}'
+          class:active='{$page.id === childList.id}'
+          style='{getStyle($page.id === childList.id)}'
+        )
           .arrow
           .text {childList.name}
 </template>
 
 <style lang="sass">
-  :global(.active)
-    // --sidebar-gradient: linear-gradient(90deg, #3f4c6b, #606c88)
-    --sidebar-gradient: linear-gradient(90deg, #1599a8b3, #0cb08ab3)
-  :global(:focus .active)
-    --sidebar-gradient: linear-gradient(90deg, #1599a8, #00c295)
-    --sidebar-gradient: linear-gradient(90deg, #038a98, #00ad75)
-    // --gradient: linear-gradient(-90deg, #606c88, #3f4c6b)
-    // --gradient: linear-gradient(-90deg, #ea7bb8, #BB377D)
-    // --gradient: linear-gradient(90deg, #2847e2, #872edc)
-    // --gradient: linear-gradient(90deg, #4C48F6, #4F7CF7)
-    // --gradient: linear-gradient(90deg, #2d44b9, #2847e2, #2d44b9)
-    // --gradient: linear-gradient(90deg, #EE6957, #F2C251)
-    // --gradient: linear-gradient(90deg, #1599a8, #00c295)
+  :global(:focus)
+    .item.active
+      background: var(--background-active)
   .item
     height: 24px
     white-space: nowrap
@@ -52,11 +58,11 @@
     position: relative
     display: flex
     align-items: center
-    border-top-right-radius: 3px
-    border-bottom-right-radius: 3px
     margin-right: 10px
+    box-sizing: border-box
     &.active
-      background: var(--sidebar-gradient)
+      box-shadow: var(--box-shadow)
+      background: var(--background-normal)
   .sub
     margin-left: calc(2px + 6px*2)
     display: none
