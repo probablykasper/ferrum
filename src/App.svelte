@@ -9,7 +9,6 @@
   import { queueVisible } from './stores/queue'
   import { iTunesImport } from './stores/window'
   import { isDev, paths, importTracks } from './stores/data'
-  import vars from './variables.json'
 
   let pageStatus = ''
   let pageStatusWarnings = ''
@@ -34,10 +33,6 @@
   onDestroy(() => {
     ipcRenderer.off('itunesImport', itunesImport)
   })
-
-  $: cssVarStyles = Object.entries(vars.cssVars)
-    .map(([key, value]) => `${key}:${value}`)
-    .join(';')
 
   let droppable = false
   function getFiles(files) {
@@ -78,7 +73,7 @@
 <template lang="pug">
   svelte:head
     title Ferrum
-  main(style='{cssVarStyles}' on:dragenter|capture='{dragEnter}')
+  main(on:dragenter|capture='{dragEnter}')
     .meat
       Sidebar
       TrackList
@@ -106,8 +101,24 @@
 </template>
 
 <style lang="sass">
+  main
+    --hue: 230
+    --tracklist-2n-bg-color: #1E1F24
+    --sidebar-bg-color: #000000
+    --player-bg-color: hsl(230deg 9% 10%)
+    --text-color: #e6e6e6
+    --drag-bg-color: rgb(30, 31, 36)
+    --drag-line-color: #0083f5
+    --empty-cover-bg-color: hsl(230,6%,18%)
+    --empty-cover-color: hsl(228,4%,28%)
+    --outline-color-disabled: #505766
+    --border-color: #333333
+    --outline-color: #344c7f
+    --icon-color: #FFFFFF
+    --icon-highlight-color: #20f39f
+    --titlebar-height: 22px
   :global(html), :global(body)
-    background-color: var(--window-bg-color)
+    background-color: #0D1115
     height: 100%
   :global(body)
     position: relative

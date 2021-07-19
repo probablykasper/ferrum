@@ -1,4 +1,4 @@
-import { writable, derived } from 'svelte/store'
+import { writable } from 'svelte/store'
 import type { Writable } from 'svelte/store'
 import quit from './quit'
 import { methods, paths } from './data'

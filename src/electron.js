@@ -7,7 +7,6 @@ const menubar = require('./electron/menubar.js')
 const shortcuts = require('./electron/shortcuts.js')
 const ipc = require('./electron/ipc.js')
 const path = require('path')
-const vars = require('./variables.json')
 
 async function errHandler(msg, error) {
   if (app.isReady()) {
@@ -55,7 +54,7 @@ app.on('ready', async () => {
       nodeIntegration: true,
       preload: path.resolve(__dirname, './electron/preload.js'),
     },
-    backgroundColor: vars.cssVars['--window-bg-color'],
+    backgroundColor: '#0D1115',
     show: false,
   })
 
@@ -82,7 +81,7 @@ app.on('ready', async () => {
     })
   })
 
-  if (is.dev) mainWindow.loadURL('http://localhost:' + vars.port)
+  if (is.dev) mainWindow.loadURL('http://localhost:' + (process.env.PORT || 8089))
   else mainWindow.loadFile(path.resolve(__dirname, '../build/index.html'))
 
   if (is.dev) mainWindow.webContents.openDevTools()

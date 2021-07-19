@@ -1,15 +1,3 @@
-<script context="module">
-  const hue = Math.round(Math.random() * 360)
-  function getStyle(isActive) {
-    if (!isActive) return ''
-    return (
-      `--box-shadow: inset 2px 0px 0px 0px hsl(${hue}, 70%, 60%);` +
-      `--background-active: linear-gradient(90deg, hsl(${hue}, 35%, 30%) 30%, #ffffff00);` +
-      `--background-normal: linear-gradient(90deg, hsl(${hue}, 35%, 25%) 30%, #ffffff00);`
-    )
-  }
-</script>
-
 <script>
   import { trackLists, page } from '../stores/data'
   export let trackList
@@ -40,7 +28,6 @@
         .item(
           on:mousedown='{open(childList.id)}'
           class:active='{$page.id === childList.id}'
-          style='{getStyle($page.id === childList.id)}'
         )
           .arrow
           .text {childList.name}
@@ -49,7 +36,7 @@
 <style lang="sass">
   :global(:focus)
     .item.active
-      background: var(--background-active)
+      background: linear-gradient(90deg, hsl(var(--hue), 40%, 30%) 30%, #ffffff00)
   .item
     height: 24px
     white-space: nowrap
@@ -61,8 +48,8 @@
     margin-right: 10px
     box-sizing: border-box
     &.active
-      box-shadow: var(--box-shadow)
-      background: var(--background-normal)
+      box-shadow: inset 2px 0px 0px 0px hsl(var(--hue), 70%, 60%)
+      background: linear-gradient(90deg, hsl(var(--hue), 35%, 25%) 30%, #ffffff00)
   .sub
     margin-left: calc(2px + 6px*2)
     display: none
