@@ -90,6 +90,21 @@ module.exports.initMenuBar = (app, mainWindow) => {
             mainWindow.webContents.send('playPause')
           },
         },
+        { type: 'separator' },
+        {
+          label: 'Volume Up',
+          accelerator: 'CommandOrControl+Up',
+          click: () => {
+            mainWindow.webContents.send('volumeUp')
+          },
+        },
+        {
+          label: 'Volume Down',
+          accelerator: 'CommandOrControl+Down',
+          click: () => {
+            mainWindow.webContents.send('volumeDown')
+          },
+        },
       ],
     },
     {

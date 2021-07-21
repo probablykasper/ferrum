@@ -2,7 +2,7 @@
   import VList from './VirtualList.svelte'
   import { page, removeFromOpenPlaylist, filter } from '../stores/data'
   import { newPlaybackInstance, playingId } from '../stores/player'
-  import { getDuration, formatDate, checkMouseShortcut } from '../scripts/helpers'
+  import { getDuration, formatDate, checkMouseShortcut, checkShortcut } from '../scripts/helpers'
   import { showTrackMenu } from '../stores/contextMenu'
   import { newSelection } from '../stores/selection'
   import { showMessageBox } from '../stores/window'
@@ -53,14 +53,14 @@
     if (e.key === 'Enter') {
       let firstIndex = selection.findFirst($selection.list) || 0
       playRow(firstIndex)
-    } else if (e.key === 'ArrowUp') {
+    } else if (checkShortcut(e, 'ArrowUp')) {
       e.preventDefault()
       const lastAdded = $selection.lastAdded
       if (lastAdded !== null && lastAdded > 0) {
         selection.clear()
         selection.add(lastAdded - 1)
       }
-    } else if (e.key === 'ArrowDown') {
+    } else if (checkShortcut(e, 'ArrowDown')) {
       e.preventDefault()
       const lastAdded = $selection.lastAdded
       if (lastAdded !== null && lastAdded + 1 < $page.length) {

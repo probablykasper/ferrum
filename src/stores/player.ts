@@ -1,5 +1,6 @@
 import { writable } from 'svelte/store'
 import type { Writable } from 'svelte/store'
+import { clamp } from '../scripts/helpers'
 import quit from './quit'
 import { methods, paths } from './data'
 import type { Track, TrackID } from './libraryTypes'
@@ -34,6 +35,33 @@ export const playingId = (() => {
 })()
 let waitingToPlay = false
 const mediaSession = navigator.mediaSession
+
+export const volume = (() => {
+  let lastVolume = 1
+  const store = writable(1)
+  audio.addEventListener('volumechange', () => {
+    store.set(audio.volume)
+  })
+  function set(value: number) {
+    lastVolume = audio.volume
+    audio.volume = clamp(0, 1, value)
+    store.set(clamp(0, 1, value))
+  }
+  return {
+    set,
+    toggle() {
+      if (audio.volume > 0) set(0)
+      else set(lastVolume || 1)
+    },
+    subscribe: store.subscribe,
+  }
+})()
+ipcRenderer.on('volumeUp', () => {
+  volume.set(audio.volume + 0.05)
+})
+ipcRenderer.on('volumeDown', () => {
+  volume.set(audio.volume - 0.05)
+})
 
 export const coverSrc = (() => {
   const { set, subscribe }: Writable<string | null> = writable(null)
@@ -226,7 +254,9 @@ if (navigator.mediaSession) {
     seek(audio.currentTime + (details.seekOffset || 5))
   })
   mediaSession.setActionHandler('seekto', (details) => {
-    seek(details.seekTime, details.fastSeek)
+    if (details.seekTime && details.fastSeek) {
+      seek(details.seekTime, details.fastSeek)
+    }
   })
   mediaSession.setActionHandler('previoustrack', previous)
   mediaSession.setActionHandler('nexttrack', next)

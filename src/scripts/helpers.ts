@@ -64,3 +64,9 @@ export function checkShortcut(e: KeyboardEvent, key: string, options: ShortcutOp
 export function checkMouseShortcut(e: MouseEvent, options: ShortcutOptions = {}) {
   return checkModifiers(e, options)
 }
+
+export function clamp(min: number, max: number, value: number) {
+  if (value < 0) return min
+  if (value > 1) return max
+  return value
+}

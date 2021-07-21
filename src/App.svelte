@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { onDestroy } from 'svelte'
   import { fade } from 'svelte/transition'
   import TrackList from './components/TrackList.svelte'
@@ -17,10 +17,10 @@
   async function itunesImport() {
     const result = await iTunesImport(
       paths,
-      (status) => {
+      (status: any) => {
         pageStatus = status
       },
-      (warning) => {
+      (warning: any) => {
         console.warn(warning)
         pageStatusWarnings += warning + '\n'
       }
@@ -35,33 +35,34 @@
   })
 
   let droppable = false
-  function getFiles(files) {
+  function getFiles(e: DragEvent): File[] {
+    if (!e.dataTransfer) return []
     const allowedMimes = ['audio/mpeg']
     let validFiles = []
-    for (const file of files) {
+    for (const file of e.dataTransfer.files) {
       if (allowedMimes.includes(file.type)) validFiles.push(file)
-      else return
+      else return []
     }
-    if (validFiles.length > 0) return validFiles
+    return validFiles
   }
-  function dragEnter(e) {
+  function dragEnter(e: DragEvent) {
     e.preventDefault()
-    const files = getFiles(e.dataTransfer.items)
+    const files = getFiles(e)
     droppable = !!files
   }
-  function dragOver(e) {
+  function dragOver(e: DragEvent) {
     e.preventDefault()
-    const files = getFiles(e.dataTransfer.items)
+    const files = getFiles(e)
     droppable = !!files
   }
-  function dragLeave(e) {
+  function dragLeave(e: DragEvent) {
     e.preventDefault()
     droppable = false
   }
-  function drop(e) {
+  function drop(e: DragEvent) {
     e.preventDefault()
     droppable = false
-    const files = getFiles(e.dataTransfer.files)
+    const files = getFiles(e)
     const paths = []
     for (const file of files) {
       paths.push(file.path)

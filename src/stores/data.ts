@@ -46,9 +46,6 @@ export type Data = {
   sort: (key: string, keep_filter: boolean) => void
   move_tracks: (indexes: number[], to_index: number) => { from: number; to: number }
 }
-// const data: Data = grabErr(() => {
-//   return addon.load_data(isDev)
-// })
 
 function runWrapped<T>(cb: () => T): T {
   try {
@@ -112,7 +109,7 @@ export const paths = (() => {
   return call((data) => data.get_paths())
 })()
 
-export async function importTracks(paths: [string]) {
+export async function importTracks(paths: string[]) {
   let errState = null
   for (const path of paths) {
     try {
