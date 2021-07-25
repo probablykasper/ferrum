@@ -35,25 +35,33 @@
   })
 
   let droppable = false
-  function getFiles(e: DragEvent): File[] {
+  const allowedMimes = ['audio/mpeg']
+  function getFilePaths(e: DragEvent): string[] {
     if (!e.dataTransfer) return []
-    const allowedMimes = ['audio/mpeg']
-    let validFiles = []
+    let validPaths = []
     for (const file of e.dataTransfer.files) {
-      if (allowedMimes.includes(file.type)) validFiles.push(file)
-      else return []
+      if (allowedMimes.includes(file.type)) {
+        validPaths.push(file.path)
+      }
     }
-    return validFiles
+    return validPaths
+  }
+  function hasFiles(e: DragEvent): boolean {
+    if (!e.dataTransfer) return false
+    for (const item of e.dataTransfer.items) {
+      if (item.kind === 'file' && allowedMimes.includes(item.type)) {
+        return true
+      }
+    }
+    return false
   }
   function dragEnter(e: DragEvent) {
     e.preventDefault()
-    const files = getFiles(e)
-    droppable = !!files
+    droppable = hasFiles(e)
   }
   function dragOver(e: DragEvent) {
     e.preventDefault()
-    const files = getFiles(e)
-    droppable = !!files
+    droppable = hasFiles(e)
   }
   function dragLeave(e: DragEvent) {
     e.preventDefault()
@@ -62,10 +70,10 @@
   function drop(e: DragEvent) {
     e.preventDefault()
     droppable = false
-    const files = getFiles(e)
+    const validPaths = getFilePaths(e)
     const paths = []
-    for (const file of files) {
-      paths.push(file.path)
+    for (const path of validPaths) {
+      paths.push(path)
     }
     importTracks(paths)
   }
