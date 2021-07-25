@@ -356,7 +356,7 @@ fn import_mp3(data: &Data, track_path: &Path) -> Track {
     name: title.to_string(),
     importedFrom: None,
     originalId: None,
-    artist: artist.map(|s| s.to_owned()),
+    artist: artist.unwrap_or_default().to_string(),
     composer: get_frame_text(&tag, "TCOM"),
     sortName: get_frame_text(&tag, "TSOT"),
     sortArtist: get_frame_text(&tag, "TSOP"),

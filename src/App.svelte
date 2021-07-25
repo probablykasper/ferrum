@@ -115,7 +115,7 @@
               pre {pageStatusErr}
     +if('droppable')
       //- if the overlay is always visible, it's not possible to scroll while dragging tracks
-      .drag-overlay(in:fade='{{ duration: 100 }}')
+      .drag-overlay(transition:fade='{{ duration: 100 }}')
         h1 Drop files to import
       .dropzone(on:dragleave='{dragLeave}' on:drop='{drop}' on:dragover='{dragOver}')
     Titlebar(dev='{isDev}')

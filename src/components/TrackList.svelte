@@ -262,7 +262,7 @@
       <div class="c name">{track.name || ''}</div>
       <div class="c playCount">{track.playCount || ''}</div>
       <div class="c duration">{getDuration(track.duration || '')}</div>
-      <div class="c artist">{track.artist || ''}</div>
+      <div class="c artist">{track.artist}</div>
       <div class="c albumName">{track.albumName || ''}</div>
       <div class="c comments">{track.comments || ''}</div>
       <div class="c genre">{track.genre || ''}</div>

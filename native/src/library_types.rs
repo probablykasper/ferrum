@@ -44,8 +44,8 @@ pub struct Track {
   /// Imported ID, like iTunes Persistent ID:
   #[serde(default, skip_serializing_if = "Option::is_none")]
   pub originalId: Option<String>,
-  #[serde(default, skip_serializing_if = "Option::is_none")]
-  pub artist: Option<String>,
+  #[serde(default)]
+  pub artist: String,
   #[serde(default, skip_serializing_if = "Option::is_none")]
   pub composer: Option<String>,
   #[serde(default, skip_serializing_if = "Option::is_none")]

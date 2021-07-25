@@ -12,7 +12,7 @@ fn get_field_str<'a>(track: &'a Track, sort_key: &str) -> Option<&'a String> {
     "name" => Some(&track.name),
     "importedFrom" => track.importedFrom.as_ref(),
     "originalId" => track.originalId.as_ref(),
-    "artist" => track.artist.as_ref(),
+    "artist" => Some(&track.artist),
     "composer" => track.composer.as_ref(),
     "sortName" => track.sortName.as_ref(),
     "sortArtist" => track.sortArtist.as_ref(),

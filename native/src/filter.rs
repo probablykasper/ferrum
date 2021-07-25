@@ -75,7 +75,7 @@ fn filter_keyword(data: &Data, ids: &Vec<TrackID>, keyword: &str) -> Vec<TrackID
   for id in ids {
     let track = tracks.get(id).expect("Track ID not found");
     let is_match = find_match(&track.name, &keyword)
-      || find_match_opt(&track.artist, &keyword)
+      || find_match(&track.artist, &keyword)
       || find_match_opt(&track.albumName, &keyword)
       || find_match_opt(&track.comments, &keyword)
       || find_match_opt(&track.genre, &keyword);
