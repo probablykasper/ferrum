@@ -4,17 +4,9 @@ use crate::page;
 use crate::sort::sort;
 use atomicwrites::{AllowOverwrite, AtomicFile};
 use rand::Rng;
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 use std::io::{Error, ErrorKind, Write};
 use std::time::Instant;
-
-#[derive(Serialize, Deserialize)]
-pub struct PageInfo {
-  pub id: TrackListID,
-  pub sort_key: String,
-  pub sort_desc: bool,
-  pub length: usize,
-}
 
 pub struct Data {
   pub paths: Paths,

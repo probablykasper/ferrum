@@ -6,6 +6,8 @@ Ferrum is a music library client.
 
 ### ToDo
 
+- Playlist covers
+- Metadata editing
 - Make removing from playlists work when filter or sorting is used (rn, if you remove the first shown track, it would remove the first track in the playlist)
 - Characters like É in title is not imported right
 - Write tags to files:

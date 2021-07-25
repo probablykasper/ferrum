@@ -1,4 +1,4 @@
-use crate::data::{Data, PageInfo};
+use crate::data::Data;
 use crate::data_js::get_data;
 use crate::js::{arg_to_bool, arg_to_number, arg_to_number_vector, arg_to_string, nerr, nr};
 use crate::library::{get_track_field_type, TrackField};
@@ -114,13 +114,20 @@ pub fn get_track_ids(data: &Data) -> Result<Vec<TrackID>, &'static str> {
 #[js_function(0)]
 pub fn get_page_info(ctx: CallContext) -> NResult<JsUnknown> {
   let data: &mut Data = get_data(&ctx)?;
-  let info = PageInfo {
-    id: data.open_playlist_id.clone(),
-    sort_key: data.sort_key.clone(),
-    sort_desc: data.sort_desc,
-    length: get_page_tracks(data).len(),
-  };
-  let js = ctx.env.to_js_value(&info)?;
+  let tracklist = data
+    .library
+    .trackLists
+    .get_mut(&data.open_playlist_id)
+    .ok_or(nerr!("Playlist ID not found"))?;
+
+  let v = serde_json::json!({
+    "id": data.open_playlist_id,
+    "tracklist": tracklist,
+    "sort_key": data.sort_key,
+    "sort_desc": data.sort_desc,
+    "length": get_page_tracks(data).len(),
+  });
+  let js = ctx.env.to_js_value(&v)?;
   return Ok(js);
 }
 

@@ -184,7 +184,14 @@
 </div>
 
 <div class="tracklist" on:dragleave={() => (dragToIndex = null)}>
-  <div class="row header" class:desc={$page.sort_desc}>
+  <div class="header">
+    <h3 class="title">{$page.tracklist.name}</h3>
+    <div class="info">{$page.length} songs</div>
+    {#if 'description' in $page.tracklist}
+      <div class="description">{$page.tracklist.description}</div>
+    {/if}
+  </div>
+  <div class="row table-header" class:desc={$page.sort_desc}>
     <div class="c index" class:sort={sortKey === 'index'} on:click={() => sortBy('index')}>
       <span>#</span>
     </div>
@@ -277,6 +284,19 @@
   :global(:focus .selected)
     --tracklist-gradient: linear-gradient(90deg, hsl(212, 80%, 45%), hsl(275, 80%, 45%))
     --tracklist-gradient: linear-gradient(90deg, #2d44b9, #2847e2, #2d44b9)
+  .header
+    margin: 20px
+    margin-top: 0px
+    .title
+      margin: 0px
+      font-weight: 500
+    .info
+      font-size: 13px
+      opacity: 0.7
+    .description
+      margin-top: 10px
+      font-size: 14px
+      opacity: 0.7
   .tracklist
     display: flex
     padding-top: var(--titlebar-height)
@@ -285,7 +305,7 @@
     width: 100%
     background-color: hsl(240, 20%, 7%)
     overflow: hidden
-    .header
+    .table-header
       .c
         overflow: visible
         *

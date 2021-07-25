@@ -1,5 +1,11 @@
 # Changelog
 
+## Next
+- Add volume controls
+- Add playlist header
+- Glowy fancy sidebar playlist highlight
+- Improve scrolling performance
+
 ## 0.7.0 - 2021 May 14
 - Add queue panel
 - Add multi-selection support

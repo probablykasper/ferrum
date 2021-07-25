@@ -3,6 +3,7 @@ import type {
   MsSinceUnixEpoch,
   Track,
   TrackID,
+  TrackList,
   TrackListID,
   TrackListsHashMap,
 } from './libraryTypes'
@@ -10,6 +11,7 @@ import { showMessageBox, addon } from './window'
 
 type PageInfo = {
   id: TrackListID
+  tracklist: TrackList
   sort_key: string
   sort_desc: boolean
   length: number
@@ -175,12 +177,7 @@ export const filter = (() => {
 export const page = (() => {
   function get() {
     const info = call((data) => data.get_page_info())
-    return {
-      id: info.id,
-      length: info.length,
-      sort_key: info.sort_key,
-      sort_desc: info.sort_desc,
-    }
+    return info
   }
 
   const { subscribe, set, update } = writable(get())
