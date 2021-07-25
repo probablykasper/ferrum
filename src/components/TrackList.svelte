@@ -117,15 +117,9 @@
       e.dataTransfer.setData('ferrumtracks', '')
     }
   }
-  onMount(() => {
-    function dragOverHandler(e: DragEvent) {
-      if (dragging) {
-        e.preventDefault()
-      }
-    }
-    document.addEventListener('dragover', dragOverHandler)
-    return () => document.removeEventListener('dragover', dragOverHandler)
-  })
+  function globalDragOverHandler(e: DragEvent) {
+    if (dragging) e.preventDefault()
+  }
   let dragToIndex: null | number = null
   function onDragOver(e: DragEvent, index: number) {
     if (!$page.sort_desc || $page.sort_key !== 'index' || $filter) {
@@ -178,6 +172,8 @@
     selection.clear()
   })
 </script>
+
+<svelte:window on:dragover={globalDragOverHandler} />
 
 <div class="drag-ghost" bind:this={dragEl}>
   <div bind:this={dragElDiv} />

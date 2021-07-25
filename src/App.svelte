@@ -90,10 +90,10 @@
 </script>
 
 <template lang="pug">
-  svelte:window(on:keydown='{keydown}')
+  svelte:window(on:keydown='{keydown}' on:dragenter|capture='{dragEnter}')
   svelte:head
     title Ferrum
-  main(on:dragenter|capture='{dragEnter}')
+  main
     .meat
       Sidebar
       TrackList
@@ -115,8 +115,9 @@
               pre {pageStatusErr}
     +if('droppable')
       //- if the overlay is always visible, it's not possible to scroll while dragging tracks
-      .drag-overlay(on:dragleave='{dragLeave}' on:drop='{drop}' on:dragover='{dragOver}' in:fade='{{ duration: 100 }}')
+      .drag-overlay(in:fade='{{ duration: 100 }}')
         h1 Drop files to import
+      .dropzone(on:dragleave='{dragLeave}' on:drop='{drop}' on:dragover='{dragOver}')
     Titlebar(dev='{isDev}')
 </template>
 
@@ -145,21 +146,20 @@
     width: 100%
     margin: 0
     box-sizing: border-box
-  .drag-overlay
-    opacity: 1
+  :global(h1), :global(h2), :global(h3)
+    font-weight: 400
+  .dropzone, .drag-overlay
     position: fixed
     width: 100%
     height: 100%
     top: 0px
     left: 0px
-    background-color: rgba(#10161e, 0.9)
-    transition: all 100ms ease-in-out
+  .drag-overlay
     display: flex
     align-items: center
     justify-content: center
-    display: flex
-  :global(h1), :global(h2), :global(h3)
-    font-weight: 400
+    background-color: rgba(#10161e, 0.9)
+    transition: all 100ms ease-in-out
 
   main
     height: 100%
