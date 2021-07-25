@@ -225,13 +225,6 @@ export function previous() {
   }
 }
 
-document.addEventListener('keydown', (e) => {
-  let el = e.target as HTMLAudioElement
-  if (el && el.tagName === 'INPUT') return
-  if (el && el.tagName === 'TEXTAREA') return
-  if (e.key === ' ') playPause()
-})
-
 export function seek(to: number, fastSeek: boolean = false) {
   const newTime = Math.min(to, audio.duration || 0)
   if (fastSeek && audio.fastSeek) {

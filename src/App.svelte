@@ -9,6 +9,7 @@
   import { queueVisible } from './stores/queue'
   import { iTunesImport } from './stores/window'
   import { isDev, paths, importTracks } from './stores/data'
+  import { playPause } from './stores/player'
 
   let pageStatus = ''
   let pageStatusWarnings = ''
@@ -77,9 +78,19 @@
     }
     importTracks(paths)
   }
+  function keydown(e: KeyboardEvent) {
+    let el = e.target as HTMLAudioElement
+    if (el && el.tagName !== 'INPUT' && el.tagName !== 'TEXTAREA') {
+      if (e.key === ' ') {
+        e.preventDefault()
+        playPause()
+      }
+    }
+  }
 </script>
 
 <template lang="pug">
+  svelte:window(on:keydown='{keydown}')
   svelte:head
     title Ferrum
   main(on:dragenter|capture='{dragEnter}')

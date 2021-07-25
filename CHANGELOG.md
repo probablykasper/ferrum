@@ -5,6 +5,7 @@
 - Add playlist header
 - Glowy fancy sidebar playlist highlight
 - Improve scrolling performance
+- Make `space` shortcut work more often
 
 ## 0.7.0 - 2021 May 14
 - Add queue panel

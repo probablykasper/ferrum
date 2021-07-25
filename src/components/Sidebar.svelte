@@ -7,12 +7,6 @@
   }
   let viewport: HTMLDivElement
   function handleKeydown(e: KeyboardEvent) {
-    if (e.key === ' ') {
-      let el = e.target as HTMLDivElement
-      if (el && el.tagName !== 'INPUT') e.preventDefault()
-      return
-    }
-
     let prevent = true
     if (e.key == 'Home') viewport.scrollTop = 0
     else if (e.key == 'End') viewport.scrollTop = viewport.scrollHeight

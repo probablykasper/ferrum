@@ -23,8 +23,6 @@
   })
 
   function keydown(e: KeyboardEvent) {
-    if (e.key === ' ') return e.preventDefault()
-
     let prevent = true
     if (e.key === 'Home') viewport.scrollTop = 0
     else if (e.key === 'End') viewport.scrollTop = viewport.scrollHeight
@@ -34,7 +32,7 @@
     if (prevent) e.preventDefault()
   }
 
-  const buffer = 0
+  const buffer = 5
   function getStartIndex(scrollTop: number, itemHeight: number) {
     let topPixel = scrollTop
     let index = Math.floor(topPixel / itemHeight) - buffer
