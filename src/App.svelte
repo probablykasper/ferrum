@@ -125,18 +125,20 @@
 
 <style lang="sass">
   main
-    --hue: 230
-    --tracklist-2n-bg-color: #1E1F24
+    --bg-1: #121217
+    --bg-2: #1E1F24
+    --bg-3: #242529
     --sidebar-bg-color: #000000
-    --player-bg-color: hsl(230deg 9% 10%)
+    --player-bg-color: #17181c
     --text-color: #e6e6e6
-    --drag-bg-color: rgb(30, 31, 36)
+    --drag-bg-color: #1e1f24
     --drag-line-color: #0083f5
-    --empty-cover-bg-color: hsl(230,6%,18%)
-    --empty-cover-color: hsl(228,4%,28%)
+    --empty-cover-bg-color: #2b2c31
+    --empty-cover-color: #45464a
     --outline-color-disabled: #505766
     --border-color: #333333
-    --outline-color: #344c7f
+    --accent-1: #2e5be0
+    --accent-2: #103fcb
     --icon-color: #FFFFFF
     --icon-highlight-color: #20f39f
     --titlebar-height: 22px

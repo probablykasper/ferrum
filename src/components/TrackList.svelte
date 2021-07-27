@@ -314,7 +314,7 @@
           {index + 1}
         {/if}
       </div>
-      <div class="c name">{track.name || ''}</div>
+      <div class="c name">{track.name}</div>
       <div class="c playCount">{track.playCount || ''}</div>
       <div class="c duration">{getDuration(track.duration || '')}</div>
       <div class="c artist">{track.artist}</div>
@@ -354,7 +354,7 @@
     flex-direction: column
     min-width: 0px
     width: 100%
-    background-color: hsl(240, 20%, 7%)
+    background-color: var(--bg-1)
     overflow: hidden
     .table-header
       .c
@@ -380,7 +380,7 @@
       box-sizing: border-box
       position: relative
       &.odd
-        background-color: var(--tracklist-2n-bg-color)
+        background-color: var(--bg-2)
       &.selected
         background: var(--tracklist-gradient)
       .c

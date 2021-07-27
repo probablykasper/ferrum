@@ -69,7 +69,7 @@
         input.time(tabindex=-1 type='range' min=0 max='{sliderSteps}' bind:value='{sliderValue}' on:mousedown='{sliderMousedown}' on:mouseup='{sliderMouseup}')
         small.duration {getDuration($duration)}
     .right
-      button.volume-icon(on:click='{volume.toggle}')
+      button.volume-icon(tabindex=-1 on:click='{volume.toggle}')
         +if('$volume > 0.5')
           svg.high(xmlns='http://www.w3.org/2000/svg', height='24px', viewbox='0 0 24 24', width='24px', fill='#000000')
             path(d='M3 10v4c0 .55.45 1 1 1h3l3.29 3.29c.63.63 1.71.18 1.71-.71V6.41c0-.89-1.08-1.34-1.71-.71L7 9H4c-.55 0-1 .45-1 1zm13.5 2c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 4.45v.2c0 .38.25.71.6.85C17.18 6.53 19 9.06 19 12s-1.82 5.47-4.4 6.5c-.36.14-.6.47-.6.85v.2c0 .63.63 1.07 1.21.85C18.6 19.11 21 15.84 21 12s-2.4-7.11-5.79-8.4c-.58-.23-1.21.22-1.21.85z')
@@ -79,7 +79,7 @@
           +else
             svg.mute(xmlns='http://www.w3.org/2000/svg', height='24px', viewbox='0 0 24 24', width='24px', fill='#000000')
               path(d='M7 10v4c0 .55.45 1 1 1h3l3.29 3.29c.63.63 1.71.18 1.71-.71V6.41c0-.89-1.08-1.34-1.71-.71L11 9H8c-.55 0-1 .45-1 1z')
-      input.volume(type='range' min=0 max=1 step=0.01 bind:value='{$volume}')
+      input.volume(tabindex=-1 type='range' min=0 max=1 step=0.01 bind:value='{$volume}')
       button.queue(tabindex=-1 on:click='{toggleQueueVisibility}' class:on='{$queueVisible}')
         svg(xmlns='http://www.w3.org/2000/svg' height='24px' viewBox='0 0 24 24' width='24px')
           path(d='M5 10h10c.55 0 1 .45 1 1s-.45 1-1 1H5c-.55 0-1-.45-1-1s.45-1 1-1zm0-4h10c.55 0 1 .45 1 1s-.45 1-1 1H5c-.55 0-1-.45-1-1s.45-1 1-1zm0 8h6c.55 0 1 .45 1 1s-.45 1-1 1H5c-.55 0-1-.45-1-1s.45-1 1-1zm9 .88v4.23c0 .39.42.63.76.43l3.53-2.12c.32-.19.32-.66 0-.86l-3.53-2.12c-.34-.19-.76.05-.76.44z')

@@ -30,8 +30,8 @@
   let comments = ''
   track.subscribe((track) => {
     if (track) {
-      name = track.name || ''
-      artist = track.artist || ''
+      name = track.name
+      artist = track.artist
       album = track.albumName || ''
       albumArtist = track.albumArtist || ''
       composer = track.composer || ''
@@ -214,7 +214,7 @@
       width: 80px
       flex-grow: 0
     &:focus
-      outline: 2px solid #2e5be0
+      outline: 2px solid var(--accent-1)
       outline-offset: -1px
   p
     padding: 3px 0px
@@ -237,8 +237,8 @@
   button
     color: #ffffff
     height: 32px
-    background-color: #103fcb
-    box-shadow: 0px 0px 2px 0px #103fcb
+    background-color: var(--accent-2)
+    box-shadow: 0px 0px 2px 0px var(--accent-2)
     border: 0px solid transparent
     margin: 2px
     margin-left: 10px

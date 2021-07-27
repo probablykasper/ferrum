@@ -33,11 +33,11 @@ export type Track = {
   file: string
   dateModified: MsSinceUnixEpoch
   dateAdded: MsSinceUnixEpoch
-  name?: string
+  name: string
   importedFrom?: string
   /** Imported ID, like iTunes Persistent ID */
   originalId?: string
-  artist?: string
+  artist: string
   composer?: string
   sortName?: string
   sortArtist?: string

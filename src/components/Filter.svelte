@@ -21,17 +21,16 @@
     display: block
     width: calc(100% - 15px*2)
     margin: auto
-    transition: border 150ms cubic-bezier(0.0, 0.0, 0.2, 1)
     font-family: inherit
-    padding: 3px 12px
+    padding: 4px 12px
     box-sizing: border-box
     color: var(--text-color)
-    background-color: rgba(#ffffff, 0.15)
+    background-color: var(--bg-3)
     border-radius: 3px
     outline: none
-    border: 3px solid transparent
+    border: 2px solid transparent
     &.on:focus
-      border: 3px solid var(--outline-color)
+      border: 2px solid var(--accent-1)
     &.on
-      border: 3px solid var(--outline-color-disabled)
+      border: 2px solid var(--outline-color-disabled)
 </style>

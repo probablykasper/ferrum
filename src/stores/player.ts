@@ -124,8 +124,8 @@ function startPlayingId(id: TrackID) {
   playingId.set(id)
   if (mediaSession) {
     mediaSession.metadata = new MediaMetadata({
-      title: track.name || '',
-      artist: track.artist || '',
+      title: track.name,
+      artist: track.artist,
       album: track.albumName || '',
       // artwork: [{ src: 'podcast.jpg' }],
     })

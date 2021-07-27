@@ -34,9 +34,10 @@
 </template>
 
 <style lang="sass">
+  $hue: 230
   :global(:focus)
     .item.active
-      background: linear-gradient(90deg, hsl(var(--hue), 40%, 30%) 30%, #ffffff00)
+      background: linear-gradient(90deg, hsl($hue, 40%, 30%) 30%, #ffffff00)
   .item
     height: 24px
     white-space: nowrap
@@ -48,8 +49,8 @@
     margin-right: 10px
     box-sizing: border-box
     &.active
-      box-shadow: inset 2px 0px 0px 0px hsl(var(--hue), 70%, 60%)
-      background: linear-gradient(90deg, hsl(var(--hue), 35%, 25%) 30%, #ffffff00)
+      box-shadow: inset 2px 0px 0px 0px hsl($hue, 70%, 60%)
+      background: linear-gradient(90deg, hsl($hue, 35%, 25%) 30%, #ffffff00)
   .sub
     margin-left: calc(2px + 6px*2)
     display: none
