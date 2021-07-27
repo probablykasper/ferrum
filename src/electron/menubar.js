@@ -64,7 +64,15 @@ module.exports.initMenuBar = (app, mainWindow) => {
     },
     {
       label: 'Song',
-      submenu: [{ label: 'TBA' }],
+      submenu: [
+        {
+          label: 'Get Info',
+          accelerator: 'CommandOrControl+I',
+          click: () => {
+            mainWindow.webContents.send('getInfo')
+          },
+        },
+      ],
     },
     {
       label: 'View',

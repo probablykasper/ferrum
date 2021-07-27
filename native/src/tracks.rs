@@ -11,6 +11,7 @@ use napi::{
   CallContext, Env, JsArrayBuffer, JsObject, JsUndefined, JsUnknown, Result as NResult, Task,
 };
 use napi_derive::js_function;
+use serde::{Deserialize, Serialize};
 use std::fs;
 use std::io::Write;
 use std::path::{Path, PathBuf};
@@ -177,8 +178,8 @@ fn generate_filename(dest_dir: &Path, artist: &str, title: &str, ext: &str) -> S
   let beginning = artist.to_owned() + " - " + title;
   let beginning = sanitize_filename(&beginning);
 
-  let mut file_num: u32 = 0;
-  let mut filename = beginning.clone() + ext;
+  let mut file_num: u32 = 1;
+  let mut filename = beginning.clone() + "." + ext;
   for i in 0..9999 {
     if i == 1000 {
       panic!("Already got 500 files with that artist and title")
@@ -186,7 +187,7 @@ fn generate_filename(dest_dir: &Path, artist: &str, title: &str, ext: &str) -> S
     let full_path = dest_dir.join(&filename);
     if full_path.exists() {
       file_num += 1;
-      filename = beginning.clone() + " " + file_num.to_string().as_str() + ext;
+      filename = beginning.clone() + " " + file_num.to_string().as_str() + "." + ext;
     } else {
       break;
     }
@@ -199,11 +200,8 @@ pub fn import(ctx: CallContext) -> NResult<JsUndefined> {
   let data: &mut Data = get_data(&ctx)?;
   let track_path_str = arg_to_string(&ctx, 0)?;
   let path = Path::new(&track_path_str);
-  let ext = match path.extension() {
-    Some(os_str) => os_str.to_str().expect("Unable to read file extension"),
-    None => panic!("No file extension found"),
-  };
-  let track = match ext {
+  let ext = path.extension().unwrap_or_default().to_string_lossy();
+  let track = match ext.as_ref() {
     "mp3" => import_mp3(&data, &path),
     _ => panic!("Unsupported file extension: {}", ext),
   };
@@ -293,15 +291,15 @@ fn import_mp3(data: &Data, track_path: &Path) -> Track {
   let artist = tag.artist();
 
   let tracks_dir = &data.paths.tracks_dir;
-  let filename = generate_filename(&tracks_dir, artist.unwrap_or(""), &title, ".mp3");
+  let filename = generate_filename(&tracks_dir, artist.unwrap_or(""), &title, "mp3");
   let dest_path = tracks_dir.join(&filename);
 
   let mut artwork_path = None;
   let mut artwork_data = None;
   for picture in tag.pictures() {
     let ext = match picture.mime_type.as_str() {
-      "image/jpeg" => ".jpg",
-      "image/png" => ".png",
+      "image/jpeg" => "jpg",
+      "image/png" => "png",
       _ => continue,
     };
     match picture.picture_type {
@@ -310,7 +308,7 @@ fn import_mp3(data: &Data, track_path: &Path) -> Track {
       id3::frame::PictureType::CoverFront => {}
       _ => continue,
     }
-    let artwork_filename = filename.to_owned() + ext;
+    let artwork_filename = filename.to_owned() + "." + ext;
     let artwork_path_x = data.paths.artworks_dir.join(artwork_filename);
     match Path::exists(&artwork_path_x) {
       true => panic!(
@@ -392,4 +390,129 @@ fn import_mp3(data: &Data, track_path: &Path) -> Track {
     volume: None,
   };
   return track;
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+struct TrackMD {
+  name: String,
+  artist: String,
+  album: String,
+  genre: String,
+  year: String,
+}
+
+fn str_to_option(s: String) -> Option<String> {
+  match s.as_str() {
+    "" => None,
+    _ => Some(s),
+  }
+}
+
+#[js_function(2)]
+pub fn update_track_info(ctx: CallContext) -> NResult<JsUndefined> {
+  let data: &mut Data = get_data(&ctx)?;
+  let track = id_arg_to_track(&ctx, 0)?;
+  let new_info: TrackMD = serde_json::from_str(&arg_to_string(&ctx, 1)?)?;
+  let old_path_str = data.paths.tracks_dir.join(&track.file);
+  let old_path = Path::new(&old_path_str);
+  if !old_path.exists() {
+    panic!("File does not exist: {}", track.file);
+  }
+  let ext = old_path.extension().unwrap_or_default().to_string_lossy();
+
+  let year: Option<i32> = match &*new_info.year {
+    "" => None,
+    value => Some(value.parse().expect("Invalid year")),
+  };
+  println!("Y# {:?}", year);
+
+  match ext.as_ref() {
+    "mp3" => {
+      let mut tag = match id3::Tag::read_from_path(&old_path) {
+        Ok(tag) => tag,
+        Err(_) => id3::Tag::new(),
+      };
+      match &*new_info.name {
+        "" => tag.remove_title(),
+        value => tag.set_title(value),
+      };
+      match &*new_info.artist {
+        "" => tag.remove_artist(),
+        value => tag.set_artist(value),
+      };
+      match &*new_info.album {
+        "" => tag.remove_album(),
+        value => tag.set_album(value),
+      };
+      match &*new_info.genre {
+        "" => tag.remove_genre(),
+        value => tag.set_genre(value),
+      };
+      match year {
+        None => tag.remove_year(),
+        Some(value) => tag.set_year(value),
+      };
+
+      match tag.write_to_path(old_path, id3::Version::Id3v24) {
+        Ok(_) => {}
+        Err(e) => panic!("Unable to tag file: {}", e.description),
+      }
+    }
+    "m4a" => {
+      let mut tag = match mp4ameta::Tag::read_from_path(&old_path) {
+        Ok(tag) => tag,
+        Err(_) => panic!("No m4a tags found in file. Auto creating m4a tags is not yet supported"),
+      };
+      match &*new_info.name {
+        "" => tag.remove_title(),
+        value => tag.set_title(value),
+      };
+      match &*new_info.artist {
+        "" => tag.remove_artists(),
+        value => tag.set_artist(value),
+      };
+      match &*new_info.album {
+        "" => tag.remove_album(),
+        value => tag.set_album(value),
+      };
+      match &*new_info.genre {
+        "" => tag.remove_genres(),
+        value => tag.set_genre(value),
+      };
+      match year {
+        None => tag.remove_year(),
+        Some(value) => tag.set_year(value.to_string()),
+      };
+
+      match tag.write_to_path(old_path) {
+        Ok(_) => (),
+        Err(e) => panic!("Unable to tag file: {}", e.description),
+      }
+    }
+    _ => panic!("Unsupported file extension: {}", ext),
+  };
+
+  if new_info.name != track.name || new_info.artist != track.artist {
+    let new_filename = generate_filename(
+      &data.paths.tracks_dir,
+      &new_info.artist,
+      &new_info.name,
+      ext.as_ref(),
+    );
+    let new_path_str = data.paths.tracks_dir.join(&new_filename);
+    let new_path = Path::new(&new_path_str);
+    match fs::rename(old_path, new_path) {
+      Ok(_) => {
+        track.file = new_filename;
+      }
+      Err(_) => {}
+    }
+  }
+
+  track.name = new_info.name.clone();
+  track.artist = new_info.artist.clone();
+  track.albumName = str_to_option(new_info.album);
+  track.genre = str_to_option(new_info.genre);
+
+  return ctx.env.get_undefined();
 }

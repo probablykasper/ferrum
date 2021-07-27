@@ -1,12 +1,64 @@
 <script lang="ts">
   import VList from './VirtualList.svelte'
-  import { page, removeFromOpenPlaylist, filter } from '../stores/data'
+  import {
+    page,
+    softRefreshPage,
+    removeFromOpenPlaylist,
+    filter,
+    trackLists as trackListsStore,
+    addTracksToPlaylist,
+  } from '../stores/data'
   import { newPlaybackInstance, playingId } from '../stores/player'
-  import { getDuration, formatDate, checkMouseShortcut, checkShortcut } from '../scripts/helpers'
-  import { showTrackMenu } from '../stores/contextMenu'
+  import {
+    getDuration,
+    formatDate,
+    checkMouseShortcut,
+    checkShortcut,
+    flattenChildLists,
+  } from '../scripts/helpers'
   import { newSelection } from '../stores/selection'
   import { showMessageBox } from '../stores/window'
-  import { onMount } from 'svelte'
+  import * as trackInfo from '../stores/trackInfo'
+  import { appendToUserQueue, prependToUserQueue } from '../stores/queue'
+  import { ipcRenderer } from '../stores/window'
+  import type { TrackID, Special } from '../stores/libraryTypes'
+
+  export async function showTrackMenu(ids: TrackID[], indexes: number[]) {
+    const trackLists = trackListsStore.getOnce()
+    const flat = flattenChildLists(trackLists.root as Special, trackLists, '', 'add-to-')
+
+    const clickedId = await ipcRenderer.invoke('showTrackMenu', flat)
+    if (clickedId === null) return
+    if (clickedId === 'Add to Queue') {
+      appendToUserQueue(ids)
+    } else if (clickedId === 'Play Next') {
+      prependToUserQueue(ids)
+    } else if (clickedId.startsWith('add-to-')) {
+      const pId = clickedId.substring('add-to-'.length)
+      addTracksToPlaylist(pId, ids)
+    } else if (clickedId === 'Remove from Playlist') {
+      removeFromOpenPlaylist(indexes)
+    } else if (clickedId === 'Get Info') {
+      trackInfo.open(ids[0])
+    } else {
+      console.error('Unknown contextMenu ID', clickedId)
+    }
+  }
+  function getInfoCmd(node: HTMLElement) {
+    function handler() {
+      for (let i = 0; i < $selection.list.length; i++) {
+        if ($selection.list[i]) {
+          const id = page.getTrackId(i)
+          trackInfo.open(id)
+          return
+        }
+      }
+    }
+    ipcRenderer.on('getInfo', handler)
+    return {
+      destroy: () => ipcRenderer.off('getInfo', handler),
+    }
+  }
 
   const sortBy = page.sortBy
   $: sortKey = $page.sort_key
@@ -171,6 +223,9 @@
     if (vlist) vlist.refresh()
     selection.clear()
   })
+  softRefreshPage.subscribe(() => {
+    if (vlist) vlist.refresh()
+  })
 </script>
 
 <svelte:window on:dragover={globalDragOverHandler} />
@@ -179,7 +234,7 @@
   <div bind:this={dragElDiv} />
 </div>
 
-<div class="tracklist" on:dragleave={() => (dragToIndex = null)}>
+<div class="tracklist" on:dragleave={() => (dragToIndex = null)} use:getInfoCmd>
   <div class="header">
     <h3 class="title">{$page.tracklist.name}</h3>
     <div class="info">{$page.length} songs</div>

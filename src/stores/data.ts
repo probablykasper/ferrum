@@ -17,6 +17,14 @@ type PageInfo = {
   length: number
 }
 
+type TrackMD = {
+  name: string
+  artist: string
+  album: string
+  genre: string
+  year: string
+}
+
 export const isDev = process.env.NODE_ENV === 'development'
 export type Data = {
   get_paths: () => {
@@ -33,6 +41,7 @@ export type Data = {
   add_skip: (id: TrackID) => void
   add_play_time: (id: TrackID, startTime: MsSinceUnixEpoch, duration_ms: number) => void
   read_cover_async: (id: TrackID) => Promise<ArrayBuffer>
+  update_track_info: (id: TrackID, md: string) => void
 
   get_track_lists: () => TrackListsHashMap
   add_tracks_to_playlist: (playlistId: TrackListID, trackIds: TrackID[]) => void
@@ -161,6 +170,11 @@ export const methods = {
     page.refresh()
   },
   readCoverAsync: (id: TrackID) => data.read_cover_async(id),
+  updateTrackInfo: (id: TrackID, md: TrackMD) => {
+    call((data) => data.update_track_info(id, JSON.stringify(md)))
+    methods.save()
+    softRefreshPage.refresh()
+  },
 }
 
 export const filter = (() => {
@@ -171,6 +185,16 @@ export const filter = (() => {
       call((data) => data.filter_open_playlist(query))
       store.set(query)
       page.setGet()
+    },
+  }
+})()
+export const softRefreshPage = (() => {
+  const store = writable(0)
+  return {
+    subscribe: store.subscribe,
+    refresh() {
+      call((data) => data.refresh_page())
+      store.update((n) => n + 1)
     },
   }
 })()

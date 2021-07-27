@@ -1,3 +1,5 @@
+import type { Folder, Special, TrackListsHashMap } from '../stores/libraryTypes'
+
 export function getDuration(dur: number) {
   dur = Math.round(dur)
   let secs = dur % 60
@@ -69,4 +71,43 @@ export function clamp(min: number, max: number, value: number) {
   if (value < 0) return min
   if (value > 1) return max
   return value
+}
+
+export function flattenChildLists(
+  trackList: Folder | Special,
+  trackLists: TrackListsHashMap,
+  prefix: string,
+  idPrefix: string
+) {
+  type Item = { label: string; enabled: boolean; id?: string }
+  let flat: Item[] = []
+  for (const childListId of trackList.children) {
+    const childList = trackLists[childListId]
+    if (childList.type === 'folder') {
+      const childFlat = flattenChildLists(childList, trackLists, prefix + '   ', idPrefix)
+      flat.push({
+        label: prefix + childList.name,
+        enabled: false,
+      })
+      flat = flat.concat(childFlat)
+    } else if (childList.type === 'playlist') {
+      flat.push({
+        label: prefix + childList.name,
+        enabled: true,
+        id: idPrefix + childList.id,
+      })
+    }
+  }
+  return flat
+}
+
+let lastActiveElement = document.body
+export function focus(el: HTMLElement) {
+  if (document.activeElement instanceof HTMLElement) {
+    lastActiveElement = document.activeElement
+    el.focus()
+  }
+}
+export function focusLast() {
+  if (lastActiveElement) lastActiveElement.focus()
 }

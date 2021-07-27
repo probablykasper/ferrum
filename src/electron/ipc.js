@@ -37,6 +37,11 @@ ipcMain.handle('showTrackMenu', (e, list) => {
         label: 'Remove from Playlist',
         click: () => resolve('Remove from Playlist'),
       },
+      { type: 'separator' },
+      {
+        label: 'Get Info',
+        click: () => resolve('Get Info'),
+      },
     ])
     menu.once('will-close', () => resolve())
     menu.popup()

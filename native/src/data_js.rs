@@ -74,6 +74,7 @@ fn init_data_instance(mut exports: JsObject) -> NResult<JsObject> {
   exports.create_named_method("add_skip", tracks::add_skip)?;
   exports.create_named_method("add_play_time", tracks::add_play_time)?;
   exports.create_named_method("read_cover_async", tracks::read_cover_async)?;
+  exports.create_named_method("update_track_info", tracks::update_track_info)?;
 
   exports.create_named_method("get_track_lists", playlists::get_track_lists)?;
   exports.create_named_method("add_tracks_to_playlist", playlists::add_tracks)?;

@@ -6,6 +6,7 @@
   import Titlebar from './components/Titlebar.svelte'
   import Sidebar from './components/Sidebar.svelte'
   import Queue from './components/Queue.svelte'
+  import TrackInfo from './components/TrackInfo.svelte'
   import { queueVisible } from './stores/queue'
   import { iTunesImport } from './stores/window'
   import { isDev, paths, importTracks } from './stores/data'
@@ -113,6 +114,7 @@
             .page-status-item
               b Error:
               pre {pageStatusErr}
+    TrackInfo
     +if('droppable')
       //- if the overlay is always visible, it's not possible to scroll while dragging tracks
       .drag-overlay(transition:fade='{{ duration: 100 }}')

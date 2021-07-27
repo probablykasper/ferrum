@@ -46,7 +46,7 @@
     "name": "native/addon"
   },
   "devDependencies": {
-    "@napi-rs/cli": "^1.0.4",
+    "@napi-rs/cli": "^1.1.0",
     "@svitejs/vite-plugin-svelte": "^0.11.1",
     "@types/wicg-mediasession": "^1.1.2",
     "concurrently": "^6.2.0",
@@ -54,14 +54,14 @@
     "electron-build-env": "^0.2.0",
     "electron-builder": "^22.11.7",
     "prettier": "^2.3.2",
-    "prettier-plugin-svelte": "^2.3.0",
+    "prettier-plugin-svelte": "^2.3.1",
     "pug": "^3.0.2",
-    "sass": "^1.35.2",
-    "svelte": "^3.38.3",
-    "svelte-check": "^1.5.2",
+    "sass": "^1.36.0",
+    "svelte": "^3.41.0",
+    "svelte-check": "^2.2.3",
     "svelte-preprocess": "^4.7.4",
     "typescript": "^4.3.5",
-    "vite": "^2.3.0"
+    "vite": "^2.4.4"
   },
   "dependencies": {
     "music-metadata": "^7.8.1",
