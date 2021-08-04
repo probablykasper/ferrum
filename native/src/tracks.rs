@@ -112,9 +112,9 @@ fn read_cover(path: &PathBuf) -> Result<Vec<u8>, CoverReadError> {
       }
     };
     match tag.artwork() {
-      Some(data) => match data {
-        mp4ameta::Data::Jpeg(jpeg_data) => return Ok(jpeg_data.clone()),
-        mp4ameta::Data::Png(png_data) => return Ok(png_data.clone()),
+      Some(img) => match img.fmt {
+        mp4ameta::ImgFmt::Jpeg => return Ok(img.data.to_vec()),
+        mp4ameta::ImgFmt::Png => return Ok(img.data.to_vec()),
         _ => return Err(CoverReadError::NoJpegOrPngFound),
       },
       None => {
@@ -221,6 +221,26 @@ fn timestamp_from_year(year: i32) -> id3::Timestamp {
   };
 }
 
+fn get_and_fix_year(tag: &mut id3::Tag) -> Option<i64> {
+  match tag.date_recorded() {
+    Some(tdrc) => Some(i64::from(tdrc.year)),
+    None => match tag.year() {
+      Some(tyer) => {
+        let x = timestamp_from_year(tyer);
+        tag.set_date_recorded(x);
+        Some(i64::from(tyer))
+      }
+      None => match tag.date_released() {
+        Some(tdrl) => {
+          tag.set_date_recorded(timestamp_from_year(tdrl.year));
+          Some(i64::from(tdrl.year))
+        }
+        None => None,
+      },
+    },
+  }
+}
+
 fn import_mp3(data: &Data, track_path: &Path) -> Track {
   fn get_frame_text(tag: &id3::Tag, id: &str) -> Option<String> {
     let frame = tag.get(id)?;
@@ -258,23 +278,7 @@ fn import_mp3(data: &Data, track_path: &Path) -> Track {
     Err(_) => id3::Tag::new(),
   };
 
-  let year = match tag.date_recorded() {
-    Some(n) => Some(i64::from(n.year)),
-    None => match tag.year() {
-      Some(n) => {
-        let x = timestamp_from_year(n);
-        tag.set_date_recorded(x);
-        Some(i64::from(n))
-      }
-      None => match tag.date_released() {
-        Some(n) => {
-          tag.set_date_recorded(timestamp_from_year(n.year));
-          Some(i64::from(n.year))
-        }
-        None => None,
-      },
-    },
-  };
+  let year = get_and_fix_year(&mut tag);
 
   let title = match tag.title() {
     Some(title) => title.to_owned(),
@@ -424,7 +428,6 @@ pub fn update_track_info(ctx: CallContext) -> NResult<JsUndefined> {
     "" => None,
     value => Some(value.parse().expect("Invalid year")),
   };
-  println!("Y# {:?}", year);
 
   match ext.as_ref() {
     "mp3" => {
@@ -449,8 +452,14 @@ pub fn update_track_info(ctx: CallContext) -> NResult<JsUndefined> {
         value => tag.set_genre(value),
       };
       match year {
-        None => tag.remove_year(),
-        Some(value) => tag.set_year(value),
+        None => {
+          tag.remove_year();
+          tag.remove_date_recorded();
+        }
+        Some(value) => {
+          tag.set_year(value);
+          tag.set_date_recorded(timestamp_from_year(value));
+        }
       };
 
       match tag.write_to_path(old_path, id3::Version::Id3v24) {
@@ -513,6 +522,7 @@ pub fn update_track_info(ctx: CallContext) -> NResult<JsUndefined> {
   track.artist = new_info.artist.clone();
   track.albumName = str_to_option(new_info.album);
   track.genre = str_to_option(new_info.genre);
+  track.year = year.map(|n| i64::from(n));
 
   return ctx.env.get_undefined();
 }

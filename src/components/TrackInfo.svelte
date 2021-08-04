@@ -115,7 +115,7 @@
         input(type='text' bind:value='{artist}')
       .row
         .label Album
-        input(disabled type='text' bind:value='{album}')
+        input(type='text' bind:value='{album}')
       .row
         .label Album artist
         input(disabled type='text' bind:value='{albumArtist}')

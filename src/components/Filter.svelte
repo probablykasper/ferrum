@@ -17,14 +17,14 @@
 </template>
 
 <style lang="sass">
-  .search
+  input.search
     display: block
     width: calc(100% - 15px*2)
     margin: auto
     font-family: inherit
     padding: 4px 12px
     box-sizing: border-box
-    color: var(--text-color)
+    color: inherit
     background-color: var(--bg-3)
     border-radius: 3px
     outline: none
