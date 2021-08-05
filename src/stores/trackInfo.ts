@@ -3,6 +3,27 @@ import type { Writable } from 'svelte/store'
 import { methods } from '../stores/data'
 import type { Track, TrackID } from 'src/stores/libraryTypes'
 
+export type TrackMD = {
+  name: string
+  artist: string
+  albumName: string
+  albumArtist: string
+  composer: string
+  grouping: string
+  genre: string
+  year: string
+  // trackNum: string
+  // trackCount: string
+  // discNum: string
+  // discCount: string
+  // bpm: string
+  // compilation: string
+  // rating: string
+  // liked: string
+  // playCount: string
+  comments: string
+}
+
 export const visible = writable(false)
 export const id: Writable<TrackID | null> = writable(null)
 export const track: Writable<Track | null> = writable(null)

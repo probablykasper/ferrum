@@ -7,6 +7,7 @@ import type {
   TrackListID,
   TrackListsHashMap,
 } from './libraryTypes'
+import type { TrackMD } from './trackInfo'
 import { showMessageBox, addon } from './window'
 
 type PageInfo = {
@@ -15,14 +16,6 @@ type PageInfo = {
   sort_key: string
   sort_desc: boolean
   length: number
-}
-
-type TrackMD = {
-  name: string
-  artist: string
-  album: string
-  genre: string
-  year: string
 }
 
 export const isDev = process.env.NODE_ENV === 'development'

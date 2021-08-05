@@ -9,9 +9,12 @@
   function uintFilter(value: string) {
     return value.replace(/[^0-9]*/g, '')
   }
+  function toString(value: any) {
+    return String(value).replaceAll(/\0/g, '')
+  }
   let name = ''
   let artist = ''
-  let album = ''
+  let albumName = ''
   let albumArtist = ''
   let composer = ''
   let grouping = ''
@@ -32,22 +35,22 @@
     if (track) {
       name = track.name
       artist = track.artist
-      album = track.albumName || ''
+      albumName = track.albumName || ''
       albumArtist = track.albumArtist || ''
       composer = track.composer || ''
       grouping = track.grouping || ''
       genre = track.genre || ''
-      year = String(track.year || '')
-      trackNum = String(track.trackNum || '')
-      trackCount = String(track.trackCount || '')
-      discNum = String(track.discNum || '')
-      discCount = String(track.discCount || '')
-      bpm = String(track.bpm || '')
+      year = toString(track.year || '')
+      trackNum = toString(track.trackNum || '')
+      trackCount = toString(track.trackCount || '')
+      discNum = toString(track.discNum || '')
+      discCount = toString(track.discCount || '')
+      bpm = toString(track.bpm || '')
       compilation = track.compilation || false
       rating = track.rating || 0
       liked = track.liked || false
       playCount = track.playCount || 0
-      comments = String(track.comments || '')
+      comments = toString(track.comments || '')
     }
   })
   function save() {
@@ -55,22 +58,22 @@
       methods.updateTrackInfo($id, {
         name,
         artist,
-        album,
-        // albumArtist
-        // composer
-        // grouping
+        albumName,
+        albumArtist,
+        composer,
+        grouping,
         genre,
         year,
-        // trackNum
-        // trackCount
-        // discNum
-        // discCount
-        // bpm
-        // compilation
-        // rating
-        // liked
-        // playCount
-        // comments
+        // trackNum,
+        // trackCount,
+        // discNum,
+        // discCount,
+        // bpm,
+        // compilation,
+        // rating,
+        // liked,
+        // playCount,
+        comments,
       })
       visible.set(false)
       focusLast()
@@ -115,16 +118,16 @@
         input(type='text' bind:value='{artist}')
       .row
         .label Album
-        input(type='text' bind:value='{album}')
+        input(type='text' bind:value='{albumName}')
       .row
         .label Album artist
-        input(disabled type='text' bind:value='{albumArtist}')
+        input(type='text' bind:value='{albumArtist}')
       .row
         .label Composer
-        input(disabled type='text' bind:value='{composer}')
+        input(type='text' bind:value='{composer}')
       .row
         .label Grouping
-        input(disabled type='text' bind:value='{grouping}')
+        input(type='text' bind:value='{grouping}')
       .row
         .label Genre
         input(type='text' bind:value='{genre}')
@@ -155,7 +158,7 @@
         p {playCount}
       .row
         .label Comments
-        input(disabled type='text' bind:value='{comments}')
+        input(type='text' bind:value='{comments}')
       .spacer
       .bottom
         button.secondary(type='button' on:click='{cancel}') Cancel
