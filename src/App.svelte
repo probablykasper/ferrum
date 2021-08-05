@@ -125,9 +125,9 @@
 
 <style lang="sass">
   main
-    --bg-1: #121217
-    --bg-2: #1E1F24
-    --bg-3: #242529
+    --bg-1: hsl(240, 10%, 8%)
+    --bg-2: hsl(230, 7%, 12%)
+    --bg-3: hsl(228, 6%, 15%)
     --sidebar-bg-color: #000000
     --player-bg-color: #17181c
     --text-color: #e6e6e6
@@ -139,8 +139,8 @@
     --border-color: #333333
     --accent-1: #2e5be0
     --accent-2: #103fcb
-    --icon-color: #FFFFFF
-    --icon-highlight-color: #20f39f
+    --icon-color: #e6e6e6
+    --icon-highlight-color: #00ffff
     --titlebar-height: 22px
   :global(html), :global(body)
     background-color: #0D1115

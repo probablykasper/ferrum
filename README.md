@@ -7,15 +7,8 @@ Ferrum is a music library client.
 ### ToDo
 
 - Playlist covers
-- Metadata editing
 - Make removing from playlists work when filter or sorting is used (rn, if you remove the first shown track, it would remove the first track in the playlist)
-- Characters like É in title is not imported right
-- Write tags to files:
-  - m4a/aac: https://github.com/Saecki/rust-mp4ameta
-  - mp3/mp3: https://github.com/polyfloyd/rust-id3
-  - audiotags
 - iTunes Import overwrites library, but old track/artwork files are still kept. Either move or delete them
-- Volume normalization
 - For Windows version, we will want to save before system shutdown. Using `session-end` event might work, but to actually delay shutdown, see this: https://github.com/electron/electron/issues/8762
 - Databases
   - https://github.com/TheNeikos/rustbreak

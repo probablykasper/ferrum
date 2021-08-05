@@ -302,10 +302,16 @@
       on:dragover={(e) => onDragOver(e, index)}
       on:dragend={dragEndHandler}
       class:odd={index % 2 === 0}
-      class:selected={$selection.list[index] === true}>
+      class:selected={$selection.list[index] === true}
+      class:playing={track.id === $playingId}>
       <div class="c index">
         {#if track.id === $playingId}
-          <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24">
+          <svg
+            class="playing-icon"
+            xmlns="http://www.w3.org/2000/svg"
+            height="24"
+            viewBox="0 0 24 24"
+            width="24">
             <path d="M0 0h24v24H0z" fill="none" />
             <path
               d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z" />
@@ -383,6 +389,10 @@
         background-color: var(--bg-2)
       &.selected
         background: var(--tracklist-gradient)
+      &.playing.selected
+        color: #ffffff
+      &.playing
+        color: #00ffff
       .c
         display: inline-block
         vertical-align: top
@@ -391,14 +401,15 @@
         overflow: hidden
         text-overflow: ellipsis
         padding-right: 10px
-      &.selected .index svg
-        fill: var(--icon-color)
+      &.selected .index svg.playing-icon
+          fill: var(--icon-color)
       .index
         width: 0px
         min-width: 36px
         text-align: right
-        svg
-          fill: #2efac7
+        svg.playing-icon
+          // fill: #2efac7
+          fill: #00ffff
           width: 16px
           height: 100%
       .name

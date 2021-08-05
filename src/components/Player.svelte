@@ -142,9 +142,13 @@
     outline: none
     border: none
     padding: 0px
-    opacity: 0.7
+    opacity: 1
+    transition: 0.05s ease-out
     &:hover
-      opacity: 1
+      // opacity: 0.7
+    &:active
+      opacity: 0.7
+      transform: scale(0.95)
   button.play, button.pause
     margin: 0px 15px
     svg
