@@ -1,5 +1,5 @@
 import { defineConfig } from 'vite'
-import svelte from '@svitejs/vite-plugin-svelte'
+import { svelte } from '@sveltejs/vite-plugin-svelte'
 import sveltePreprocess from 'svelte-preprocess'
 
 console.log('VITEPORT', process.env.PORT || 8089)

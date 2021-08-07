@@ -1,7 +1,8 @@
 use crate::data::Data;
 use crate::data_js::get_data;
-use crate::js::{arg_to_number_vector, arg_to_string, arg_to_string_vector};
-use crate::library_types::TrackList;
+use crate::js::{arg_to_bool, arg_to_number_vector, arg_to_string, arg_to_string_vector};
+use crate::library_types::{SpecialTrackListName, TrackList};
+use crate::str_to_option;
 use napi::{CallContext, JsUndefined, JsUnknown, Result as NResult};
 use napi_derive::js_function;
 
@@ -66,5 +67,47 @@ pub fn remove_from_open(ctx: CallContext) -> NResult<JsUndefined> {
     }
   }
   playlist.tracks = new_list;
+  return ctx.env.get_undefined();
+}
+
+#[js_function(4)]
+pub fn new_playlist(ctx: CallContext) -> NResult<JsUndefined> {
+  let data: &mut Data = get_data(&ctx)?;
+  let library = &mut data.library;
+  let name = arg_to_string(&ctx, 0)?;
+  let description = arg_to_string(&ctx, 1)?;
+  let is_folder = arg_to_bool(&ctx, 2)?;
+  let parent_id = arg_to_string(&ctx, 3)?;
+
+  let list = match is_folder {
+    true => {
+      let folder = library.new_folder(name, str_to_option(description));
+      TrackList::Folder(folder)
+    }
+    false => {
+      let playlist = library.new_playlist(name, str_to_option(description));
+      TrackList::Playlist(playlist)
+    }
+  };
+
+  let parent = match library.trackLists.get_mut(&parent_id) {
+    Some(parent) => parent,
+    None => return Err(nerr!("Parent not found")),
+  };
+
+  match parent {
+    TrackList::Playlist(_) => return Err(nerr!("Parent cannot be playlist")),
+    TrackList::Folder(folder) => {
+      folder.children.push(list.id().to_string());
+      library.trackLists.insert(list.id().to_string(), list);
+    }
+    TrackList::Special(special) => match special.name {
+      SpecialTrackListName::Root => {
+        special.children.push(list.id().to_string());
+        library.trackLists.insert(list.id().to_string(), list);
+      }
+    },
+  };
+
   return ctx.env.get_undefined();
 }

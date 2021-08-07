@@ -33,3 +33,10 @@ fn sys_time_to_timestamp(sys_time: &SystemTime) -> i64 {
   };
   return timestamp;
 }
+
+fn str_to_option(s: String) -> Option<String> {
+  match s.as_str() {
+    "" => None,
+    _ => Some(s),
+  }
+}

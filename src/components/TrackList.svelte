@@ -24,7 +24,7 @@
   import type { TrackID, Special } from '../stores/libraryTypes'
 
   export async function showTrackMenu(ids: TrackID[], indexes: number[]) {
-    const trackLists = trackListsStore.getOnce()
+    const trackLists = $trackListsStore
     const flat = flattenChildLists(trackLists.root as Special, trackLists, '', 'add-to-')
 
     const clickedId = await ipcRenderer.invoke('showTrackMenu', flat)

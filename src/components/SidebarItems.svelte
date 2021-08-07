@@ -1,7 +1,11 @@
-<script>
+<script lang="ts">
+  import type { TrackList, Folder } from '../stores/libraryTypes'
   import { trackLists, page } from '../stores/data'
-  export let trackList
-  let childLists = []
+  import { ipcRenderer } from '../stores/window'
+  import { visible as playlistModalVisible } from './PlaylistInfo.svelte'
+
+  export let trackList: Folder
+  let childLists: TrackList[] = []
   $: {
     childLists = []
     for (const id of trackList.children) {
@@ -10,28 +14,50 @@
       childLists.push(tl)
     }
   }
-  function open(id) {
+  function open(id: string) {
     if ($page.id !== id) page.openPlaylist(id)
+  }
+  async function folderContextMenu(folderId: string) {
+    const clickedId = await ipcRenderer.invoke('showPlaylistMenu')
+    if (clickedId === null) return
+    if (clickedId === 'New Playlist') {
+      playlistModalVisible.open(folderId)
+    } else {
+      console.error('Unknown contextMenu ID', clickedId)
+    }
   }
 </script>
 
-<template lang="pug">
-  +each('childLists as childList')
-    +if('childList.type === "folder"')
-      .item(class:show='{childList.show}' on:click!='{() => childList.show = !childList.show }')
-        svg.arrow(xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24")
-          path(d='M21 12l-18 12v-24z')
-        .text {childList.name}
-      .sub(class:show='{childList.show}')
-        svelte:self(trackList='{childList}')
-      +else()
-        .item(
-          on:mousedown='{open(childList.id)}'
-          class:active='{$page.id === childList.id}'
-        )
-          .arrow
-          .text {childList.name}
-</template>
+{#each childLists as childList}
+  {#if childList.type === 'folder'}
+    <div
+      class="item"
+      class:show={childList.show}
+      on:click={() => (childList.show = !childList.show)}
+      on:contextmenu={() => folderContextMenu(childList.id)}>
+      <svg
+        class="arrow"
+        xmlns="http://www.w3.org/2000/svg"
+        width="24"
+        height="24"
+        viewBox="0 0 24 24">
+        <path d="M21 12l-18 12v-24z" />
+      </svg>
+      <div class="text">{childList.name}</div>
+    </div>
+    <div class="sub" class:show={childList.show}>
+      <svelte:self trackList={childList} />
+    </div>
+  {:else}
+    <div
+      class="item"
+      on:mousedown={() => open(childList.id)}
+      class:active={$page.id === childList.id}>
+      <div class="arrow" />
+      <div class="text">{childList.name}</div>
+    </div>
+  {/if}
+{/each}
 
 <style lang="sass">
   $hue: 230

@@ -1,6 +1,8 @@
 #![allow(non_snake_case)]
 
+use crate::get_now_timestamp;
 use linked_hash_map::LinkedHashMap;
+use nanoid::nanoid;
 use serde::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};
 
@@ -11,6 +13,66 @@ pub struct Library {
   pub tracks: LinkedHashMap<TrackID, Track>,
   pub trackLists: TrackLists,
   pub playTime: Vec<PlayTime>,
+}
+
+impl Library {
+  pub fn generate_id(&self) -> String {
+    let alphabet: [char; 32] = [
+      'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r',
+      's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '2', '3', '4', '5', '6', '7',
+    ];
+    for _ in 0..1000 {
+      let id = nanoid!(7, &alphabet);
+      if !self.tracks.contains_key(&id) && !self.trackLists.contains_key(&id) {
+        return id;
+      }
+    }
+    panic!("Error generating ID: Generated IDs already exist")
+  }
+  pub fn new_playlist(&self, name: String, description: Option<String>) -> Playlist {
+    Playlist {
+      id: self.generate_id(),
+      name,
+      description,
+      liked: None,
+      disliked: None,
+      importedFrom: None,
+      originalId: None,
+      dateImported: None,
+      dateCreated: Some(get_now_timestamp()),
+      tracks: Vec::new(),
+    }
+  }
+  pub fn new_folder(&self, name: String, description: Option<String>) -> Folder {
+    Folder {
+      id: self.generate_id(),
+      name,
+      show: false,
+      description,
+      liked: None,
+      disliked: None,
+      importedFrom: None,
+      originalId: None,
+      dateImported: None,
+      dateCreated: Some(get_now_timestamp()),
+      children: Vec::new(),
+    }
+  }
+  pub fn get_parent_id(&self, id: &str) -> Option<String> {
+    for (parent_id, tracklist) in &self.trackLists {
+      let children = match tracklist {
+        TrackList::Playlist(_) => continue,
+        TrackList::Folder(list) => &list.children,
+        TrackList::Special(list) => &list.children,
+      };
+      for child_id in children {
+        if child_id == id {
+          return Some(parent_id.to_string());
+        }
+      }
+    }
+    None
+  }
 }
 
 pub type TrackID = String;
@@ -124,6 +186,16 @@ pub enum TrackList {
   Folder(Folder),
   #[serde(rename = "special")]
   Special(Special),
+}
+
+impl TrackList {
+  pub fn id(&self) -> &str {
+    match self {
+      TrackList::Playlist(list) => &list.id,
+      TrackList::Folder(list) => &list.id,
+      TrackList::Special(list) => &list.id,
+    }
+  }
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]

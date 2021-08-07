@@ -39,6 +39,7 @@ export type Data = {
   get_track_lists: () => TrackListsHashMap
   add_tracks_to_playlist: (playlistId: TrackListID, trackIds: TrackID[]) => void
   remove_from_open_playlist: (indexes: number[]) => void
+  new_playlist: (name: string, description: string, isFolder: boolean, parentId: string) => void
 
   refresh_page: () => void
   open_playlist: (id: TrackListID) => void
@@ -95,7 +96,9 @@ export const trackLists = (() => {
   const { subscribe, set, update } = writable(initial)
   return {
     subscribe,
-    getOnce: () => initial,
+    refresh() {
+      set(call((data) => data.get_track_lists()))
+    },
   }
 })()
 export function addTracksToPlaylist(playlistId: TrackListID, trackIds: TrackID[]) {
@@ -107,6 +110,16 @@ export function removeFromOpenPlaylist(indexes: number[]) {
   call((data) => data.remove_from_open_playlist(indexes))
   page.refresh()
   methods.save()
+}
+export function newPlaylist(
+  name: string,
+  description: string,
+  isFolder: boolean,
+  parentId: string
+) {
+  call((data) => data.new_playlist(name, description, isFolder, parentId))
+  methods.save()
+  trackLists.refresh()
 }
 
 export const paths = (() => {

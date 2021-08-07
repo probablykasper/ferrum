@@ -79,6 +79,7 @@ fn init_data_instance(mut exports: JsObject) -> NResult<JsObject> {
   exports.create_named_method("get_track_lists", playlists::get_track_lists)?;
   exports.create_named_method("add_tracks_to_playlist", playlists::add_tracks)?;
   exports.create_named_method("remove_from_open_playlist", playlists::remove_from_open)?;
+  exports.create_named_method("new_playlist", playlists::new_playlist)?;
 
   exports.create_named_method("refresh_page", page::refresh)?;
   exports.create_named_method("open_playlist", page::open_playlist)?;

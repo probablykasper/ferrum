@@ -2,7 +2,7 @@ use crate::data::Data;
 use crate::data_js::get_data;
 use crate::js::{arg_to_number, arg_to_string, nerr};
 use crate::library_types::Track;
-use crate::{get_now_timestamp, sys_time_to_timestamp};
+use crate::{get_now_timestamp, str_to_option, sys_time_to_timestamp};
 use atomicwrites::{AtomicFile, DisallowOverwrite};
 use id3;
 use mp3_metadata;
@@ -205,7 +205,7 @@ pub fn import(ctx: CallContext) -> NResult<JsUndefined> {
     "mp3" => import_mp3(&data, &path),
     _ => panic!("Unsupported file extension: {}", ext),
   };
-  let id = crate::data::make_id(&data.library);
+  let id = data.library.generate_id();
   data.library.tracks.insert(id, track);
   return ctx.env.get_undefined();
 }
@@ -408,13 +408,6 @@ struct TrackMD {
   genre: String,
   year: String,
   comments: String,
-}
-
-fn str_to_option(s: String) -> Option<String> {
-  match s.as_str() {
-    "" => None,
-    _ => Some(s),
-  }
 }
 
 #[js_function(2)]

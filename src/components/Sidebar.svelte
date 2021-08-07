@@ -2,6 +2,8 @@
   import SidebarItems from './SidebarItems.svelte'
   import Filter from './Filter.svelte'
   import { trackLists } from '../stores/data'
+  import { ipcRenderer } from '../stores/window'
+  import { visible as playlistModalVisible } from './PlaylistInfo.svelte'
   const special = {
     children: ['root'],
   }
@@ -15,18 +17,29 @@
     else prevent = false
     if (prevent) e.preventDefault()
   }
+  async function onContextMenu(e: HTMLDivElement) {
+    const clickedId = await ipcRenderer.invoke('showPlaylistMenu')
+    if (clickedId === null) return
+    if (clickedId === 'New Playlist') {
+      playlistModalVisible.open('root')
+    } else {
+      console.error('Unknown contextMenu ID', clickedId)
+    }
+  }
 </script>
 
 <template lang="pug">
   .sidebar(on:mousedown|self|preventDefault)
-    .spacer(on:mousedown|self|preventDefault)
-    Filter
-    .items(tabindex='0' on:keydown='{handleKeydown}' bind:this='{viewport}')
-      .spacer
-      SidebarItems(trackList='{special}')
-      .spacer
-      SidebarItems(trackList='{$trackLists.root}')
-      .spacer
+    .content
+      .spacer(on:mousedown|self|preventDefault)
+      Filter
+      .items(tabindex='0' on:keydown='{handleKeydown}' bind:this='{viewport}')
+        .spacer
+        SidebarItems(trackList='{special}')
+        .spacer(on:contextmenu='{onContextMenu}')
+        SidebarItems(trackList='{$trackLists.root}')
+        .spacer(on:contextmenu='{onContextMenu}')
+        .bottom-space(on:contextmenu='{onContextMenu}')
 </template>
 
 <style lang="sass">
@@ -37,15 +50,23 @@
     flex-direction: column
     padding-top: var(--titlebar-height)
     background-color: var(--sidebar-bg-color)
-    // background-color: #151518
-    // background: linear-gradient(#23232a, #151519)
+  .content
+    overflow-y: scroll
+    display: flex
+    flex-direction: column
+    flex-grow: 1
+    background-color: var(--sidebar-bg-color) // for scrollbar color
   .spacer
     height: 10px
+    flex-shrink: 0
   .items
     width: 100%
-    height: 100%
+    flex-grow: 1
     font-size: 13px
-    overflow-y: scroll
     outline: none
     background-color: inherit
+    display: flex
+    flex-direction: column
+  .bottom-space
+    flex-grow: 1
 </style>

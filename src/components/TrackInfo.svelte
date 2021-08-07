@@ -6,6 +6,8 @@
   import { checkShortcut, focus, focusLast } from '../scripts/helpers'
   import type { TrackID } from '../stores/libraryTypes'
   import { methods } from '../stores/data'
+  import Button from './Button.svelte'
+
   function uintFilter(value: string) {
     return value.replace(/[^0-9]*/g, '')
   }
@@ -86,7 +88,6 @@
     visible.set(false)
     focusLast()
   }
-  let focusModal: Function
   function keydown(e: KeyboardEvent) {
     if (checkShortcut(e, 'escape')) {
       if (document.activeElement instanceof HTMLElement) {
@@ -98,7 +99,7 @@
 
 <template lang="pug">
   svelte:window(on:keydown='{keydown}')
-  Modal(bind:visible='{$visible}' bind:focus='{focusModal}' close='{cancel}')
+  Modal(bind:visible='{$visible}' close='{cancel}')
     form.modal(on:submit|preventDefault='{save}')
       .header
         +if('$coverSrc')
@@ -161,8 +162,8 @@
         input(type='text' bind:value='{comments}')
       .spacer
       .bottom
-        button.secondary(type='button' on:click='{cancel}') Cancel
-        button(type='submit') Save
+        Button(secondary on:click='{cancel}') Cancel
+        Button(submit) Save
 </template>
 
 <style lang="sass">
@@ -237,28 +238,4 @@
   .bottom
     display: flex
     justify-content: flex-end
-  button
-    color: #ffffff
-    height: 32px
-    background-color: var(--accent-2)
-    box-shadow: 0px 0px 2px 0px var(--accent-2)
-    border: 0px solid transparent
-    margin: 2px
-    margin-left: 10px
-    width: 80px
-    border-radius: 7px
-    transition: 0.1s ease-in-out
-    transition-property: transform, opacity
-    outline: none
-    &:focus
-      border: 2px solid rgba(#7e9bf1, 0.7)
-    &:active
-      outline: none
-      opacity: 0.8
-      transform: scale(0.95)
-  button.secondary
-    background-color: #373e53
-    box-shadow: 0px 0px 2px 0px #373e53
-    &:focus
-      border: 2px solid rgba(#7e9bf1, 0.5)
 </style>

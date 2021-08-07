@@ -96,10 +96,10 @@ dependencies = [
  "linked-hash-map",
  "mp3-metadata",
  "mp4ameta",
+ "nanoid",
  "napi",
  "napi-build",
  "napi-derive",
- "rand",
  "serde",
  "serde_json",
  "serde_repr",
@@ -225,6 +225,15 @@ name = "mp4ameta_proc"
 version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "07dcca13d1740c0a665f77104803360da0bdb3323ecce2e93fa2c959a6d52806"
+
+[[package]]
+name = "nanoid"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3ffa00dec017b5b1a8b7cf5e2c008bfda1aa7e0697ac1508b491fdf2622fb4d8"
+dependencies = [
+ "rand",
+]
 
 [[package]]
 name = "napi"

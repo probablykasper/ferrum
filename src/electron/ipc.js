@@ -47,3 +47,16 @@ ipcMain.handle('showTrackMenu', (e, list) => {
     menu.popup()
   })
 })
+
+ipcMain.handle('showPlaylistMenu', (e, list) => {
+  return new Promise((resolve, reject) => {
+    const menu = Menu.buildFromTemplate([
+      {
+        label: 'New Playlist',
+        click: () => resolve('New Playlist'),
+      },
+    ])
+    menu.once('will-close', () => resolve())
+    menu.popup()
+  })
+})

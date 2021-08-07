@@ -25,6 +25,14 @@ module.exports.initMenuBar = (app, mainWindow) => {
       label: 'File',
       submenu: [
         {
+          label: 'New Playlist',
+          accelerator: 'CommandOrControl+N',
+          click: () => {
+            mainWindow.webContents.send('newPlaylist')
+          },
+        },
+        { type: 'separator' },
+        {
           label: 'Import iTunes Library...',
           click: () => {
             mainWindow.webContents.send('itunesImport')
