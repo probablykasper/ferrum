@@ -9,7 +9,7 @@
 </p>
 
 ## ⚠️ Warning
-Ferrum is in development and might get updates that no longer with with your library.
+Ferrum is in development and might get updates that no longer work with your library.
 
 <br/>
 
@@ -38,7 +38,7 @@ Ferrum is in development and might get updates that no longer with with your lib
 2. Install Rust (v1.49 works)
 3. Run `npm install`
 
-## Structure
+### Structure
 
 App (Electron)
 - Source: `src/electron.js` and `src/electron/`
