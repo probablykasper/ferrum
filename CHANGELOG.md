@@ -1,6 +1,7 @@
 # Changelog
 
-## Next
+## 0.8.0 - 2021 Aug 8
+- Add support for Linux (deb/rpm) and Windows (exe)
 - Add volume controls
 - Add ability to create playlists
 - Add track metadata editing
