@@ -1,5 +1,8 @@
 # Changelog
 
+## Next
+- Fix error after updating metadata when filter is on
+
 ## 0.8.0 - 2021 Aug 8
 - Add support for Linux (deb/rpm) and Windows (exe)
 - Add volume controls

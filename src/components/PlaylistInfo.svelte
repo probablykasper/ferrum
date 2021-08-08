@@ -16,7 +16,6 @@
       },
     }
   })()
-  // export const visible = writable(true)
   visible.subscribe((newValue) => {
     if (newValue === false) {
       focusLast()

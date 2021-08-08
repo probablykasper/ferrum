@@ -199,7 +199,6 @@ export const softRefreshPage = (() => {
   return {
     subscribe: store.subscribe,
     refresh() {
-      call((data) => data.refresh_page())
       store.update((n) => n + 1)
     },
   }
