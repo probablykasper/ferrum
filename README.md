@@ -1,9 +1,19 @@
-# Ferrum
-
-Music library and player
+<div align="center">
+  <img src="assets/Logo%201024.png" width="80">
+</div>
+<h3 align="center">Ferrum</h3>
+<p align="center">
+  Music library and player
+  <br/>
+  <a href="https://github.com/probablykasper/ferrum/releases"><b>Download for Mac, Windows or Linux</b></a>
+</p>
 
 ## ⚠️ Warning
-Ferrum is in development and might have breaking changes that are incompatible with your current `library.json`.
+Ferrum is in development and might get updates that no longer with with your library.
+
+<br/>
+
+![Screenshot](assets/screenshot.png)
 
 ## Dev instructions
 

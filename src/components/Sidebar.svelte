@@ -33,7 +33,6 @@
     +if('isMac')
       .titlebar-spacer
     .content
-      .spacer(on:mousedown|self|preventDefault)
       Filter
       .items(tabindex='0' on:keydown='{handleKeydown}' bind:this='{viewport}')
         .spacer
@@ -53,6 +52,7 @@
     background-color: var(--sidebar-bg-color)
   .titlebar-spacer
     height: var(--titlebar-height)
+    padding-bottom: 5px
   .content
     overflow-y: scroll
     display: flex
