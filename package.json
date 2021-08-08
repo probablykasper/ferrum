@@ -13,6 +13,7 @@
     "napi": "electron-build-env napi build --cargo-cwd ./native  ./build --release",
     "napi:dev": "electron-build-env napi build --cargo-cwd ./native  ./build",
     "build": "npm run napi && npm run build:web && electron-builder",
+    "build-ci": "npm run napi && npm run build:web",
     "build:web": "vite build",
     "lint": "prettier --write --ignore-path .gitignore *.js *.json src",
     "check": "svelte-check"
@@ -29,6 +30,21 @@
       ],
       "darkModeSupport": true,
       "identity": null
+    },
+    "linux": {
+      "category": "Audio",
+      "icon": "build/icons/icon.icns",
+      "maintainer": "kasper.space <example@example.com>",
+      "target": [
+        "deb",
+        "rpm"
+      ]
+    },
+    "win": {
+      "icon": "build/icons/icon.ico",
+      "target": [
+        "nsis"
+      ]
     },
     "files": [
       "build/web",
