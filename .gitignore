@@ -1,3 +1,6 @@
 /node_modules/
-/build/
-/dist/
+/build/app
+/build/web
+/build/addon.node
+/native/target/
+/native/artifacts.json

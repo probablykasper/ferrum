@@ -3,7 +3,7 @@ name = "ferrum"
 version = "0.7.0"
 build = "build.rs"
 edition = "2018"
-exclude = ["artifacts.json", "addon.node"]
+exclude = ["artifacts.json"]
 
 [lib]
 name = "ferrum"
@@ -22,7 +22,6 @@ id3 = "0.6.4"
 mp3-metadata = "0.3.3"
 mp4ameta = "0.11.0"
 serde_json = "1.0.62"
-jemallocator = "0.3.2"
 nanoid = "0.4.0"
 alphanumeric-sort = "1.4.0"
 linked-hash-map = { version = "0.5.4", features = ["serde_impl"] }

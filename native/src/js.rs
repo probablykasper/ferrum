@@ -1,8 +1,3 @@
-#[cfg(not(target_env = "msvc"))]
-use jemallocator::Jemalloc;
-#[cfg(not(target_env = "msvc"))]
-#[global_allocator]
-static GLOBAL: Jemalloc = Jemalloc;
 use crate::data_js::{load_data_async, load_data_js};
 use atomicwrites::{AllowOverwrite, AtomicFile};
 use napi::{

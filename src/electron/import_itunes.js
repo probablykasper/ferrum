@@ -4,7 +4,7 @@ const path = require('path')
 const url = require('url')
 const fs = require('fs')
 const mm = require('music-metadata')
-const addon = require('../../native/addon.node')
+const addon = require('../../build/addon.node')
 
 module.exports = iTunesImport
 async function iTunesImport(paths, status, warn) {

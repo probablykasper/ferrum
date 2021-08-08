@@ -1,6 +1,9 @@
 # Ferrum
 
-Ferrum is a music library client.
+Music library and player
+
+## ⚠️ Warning
+Ferrum is in development and might have breaking changes that are incompatible with your current `library.json`.
 
 ## Dev instructions
 
@@ -9,7 +12,6 @@ Ferrum is a music library client.
 - Playlist covers
 - Make removing from playlists work when filter or sorting is used (rn, if you remove the first shown track, it would remove the first track in the playlist)
 - iTunes Import overwrites library, but old track/artwork files are still kept. Either move or delete them
-- For Windows version, we will want to save before system shutdown. Using `session-end` event might work, but to actually delay shutdown, see this: https://github.com/electron/electron/issues/8762
 - Databases
   - https://github.com/TheNeikos/rustbreak
   - https://github.com/spacejam/sled
@@ -26,24 +28,38 @@ Ferrum is a music library client.
 2. Install Rust (v1.49 works)
 3. Run `npm install`
 
+## Structure
+
+App (Electron)
+- Source: `src/electron.js` and `src/electron/`
+- Build output: `build/app/`
+
+Web (the frontend)
+- Source code: napi and `src/`
+- Build output: `build/web/`
+
+Napi (the native Rust backend)
+- Source code: `native/`
+- Build output: `build/addon.node`
+
 ### Commands
 
-Build napi, run app in dev mode:
+Run app in dev mode (napi unoptimized):
 ```
 npm run dev
 ```
 
-Build napi in release mode, run app in dev mode:
+Run app in dev mode (napi optimized):
 ```
 npm run dev-release
 ```
 
-Build napi in release mode, build web to `build/`, build app to `dist/`
+Build app (optimized):
 ```
 npm run build
 ```
 
-Build web into `build/`:
+Build web:
 ```
 npm run build:web
 ```

@@ -82,7 +82,7 @@ app.on('ready', async () => {
   })
 
   if (is.dev) mainWindow.loadURL('http://localhost:' + (process.env.PORT || 8089))
-  else mainWindow.loadFile(path.resolve(__dirname, '../build/index.html'))
+  else mainWindow.loadFile(path.resolve(__dirname, '../build/web/index.html'))
 
   if (is.dev) mainWindow.webContents.openDevTools()
 
@@ -100,6 +100,7 @@ app.on('ready', async () => {
     mainWindow = null
   })
 
+  // doesn't fire on Windows :(
   app.on('before-quit', () => {
     mainWindow.webContents.send('gonnaQuit')
     ipcMain.once('readyToQuit', () => {
