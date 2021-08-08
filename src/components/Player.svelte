@@ -15,6 +15,8 @@
   } from '../stores/player'
   import { getDuration } from '../scripts/helpers'
   import { queueVisible, toggleQueueVisibility } from '../stores/queue'
+  import { isDev } from '../stores/data'
+
   let sliderBeingDragged = false
   const sliderSteps = 400
   let sliderValue = 0
@@ -33,7 +35,7 @@
 </script>
 
 <template lang="pug">
-  .player(class:stopped='{$stopped}' on:mousedown|self|preventDefault)
+  .player(class:stopped='{$stopped}' on:mousedown|self|preventDefault class:dev='{isDev}')
     .left
       +if('!$stopped')
         +if('$coverSrc')
@@ -99,6 +101,8 @@
     align-items: center
     border-top: 1px solid var(--border-color)
     background-color: var(--player-bg-color)
+    &:not(:hover).dev
+      background: linear-gradient(90deg, hsl(205deg 60% 15%), hsl(280deg 60% 15%))
   .stopped .middle
     pointer-events: none
     opacity: 0.25

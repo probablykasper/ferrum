@@ -19,6 +19,7 @@ type PageInfo = {
 }
 
 export const isDev = process.env.NODE_ENV === 'development'
+export const isMac = process.platform === 'darwin'
 export type Data = {
   get_paths: () => {
     library_dir: string

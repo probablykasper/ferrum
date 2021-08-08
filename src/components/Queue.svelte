@@ -105,7 +105,6 @@
     height: 100%
     box-sizing: border-box
     display: flex
-    padding-top: var(--titlebar-height)
     pointer-events: none
   .shadow
     height: 100%

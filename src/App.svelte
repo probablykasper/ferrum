@@ -3,14 +3,13 @@
   import { fade } from 'svelte/transition'
   import TrackList from './components/TrackList.svelte'
   import Player from './components/Player.svelte'
-  import Titlebar from './components/Titlebar.svelte'
   import Sidebar from './components/Sidebar.svelte'
   import Queue from './components/Queue.svelte'
   import TrackInfo from './components/TrackInfo.svelte'
   import PlaylistInfo from './components/PlaylistInfo.svelte'
   import { queueVisible } from './stores/queue'
   import { iTunesImport } from './stores/window'
-  import { isDev, paths, importTracks } from './stores/data'
+  import { isMac, paths, importTracks } from './stores/data'
   import { playPause } from './stores/player'
 
   let pageStatus = ''
@@ -122,7 +121,8 @@
       .drag-overlay(transition:fade='{{ duration: 100 }}')
         h1 Drop files to import
       .dropzone(on:dragleave='{dragLeave}' on:drop='{drop}' on:dragover='{dragOver}')
-    Titlebar(dev='{isDev}')
+    +if('isMac')
+      .titlebar(on:mousedown|self|preventDefault)
 </template>
 
 <style lang="sass">
@@ -209,4 +209,9 @@
         white-space: pre-wrap
         overflow: hidden
         overflow-wrap: anywhere
+  .titlebar
+    height: var(--titlebar-height)
+    width: 100%
+    position: absolute
+    -webkit-app-region: drag
 </style>

@@ -343,7 +343,7 @@
     --tracklist-gradient: linear-gradient(90deg, #2d44b9, #2847e2, #2d44b9)
   .header
     margin: 20px
-    margin-top: 0px
+    margin-top: 15px
     .title
       margin: 0px
       font-weight: 500
@@ -356,7 +356,6 @@
       opacity: 0.7
   .tracklist
     display: flex
-    padding-top: var(--titlebar-height)
     flex-direction: column
     min-width: 0px
     width: 100%

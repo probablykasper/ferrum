@@ -1,7 +1,7 @@
 <script lang="ts">
   import SidebarItems from './SidebarItems.svelte'
   import Filter from './Filter.svelte'
-  import { trackLists } from '../stores/data'
+  import { isMac, trackLists } from '../stores/data'
   import { ipcRenderer } from '../stores/window'
   import { visible as playlistModalVisible } from './PlaylistInfo.svelte'
   const special = {
@@ -30,6 +30,8 @@
 
 <template lang="pug">
   .sidebar(on:mousedown|self|preventDefault)
+    +if('isMac')
+      .titlebar-spacer
     .content
       .spacer(on:mousedown|self|preventDefault)
       Filter
@@ -48,8 +50,9 @@
     min-width: 230px
     display: flex
     flex-direction: column
-    padding-top: var(--titlebar-height)
     background-color: var(--sidebar-bg-color)
+  .titlebar-spacer
+    height: var(--titlebar-height)
   .content
     overflow-y: scroll
     display: flex
