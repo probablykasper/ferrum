@@ -24,7 +24,6 @@ export type Data = {
   get_paths: () => {
     library_dir: string
     tracks_dir: string
-    artworks_dir: string
     library_json: string
   }
   save: () => void

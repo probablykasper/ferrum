@@ -3,7 +3,6 @@ use crate::data_js::get_data;
 use crate::js::{arg_to_number, arg_to_string, nerr};
 use crate::library_types::Track;
 use crate::{get_now_timestamp, str_to_option, sys_time_to_timestamp};
-use atomicwrites::{AtomicFile, DisallowOverwrite};
 use id3;
 use mp3_metadata;
 use mp4ameta;
@@ -13,7 +12,6 @@ use napi::{
 use napi_derive::js_function;
 use serde::{Deserialize, Serialize};
 use std::fs;
-use std::io::Write;
 use std::path::{Path, PathBuf};
 
 fn id_arg_to_track<'a>(ctx: &'a CallContext, arg: usize) -> NResult<&'a mut Track> {
@@ -298,33 +296,6 @@ fn import_mp3(data: &Data, track_path: &Path) -> Track {
   let filename = generate_filename(&tracks_dir, artist.unwrap_or(""), &title, "mp3");
   let dest_path = tracks_dir.join(&filename);
 
-  let mut artwork_path = None;
-  let mut artwork_data = None;
-  for picture in tag.pictures() {
-    let ext = match picture.mime_type.as_str() {
-      "image/jpeg" => "jpg",
-      "image/png" => "png",
-      _ => continue,
-    };
-    match picture.picture_type {
-      id3::frame::PictureType::Other => {}
-      id3::frame::PictureType::Undefined(_) => {}
-      id3::frame::PictureType::CoverFront => {}
-      _ => continue,
-    }
-    let artwork_filename = filename.to_owned() + "." + ext;
-    let artwork_path_x = data.paths.artworks_dir.join(artwork_filename);
-    match Path::exists(&artwork_path_x) {
-      true => panic!(
-        "Artwork path already exists: {}",
-        artwork_path_x.to_string_lossy().into_owned()
-      ),
-      false => {}
-    }
-    artwork_path = Some(artwork_path_x);
-    artwork_data = Some(&picture.data);
-  }
-
   fs::copy(track_path, &dest_path).expect("Error copying file");
 
   if tag_changed {
@@ -334,17 +305,6 @@ fn import_mp3(data: &Data, track_path: &Path) -> Track {
     // manually set date_modified because the date_modified doens't seem to
     // immediately update after tag.write_to_path().
     date_modified = now;
-  }
-
-  // copy artwork
-  if let Some(artwork_path) = artwork_path {
-    if let Some(artwork_data) = artwork_data {
-      let af = AtomicFile::new(artwork_path, DisallowOverwrite);
-      match af.write(|f| f.write_all(&artwork_data)) {
-        Ok(_) => {}
-        Err(err) => panic!("Error writing cover: {}", err),
-      }
-    }
   }
 
   let track = Track {

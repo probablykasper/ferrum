@@ -57,7 +57,6 @@ pub fn load_data(is_dev: &bool) -> Result<Data, &'static str> {
   let paths = Paths {
     library_dir: library_dir.clone(),
     tracks_dir: library_dir.join("Tracks"),
-    artworks_dir: library_dir.join("Artworks"),
     library_json: library_json_path,
   };
 

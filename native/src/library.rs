@@ -11,13 +11,11 @@ use std::time::Instant;
 pub struct Paths {
   pub library_dir: PathBuf,
   pub tracks_dir: PathBuf,
-  pub artworks_dir: PathBuf,
   pub library_json: PathBuf,
 }
 fn ensure_dirs_exists(paths: &Paths) -> Result<(), Error> {
   create_dir_all(&paths.library_dir)?;
   create_dir_all(&paths.tracks_dir)?;
-  create_dir_all(&paths.artworks_dir)?;
   return Ok(());
 }
 

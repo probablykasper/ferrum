@@ -2,10 +2,15 @@
 
 ## Next
 - Add volume controls
+- Add ability to create playlists
+- Add track metadata editing
 - Add playlist header
 - Glowy fancy sidebar playlist highlight
+- Some smaller design improvements
 - Improve scrolling performance
 - Make `space` shortcut work more often
+- The `Ferrum/Artworks` folder is no longer necessary and can be safely deleted
+- Breaking change: Make `library.json` track artist field required. Previously, this field was left out if it was empty
 
 ## 0.7.0 - 2021 May 14
 - Add queue panel
