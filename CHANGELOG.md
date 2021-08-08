@@ -1,6 +1,6 @@
 # Changelog
 
-## Next
+## 0.8.1 - 2021 Aug 9
 - Fix error after updating metadata when filter is on
 
 ## 0.8.0 - 2021 Aug 8
