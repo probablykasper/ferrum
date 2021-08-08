@@ -13,7 +13,7 @@
     "napi": "electron-build-env napi build --cargo-cwd ./native  ./build --release",
     "napi:dev": "electron-build-env napi build --cargo-cwd ./native  ./build",
     "build": "npm run napi && npm run build:web && electron-builder",
-    "build-ci": "npm run napi && npm run build:web",
+    "electron-builder": "electron-builder",
     "build:web": "vite build",
     "lint": "prettier --write --ignore-path .gitignore *.js *.json src",
     "check": "svelte-check"

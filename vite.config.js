@@ -2,11 +2,10 @@ import { defineConfig } from 'vite'
 import { svelte } from '@sveltejs/vite-plugin-svelte'
 import sveltePreprocess from 'svelte-preprocess'
 
-console.log('VITEPORT', process.env.PORT || 8089)
 export default defineConfig({
   root: './src',
   base: './', // use relative paths
-  publicDir: '../public',
+  // publicDir: '../public',
   clearScreen: false,
   server: {
     port: process.env.PORT || 8089,

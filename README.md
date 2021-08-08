@@ -85,9 +85,6 @@ npm run check
     ```
     cargo check --manifest-path native/Cargo.toml
     ```
-5. Commit and tag in format "v#.#.#"
-6. Build the app
-    ```
-    npm run build
-    ```
-7. Create GitHub release with release notes
+5. Commit with a tag in format "v#.#.#"
+6. Wait for the GitHub workflow to finish successfully
+7. Add release notes to the generated GitHub release and publish it

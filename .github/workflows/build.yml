@@ -1,0 +1,36 @@
+name: Build
+on:
+  push:
+    branches:
+      - '*'
+    tags-ignore:
+      - '*'
+  workflow_dispatch:
+env:
+  CARGO_TERM_COLOR: always
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - { os: macos-latest, arg: --mac }
+          - { os: ubuntu-latest, arg: --linux }
+          - { os: windows-latest, arg: --windows }
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Rust setup
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+
+      - name: Node.js setup
+        uses: actions/setup-node@v2
+        with:
+          node-version: 14
+
+      - run: npm install && npm run napi && npm run build:web
+
+      - run: npm run electron-builder -- ${{ matrix.arg }} --publish never
