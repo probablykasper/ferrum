@@ -63,19 +63,22 @@
   const sortBy = page.sortBy
   $: sortKey = $page.sort_key
 
-  let selection = newSelection()
+  const selection = newSelection()
+
   let possibleRowClick = false
   function rowMouseDown(e: MouseEvent, index: number, ctx = false) {
     if (e.button !== 0 && !ctx) return
-    if ($selection.list[index]) {
+    const isSelected = $selection.list[index]
+    if (isSelected) {
       possibleRowClick = true
-    } else if (checkMouseShortcut(e)) {
+    }
+    if (checkMouseShortcut(e) && !isSelected) {
       selection.clear()
       selection.add(index)
-    } else if (checkMouseShortcut(e, { cmdOrCtrl: true })) {
-      selection.toggle(index)
+    } else if (checkMouseShortcut(e, { cmdOrCtrl: true }) && !isSelected) {
+      selection.add(index)
     } else if (checkMouseShortcut(e, { shift: true })) {
-      selection.selectTo(index)
+      selection.shiftSelectTo(index)
     }
   }
   function rowClick(e: MouseEvent, index: number) {
@@ -88,6 +91,11 @@
       }
     }
     possibleRowClick = false
+  }
+  function doubleClick(e: MouseEvent, index: number) {
+    if (e.button === 0 && checkMouseShortcut(e)) {
+      playRow(index)
+    }
   }
   function onContextMenu(e: MouseEvent, index: number) {
     rowMouseDown(e, index, true)
@@ -105,20 +113,6 @@
     if (e.key === 'Enter') {
       let firstIndex = selection.findFirst($selection.list) || 0
       playRow(firstIndex)
-    } else if (checkShortcut(e, 'ArrowUp')) {
-      e.preventDefault()
-      const lastAdded = $selection.lastAdded
-      if (lastAdded !== null && lastAdded > 0) {
-        selection.clear()
-        selection.add(lastAdded - 1)
-      }
-    } else if (checkShortcut(e, 'ArrowDown')) {
-      e.preventDefault()
-      const lastAdded = $selection.lastAdded
-      if (lastAdded !== null && lastAdded + 1 < $page.length) {
-        selection.clear()
-        selection.add(lastAdded + 1)
-      }
     } else if (e.key === 'Backspace' && $selection.count > 0 && !$filter) {
       e.preventDefault()
       const s = $selection.count > 1 ? 's' : ''
@@ -137,7 +131,32 @@
       if (result.buttonClicked === 0) {
         removeFromOpenPlaylist(indexes)
       }
+    } else if (checkShortcut(e, 'Escape')) {
+      selection.clear()
+    } else if (checkShortcut(e, 'ArrowUp')) {
+      selection.goBackward($page.length - 1)
+    } else if (checkShortcut(e, 'ArrowUp', { shift: true })) {
+      selection.shiftSelectBackward()
+    } else if (checkShortcut(e, 'ArrowUp', { alt: true })) {
+      selection.clear()
+      selection.add(0)
+    } else if (checkShortcut(e, 'ArrowUp', { shift: true, alt: true })) {
+      selection.shiftSelectTo(0)
+    } else if (checkShortcut(e, 'ArrowDown')) {
+      selection.goForward($page.length - 1)
+    } else if (checkShortcut(e, 'ArrowDown', { shift: true })) {
+      selection.shiftSelectForward($page.length - 1)
+    } else if (checkShortcut(e, 'ArrowDown', { alt: true })) {
+      selection.clear()
+      selection.add($page.length - 1)
+    } else if (checkShortcut(e, 'ArrowDown', { shift: true, alt: true })) {
+      selection.shiftSelectTo($page.length - 1)
+    } else if (checkShortcut(e, 'A', { cmdOrCtrl: true })) {
+      selection.add(0, $page.length - 1)
+    } else {
+      return
     }
+    e.preventDefault()
   }
 
   function playRow(index: number) {
@@ -293,7 +312,7 @@
     let:index>
     <div
       class="row"
-      on:dblclick={() => playRow(index)}
+      on:dblclick={() => doubleClick(index)}
       on:mousedown={(e) => rowMouseDown(e, index)}
       on:click={(e) => rowClick(e, index)}
       on:contextmenu={(e) => onContextMenu(e, index)}
