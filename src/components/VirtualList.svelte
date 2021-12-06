@@ -10,6 +10,15 @@
   let scrollTop = 0
   let visibleItems: any[] = []
 
+  export function scrollToItem(index: number) {
+    const top = index * itemHeight
+    if (viewport.scrollTop > top) {
+      viewport.scrollTop = top
+    } else if (viewport.scrollTop + viewport.clientHeight < top + itemHeight) {
+      viewport.scrollTop = top + itemHeight - viewport.clientHeight
+    }
+  }
+
   let viewport: HTMLDivElement
   function handleScroll(e: Event) {
     const target = e.target as HTMLTextAreaElement

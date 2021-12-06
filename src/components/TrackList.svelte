@@ -135,22 +135,29 @@
       selection.clear()
     } else if (checkShortcut(e, 'ArrowUp')) {
       selection.goBackward($page.length - 1)
+      vlist.scrollToItem($selection.lastAdded || 0)
     } else if (checkShortcut(e, 'ArrowUp', { shift: true })) {
       selection.shiftSelectBackward()
+      vlist.scrollToItem($selection.lastAdded || 0)
     } else if (checkShortcut(e, 'ArrowUp', { alt: true })) {
       selection.clear()
       selection.add(0)
     } else if (checkShortcut(e, 'ArrowUp', { shift: true, alt: true })) {
       selection.shiftSelectTo(0)
+      vlist.scrollToItem($selection.lastAdded || 0)
     } else if (checkShortcut(e, 'ArrowDown')) {
       selection.goForward($page.length - 1)
+      vlist.scrollToItem($selection.lastAdded || 0)
     } else if (checkShortcut(e, 'ArrowDown', { shift: true })) {
       selection.shiftSelectForward($page.length - 1)
+      vlist.scrollToItem($selection.lastAdded || 0)
     } else if (checkShortcut(e, 'ArrowDown', { alt: true })) {
       selection.clear()
       selection.add($page.length - 1)
+      vlist.scrollToItem($selection.lastAdded || 0)
     } else if (checkShortcut(e, 'ArrowDown', { shift: true, alt: true })) {
       selection.shiftSelectTo($page.length - 1)
+      vlist.scrollToItem($selection.lastAdded || 0)
     } else if (checkShortcut(e, 'A', { cmdOrCtrl: true })) {
       selection.add(0, $page.length - 1)
     } else {
@@ -312,7 +319,7 @@
     let:index>
     <div
       class="row"
-      on:dblclick={() => doubleClick(index)}
+      on:dblclick={(e) => doubleClick(e, index)}
       on:mousedown={(e) => rowMouseDown(e, index)}
       on:click={(e) => rowClick(e, index)}
       on:contextmenu={(e) => onContextMenu(e, index)}

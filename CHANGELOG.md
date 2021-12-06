@@ -4,6 +4,7 @@
 - Add `Escape` shortcut for deselecting tracks
 - Add support selecting tracks via `Cmd+A`, `Shift+Up/Down`, `Alt+Up/Down`, `Shift+Alt+Up/Down`
 - Improve behavior of shift-selecting tracks
+- Make sure newly selected tracks are visible by scrolling to them
 
 ## 0.8.1 - 2021 Aug 9
 - Fix error after updating metadata when filter is on
