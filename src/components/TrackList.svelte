@@ -44,7 +44,7 @@
       console.error('Unknown contextMenu ID', clickedId)
     }
   }
-  function getInfoCmd(node: HTMLElement) {
+  function getInfoCmd(_node: HTMLElement) {
     function handler() {
       for (let i = 0; i < $selection.list.length; i++) {
         if ($selection.list[i]) {
@@ -262,7 +262,13 @@
 
 <div class="tracklist" on:dragleave={() => (dragToIndex = null)} use:getInfoCmd>
   <div class="header">
-    <h3 class="title">{$page.tracklist.name}</h3>
+    <h3 class="title">
+      {#if $page.tracklist.id === 'root'}
+        Songs
+      {:else if $page.tracklist.type === 'playlist'}
+        {$page.tracklist.name}
+      {/if}
+    </h3>
     <div class="info">{$page.length} songs</div>
     {#if 'description' in $page.tracklist}
       <div class="description">{$page.tracklist.description}</div>

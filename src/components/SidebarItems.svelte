@@ -48,13 +48,27 @@
     <div class="sub" class:show={childList.show}>
       <svelte:self trackList={childList} />
     </div>
-  {:else}
+  {:else if childList.type === 'playlist'}
     <div
       class="item"
       on:mousedown={() => open(childList.id)}
       class:active={$page.id === childList.id}>
       <div class="arrow" />
       <div class="text">{childList.name}</div>
+    </div>
+  {:else}
+    <div
+      class="item"
+      on:mousedown={() => open(childList.id)}
+      class:active={$page.id === childList.id}>
+      <div class="arrow" />
+      <div class="text">
+        {#if childList.id === 'root'}
+          Songs
+        {:else}
+          {childList.name}
+        {/if}
+      </div>
     </div>
   {/if}
 {/each}
