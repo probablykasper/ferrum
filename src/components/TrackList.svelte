@@ -367,12 +367,13 @@
 </div>
 
 <style lang="sass">
-  :global(.selected)
-    --tracklist-gradient: linear-gradient(90deg, hsl(212, 80%, 35%), hsl(275, 80%, 35%))
-    --tracklist-gradient: linear-gradient(90deg, #2d44b9b3, #2847e2b3, #2d44b9b3)
-  :global(:focus .selected)
-    --tracklist-gradient: linear-gradient(90deg, hsl(212, 80%, 45%), hsl(275, 80%, 45%))
-    --tracklist-gradient: linear-gradient(90deg, #2d44b9, #2847e2, #2d44b9)
+  .odd
+    background-color: hsla(0, 0%, 90%, 0.05)
+  .selected
+    background-color: hsla(var(--hue), 12%, 45%, 0.5)
+  :global(:focus)
+    .selected
+      background-color: hsla(var(--hue), 100%, 60%, 0.5)
   .header
     margin: 20px
     margin-top: 15px
@@ -391,7 +392,7 @@
     flex-direction: column
     min-width: 0px
     width: 100%
-    background-color: var(--bg-1)
+    background-color: rgba(0, 0, 0, 0.01)
     overflow: hidden
     .table-header
       .c
@@ -416,10 +417,6 @@
       line-height: $row-height
       box-sizing: border-box
       position: relative
-      &.odd
-        background-color: var(--bg-2)
-      &.selected
-        background: var(--tracklist-gradient)
       &.playing.selected
         color: #ffffff
       &.playing
@@ -439,7 +436,6 @@
         min-width: 36px
         text-align: right
         svg.playing-icon
-          // fill: #2efac7
           fill: #00ffff
           width: 16px
           height: 100%

@@ -49,16 +49,18 @@
     min-width: 230px
     display: flex
     flex-direction: column
-    background-color: var(--sidebar-bg-color)
+    background-color: hsla(0, 0%, 0%, 0.7)
+    box-shadow: inset -6px 0px 6px -6px #000000
   .titlebar-spacer
     height: var(--titlebar-height)
-    padding-bottom: 5px
+    flex-shrink: 0
   .content
+    padding-top: 5px
     overflow-y: scroll
     display: flex
     flex-direction: column
     flex-grow: 1
-    background-color: var(--sidebar-bg-color) // for scrollbar color
+    background-color: rgba(0, 0, 0, 0.01) // for scrollbar color
   .spacer
     height: 10px
     flex-shrink: 0

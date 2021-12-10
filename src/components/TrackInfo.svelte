@@ -12,7 +12,7 @@
     return value.replace(/[^0-9]*/g, '')
   }
   function toString(value: any) {
-    return String(value).replaceAll(/\0/g, '')
+    return String(value).replace(/\0/g, '') // remove NULL bytes
   }
   let name = ''
   let artist = ''

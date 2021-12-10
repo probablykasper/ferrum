@@ -40,21 +40,21 @@
   const allowedMimes = ['audio/mpeg']
   function getFilePaths(e: DragEvent): string[] {
     if (!e.dataTransfer) return []
-    let validPaths = []
-    for (const file of e.dataTransfer.files) {
+    let validPaths: string[] = []
+    Array.from(e.dataTransfer.files).forEach((file) => {
       if (allowedMimes.includes(file.type)) {
         validPaths.push(file.path)
       }
-    }
+    })
     return validPaths
   }
   function hasFiles(e: DragEvent): boolean {
     if (!e.dataTransfer) return false
-    for (const item of e.dataTransfer.items) {
+    Array.from(e.dataTransfer.items).forEach((item) => {
       if (item.kind === 'file' && allowedMimes.includes(item.type)) {
         return true
       }
-    }
+    })
     return false
   }
   function dragEnter(e: DragEvent) {
@@ -126,24 +126,20 @@
 </template>
 
 <style lang="sass">
-  main
-    --bg-1: hsl(240, 10%, 8%)
-    --bg-2: hsl(230, 7%, 12%)
-    --bg-3: hsl(228, 6%, 15%)
-    --sidebar-bg-color: #000000
+  :global(:root)
     --player-bg-color: #17181c
     --text-color: #e6e6e6
     --drag-bg-color: #1e1f24
     --drag-line-color: #0083f5
     --empty-cover-bg-color: #2b2c31
     --empty-cover-color: #45464a
-    --outline-color-disabled: #505766
     --border-color: #333333
     --accent-1: #2e5be0
     --accent-2: #103fcb
     --icon-color: #e6e6e6
     --icon-highlight-color: #00ffff
     --titlebar-height: 22px
+    --hue: 230
   :global(html), :global(body)
     background-color: #0D1115
     height: 100%
@@ -152,6 +148,7 @@
     width: 100%
     margin: 0
     box-sizing: border-box
+    background-image: linear-gradient(150deg, hsl(var(--hue), 60%, 10%), hsl(var(--hue), 20%, 6%))
   :global(h1), :global(h2), :global(h3)
     font-weight: 400
     margin: 0px
@@ -167,7 +164,6 @@
     justify-content: center
     background-color: rgba(#10161e, 0.9)
     transition: all 100ms ease-in-out
-
   main
     height: 100%
     max-height: 100%
@@ -176,14 +172,12 @@
     user-select: none
     display: flex
     flex-direction: column
-
   .meat
     position: relative
     height: 0px
     display: flex
     flex-direction: row
     flex-grow: 1
-
   .page-status-bg
     position: absolute
     top: 0px

@@ -113,7 +113,7 @@
   .content
     height: 100%
     width: 250px
-    background-color: var(--sidebar-bg-color)
+    background-color: #000000
     pointer-events: all
     overflow-y: scroll
     border-left: 1px solid var(--border-color)

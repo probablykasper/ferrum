@@ -22,15 +22,18 @@
     width: calc(100% - 15px*2)
     margin: auto
     font-family: inherit
-    padding: 4px 12px
+    padding: 6px 12px
     box-sizing: border-box
     color: inherit
-    background-color: var(--bg-3)
+    background-color: hsla(var(--hue), 68%, 90%, 0.08)
     border-radius: 3px
     outline: none
     border: 2px solid transparent
+    &:focus
+      background-color: hsla(var(--hue), 68%, 90%, 0.1)
     &.on:focus
-      border: 2px solid var(--accent-1)
+      border: 2px solid hsla(var(--hue), 60%, 50%, 1)
     &.on
-      border: 2px solid var(--outline-color-disabled)
+      border: 2px solid hsl(var(--hue), 15%, 35%)
+      background-color: hsla(var(--hue), 68%, 90%, 0.1)
 </style>
