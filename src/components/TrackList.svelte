@@ -142,6 +142,7 @@
     } else if (checkShortcut(e, 'ArrowUp', { alt: true })) {
       selection.clear()
       selection.add(0)
+      vlist.scrollToItem(0)
     } else if (checkShortcut(e, 'ArrowUp', { shift: true, alt: true })) {
       selection.shiftSelectTo(0)
       vlist.scrollToItem($selection.lastAdded || 0)
