@@ -2,6 +2,7 @@
 
 ## Next
 - Add ability to delete tracks from library
+- Add more items to Song menu
 - Add `Escape` shortcut for deselecting tracks
 - Add support selecting tracks via `Cmd+A`, `Shift+Up/Down`, `Alt+Up/Down`, `Shift+Alt+Up/Down`
 - Improve behavior of shift-selecting tracks

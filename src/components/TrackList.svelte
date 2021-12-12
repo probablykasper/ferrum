@@ -23,6 +23,7 @@
   import { appendToUserQueue, prependToUserQueue } from '../stores/queue'
   import { ipcRenderer } from '../stores/window'
   import type { TrackID, Special } from '../stores/libraryTypes'
+  import { onDestroy, onMount } from 'svelte'
 
   export async function showTrackMenu(ids: TrackID[], indexes: number[]) {
     const trackLists = $trackListsStore
@@ -30,36 +31,65 @@
 
     const clickedId = await ipcRenderer.invoke('showTrackMenu', flat)
     if (clickedId === null) return
-    if (clickedId === 'Add to Queue') {
-      appendToUserQueue(ids)
-    } else if (clickedId === 'Play Next') {
+    if (clickedId === 'Play Next') {
       prependToUserQueue(ids)
+    } else if (clickedId === 'Add to Queue') {
+      appendToUserQueue(ids)
     } else if (clickedId.startsWith('add-to-')) {
       const pId = clickedId.substring('add-to-'.length)
       addTracksToPlaylist(pId, ids)
     } else if (clickedId === 'Remove from Playlist') {
-      removeFromOpenPlaylist(indexes)
+      if ($page.tracklist.type === 'playlist') {
+        removeFromOpenPlaylist(indexes)
+      }
     } else if (clickedId === 'Get Info') {
       trackInfo.open(ids[0])
     } else {
       console.error('Unknown contextMenu ID', clickedId)
     }
   }
-  function getInfoCmd(_node: HTMLElement) {
-    function handler() {
-      for (let i = 0; i < $selection.list.length; i++) {
-        if ($selection.list[i]) {
-          const id = page.getTrackId(i)
-          trackInfo.open(id)
-          return
-        }
-      }
-    }
-    ipcRenderer.on('getInfo', handler)
-    return {
-      destroy: () => ipcRenderer.off('getInfo', handler),
+
+  function playNext() {
+    const indexes = selection.getSelectedIndexes($selection)
+    const ids = indexes.map((i) => page.getTrackId(i))
+    prependToUserQueue(ids)
+  }
+  function addToQueue() {
+    const indexes = selection.getSelectedIndexes($selection)
+    const ids = indexes.map((i) => page.getTrackId(i))
+    appendToUserQueue(ids)
+  }
+  function getInfo() {
+    const index = selection.findFirst($selection.list)
+    if (index !== null) {
+      const id = page.getTrackId(index)
+      trackInfo.open(id)
     }
   }
+  function removeFromPlaylist() {
+    if ($page.tracklist.type === 'playlist') {
+      const indexes = selection.getSelectedIndexes($selection)
+      removeFromOpenPlaylist(indexes)
+    }
+  }
+  function deleteFromLibrary() {
+    const indexes = selection.getSelectedIndexes($selection)
+    deleteTracksInOpen(indexes)
+  }
+  onMount(() => {
+    ipcRenderer.on('Get Info', getInfo)
+    ipcRenderer.on('Play Next', playNext)
+    ipcRenderer.on('Add to Queue', addToQueue)
+    ipcRenderer.on('Remove from Playlist', removeFromPlaylist)
+    ipcRenderer.on('Delete from Library', deleteFromLibrary)
+  })
+  onDestroy(() => {
+    ipcRenderer.off('Get Info', getInfo)
+    ipcRenderer.off('Play Next', playNext)
+    ipcRenderer.off('Add to Queue', addToQueue)
+    ipcRenderer.off('Remove from Playlist', removeFromPlaylist)
+    ipcRenderer.off('Delete from Library', deleteFromLibrary)
+  })
 
   const sortBy = page.sortBy
   $: sortKey = $page.sort_key
@@ -100,14 +130,8 @@
   }
   function onContextMenu(e: MouseEvent, index: number) {
     rowMouseDown(e, index, true)
-    const ids = []
-    const indexes = []
-    for (let i = 0; i < $selection.list.length; i++) {
-      if ($selection.list[i]) {
-        ids.push(page.getTrackId(i))
-        indexes.push(i)
-      }
-    }
+    const indexes = selection.getSelectedIndexes($selection)
+    const ids = indexes.map((i) => page.getTrackId(i))
     showTrackMenu(ids, indexes)
   }
   async function rowKeydown(e: KeyboardEvent) {
@@ -285,7 +309,7 @@
   <div bind:this={dragElDiv} />
 </div>
 
-<div class="tracklist" on:dragleave={() => (dragToIndex = null)} use:getInfoCmd>
+<div class="tracklist" on:dragleave={() => (dragToIndex = null)}>
   <div class="header">
     <h3 class="title">
       {#if $page.tracklist.id === 'root'}

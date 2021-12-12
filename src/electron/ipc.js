@@ -21,6 +21,11 @@ ipcMain.handle('showTrackMenu', (e, list) => {
     }
     const menu = Menu.buildFromTemplate([
       {
+        label: 'Add to Playlist',
+        submenu: list,
+      },
+      { type: 'separator' },
+      {
         label: 'Play Next',
         click: () => resolve('Play Next'),
       },
@@ -30,17 +35,13 @@ ipcMain.handle('showTrackMenu', (e, list) => {
       },
       { type: 'separator' },
       {
-        label: 'Add to Playlist',
-        submenu: list,
-      },
-      {
-        label: 'Remove from Playlist',
-        click: () => resolve('Remove from Playlist'),
+        label: 'Get Info',
+        click: () => resolve('Get Info'),
       },
       { type: 'separator' },
       {
-        label: 'Get Info',
-        click: () => resolve('Get Info'),
+        label: 'Remove from Playlist',
+        click: () => resolve('Remove from Playlist'),
       },
     ])
     menu.once('will-close', () => resolve())

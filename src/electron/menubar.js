@@ -26,7 +26,7 @@ module.exports.initMenuBar = (app, mainWindow) => {
       submenu: [
         {
           label: 'New Playlist',
-          accelerator: 'CommandOrControl+N',
+          accelerator: 'CmdOrCtrl+N',
           click: () => {
             mainWindow.webContents.send('newPlaylist')
           },
@@ -62,7 +62,7 @@ module.exports.initMenuBar = (app, mainWindow) => {
         }
         menu.push({
           label: 'Filter',
-          accelerator: 'CommandOrControl+F',
+          accelerator: 'CmdOrCtrl+F',
           click: () => {
             mainWindow.webContents.send('filter')
           },
@@ -74,10 +74,40 @@ module.exports.initMenuBar = (app, mainWindow) => {
       label: 'Song',
       submenu: [
         {
-          label: 'Get Info',
-          accelerator: 'CommandOrControl+I',
+          label: 'Play Next',
+          accelerator: '',
           click: () => {
-            mainWindow.webContents.send('getInfo')
+            mainWindow.webContents.send('Play Next')
+          },
+        },
+        {
+          label: 'Add to Queue',
+          accelerator: '',
+          click: () => {
+            mainWindow.webContents.send('Add to Queue')
+          },
+        },
+        { type: 'separator' },
+        {
+          label: 'Get Info',
+          accelerator: 'CmdOrCtrl+I',
+          click: () => {
+            mainWindow.webContents.send('Get Info')
+          },
+        },
+        { type: 'separator' },
+        {
+          label: 'Remove from Playlist',
+          accelerator: '',
+          click: () => {
+            mainWindow.webContents.send('Remove from Playlist')
+          },
+        },
+        {
+          label: 'Delete from Library',
+          accelerator: 'CmdOrCtrl+Backspace',
+          click: () => {
+            mainWindow.webContents.send('Delete from Library')
           },
         },
       ],
@@ -109,14 +139,14 @@ module.exports.initMenuBar = (app, mainWindow) => {
         { type: 'separator' },
         {
           label: 'Volume Up',
-          accelerator: 'CommandOrControl+Up',
+          accelerator: 'CmdOrCtrl+Up',
           click: () => {
             mainWindow.webContents.send('volumeUp')
           },
         },
         {
           label: 'Volume Down',
-          accelerator: 'CommandOrControl+Down',
+          accelerator: 'CmdOrCtrl+Down',
           click: () => {
             mainWindow.webContents.send('volumeDown')
           },

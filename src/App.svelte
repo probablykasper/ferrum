@@ -139,7 +139,7 @@
     --icon-color: #e6e6e6
     --icon-highlight-color: #00ffff
     --titlebar-height: 22px
-    --hue: 230
+    --hue: 225
   :global(html), :global(body)
     background-color: #0D1115
     height: 100%

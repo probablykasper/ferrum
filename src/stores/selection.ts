@@ -56,6 +56,7 @@ function removeRange(selection: Selection, from: number, to: number) {
   }
 }
 
+/** Get first selected index */
 function findFirst(list: boolean[]) {
   for (let i = 0; i < list.length; i++) {
     if (list[i] === true) return i
@@ -107,6 +108,15 @@ export function newSelection() {
   return {
     subscribe: store.subscribe,
     findFirst: findFirst,
+    getSelectedIndexes(selection: Selection): number[] {
+      const indexes = []
+      for (let i = 0; i < selection.list.length; i++) {
+        if (selection.list[i]) {
+          indexes.push(i)
+        }
+      }
+      return indexes
+    },
     /**
      * Add an index to the selection.
      */

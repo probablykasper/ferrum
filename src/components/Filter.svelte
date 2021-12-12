@@ -22,7 +22,7 @@
     width: calc(100% - 15px*2)
     margin: auto
     font-family: inherit
-    padding: 6px 12px
+    padding: 5px 12px
     box-sizing: border-box
     color: inherit
     background-color: hsla(var(--hue), 68%, 90%, 0.08)
