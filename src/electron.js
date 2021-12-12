@@ -5,7 +5,7 @@ if (is.dev) app.setName('Ferrum Dev')
 
 const menubar = require('./electron/menubar.js')
 const shortcuts = require('./electron/shortcuts.js')
-const ipc = require('./electron/ipc.js')
+require('./electron/ipc.js')
 const path = require('path')
 
 async function errHandler(msg, error) {
@@ -58,16 +58,15 @@ app.on('ready', async () => {
     show: false,
   })
 
+  if (!is.dev) {
+    await shortcuts.initMediaKeys(mainWindow)
+  }
+
   protocol.registerFileProtocol('file', (request, callback) => {
     const url = decodeURI(request.url)
     const path = url.substr(7)
     callback(path)
   })
-
-  if (!is.dev) {
-    const openSysPref = await shortcuts.initMediaKeys(mainWindow)
-    if (openSysPref) return app.quit()
-  }
 
   // Electron shows a warning when unsafe-eval is enabled, so we disable
   // security warnings. Somehow devtools doesn't open without unsafe-eval.

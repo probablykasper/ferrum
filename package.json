@@ -29,7 +29,8 @@
         "dmg"
       ],
       "darkModeSupport": true,
-      "identity": null
+      "identity": null,
+      "electronLanguages": null
     },
     "linux": {
       "category": "Audio",

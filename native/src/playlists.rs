@@ -88,7 +88,9 @@ fn get_page_ids(data: &mut Data, indexes: Vec<u32>) -> UniResult<Vec<String>> {
 
 fn delete_file(path: &PathBuf) -> UniResult<()> {
   let mut trash_context = trash::TrashContext::new();
-  trash_context.set_delete_method(trash::macos::DeleteMethod::NsFileManager);
+  if cfg!(target_os = "macos") {
+    trash_context.set_delete_method(trash::macos::DeleteMethod::NsFileManager);
+  }
   match trash_context.delete(&path) {
     Ok(_) => Ok(()),
     Err(_) => throw!("Failed moving file to trash: {}", path.to_string_lossy()),
