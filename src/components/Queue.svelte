@@ -2,16 +2,25 @@
   import { queue } from '../stores/queue'
   import { methods } from '../stores/data'
   import { fade } from 'svelte/transition'
+  import { onDestroy } from 'svelte'
 
+  let objectUrls: string[] = []
   async function loadCover(id: string) {
     try {
       let buf = await methods.readCoverAsync(id)
       let url = URL.createObjectURL(new Blob([buf], {}))
+      objectUrls.push(url)
       return url
     } catch (e) {
       throw null
     }
   }
+
+  onDestroy(() => {
+    for (let url of objectUrls) {
+      URL.revokeObjectURL(url)
+    }
+  })
 
   function getItem(index: number) {
     const id = $queue.ids[index]

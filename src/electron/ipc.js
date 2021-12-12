@@ -21,17 +21,16 @@ ipcMain.handle('showTrackMenu', (e, list) => {
     }
     const menu = Menu.buildFromTemplate([
       {
-        label: 'Add to Playlist',
-        submenu: list,
-      },
-      { type: 'separator' },
-      {
         label: 'Play Next',
         click: () => resolve('Play Next'),
       },
       {
         label: 'Add to Queue',
         click: () => resolve('Add to Queue'),
+      },
+      {
+        label: 'Add to Playlist',
+        submenu: list,
       },
       { type: 'separator' },
       {
