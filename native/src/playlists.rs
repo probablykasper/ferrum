@@ -7,6 +7,8 @@ use crate::library_types::{Library, SpecialTrackListName, TrackList};
 use crate::{str_to_option, UniResult};
 use napi::{CallContext, JsUndefined, JsUnknown, Result as NResult};
 use napi_derive::js_function;
+
+#[cfg(target_os = "macos")]
 use trash::macos::TrashContextExtMacos;
 
 #[js_function(0)]

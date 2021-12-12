@@ -9,6 +9,7 @@
 - Fix memory leak from opening queue
 - Improve behavior of shift-selecting tracks
 - Make sure newly selected tracks are visible by scrolling to them
+- Improve media key handler registration
 
 ## 0.8.1 - 2021 Aug 9
 - Fix error after updating metadata when filter is on
