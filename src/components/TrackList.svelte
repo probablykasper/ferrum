@@ -7,6 +7,7 @@
     filter,
     trackLists as trackListsStore,
     addTracksToPlaylist,
+    deleteTracksInOpen,
   } from '../stores/data'
   import { newPlaybackInstance, playingId } from '../stores/player'
   import {
@@ -110,15 +111,20 @@
     showTrackMenu(ids, indexes)
   }
   async function rowKeydown(e: KeyboardEvent) {
-    if (e.key === 'Enter') {
+    if (checkShortcut(e, 'Enter')) {
       let firstIndex = selection.findFirst($selection.list) || 0
       playRow(firstIndex)
-    } else if (e.key === 'Backspace' && $selection.count > 0 && !$filter) {
+    } else if (
+      checkShortcut(e, 'Backspace') &&
+      $selection.count > 0 &&
+      !$filter &&
+      $page.tracklist.type === 'playlist'
+    ) {
       e.preventDefault()
       const s = $selection.count > 1 ? 's' : ''
-      const result = await showMessageBox({
+      const result = showMessageBox({
         type: 'info',
-        message: `Remove the selected song${s} from the list?`,
+        message: `Remove ${$selection.count} song${s} from the list?`,
         buttons: ['Remove Song' + s, 'Cancel'],
         defaultId: 0,
       })
@@ -128,8 +134,26 @@
           indexes.push(i)
         }
       }
-      if (result.buttonClicked === 0) {
+      if ((await result).buttonClicked === 0) {
         removeFromOpenPlaylist(indexes)
+      }
+    } else if (checkShortcut(e, 'Backspace', { cmdOrCtrl: true }) && $selection.count > 0) {
+      e.preventDefault()
+      const s = $selection.count > 1 ? 's' : ''
+      const result = showMessageBox({
+        type: 'info',
+        message: `Delete ${$selection.count} song${s} from library?`,
+        buttons: [`Delete Song${s}`, 'Cancel'],
+        defaultId: 0,
+      })
+      const indexes = []
+      for (let i = 0; i < $selection.list.length; i++) {
+        if ($selection.list[i]) {
+          indexes.push(i)
+        }
+      }
+      if ((await result).buttonClicked === 0) {
+        deleteTracksInOpen(indexes)
       }
     } else if (checkShortcut(e, 'Escape')) {
       selection.clear()
@@ -369,12 +393,12 @@
 
 <style lang="sass">
   .odd
-    background-color: hsla(0, 0%, 90%, 0.05)
+    background-color: hsla(0, 0%, 90%, 0.06)
   .selected
-    background-color: hsla(var(--hue), 12%, 45%, 0.5)
+    background-color: hsla(var(--hue), 20%, 42%, 0.8)
   :global(:focus)
     .selected
-      background-color: hsla(var(--hue), 100%, 60%, 0.5)
+      background-color: hsla(var(--hue), 70%, 46%, 1)
   .header
     margin: 20px
     margin-top: 15px

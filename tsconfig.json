@@ -1,13 +1,13 @@
 {
   "compilerOptions": {
-    "target": "esnext",
-    "module": "esnext",
     "moduleResolution": "node",
+    "target": "es2019",
+    "module": "es2020",
+    "lib": ["es2020"],
 
-    // require `import type` instead fo `import` for types
-    // svelte-preprocess apparently needs this
+    // svelte-preprocess can't tell if you're importing a value or
+    // type, so require 'import type' instead of 'import' for types
     "importsNotUsedAsValues": "error",
-    "isolatedModules": true,
 
     // To have svelte warnings/errors correct position
     "sourceMap": true,
@@ -15,11 +15,14 @@
     // Prevent type errors
     "types": ["svelte", "node", "wicg-mediasession"],
 
+    "isolatedModules": true,
+    "resolveJsonModule": true,
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "baseUrl": "."
+    "baseUrl": ".",
+    "paths": {}
   },
-  "include": ["src/**/*.ts", "src/**/*.svelte"]
+  "include": ["src/**/*.d.ts", "src/**/*.ts", "src/**/*.svelte"]
 }

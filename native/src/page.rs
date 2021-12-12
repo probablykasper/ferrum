@@ -1,10 +1,10 @@
 use crate::data::Data;
 use crate::data_js::get_data;
-use crate::js::{arg_to_bool, arg_to_number, arg_to_number_vector, arg_to_string, nerr, nr};
+use crate::js::{arg_to_bool, arg_to_number, arg_to_number_vector, arg_to_string, nerr};
 use crate::library::{get_track_field_type, TrackField};
 use crate::library_types::{SpecialTrackListName, TrackID, TrackList};
 use crate::sort::sort;
-use crate::{filter, page};
+use crate::{filter, page, UniResult};
 use napi::{CallContext, JsObject, JsString, JsUndefined, JsUnknown, Result as NResult};
 use napi_derive::js_function;
 
@@ -12,16 +12,11 @@ use napi_derive::js_function;
 pub fn open_playlist(ctx: CallContext) -> NResult<JsUndefined> {
   let data: &mut Data = get_data(&ctx)?;
   data.open_playlist_id = arg_to_string(&ctx, 0)?;
-  data.open_playlist_track_ids = nr(page::get_track_ids(&data))?;
+  data.open_playlist_track_ids = page::get_track_ids(&data)?;
   data.page_track_ids = None;
-  let playlist = data
-    .library
-    .trackLists
-    .get(&data.open_playlist_id)
-    .ok_or(nerr("Playlist ID not found"))?;
-  match playlist {
+  match data.library.get_tracklist(&data.open_playlist_id)? {
     TrackList::Special(_) => {
-      nr(sort(data, "dateAdded", true))?;
+      sort(data, "dateAdded", true)?;
     }
     _ => {
       data.sort_key = "index".to_string();
@@ -31,19 +26,11 @@ pub fn open_playlist(ctx: CallContext) -> NResult<JsUndefined> {
   return ctx.env.get_undefined();
 }
 
-fn get_page_tracks<'a>(data: &'a Data) -> &'a Vec<String> {
-  let ids = match &data.page_track_ids {
-    Some(ids) => ids,
-    None => &data.open_playlist_track_ids,
-  };
-  return ids;
-}
-
 #[js_function(1)]
 pub fn get_page_track(ctx: CallContext) -> NResult<JsUnknown> {
   let data: &mut Data = get_data(&ctx)?;
   let index: i64 = arg_to_number(&ctx, 0)?;
-  let page_track_ids = get_page_tracks(data);
+  let page_track_ids = data.get_page_tracks();
   let track_id = page_track_ids.get(index as usize).ok_or(nerr!(
     "Track index {} not found in open playlist",
     index.to_string()
@@ -58,7 +45,7 @@ pub fn get_page_track(ctx: CallContext) -> NResult<JsUnknown> {
 pub fn get_page_track_id(ctx: CallContext) -> NResult<JsString> {
   let data: &mut Data = get_data(&ctx)?;
   let index: i64 = arg_to_number(&ctx, 0)?;
-  let page_track_ids = get_page_tracks(data);
+  let page_track_ids = data.get_page_tracks();
   let track_id = page_track_ids.get(index as usize).ok_or(nerr!(
     "Track index {} not found in open playlist",
     index.to_string()
@@ -71,7 +58,7 @@ pub fn refresh(ctx: CallContext) -> NResult<JsUndefined> {
   let data: &mut Data = get_data(&ctx)?;
   let sort_key = data.sort_key.clone();
   let sort_desc = data.sort_desc.clone();
-  nr(sort(data, &sort_key, sort_desc))?;
+  sort(data, &sort_key, sort_desc)?;
   filter::filter(data, data.filter.clone());
   return ctx.env.get_undefined();
 }
@@ -79,17 +66,12 @@ pub fn refresh(ctx: CallContext) -> NResult<JsUndefined> {
 #[js_function(0)]
 pub fn get_page_track_ids(ctx: CallContext) -> NResult<JsUnknown> {
   let data: &mut Data = get_data(&ctx)?;
-  let page_track_ids = get_page_tracks(data);
+  let page_track_ids = data.get_page_tracks();
   return ctx.env.to_js_value(page_track_ids);
 }
 
-pub fn get_track_ids(data: &Data) -> Result<Vec<TrackID>, &'static str> {
-  let playlist = data
-    .library
-    .trackLists
-    .get(&data.open_playlist_id)
-    .ok_or("Playlist ID not found")?;
-  match playlist {
+pub fn get_track_ids(data: &Data) -> UniResult<Vec<TrackID>> {
+  match data.library.get_tracklist(&data.open_playlist_id)? {
     TrackList::Playlist(playlist) => {
       let mut ids: Vec<TrackID> = Vec::new();
       for track_id in &playlist.tracks {
@@ -97,7 +79,7 @@ pub fn get_track_ids(data: &Data) -> Result<Vec<TrackID>, &'static str> {
       }
       return Ok(ids);
     }
-    TrackList::Folder(_) => return Err("Cannot get length of folder"),
+    TrackList::Folder(_) => return Err("Cannot get length of folder")?,
     TrackList::Special(special) => match special.name {
       SpecialTrackListName::Root => {
         let track_keys = data.library.tracks.keys();
@@ -114,18 +96,14 @@ pub fn get_track_ids(data: &Data) -> Result<Vec<TrackID>, &'static str> {
 #[js_function(0)]
 pub fn get_page_info(ctx: CallContext) -> NResult<JsUnknown> {
   let data: &mut Data = get_data(&ctx)?;
-  let tracklist = data
-    .library
-    .trackLists
-    .get_mut(&data.open_playlist_id)
-    .ok_or(nerr!("Playlist ID not found"))?;
+  let tracklist = data.library.get_tracklist(&data.open_playlist_id)?;
 
   let v = serde_json::json!({
     "id": data.open_playlist_id,
     "tracklist": tracklist,
     "sort_key": data.sort_key,
     "sort_desc": data.sort_desc,
-    "length": get_page_tracks(data).len(),
+    "length": data.get_page_tracks().len(),
   });
   let js = ctx.env.to_js_value(&v)?;
   return Ok(js);
@@ -148,7 +126,7 @@ pub fn sort_js(ctx: CallContext) -> NResult<JsUndefined> {
       _ => true,
     };
 
-    nr(sort(data, &sort_key, desc))?;
+    sort(data, &sort_key, desc)?;
   }
 
   if keep_filter {

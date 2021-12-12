@@ -1,10 +1,13 @@
+use std::path::PathBuf;
+
 use crate::data::Data;
 use crate::data_js::get_data;
 use crate::js::{arg_to_bool, arg_to_number_vector, arg_to_string, arg_to_string_vector};
-use crate::library_types::{SpecialTrackListName, TrackList};
-use crate::str_to_option;
+use crate::library_types::{Library, SpecialTrackListName, TrackList};
+use crate::{str_to_option, UniResult};
 use napi::{CallContext, JsUndefined, JsUnknown, Result as NResult};
 use napi_derive::js_function;
+use trash::macos::TrashContextExtMacos;
 
 #[js_function(0)]
 pub fn get_track_lists(ctx: CallContext) -> NResult<JsUnknown> {
@@ -19,12 +22,7 @@ pub fn add_tracks(ctx: CallContext) -> NResult<JsUndefined> {
   let data: &mut Data = get_data(&ctx)?;
   let playlist_id = arg_to_string(&ctx, 0)?;
   let mut track_ids: Vec<String> = arg_to_string_vector(&ctx, 1)?;
-  let tracklist = data
-    .library
-    .trackLists
-    .get_mut(&playlist_id)
-    .ok_or(nerr!("Playlist ID not found"))?;
-  let playlist = match tracklist {
+  let playlist = match data.library.get_tracklist_mut(&playlist_id)? {
     TrackList::Playlist(playlist) => playlist,
     TrackList::Folder(_) => return Err(nerr!("Cannot add track to folder")),
     TrackList::Special(_) => return Err(nerr!("Cannot add track to special playlist")),
@@ -39,12 +37,7 @@ pub fn remove_from_open(ctx: CallContext) -> NResult<JsUndefined> {
   let mut indexes_to_remove: Vec<u32> = arg_to_number_vector(&ctx, 0)?;
   indexes_to_remove.sort_unstable();
   indexes_to_remove.dedup();
-  let open_playlist = data
-    .library
-    .trackLists
-    .get_mut(&data.open_playlist_id)
-    .ok_or(nerr!("Playlist ID not found"))?;
-  let playlist = match open_playlist {
+  let playlist = match data.library.get_tracklist_mut(&data.open_playlist_id)? {
     TrackList::Playlist(playlist) => playlist,
     TrackList::Folder(_) => return Err(nerr!("Cannot remove track from folder")),
     TrackList::Special(_) => return Err(nerr!("Cannot remove track from special playlist")),
@@ -67,6 +60,68 @@ pub fn remove_from_open(ctx: CallContext) -> NResult<JsUndefined> {
     }
   }
   playlist.tracks = new_list;
+  return ctx.env.get_undefined();
+}
+
+fn remove_from_all_playlists(library: &mut Library, id: &str) {
+  for (_, tracklist) in &mut library.trackLists {
+    let playlist = match tracklist {
+      TrackList::Playlist(playlist) => playlist,
+      _ => continue,
+    };
+    playlist.tracks.retain(|current_id| current_id != id);
+  }
+}
+
+fn get_page_ids(data: &mut Data, indexes: Vec<u32>) -> UniResult<Vec<String>> {
+  let mut ids = Vec::new();
+  let page_track_ids = data.get_page_tracks();
+  for index in indexes {
+    let id = match page_track_ids.get(index as usize) {
+      Some(id) => id,
+      None => throw!("Track index not found"),
+    };
+    ids.push(id.clone());
+  }
+  Ok(ids)
+}
+
+fn delete_file(path: &PathBuf) -> UniResult<()> {
+  let mut trash_context = trash::TrashContext::new();
+  trash_context.set_delete_method(trash::macos::DeleteMethod::NsFileManager);
+  match trash_context.delete(&path) {
+    Ok(_) => Ok(()),
+    Err(_) => throw!("Failed moving file to trash: {}", path.to_string_lossy()),
+  }
+}
+
+#[js_function(1)]
+pub fn delete_tracks_in_open(ctx: CallContext) -> NResult<JsUndefined> {
+  let data: &mut Data = get_data(&ctx)?;
+  let ids_to_delete = {
+    let mut indexes_to_delete: Vec<u32> = arg_to_number_vector(&ctx, 0)?;
+    indexes_to_delete.sort_unstable();
+    indexes_to_delete.dedup();
+    get_page_ids(data, indexes_to_delete)?
+  };
+  let library = &mut data.library;
+
+  for id_to_delete in &ids_to_delete {
+    let file_path = {
+      let track = library.get_track(id_to_delete)?;
+      data.paths.tracks_dir.join(&track.file)
+    };
+    if !file_path.exists() {
+      throw!("File does not exist: {}", file_path.to_string_lossy());
+    }
+
+    remove_from_all_playlists(library, &id_to_delete);
+    library
+      .tracks
+      .remove(id_to_delete)
+      .expect("Track ID not found when deleting");
+    delete_file(&file_path)?;
+  }
   return ctx.env.get_undefined();
 }
 

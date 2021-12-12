@@ -1,6 +1,6 @@
 #![allow(non_snake_case)]
 
-use crate::get_now_timestamp;
+use crate::{get_now_timestamp, UniResult};
 use linked_hash_map::LinkedHashMap;
 use nanoid::nanoid;
 use serde::{Deserialize, Serialize};
@@ -16,6 +16,22 @@ pub struct Library {
 }
 
 impl Library {
+  pub fn new() -> Self {
+    let mut track_lists = LinkedHashMap::new();
+    let root = Special {
+      id: "root".to_string(),
+      name: SpecialTrackListName::Root,
+      dateCreated: get_now_timestamp(),
+      children: Vec::new(),
+    };
+    track_lists.insert("root".to_string(), TrackList::Special(root));
+    Library {
+      version: Version::V1,
+      playTime: Vec::new(),
+      tracks: LinkedHashMap::new(),
+      trackLists: track_lists,
+    }
+  }
   pub fn generate_id(&self) -> String {
     let alphabet: [char; 32] = [
       'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r',
@@ -58,21 +74,35 @@ impl Library {
       children: Vec::new(),
     }
   }
-  pub fn get_parent_id(&self, id: &str) -> Option<String> {
-    for (parent_id, tracklist) in &self.trackLists {
-      let children = match tracklist {
-        TrackList::Playlist(_) => continue,
-        TrackList::Folder(list) => &list.children,
-        TrackList::Special(list) => &list.children,
-      };
-      for child_id in children {
-        if child_id == id {
-          return Some(parent_id.to_string());
-        }
-      }
+  pub fn get_track(&self, id: &str) -> UniResult<&Track> {
+    match self.tracks.get(id) {
+      Some(track) => Ok(track),
+      None => throw!("Track with ID {} not found", id),
     }
-    None
   }
+  pub fn get_tracklist(&self, id: &str) -> UniResult<&TrackList> {
+    let tracklist = self.trackLists.get(id);
+    Ok(tracklist.ok_or("Playlist ID not found")?)
+  }
+  pub fn get_tracklist_mut(&mut self, id: &str) -> UniResult<&mut TrackList> {
+    let tracklist = self.trackLists.get_mut(id);
+    Ok(tracklist.ok_or("Playlist ID not found")?)
+  }
+  // pub fn get_parent_id(&self, id: &str) -> Option<String> {
+  //   for (parent_id, tracklist) in &self.trackLists {
+  //     let children = match tracklist {
+  //       TrackList::Playlist(_) => continue,
+  //       TrackList::Folder(list) => &list.children,
+  //       TrackList::Special(list) => &list.children,
+  //     };
+  //     for child_id in children {
+  //       if child_id == id {
+  //         return Some(parent_id.to_string());
+  //       }
+  //     }
+  //   }
+  //   None
+  // }
 }
 
 pub type TrackID = String;

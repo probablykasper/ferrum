@@ -1,6 +1,4 @@
-use crate::get_now_timestamp;
-use crate::library_types::{Library, Special, SpecialTrackListName, TrackList, Version};
-use linked_hash_map::LinkedHashMap;
+use crate::library_types::Library;
 use serde::{Deserialize, Serialize};
 use std::fs::{create_dir_all, File};
 use std::io::{Error, ErrorKind, Read};
@@ -13,16 +11,18 @@ pub struct Paths {
   pub tracks_dir: PathBuf,
   pub library_json: PathBuf,
 }
-fn ensure_dirs_exists(paths: &Paths) -> Result<(), Error> {
-  create_dir_all(&paths.library_dir)?;
-  create_dir_all(&paths.tracks_dir)?;
-  return Ok(());
+impl Paths {
+  fn ensure_dirs_exists(&self) -> Result<(), Error> {
+    create_dir_all(&self.library_dir)?;
+    create_dir_all(&self.tracks_dir)?;
+    return Ok(());
+  }
 }
 
 pub fn load_library(paths: &Paths) -> Library {
   let mut now = Instant::now();
 
-  match ensure_dirs_exists(&paths) {
+  match paths.ensure_dirs_exists() {
     Ok(_) => {}
     Err(err) => panic!("Error ensuring folder exists: {}", err),
   };
@@ -47,20 +47,7 @@ pub fn load_library(paths: &Paths) -> Library {
     }
     Err(err) => match err.kind() {
       ErrorKind::NotFound => {
-        let mut track_lists = LinkedHashMap::new();
-        let root = Special {
-          id: "root".to_string(),
-          name: SpecialTrackListName::Root,
-          dateCreated: get_now_timestamp(),
-          children: Vec::new(),
-        };
-        track_lists.insert("root".to_string(), TrackList::Special(root));
-        return Library {
-          version: Version::V1,
-          playTime: Vec::new(),
-          tracks: LinkedHashMap::new(),
-          trackLists: track_lists,
-        };
+        return Library::new();
       }
       _err_kind => panic!("Error opening library file: {}", err),
     },

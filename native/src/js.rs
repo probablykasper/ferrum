@@ -15,14 +15,6 @@ pub fn nerr(msg: &str) -> NapiError {
   return NapiError::from_reason(msg.to_owned());
 }
 
-// Convert Result with &'static str error to NapiResult
-pub fn nr<T>(x: Result<T, &'static str>) -> NResult<T> {
-  return match x {
-    Ok(x) => Ok(x),
-    Err(e) => Err(nerr(e)),
-  };
-}
-
 pub fn arg_to_string(ctx: &CallContext, arg: usize) -> NResult<String> {
   let js_string: JsString = ctx.get(arg)?;
   let js_utf8_string = js_string.into_utf8()?;

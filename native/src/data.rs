@@ -1,7 +1,7 @@
 use crate::library::{load_library, Paths};
 use crate::library_types::{Library, TrackID, TrackListID};
-use crate::page;
 use crate::sort::sort;
+use crate::{page, UniResult};
 use atomicwrites::{AllowOverwrite, AtomicFile};
 use serde::Serialize;
 use std::io::{Error, ErrorKind, Write};
@@ -11,7 +11,9 @@ pub struct Data {
   pub paths: Paths,
   pub is_dev: bool,
   pub library: Library,
+  /// All tracks on the current page, even if they are filtered out
   pub open_playlist_track_ids: Vec<TrackID>,
+  /// The visible tracks on the current page
   pub page_track_ids: Option<Vec<TrackID>>,
   pub open_playlist_id: TrackListID,
   pub filter: String,
@@ -45,9 +47,15 @@ impl Data {
     println!("Write: {}ms", now.elapsed().as_millis());
     Ok(())
   }
+  pub fn get_page_tracks<'a>(&'a self) -> &'a Vec<String> {
+    match &self.page_track_ids {
+      Some(ids) => &ids,
+      None => &self.open_playlist_track_ids,
+    }
+  }
 }
 
-pub fn load_data(is_dev: &bool) -> Result<Data, &'static str> {
+pub fn load_data(is_dev: &bool) -> UniResult<Data> {
   let app_name = if *is_dev { "Ferrum Dev" } else { "Ferrum" };
 
   let music_dir = dirs::audio_dir().ok_or("Music folder not found")?;

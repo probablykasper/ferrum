@@ -39,6 +39,7 @@ export type Data = {
   get_track_lists: () => TrackListsHashMap
   add_tracks_to_playlist: (playlistId: TrackListID, trackIds: TrackID[]) => void
   remove_from_open_playlist: (indexes: number[]) => void
+  delete_tracks_in_open: (indexes: number[]) => void
   new_playlist: (name: string, description: string, isFolder: boolean, parentId: string) => void
 
   refresh_page: () => void
@@ -52,18 +53,35 @@ export type Data = {
   move_tracks: (indexes: number[], to_index: number) => { from: number; to: number }
 }
 
+function getErrorMessage(err: unknown): string {
+  if (typeof err === 'object' && err !== null) {
+    const obj = err as { [key: string]: unknown }
+    if (obj.message) {
+      return String(obj.message)
+    } else if (obj.code) {
+      return 'Code: ' + String(obj.message)
+    }
+  }
+  return 'No reason or code provided'
+}
+function getErrorStack(err: unknown): string {
+  if (typeof err === 'object' && err !== null) {
+    const obj = err as { [key: string]: unknown }
+    if (obj.stack) {
+      return String(obj.stack)
+    }
+  }
+  return ''
+}
+
 function runWrapped<T>(cb: () => T): T {
   try {
     return cb()
   } catch (err) {
-    if (!err.message) {
-      if (err.code) err.message = 'Code: ' + err.code
-      else err.message = 'No reason or code provided'
-    }
     showMessageBox({
       type: 'error',
-      message: err.message,
-      detail: err.stack,
+      message: getErrorMessage(err),
+      detail: getErrorStack(err),
     })
     throw err
   }
@@ -78,14 +96,10 @@ export function call<T>(cb: (data: Data) => T): T {
   try {
     return cb(dataInternal)
   } catch (err) {
-    if (!err.message) {
-      if (err.code) err.message = 'Code: ' + err.code
-      else err.message = 'No reason or code provided'
-    }
     showMessageBox({
       type: 'error',
-      message: err.message,
-      detail: err.stack,
+      message: getErrorMessage(err),
+      detail: getErrorStack(err),
     })
     throw err
   }
@@ -111,6 +125,11 @@ export function removeFromOpenPlaylist(indexes: number[]) {
   page.refresh()
   methods.save()
 }
+export function deleteTracksInOpen(indexes: number[]) {
+  call((data) => data.delete_tracks_in_open(indexes))
+  page.refresh()
+  methods.save()
+}
 export function newPlaylist(
   name: string,
   description: string,
@@ -132,15 +151,11 @@ export async function importTracks(paths: string[]) {
     try {
       data.import_track(path)
     } catch (err) {
-      if (!err.message) {
-        if (err.code) err.message = 'Code: ' + err.code
-        else err.message = 'No reason or code provided'
-      }
       if (errState === 'skip') continue
       const result = await showMessageBox({
         type: 'error',
         message: 'Error importing track ' + path,
-        detail: err.message,
+        detail: getErrorMessage(err),
         buttons: errState ? ['OK', 'Skip all errors'] : ['OK'],
         defaultId: 0,
       })

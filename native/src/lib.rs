@@ -6,6 +6,12 @@ macro_rules! nerr {
   }
 }
 
+macro_rules! throw {
+  ($($arg:tt)*) => {
+    return crate::UniResult::Err(format!($($arg)*).into()).map_err(|e| e.into())
+  }
+}
+
 mod js;
 mod library;
 mod library_types;
@@ -38,5 +44,35 @@ fn str_to_option(s: String) -> Option<String> {
   match s.as_str() {
     "" => None,
     _ => Some(s),
+  }
+}
+
+pub type UniResult<T> = std::result::Result<T, UniError>;
+
+pub struct UniError {
+  message: String,
+}
+impl From<String> for UniError {
+  fn from(message: String) -> Self {
+    Self { message }
+  }
+}
+impl From<&str> for UniError {
+  fn from(message: &str) -> Self {
+    Self {
+      message: message.to_string(),
+    }
+  }
+}
+impl From<UniError> for napi::Error {
+  fn from(ue: UniError) -> Self {
+    Self::from_reason(ue.message)
+  }
+}
+impl From<napi::Error> for UniError {
+  fn from(n_err: napi::Error) -> Self {
+    UniError {
+      message: n_err.reason,
+    }
   }
 }

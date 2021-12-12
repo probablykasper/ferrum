@@ -1,5 +1,5 @@
 use crate::data::{load_data, Data};
-use crate::js::{arg_to_bool, nr};
+use crate::js::arg_to_bool;
 use crate::{filter, page, playlists, tracks};
 use napi::{CallContext, Env, JsObject, JsUndefined, JsUnknown, Result as NResult, Task};
 use napi_derive::js_function;
@@ -14,7 +14,7 @@ pub fn get_data<'a>(ctx: &'a CallContext) -> NResult<&'a mut Data> {
 pub fn load_data_js(ctx: CallContext) -> NResult<JsObject> {
   let is_dev = arg_to_bool(&ctx, 0)?;
 
-  let data: Data = nr(load_data(&is_dev))?;
+  let data: Data = load_data(&is_dev)?;
 
   let mut new_this: JsObject = ctx.env.create_object()?;
   ctx.env.wrap(&mut new_this, data)?;
@@ -28,7 +28,7 @@ impl Task for LoadData {
   type JsValue = JsObject;
   fn compute(&mut self) -> NResult<Self::Output> {
     let is_dev = &self.0;
-    let data: Data = nr(load_data(&is_dev))?;
+    let data: Data = load_data(&is_dev)?;
     return Ok(data);
   }
   fn resolve(self, env: Env, output: Self::Output) -> NResult<Self::JsValue> {
@@ -42,7 +42,7 @@ impl Task for LoadData {
 pub fn load_data_async(ctx: CallContext) -> NResult<JsObject> {
   let is_dev = arg_to_bool(&ctx, 0)?;
 
-  let data: Data = nr(load_data(&is_dev))?;
+  let data: Data = load_data(&is_dev)?;
 
   let mut new_this: JsObject = ctx.env.create_object()?;
   ctx.env.wrap(&mut new_this, data)?;
@@ -79,6 +79,7 @@ fn init_data_instance(mut exports: JsObject) -> NResult<JsObject> {
   exports.create_named_method("get_track_lists", playlists::get_track_lists)?;
   exports.create_named_method("add_tracks_to_playlist", playlists::add_tracks)?;
   exports.create_named_method("remove_from_open_playlist", playlists::remove_from_open)?;
+  exports.create_named_method("delete_tracks_in_open", playlists::delete_tracks_in_open)?;
   exports.create_named_method("new_playlist", playlists::new_playlist)?;
 
   exports.create_named_method("refresh_page", page::refresh)?;

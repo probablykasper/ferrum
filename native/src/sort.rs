@@ -1,7 +1,7 @@
 use crate::data::Data;
 use crate::library::{get_track_field_type, TrackField};
 use crate::library_types::{Track, TrackList};
-use crate::page;
+use crate::{page, UniResult};
 use alphanumeric_sort::compare_str;
 use std::cmp::Ordering;
 use std::time::Instant;
@@ -79,7 +79,7 @@ fn get_field_bool(track: &Track, sort_key: &str) -> Option<bool> {
   }
 }
 
-pub fn sort(data: &mut Data, sort_key: &str, desc: bool) -> Result<(), &'static str> {
+pub fn sort(data: &mut Data, sort_key: &str, desc: bool) -> UniResult<()> {
   let now = Instant::now();
 
   if sort_key == "index" {
