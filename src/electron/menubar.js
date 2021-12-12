@@ -115,6 +115,14 @@ module.exports.initMenuBar = (app, mainWindow) => {
     {
       label: 'View',
       submenu: [
+        {
+          label: 'Toggle Queue',
+          accelerator: 'CmdOrCtrl+U',
+          click: () => {
+            mainWindow.webContents.send('Toggle Queue')
+          },
+        },
+        { type: 'separator' },
         { role: 'reload' },
         { role: 'forceReload' },
         { role: 'toggleDevTools' },

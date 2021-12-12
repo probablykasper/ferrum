@@ -36,6 +36,14 @@
     ipcRenderer.off('itunesImport', itunesImport)
   })
 
+  function toggleQueue() {
+    $queueVisible = !$queueVisible
+  }
+  ipcRenderer.on('Toggle Queue', toggleQueue)
+  onDestroy(() => {
+    ipcRenderer.off('Toggle Queue', toggleQueue)
+  })
+
   let droppable = false
   const allowedMimes = ['audio/mpeg']
   function getFilePaths(e: DragEvent): string[] {
