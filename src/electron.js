@@ -47,6 +47,7 @@ app.on('ready', async () => {
     minHeight: 400,
     titleBarStyle: is.mac ? 'hidden' : 'default',
     webPreferences: {
+      nativeWindowOpen: true,
       contextIsolation: false,
       // Allow file:// during development, since the app is loaded via http
       webSecurity: !is.dev,
