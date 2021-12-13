@@ -134,6 +134,12 @@
       loadImage()
     }
   }
+  function coverKeydown(e: KeyboardEvent) {
+    if (checkShortcut(e, 'Backspace')) {
+      methods.removeImage(0)
+      loadImage()
+    }
+  }
 </script>
 
 <svelte:window on:keydown={keydown} />
@@ -147,6 +153,7 @@
         on:dragover={dragEnterOrOver}
         on:dragleave={dragLeave}
         on:drop={drop}
+        on:keydown={coverKeydown}
         tabindex="0">
         {#if $image === null}
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">

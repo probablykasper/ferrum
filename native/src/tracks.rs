@@ -612,6 +612,27 @@ impl Tag {
       },
     }
   }
+  pub fn remove_image(&mut self, index: usize) {
+    match self {
+      Tag::Id3(ref mut tag) => {
+        let mut pic_frames: Vec<_> = tag
+          .frames()
+          .filter(|frame| frame.content().picture().is_some())
+          .map(|frame| frame.clone())
+          .collect();
+        pic_frames.remove(index);
+        tag.remove_all_pictures();
+        for pic_frame in pic_frames {
+          tag.add_frame(pic_frame);
+        }
+      }
+      Tag::Mp4(ref mut tag) => {
+        let mut artworks: Vec<_> = tag.take_artworks().collect();
+        artworks.remove(index);
+        tag.set_artworks(artworks);
+      }
+    }
+  }
 }
 
 pub struct Image<'a> {
@@ -685,7 +706,6 @@ pub fn get_image(ctx: CallContext) -> NResult<JsUnknown> {
     Some(tag) => tag,
     None => return Ok(ctx.env.get_null()?.into_unknown()),
   };
-
   let image = match tag.get_image(index as usize) {
     Some(image) => image,
     None => return Ok(ctx.env.get_null()?.into_unknown()),
@@ -704,6 +724,17 @@ pub fn set_image(ctx: CallContext) -> NResult<JsUndefined> {
   match &mut data.current_tag {
     Some(tag) => tag.set_image(index as usize, path)?,
     None => throw!("No tag loaded"),
+  };
+  ctx.env.get_undefined()
+}
+
+#[js_function(1)]
+pub fn remove_image(ctx: CallContext) -> NResult<JsUndefined> {
+  let data: &mut Data = get_data(&ctx)?;
+  let index: u32 = arg_to_number(&ctx, 0)?;
+  match data.current_tag {
+    Some(ref mut tag) => tag.remove_image(index as usize),
+    None => {}
   };
   ctx.env.get_undefined()
 }

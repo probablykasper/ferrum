@@ -39,6 +39,7 @@ export type Data = {
   load_tags: (id: TrackID) => void
   get_image: (index: number) => Image
   set_image: (index: number, path: string) => void
+  remove_image: (index: number) => void
 
   get_track_lists: () => TrackListsHashMap
   add_tracks_to_playlist: (playlistId: TrackListID, trackIds: TrackID[]) => void
@@ -208,6 +209,9 @@ export const methods = {
   },
   setImage: (index: number, path: string) => {
     return call((data) => data.set_image(index, path))
+  },
+  removeImage: (index: number) => {
+    return call((data) => data.remove_image(index))
   },
 }
 

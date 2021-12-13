@@ -78,6 +78,7 @@ fn init_data_instance(mut exports: JsObject) -> NResult<JsObject> {
   exports.create_named_method("load_tags", tracks::load_tags)?;
   exports.create_named_method("get_image", tracks::get_image)?;
   exports.create_named_method("set_image", tracks::set_image)?;
+  exports.create_named_method("remove_image", tracks::remove_image)?;
 
   exports.create_named_method("get_track_lists", playlists::get_track_lists)?;
   exports.create_named_method("add_tracks_to_playlist", playlists::add_tracks)?;
