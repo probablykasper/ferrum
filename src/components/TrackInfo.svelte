@@ -64,8 +64,8 @@
         grouping,
         genre,
         year,
-        // trackNum,
-        // trackCount,
+        trackNum,
+        trackCount,
         // discNum,
         // discCount,
         // bpm,
@@ -227,9 +227,9 @@
     </div>
     <div class="row num">
       <div class="label">Track</div>
-      <input disabled class="num" type="text" bind:value={trackNum} class:big={big(trackNum)} />
+      <input class="num" type="text" bind:value={trackNum} class:big={big(trackNum)} />
       <div class="midtext">of</div>
-      <input disabled class="num" type="text" bind:value={trackCount} class:big={big(trackCount)} />
+      <input class="num" type="text" bind:value={trackCount} class:big={big(trackCount)} />
     </div>
     <div class="row num">
       <div class="label">Disc number</div>

@@ -368,6 +368,8 @@ struct TrackMD {
   genre: String,
   year: String,
   comments: String,
+  trackNum: String,
+  trackCount: String,
 }
 
 pub enum Tag {
@@ -492,6 +494,47 @@ impl Tag {
       }
       Tag::Mp4(tag) => tag.set_year(value.to_string()),
     }
+  }
+  pub fn remove_track_number(&mut self) {
+    match self {
+      Tag::Id3(tag) => tag.remove_track(),
+      Tag::Mp4(tag) => tag.remove_track_number(),
+    }
+  }
+  pub fn set_track_number(&mut self, value: u32) -> UniResult<()> {
+    match self {
+      Tag::Id3(tag) => tag.set_track(value),
+      Tag::Mp4(tag) => {
+        if value > u16::MAX as u32 {
+          throw!("Track number cannot be over {} in MP4", u16::MAX);
+        } else {
+          tag.set_track_number(value as u16);
+        }
+      }
+    };
+    Ok(())
+  }
+  pub fn remove_track_count(&mut self) {
+    match self {
+      Tag::Id3(tag) => tag.remove_total_tracks(),
+      Tag::Mp4(tag) => tag.remove_total_tracks(),
+    }
+  }
+  pub fn set_track_count(&mut self, value: u32) -> UniResult<()> {
+    match self {
+      Tag::Id3(tag) => {
+        println!("set_track_count: {}", value);
+        tag.set_total_tracks(value);
+      }
+      Tag::Mp4(tag) => {
+        if value > u16::MAX as u32 {
+          throw!("Total tracks cannot be over {} in MP4", u16::MAX);
+        } else {
+          tag.set_total_tracks(value as u16);
+        }
+      }
+    };
+    Ok(())
   }
   pub fn remove_comments(&mut self) {
     match self {
@@ -805,7 +848,7 @@ pub fn update_track_info(ctx: CallContext) -> NResult<JsUndefined> {
   let new_genre = str_to_option(new_info.genre);
 
   // year
-  let new_year_i32 = match &*new_info.year {
+  let new_year_i32 = match new_info.year.as_ref() {
     "" => None,
     value => Some(value.parse().expect("Invalid year")),
   };
@@ -814,6 +857,26 @@ pub fn update_track_info(ctx: CallContext) -> NResult<JsUndefined> {
     None => tag.remove_year(),
     Some(value) => tag.set_year(value),
   };
+
+  // track_number
+  let new_track_number: Option<u32> = match new_info.trackNum.as_ref() {
+    "" => None,
+    value => Some(value.parse().expect("Invalid track number")),
+  };
+  match new_track_number {
+    None => tag.remove_track_number(),
+    Some(value) => tag.set_track_number(value)?,
+  }
+
+  // track_count
+  let new_track_count: Option<u32> = match new_info.trackCount.as_ref() {
+    "" => None,
+    value => Some(value.parse().expect("Invalid track count")),
+  };
+  match new_track_count {
+    None => tag.remove_track_count(),
+    Some(value) => tag.set_track_count(value)?,
+  }
 
   // comment
   match new_info.comments.as_ref() {
@@ -846,6 +909,8 @@ pub fn update_track_info(ctx: CallContext) -> NResult<JsUndefined> {
   track.grouping = new_grouping;
   track.genre = new_genre;
   track.year = new_year_i64;
+  track.trackNum = new_track_number;
+  track.trackCount = new_track_count;
   track.comments = new_comments;
 
   return ctx.env.get_undefined();

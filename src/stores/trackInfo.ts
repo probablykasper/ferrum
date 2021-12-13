@@ -12,8 +12,8 @@ export type TrackMD = {
   grouping: string
   genre: string
   year: string
-  // trackNum: string
-  // trackCount: string
+  trackNum: string
+  trackCount: string
   // discNum: string
   // discCount: string
   // bpm: string
