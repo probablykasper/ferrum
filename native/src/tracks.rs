@@ -2,7 +2,7 @@ use crate::data::Data;
 use crate::data_js::get_data;
 use crate::js::{arg_to_number, arg_to_string, nerr};
 use crate::library_types::Track;
-use crate::{get_now_timestamp, str_to_option, sys_time_to_timestamp};
+use crate::{get_now_timestamp, str_to_option, sys_time_to_timestamp, UniResult};
 use id3;
 use mp3_metadata;
 use mp4ameta;
@@ -370,7 +370,7 @@ struct TrackMD {
   comments: String,
 }
 
-enum Tag {
+pub enum Tag {
   Id3(id3::Tag),
   Mp4(mp4ameta::Tag),
 }
@@ -512,21 +512,148 @@ impl Tag {
       Tag::Mp4(tag) => tag.set_comment(value),
     }
   }
+  pub fn set_image(&mut self, index: usize, path: PathBuf) -> UniResult<()> {
+    let new_bytes = match fs::read(&path) {
+      Ok(b) => b,
+      Err(e) => throw!("Error reading that file: {}", e),
+    };
+    let ext = path.extension().unwrap_or_default().to_string_lossy();
+    match self {
+      Tag::Id3(tag) => {
+        let mut pic_frames: Vec<_> = tag
+          .frames()
+          .filter(|frame| frame.content().picture().is_some())
+          .map(|frame| frame.clone())
+          .collect();
+        let mime_type = match ext.as_ref() {
+          "jpg" | "jpeg" => "image/jpeg".to_string(),
+          "png" => "image/png".to_string(),
+          ext => throw!("Unsupported file type: {}", ext),
+        };
+        let mut new_pic = id3::frame::Picture {
+          mime_type,
+          picture_type: id3::frame::PictureType::Other,
+          description: "".to_string(),
+          data: new_bytes,
+        };
+        match pic_frames.get_mut(index) {
+          Some(old_frame) => {
+            let old_pic = old_frame.content().picture().unwrap();
+            new_pic.picture_type = old_pic.picture_type;
+            new_pic.description = old_pic.description.clone();
+            let new_frame = id3::Frame::with_content("APIC", id3::Content::Picture(new_pic));
+            *old_frame = new_frame;
+          }
+          None => {
+            if index == pic_frames.len() {
+              let new_frame = id3::Frame::with_content("APIC", id3::Content::Picture(new_pic));
+              pic_frames.insert(index, new_frame);
+            } else {
+              throw!("Index out of range");
+            }
+          }
+        }
+        tag.remove_all_pictures();
+        for pic_frame in pic_frames {
+          tag.add_frame(pic_frame);
+        }
+      }
+      Tag::Mp4(tag) => {
+        let mut artworks: Vec<_> = tag.take_artworks().collect();
+        let new_artwork = mp4ameta::Img {
+          fmt: match ext.as_ref() {
+            "jpg" | "jpeg" => mp4ameta::ImgFmt::Jpeg,
+            "png" => mp4ameta::ImgFmt::Png,
+            "bmp" => mp4ameta::ImgFmt::Bmp,
+            ext => throw!("Unsupported file type: {}", ext),
+          },
+          data: new_bytes,
+        };
+        match artworks.get_mut(index) {
+          Some(artwork) => {
+            *artwork = new_artwork;
+          }
+          None => {
+            if index == artworks.len() {
+              artworks.push(new_artwork);
+            } else {
+              throw!("Index out of range");
+            }
+          }
+        }
+        tag.set_artworks(artworks);
+      }
+    }
+    Ok(())
+  }
+  pub fn get_image(&self, index: usize) -> Option<Image> {
+    match self {
+      Tag::Id3(tag) => match tag.pictures().nth(index) {
+        Some(pic) => Some(Image {
+          index: index,
+          total_images: tag.pictures().count(),
+          data: &pic.data,
+          mime_type: pic.mime_type.clone(),
+        }),
+        None => None,
+      },
+      Tag::Mp4(tag) => match tag.artworks().nth(index) {
+        Some(artwork) => Some(Image {
+          index: index,
+          total_images: tag.artworks().count(),
+          data: artwork.data,
+          mime_type: match artwork.fmt {
+            mp4ameta::ImgFmt::Bmp => "image/bmp".to_string(),
+            mp4ameta::ImgFmt::Jpeg => "image/jpeg".to_string(),
+            mp4ameta::ImgFmt::Png => "image/png".to_string(),
+          },
+        }),
+        None => None,
+      },
+    }
+  }
 }
 
-#[js_function(2)]
-pub fn update_track_info(ctx: CallContext) -> NResult<JsUndefined> {
+pub struct Image<'a> {
+  index: usize,
+  total_images: usize,
+  mime_type: String,
+  data: &'a [u8],
+}
+impl Image<'_> {
+  pub fn to_js_obj(self, ctx: &CallContext) -> NResult<JsObject> {
+    let mut image_obj = ctx.env.create_object()?;
+
+    let index = ctx.env.create_uint32(self.index as u32)?;
+    image_obj.set_named_property("index", index)?;
+
+    let total_images = ctx.env.create_uint32(self.total_images as u32)?;
+    image_obj.set_named_property("total_images", total_images)?;
+
+    let mime_type = ctx.env.create_string(&self.mime_type)?;
+    image_obj.set_named_property("mime_type", mime_type)?;
+
+    let encoded_data = base64::encode(self.data);
+    let data_str = ctx.env.create_string(&encoded_data)?;
+    image_obj.set_named_property("data", data_str)?;
+
+    Ok(image_obj)
+  }
+}
+
+#[js_function(1)]
+pub fn load_tags(ctx: CallContext) -> NResult<JsUndefined> {
   let data: &mut Data = get_data(&ctx)?;
+  data.current_tag = None;
   let track = id_arg_to_track(&ctx, 0)?;
-  let new_info: TrackMD = serde_json::from_str(&arg_to_string(&ctx, 1)?)?;
-  let old_path_str = data.paths.tracks_dir.join(&track.file);
-  let old_path = Path::new(&old_path_str);
+  let old_path = data.paths.tracks_dir.join(&track.file);
+
   if !old_path.exists() {
     panic!("File does not exist: {}", track.file);
   }
   let ext = old_path.extension().unwrap_or_default().to_string_lossy();
 
-  let mut tag = match ext.as_ref() {
+  let tag = match ext.as_ref() {
     "mp3" => {
       let tag = match id3::Tag::read_from_path(&old_path) {
         Ok(tag) => tag,
@@ -542,6 +669,59 @@ pub fn update_track_info(ctx: CallContext) -> NResult<JsUndefined> {
       Tag::Mp4(tag)
     }
     _ => panic!("Unsupported file extension: {}", ext),
+  };
+
+  data.current_tag = Some(tag);
+
+  return ctx.env.get_undefined();
+}
+
+#[js_function(1)]
+pub fn get_image(ctx: CallContext) -> NResult<JsUnknown> {
+  let data: &mut Data = get_data(&ctx)?;
+  let index: u32 = arg_to_number(&ctx, 0)?;
+
+  let tag = match &data.current_tag {
+    Some(tag) => tag,
+    None => return Ok(ctx.env.get_null()?.into_unknown()),
+  };
+
+  let image = match tag.get_image(index as usize) {
+    Some(image) => image,
+    None => return Ok(ctx.env.get_null()?.into_unknown()),
+  };
+
+  let image_obj = image.to_js_obj(&ctx)?;
+  return Ok(image_obj.into_unknown());
+}
+
+#[js_function(2)]
+pub fn set_image(ctx: CallContext) -> NResult<JsUndefined> {
+  let data: &mut Data = get_data(&ctx)?;
+  let index: u32 = arg_to_number(&ctx, 0)?;
+  let path_str = arg_to_string(&ctx, 1)?;
+  let path = data.paths.tracks_dir.join(path_str);
+  match &mut data.current_tag {
+    Some(tag) => tag.set_image(index as usize, path)?,
+    None => throw!("No tag loaded"),
+  };
+  ctx.env.get_undefined()
+}
+
+#[js_function(2)]
+pub fn update_track_info(ctx: CallContext) -> NResult<JsUndefined> {
+  let data: &mut Data = get_data(&ctx)?;
+  let track = id_arg_to_track(&ctx, 0)?;
+  let new_info: TrackMD = serde_json::from_str(&arg_to_string(&ctx, 1)?)?;
+  let old_path = data.paths.tracks_dir.join(&track.file);
+  if !old_path.exists() {
+    panic!("File does not exist: {}", track.file);
+  }
+  let ext = old_path.extension().unwrap_or_default().to_string_lossy();
+
+  let tag = match &mut data.current_tag {
+    Some(tag) => tag,
+    None => throw!("No tag loaded"),
   };
 
   // name
@@ -612,7 +792,7 @@ pub fn update_track_info(ctx: CallContext) -> NResult<JsUndefined> {
   let new_comments = str_to_option(new_info.comments);
 
   // save tag
-  tag.write_to_path(old_path);
+  tag.write_to_path(&old_path);
 
   // move file
   if new_name != track.name || new_artist != track.artist {

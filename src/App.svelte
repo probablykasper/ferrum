@@ -67,11 +67,7 @@
     }
     return false
   }
-  function dragEnter(e: DragEvent) {
-    e.preventDefault()
-    droppable = hasFiles(e)
-  }
-  function dragOver(e: DragEvent) {
+  function dragEnterOrOver(e: DragEvent) {
     e.preventDefault()
     droppable = hasFiles(e)
   }
@@ -101,10 +97,10 @@
 </script>
 
 <template lang="pug">
-  svelte:window(on:keydown='{keydown}' on:dragenter|capture='{dragEnter}')
+  svelte:window(on:keydown='{keydown}')
   svelte:head
     title Ferrum
-  main
+  main(on:dragenter|capture='{dragEnterOrOver}')
     .meat
       Sidebar
       TrackList
@@ -124,15 +120,15 @@
             .page-status-item
               b Error:
               pre {pageStatusErr}
-    TrackInfo
-    PlaylistInfo
     +if('droppable')
       //- if the overlay is always visible, it's not possible to scroll while dragging tracks
       .drag-overlay(transition:fade='{{ duration: 100 }}')
         h1 Drop files to import
-      .dropzone(on:dragleave='{dragLeave}' on:drop='{drop}' on:dragover='{dragOver}')
+      .dropzone(on:dragleave='{dragLeave}' on:drop='{drop}' on:dragover='{dragEnterOrOver}')
     +if('isMac')
       .titlebar(on:mousedown|self|preventDefault)
+  TrackInfo
+  PlaylistInfo
 </template>
 
 <style lang="sass">
@@ -159,6 +155,9 @@
     margin: 0
     box-sizing: border-box
     background-image: linear-gradient(150deg, hsl(var(--hue), 60%, 10%), hsl(var(--hue), 20%, 6%))
+    color: var(--text-color)
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif
+    user-select: none
   :global(h1), :global(h2), :global(h3)
     font-weight: 400
     margin: 0px
@@ -177,9 +176,6 @@
   main
     height: 100%
     max-height: 100%
-    color: var(--text-color)
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif
-    user-select: none
     display: flex
     flex-direction: column
   .meat

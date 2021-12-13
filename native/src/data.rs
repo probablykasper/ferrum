@@ -1,6 +1,7 @@
 use crate::library::{load_library, Paths};
 use crate::library_types::{Library, TrackID, TrackListID};
 use crate::sort::sort;
+use crate::tracks::Tag;
 use crate::{page, UniResult};
 use atomicwrites::{AllowOverwrite, AtomicFile};
 use serde::Serialize;
@@ -19,6 +20,8 @@ pub struct Data {
   pub filter: String,
   pub sort_key: String,
   pub sort_desc: bool,
+  /// Current tag being edited
+  pub current_tag: Option<Tag>,
 }
 
 impl Data {
@@ -80,6 +83,7 @@ pub fn load_data(is_dev: &bool) -> UniResult<Data> {
     filter: "".to_string(),
     sort_key: "index".to_string(),
     sort_desc: true,
+    current_tag: None,
   };
   data.open_playlist_track_ids = page::get_track_ids(&data)?;
   sort(&mut data, "dateAdded", true)?;

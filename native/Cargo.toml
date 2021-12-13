@@ -27,3 +27,4 @@ alphanumeric-sort = "1.4.3"
 linked-hash-map = { version = "0.5.4", features = ["serde_impl"] }
 atomicwrites = "0.3.0"
 trash = "2.0.2"
+base64 = "0.13.0"

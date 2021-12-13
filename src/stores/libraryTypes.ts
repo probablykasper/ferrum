@@ -70,6 +70,13 @@ export type Track = {
   volume?: PercentInteger
 }
 
+export type Image = {
+  index: number
+  total_images: number
+  mime_type: string
+  data: string
+}
+
 export type CountObject = {
   count: number
   fromDate: MsSinceUnixEpoch

@@ -2,6 +2,7 @@ import { writable, readable, derived } from 'svelte/store'
 import type {
   MsSinceUnixEpoch,
   Track,
+  Image,
   TrackID,
   TrackList,
   TrackListID,
@@ -35,6 +36,9 @@ export type Data = {
   add_play_time: (id: TrackID, startTime: MsSinceUnixEpoch, duration_ms: number) => void
   read_cover_async: (id: TrackID) => Promise<ArrayBuffer>
   update_track_info: (id: TrackID, md: string) => void
+  load_tags: (id: TrackID) => void
+  get_image: (index: number) => Image
+  set_image: (index: number, path: string) => void
 
   get_track_lists: () => TrackListsHashMap
   add_tracks_to_playlist: (playlistId: TrackListID, trackIds: TrackID[]) => void
@@ -195,6 +199,15 @@ export const methods = {
     call((data) => data.update_track_info(id, JSON.stringify(md)))
     methods.save()
     softRefreshPage.refresh()
+  },
+  loadTags: (id: TrackID) => {
+    call((data) => data.load_tags(id))
+  },
+  getImage: (index: number) => {
+    return call((data) => data.get_image(index))
+  },
+  setImage: (index: number, path: string) => {
+    return call((data) => data.set_image(index, path))
   },
 }
 

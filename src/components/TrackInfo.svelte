@@ -1,10 +1,7 @@
 <script lang="ts">
-  import { writable } from 'svelte/store'
-  import type { Writable } from 'svelte/store'
   import Modal from './Modal.svelte'
-  import { visible, track, open, coverSrc, id } from '../stores/trackInfo'
+  import { visible, track, image, id, loadImage } from '../stores/trackInfo'
   import { checkShortcut, focus, focusLast } from '../scripts/helpers'
-  import type { TrackID } from '../stores/libraryTypes'
   import { methods } from '../stores/data'
   import Button from './Button.svelte'
 
@@ -95,76 +92,147 @@
       }
     }
   }
+
+  let droppable = false
+  const allowedMimes = ['image/jpeg', 'image/png']
+  function getFilePath(e: DragEvent): string | null {
+    if (e.dataTransfer && hasFile(e)) {
+      for (let i = 0; i < e.dataTransfer.files.length; i++) {
+        const file = e.dataTransfer.files[i]
+        if (allowedMimes.includes(file.type)) {
+          return file.path
+        }
+      }
+    }
+    return null
+  }
+  function hasFile(e: DragEvent): boolean {
+    if (!e.dataTransfer) return false
+    let count = 0
+    for (let i = 0; i < e.dataTransfer.items.length; i++) {
+      const item = e.dataTransfer.items[i]
+      if (item.kind === 'file' && allowedMimes.includes(item.type)) {
+        count++
+      }
+    }
+    return count === 1
+  }
+  function dragEnterOrOver(e: DragEvent) {
+    e.preventDefault()
+    droppable = hasFile(e)
+  }
+  function dragLeave(e: DragEvent) {
+    e.preventDefault()
+    droppable = false
+  }
+  function drop(e: DragEvent) {
+    e.preventDefault()
+    droppable = false
+    const path = getFilePath(e)
+    if (path !== null) {
+      methods.setImage(0, path)
+      loadImage()
+    }
+  }
 </script>
 
-<template lang="pug">
-  svelte:window(on:keydown='{keydown}')
-  Modal(bind:visible='{$visible}' close='{cancel}')
-    form.modal(on:submit|preventDefault='{save}')
-      .header
-        +if('$coverSrc')
-          img.cover(alt="" src='{$coverSrc}')
-          +else
-            svg.cover(xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24')
-              path(d='M23 0l-15.996 3.585v13.04c-2.979-.589-6.004 1.671-6.004 4.154 0 2.137 1.671 3.221 3.485 3.221 2.155 0 4.512-1.528 4.515-4.638v-10.9l12-2.459v8.624c-2.975-.587-6 1.664-6 4.141 0 2.143 1.715 3.232 3.521 3.232 2.14 0 4.476-1.526 4.479-4.636v-17.364z')
-        div
-          .name {name}
-          .artist {artist}
-      .spacer
-      .row
-        .label Title
-        input(type='text' bind:value='{name}' use:focus)
-      .row
-        .label Artist
-        input(type='text' bind:value='{artist}')
-      .row
-        .label Album
-        input(type='text' bind:value='{albumName}')
-      .row
-        .label Album artist
-        input(type='text' bind:value='{albumArtist}')
-      .row
-        .label Composer
-        input(type='text' bind:value='{composer}')
-      .row
-        .label Grouping
-        input(type='text' bind:value='{grouping}')
-      .row
-        .label Genre
-        input(type='text' bind:value='{genre}')
-      .row
-        .label Year
-        input.medium(type='text' bind:value='{year}')
-      .row.num
-        .label Track
-        input.num(disabled type='text' bind:value='{trackNum}' class:big='{big(trackNum)}')
-        .midtext of
-        input.num(disabled type='text' bind:value='{trackCount}' class:big='{big(trackCount)}')
-      .row.num
-        .label Disc number
-        input.num(disabled type='text' bind:value='{discNum}' class:big='{big(discNum)}')
-        .midtext of
-        input.num(disabled type='text' bind:value='{discCount}' class:big='{big(discCount)}')
-      .row
-        .label Compilation
-        p {compilation ? 'Yes' : 'No'}
-      .row
-        .label Rating
-        p {rating}, {liked ? 'Liked' : 'Not Liked'}
-      .row
-        .label BPM
-        input.medium(disabled type='text' bind:value='{bpm}')
-      .row
-        .label Play count
-        p {playCount}
-      .row
-        .label Comments
-        input(type='text' bind:value='{comments}')
-      .spacer
-      .bottom
-        Button(secondary on:click='{cancel}') Cancel
-        Button(submit) Save
-</template>
+<svelte:window on:keydown={keydown} />
+<Modal bind:visible={$visible} close={cancel}>
+  <form class="modal" on:submit|preventDefault={save}>
+    <div class="header">
+      <div
+        class="cover"
+        class:droppable
+        on:dragenter={dragEnterOrOver}
+        on:dragover={dragEnterOrOver}
+        on:dragleave={dragLeave}
+        on:drop={drop}
+        tabindex="0">
+        {#if $image === null}
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+            <path
+              d="M23 0l-15.996 3.585v13.04c-2.979-.589-6.004 1.671-6.004 4.154 0 2.137 1.671 3.221 3.485 3.221 2.155 0 4.512-1.528 4.515-4.638v-10.9l12-2.459v8.624c-2.975-.587-6 1.664-6 4.141 0 2.143 1.715 3.232 3.521 3.232 2.14 0 4.476-1.526 4.479-4.636v-17.364z" />
+          </svg>
+        {:else}
+          <img alt="" src={'data:' + $image.mime_type + ';base64,' + $image.data} />
+        {/if}
+      </div>
+      <div>
+        <div class="name">{name}</div>
+        <div class="artist">{artist}</div>
+      </div>
+    </div>
+    <div class="spacer" />
+    <div class="row">
+      <div class="label">Title</div>
+      <input type="text" bind:value={name} use:focus />
+    </div>
+    <div class="row">
+      <div class="label">Artist</div>
+      <input type="text" bind:value={artist} />
+    </div>
+    <div class="row">
+      <div class="label">Album</div>
+      <input type="text" bind:value={albumName} />
+    </div>
+    <div class="row">
+      <div class="label">Album artist</div>
+      <input type="text" bind:value={albumArtist} />
+    </div>
+    <div class="row">
+      <div class="label">Composer</div>
+      <input type="text" bind:value={composer} />
+    </div>
+    <div class="row">
+      <div class="label">Grouping</div>
+      <input type="text" bind:value={grouping} />
+    </div>
+    <div class="row">
+      <div class="label">Genre</div>
+      <input type="text" bind:value={genre} />
+    </div>
+    <div class="row">
+      <div class="label">Year</div>
+      <input class="medium" type="text" bind:value={year} />
+    </div>
+    <div class="row num">
+      <div class="label">Track</div>
+      <input disabled class="num" type="text" bind:value={trackNum} class:big={big(trackNum)} />
+      <div class="midtext">of</div>
+      <input disabled class="num" type="text" bind:value={trackCount} class:big={big(trackCount)} />
+    </div>
+    <div class="row num">
+      <div class="label">Disc number</div>
+      <input disabled class="num" type="text" bind:value={discNum} class:big={big(discNum)} />
+      <div class="midtext">of</div>
+      <input disabled class="num" type="text" bind:value={discCount} class:big={big(discCount)} />
+    </div>
+    <div class="row">
+      <div class="label">Compilation</div>
+      <p>{compilation ? 'Yes' : 'No'}</p>
+    </div>
+    <div class="row">
+      <div class="label">Rating</div>
+      <p>{rating}, {liked ? 'Liked' : 'Not Liked'}</p>
+    </div>
+    <div class="row">
+      <div class="label">BPM</div>
+      <input disabled class="medium" type="text" bind:value={bpm} />
+    </div>
+    <div class="row">
+      <div class="label">Play count</div>
+      <p>{playCount}</p>
+    </div>
+    <div class="row">
+      <div class="label">Comments</div>
+      <input type="text" bind:value={comments} />
+    </div>
+    <div class="spacer" />
+    <div class="bottom">
+      <Button secondary on:click={cancel}>Cancel</Button><Button submit>Save</Button>
+    </div>
+  </form>
+</Modal>
 
 <style lang="sass">
   $cover-size: 90px
@@ -183,17 +251,28 @@
     font-size: 13px
     opacity: 0.7
   .cover
-    width: $cover-size
     margin-right: 20px
-    flex-shrink: 0
-  svg.cover
-    padding: 26px
-    width: $cover-size
-    height: $cover-size
-    box-sizing: border-box
-    background: var(--empty-cover-bg-color)
-    fill: var(--empty-cover-color)
-    border-radius: 2px
+  .cover
+    position: relative
+    transition: box-shadow 40ms ease-out
+    outline: none
+    &:focus
+      box-shadow: 0px 0px 0px 2px var(--accent-1)
+    &.droppable
+      box-shadow: 0px 0px 0px 2px var(--accent-1)
+    &:focus.droppable
+      box-shadow: 0px 0px 0px 4px var(--accent-1)
+    img
+      width: $cover-size
+      flex-shrink: 0
+    svg
+      padding: 26px
+      width: $cover-size
+      height: $cover-size
+      box-sizing: border-box
+      background: var(--empty-cover-bg-color)
+      fill: var(--empty-cover-color)
+      border-radius: 2px
   .row
     padding: 2px 0px
     display: flex

@@ -43,7 +43,7 @@
         removeFromOpenPlaylist(indexes)
       }
     } else if (clickedId === 'Get Info') {
-      trackInfo.open(ids[0])
+      trackInfo.visible.open(ids[0])
     } else {
       console.error('Unknown contextMenu ID', clickedId)
     }
@@ -63,7 +63,7 @@
     const index = selection.findFirst($selection.list)
     if (index !== null) {
       const id = page.getTrackId(index)
-      trackInfo.open(id)
+      trackInfo.visible.open(id)
     }
   }
   function removeFromPlaylist() {
