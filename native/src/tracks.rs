@@ -370,6 +370,150 @@ struct TrackMD {
   comments: String,
 }
 
+enum Tag {
+  Id3(id3::Tag),
+  Mp4(mp4ameta::Tag),
+}
+impl Tag {
+  pub fn write_to_path(&mut self, path: &Path) {
+    match self {
+      Tag::Id3(tag) => {
+        match tag.write_to_path(path, id3::Version::Id3v24) {
+          Ok(_) => {}
+          Err(e) => panic!("Unable to tag file: {}", e.description),
+        };
+      }
+      Tag::Mp4(tag) => {
+        match tag.write_to_path(path) {
+          Ok(_) => (),
+          Err(e) => panic!("Unable to tag file: {}", e.description),
+        };
+      }
+    }
+  }
+  pub fn remove_title(&mut self) {
+    match self {
+      Tag::Id3(tag) => tag.remove_title(),
+      Tag::Mp4(tag) => tag.remove_title(),
+    }
+  }
+  pub fn set_title(&mut self, value: &str) {
+    match self {
+      Tag::Id3(tag) => tag.set_title(value),
+      Tag::Mp4(tag) => tag.set_title(value),
+    }
+  }
+  pub fn remove_artists(&mut self) {
+    match self {
+      Tag::Id3(tag) => tag.remove_artist(),
+      Tag::Mp4(tag) => tag.remove_artists(),
+    }
+  }
+  pub fn set_artist(&mut self, value: &str) {
+    match self {
+      Tag::Id3(tag) => tag.set_artist(value),
+      Tag::Mp4(tag) => tag.set_artist(value),
+    }
+  }
+  pub fn remove_album(&mut self) {
+    match self {
+      Tag::Id3(tag) => tag.remove_album(),
+      Tag::Mp4(tag) => tag.remove_album(),
+    }
+  }
+  pub fn set_album(&mut self, value: &str) {
+    match self {
+      Tag::Id3(tag) => tag.set_album(value),
+      Tag::Mp4(tag) => tag.set_album(value),
+    }
+  }
+  pub fn remove_album_artists(&mut self) {
+    match self {
+      Tag::Id3(tag) => tag.remove_album_artist(),
+      Tag::Mp4(tag) => tag.remove_album_artists(),
+    }
+  }
+  pub fn set_album_artist(&mut self, value: &str) {
+    match self {
+      Tag::Id3(tag) => tag.set_album_artist(value),
+      Tag::Mp4(tag) => tag.set_album_artist(value),
+    }
+  }
+  pub fn remove_composers(&mut self) {
+    match self {
+      Tag::Id3(tag) => tag.remove("TCOM"),
+      Tag::Mp4(tag) => tag.remove_composers(),
+    }
+  }
+  pub fn set_composer(&mut self, value: &str) {
+    match self {
+      Tag::Id3(tag) => tag.set_text("TCOM", value),
+      Tag::Mp4(tag) => tag.set_composer(value),
+    }
+  }
+  pub fn remove_groupings(&mut self) {
+    match self {
+      Tag::Id3(tag) => tag.remove("GRP1"),
+      Tag::Mp4(tag) => tag.remove_groupings(),
+    }
+  }
+  pub fn set_grouping(&mut self, value: &str) {
+    match self {
+      Tag::Id3(tag) => tag.set_text("GRP1", value),
+      Tag::Mp4(tag) => tag.set_grouping(value),
+    }
+  }
+  pub fn remove_genres(&mut self) {
+    match self {
+      Tag::Id3(tag) => tag.remove_genre(),
+      Tag::Mp4(tag) => tag.remove_genres(),
+    }
+  }
+  pub fn set_genre(&mut self, value: &str) {
+    match self {
+      Tag::Id3(tag) => tag.set_genre(value),
+      Tag::Mp4(tag) => tag.set_genre(value),
+    }
+  }
+  pub fn remove_year(&mut self) {
+    match self {
+      Tag::Id3(tag) => {
+        tag.remove_year();
+        tag.remove_date_recorded();
+      }
+      Tag::Mp4(tag) => tag.remove_year(),
+    }
+  }
+  pub fn set_year(&mut self, value: i32) {
+    match self {
+      Tag::Id3(tag) => {
+        tag.set_year(value);
+        tag.set_date_recorded(timestamp_from_year(value));
+      }
+      Tag::Mp4(tag) => tag.set_year(value.to_string()),
+    }
+  }
+  pub fn remove_comments(&mut self) {
+    match self {
+      Tag::Id3(tag) => tag.remove("COMM"),
+      Tag::Mp4(tag) => tag.remove_comments(),
+    }
+  }
+  pub fn set_comment(&mut self, value: &str) {
+    match self {
+      Tag::Id3(tag) => {
+        tag.remove("COMM");
+        tag.add_comment(id3::frame::Comment {
+          lang: "eng".to_string(),
+          description: "".to_string(),
+          text: value.to_string(),
+        });
+      }
+      Tag::Mp4(tag) => tag.set_comment(value),
+    }
+  }
+}
+
 #[js_function(2)]
 pub fn update_track_info(ctx: CallContext) -> NResult<JsUndefined> {
   let data: &mut Data = get_data(&ctx)?;
@@ -382,10 +526,6 @@ pub fn update_track_info(ctx: CallContext) -> NResult<JsUndefined> {
   }
   let ext = old_path.extension().unwrap_or_default().to_string_lossy();
 
-  enum Tag {
-    Id3(id3::Tag),
-    Mp4(mp4ameta::Tag),
-  }
   let mut tag = match ext.as_ref() {
     "mp3" => {
       let tag = match id3::Tag::read_from_path(&old_path) {
@@ -404,173 +544,81 @@ pub fn update_track_info(ctx: CallContext) -> NResult<JsUndefined> {
     _ => panic!("Unsupported file extension: {}", ext),
   };
 
-  let name = {
-    match tag {
-      Tag::Id3(ref mut tag) => match &*new_info.name {
-        "" => tag.remove_title(),
-        value => tag.set_title(value),
-      },
-      Tag::Mp4(ref mut tag) => match &*new_info.name {
-        "" => tag.remove_title(),
-        value => tag.set_title(value),
-      },
-    }
-    new_info.name.clone()
+  // name
+  match new_info.name.as_ref() {
+    "" => tag.remove_title(),
+    value => tag.set_title(value),
   };
-  let artist = {
-    match tag {
-      Tag::Id3(ref mut tag) => match &*new_info.artist {
-        "" => tag.remove_artist(),
-        value => tag.set_artist(value),
-      },
-      Tag::Mp4(ref mut tag) => match &*new_info.artist {
-        "" => tag.remove_artists(),
-        value => tag.set_artist(value),
-      },
-    }
-    new_info.artist.clone()
+  let new_name = new_info.name.clone();
+
+  // artists
+  match new_info.artist.as_ref() {
+    "" => tag.remove_artists(),
+    value => tag.set_artist(value),
   };
-  let album_name = {
-    match tag {
-      Tag::Id3(ref mut tag) => match &*new_info.albumName {
-        "" => tag.remove_album(),
-        value => tag.set_album(value),
-      },
-      Tag::Mp4(ref mut tag) => match &*new_info.albumName {
-        "" => tag.remove_album(),
-        value => tag.set_album(value),
-      },
-    }
-    str_to_option(new_info.albumName)
+  let new_artist = new_info.artist.clone();
+
+  // album_name
+  match new_info.albumName.as_ref() {
+    "" => tag.remove_album(),
+    value => tag.set_album(value),
   };
-  let album_artist = {
-    match tag {
-      Tag::Id3(ref mut tag) => match &*new_info.albumArtist {
-        "" => tag.remove_album_artist(),
-        value => tag.set_album_artist(value),
-      },
-      Tag::Mp4(ref mut tag) => match &*new_info.albumArtist {
-        "" => tag.remove_album_artists(),
-        value => tag.set_album_artist(value),
-      },
-    }
-    str_to_option(new_info.albumArtist)
+  let new_album_name = str_to_option(new_info.albumName);
+
+  // album_artist
+  match new_info.albumArtist.as_ref() {
+    "" => tag.remove_album_artists(),
+    value => tag.set_album_artist(value),
   };
-  let composer = {
-    match tag {
-      Tag::Id3(ref mut tag) => match &*new_info.composer {
-        "" => tag.remove("TCOM"),
-        value => tag.set_text("TCOM", value),
-      },
-      Tag::Mp4(ref mut tag) => match &*new_info.composer {
-        "" => tag.remove_composers(),
-        value => tag.set_composer(value),
-      },
-    }
-    str_to_option(new_info.composer)
+  let new_album_artist = str_to_option(new_info.albumArtist);
+
+  // composer
+  match new_info.composer.as_ref() {
+    "" => tag.remove_composers(),
+    value => tag.set_composer(value),
   };
-  let grouping = {
-    match tag {
-      Tag::Id3(ref mut tag) => match &*new_info.grouping {
-        "" => tag.remove("GRP1"),
-        value => tag.set_text("GRP1", value),
-      },
-      Tag::Mp4(ref mut tag) => match &*new_info.grouping {
-        "" => tag.remove_groupings(),
-        value => tag.set_grouping(value),
-      },
-    }
-    str_to_option(new_info.grouping)
+  let new_composer = str_to_option(new_info.composer);
+
+  // grouping
+  match new_info.grouping.as_ref() {
+    "" => tag.remove_groupings(),
+    value => tag.set_grouping(value),
   };
-  let genre = {
-    match tag {
-      Tag::Id3(ref mut tag) => match &*new_info.genre {
-        "" => tag.remove_genre(),
-        value => tag.set_genre(value),
-      },
-      Tag::Mp4(ref mut tag) => match &*new_info.genre {
-        "" => tag.remove_genres(),
-        value => tag.set_genre(value),
-      },
-    }
-    str_to_option(new_info.genre)
+  let new_grouping = str_to_option(new_info.grouping);
+
+  // genre
+  match new_info.genre.as_ref() {
+    "" => tag.remove_genres(),
+    value => tag.set_genre(value),
   };
-  let parsed_year = match &*new_info.year {
+  let new_genre = str_to_option(new_info.genre);
+
+  // year
+  let new_year_i32 = match &*new_info.year {
     "" => None,
     value => Some(value.parse().expect("Invalid year")),
   };
-  let i64_year = match parsed_year {
-    None => None,
-    Some(value) => Some(i64::from(value)),
-  };
-  let year = {
-    match tag {
-      Tag::Id3(ref mut tag) => match parsed_year {
-        None => {
-          tag.remove_year();
-          tag.remove_date_recorded();
-        }
-        Some(value) => {
-          tag.set_year(value);
-          tag.set_date_recorded(timestamp_from_year(value));
-        }
-      },
-      Tag::Mp4(ref mut tag) => match parsed_year {
-        None => tag.remove_year(),
-        Some(value) => tag.set_year(value.to_string()),
-      },
-    }
-    i64_year
-  };
-  let comments = {
-    match tag {
-      Tag::Id3(ref mut tag) => {
-        tag.remove("COMM");
-        match &*new_info.comments {
-          "" => {}
-          value => tag.add_comment(id3::frame::Comment {
-            lang: "eng".to_string(),
-            description: "".to_string(),
-            text: value.to_string(),
-          }),
-        };
-      }
-      Tag::Mp4(ref mut tag) => {
-        tag.remove_comments();
-        match &*new_info.comments {
-          "" => {}
-          value => tag.add_comment(value),
-        };
-      }
-    };
-    str_to_option(new_info.comments)
+  let new_year_i64 = new_year_i32.map(|n| i64::from(n));
+  match new_year_i32 {
+    None => tag.remove_year(),
+    Some(value) => tag.set_year(value),
   };
 
-  match tag {
-    Tag::Id3(ref mut tag) => {
-      match tag.write_to_path(old_path, id3::Version::Id3v24) {
-        Ok(_) => {}
-        Err(e) => panic!("Unable to tag file: {}", e.description),
-      };
-    }
-    Tag::Mp4(ref mut tag) => {
-      match tag.write_to_path(old_path) {
-        Ok(_) => (),
-        Err(e) => panic!("Unable to tag file: {}", e.description),
-      };
-    }
-  }
+  // comment
+  match new_info.comments.as_ref() {
+    "" => tag.remove_comments(),
+    value => tag.set_comment(value),
+  };
+  let new_comments = str_to_option(new_info.comments);
+
+  // save tag
+  tag.write_to_path(old_path);
 
   // move file
-  if new_info.name != track.name || new_info.artist != track.artist {
-    let new_filename = generate_filename(
-      &data.paths.tracks_dir,
-      &new_info.artist,
-      &new_info.name,
-      ext.as_ref(),
-    );
-    let new_path_str = data.paths.tracks_dir.join(&new_filename);
-    let new_path = Path::new(&new_path_str);
+  if new_name != track.name || new_artist != track.artist {
+    let dir = &data.paths.tracks_dir;
+    let new_filename = generate_filename(dir, &new_artist, &new_name, &ext);
+    let new_path = dir.join(&new_filename);
     match fs::rename(old_path, new_path) {
       Ok(_) => {
         track.file = new_filename;
@@ -579,15 +627,15 @@ pub fn update_track_info(ctx: CallContext) -> NResult<JsUndefined> {
     }
   }
 
-  track.name = name;
-  track.artist = artist;
-  track.albumName = album_name;
-  track.albumArtist = album_artist;
-  track.composer = composer;
-  track.grouping = grouping;
-  track.genre = genre;
-  track.year = year;
-  track.comments = comments;
+  track.name = new_name;
+  track.artist = new_artist;
+  track.albumName = new_album_name;
+  track.albumArtist = new_album_artist;
+  track.composer = new_composer;
+  track.grouping = new_grouping;
+  track.genre = new_genre;
+  track.year = new_year_i64;
+  track.comments = new_comments;
 
   return ctx.env.get_undefined();
 }
