@@ -49,20 +49,22 @@
   function getFilePaths(e: DragEvent): string[] {
     if (!e.dataTransfer) return []
     let validPaths: string[] = []
-    Array.from(e.dataTransfer.files).forEach((file) => {
+    for (let i = 0; i < e.dataTransfer.files.length; i++) {
+      const file = e.dataTransfer.files[i]
       if (allowedMimes.includes(file.type)) {
         validPaths.push(file.path)
       }
-    })
+    }
     return validPaths
   }
   function hasFiles(e: DragEvent): boolean {
     if (!e.dataTransfer) return false
-    Array.from(e.dataTransfer.items).forEach((item) => {
+    for (let i = 0; i < e.dataTransfer.items.length; i++) {
+      const item = e.dataTransfer.items[i]
       if (item.kind === 'file' && allowedMimes.includes(item.type)) {
         return true
       }
-    })
+    }
     return false
   }
   function dragEnter(e: DragEvent) {
