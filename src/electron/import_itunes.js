@@ -129,7 +129,7 @@ async function popup() {
   })
   if (info.response === 1) return {}
   const dryRun = info.checkboxChecked
-  const open = await ipcRenderer.invoke('showOpenDialogAttached', {
+  const open = await ipcRenderer.invoke('showOpenDialog', true, {
     properties: ['openFile'],
   })
   if (!open.canceled && canceled.filePaths && filePaths[0]) {

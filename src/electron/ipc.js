@@ -9,9 +9,13 @@ ipcMain.handle('showMessageBoxAttached', async (e, options) => {
   return await dialog.showMessageBox(window, options)
 })
 
-ipcMain.handle('showOpenDialogAttached', async (e, options) => {
+ipcMain.handle('showOpenDialog', async (e, attached, options) => {
   const window = e.sender.getOwnerBrowserWindow()
-  return await dialog.showOpenDialog(window, options)
+  if (attached === true) {
+    return await dialog.showOpenDialog(window, options)
+  } else {
+    return await dialog.showOpenDialog(options)
+  }
 })
 
 ipcMain.handle('showTrackMenu', (e, list) => {

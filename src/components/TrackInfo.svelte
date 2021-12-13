@@ -4,6 +4,7 @@
   import { checkShortcut, focus, focusLast } from '../scripts/helpers'
   import { methods } from '../stores/data'
   import Button from './Button.svelte'
+  import { showOpenDialog } from '../stores/window'
 
   function uintFilter(value: string) {
     return value.replace(/[^0-9]*/g, '')
@@ -92,6 +93,11 @@
       }
     }
   }
+  function keydownNoneSelected(e: KeyboardEvent) {
+    if (checkShortcut(e, 'Enter')) {
+      save()
+    }
+  }
 
   let droppable = false
   const allowedMimes = ['image/jpeg', 'image/png']
@@ -138,11 +144,24 @@
     if (checkShortcut(e, 'Backspace')) {
       methods.removeImage(0)
       loadImage()
+    } else {
+      keydownNoneSelected(e)
+    }
+  }
+  async function selectCover() {
+    let result = await showOpenDialog(false, {
+      properties: ['openFile'],
+      filters: [{ name: 'Images', extensions: ['jpg', 'jpeg', 'png'] }],
+    })
+    if (!result.canceled && result.filePaths.length === 1) {
+      methods.setImage(0, result.filePaths[0])
+      loadImage()
     }
   }
 </script>
 
 <svelte:window on:keydown={keydown} />
+<svelte:body on:keydown|self={keydownNoneSelected} />
 <Modal bind:visible={$visible} close={cancel}>
   <form class="modal" on:submit|preventDefault={save}>
     <div class="header" class:has-subtitle={$image !== null && $image.total_images >= 2}>
@@ -153,6 +172,7 @@
         on:dragover={dragEnterOrOver}
         on:dragleave={dragLeave}
         on:drop={drop}
+        on:dblclick={selectCover}
         on:keydown={coverKeydown}
         tabindex="0">
         {#if $image === null}
@@ -275,9 +295,11 @@
     &:focus.droppable
       box-shadow: 0px 0px 0px 4px var(--accent-1)
     img
+      display: block
       width: $cover-size
       flex-shrink: 0
     svg
+      display: block
       padding: 26px
       width: $cover-size
       height: $cover-size

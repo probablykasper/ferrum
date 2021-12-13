@@ -1,5 +1,5 @@
 import type { Data } from './data'
-import type { MessageBoxOptions } from 'electron'
+import type { MessageBoxOptions, OpenDialogOptions } from 'electron'
 const electron = window.require('electron')
 
 export const ipcRenderer = electron.ipcRenderer
@@ -35,6 +35,11 @@ export async function showMessageBoxAttached(attached: boolean, options: Message
     buttonClicked: result.response,
     checkboxChecked: result.checkboxChecked,
   }
+}
+export async function showOpenDialog(attached: boolean, options: OpenDialogOptions) {
+  type RV = Electron.OpenDialogReturnValue
+  const result: RV = await invoke('showOpenDialog', attached, options)
+  return result
 }
 
 export const addon = window.addon
