@@ -139,7 +139,7 @@
 <svelte:window on:keydown={keydown} />
 <Modal bind:visible={$visible} close={cancel}>
   <form class="modal" on:submit|preventDefault={save}>
-    <div class="header">
+    <div class="header" class:has-subtitle={$image !== null && $image.total_images >= 2}>
       <div
         class="cover"
         class:droppable
@@ -155,6 +155,9 @@
           </svg>
         {:else}
           <img alt="" src={'data:' + $image.mime_type + ';base64,' + $image.data} />
+        {/if}
+        {#if $image !== null && $image.total_images >= 2}
+          <div class="cover-subtitle">{$image.index + 1} / {$image.total_images}</div>
         {/if}
       </div>
       <div>
@@ -241,7 +244,9 @@
   .header
     display: flex
     align-items: center
-    height: $cover-size
+    min-height: $cover-size
+    &.has-subtitle
+      margin-bottom: 7px
   .spacer
     height: 15px
   .name
@@ -273,6 +278,12 @@
       background: var(--empty-cover-bg-color)
       fill: var(--empty-cover-color)
       border-radius: 2px
+  .cover-subtitle
+    position: absolute
+    font-size: 11px
+    opacity: 0.8
+    width: 100%
+    text-align: center
   .row
     padding: 2px 0px
     display: flex
