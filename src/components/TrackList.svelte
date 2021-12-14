@@ -8,6 +8,7 @@
     trackLists as trackListsStore,
     addTracksToPlaylist,
     deleteTracksInOpen,
+    paths,
   } from '../stores/data'
   import { newPlaybackInstance, playingId } from '../stores/player'
   import {
@@ -42,6 +43,9 @@
       if ($page.tracklist.type === 'playlist') {
         removeFromOpenPlaylist(indexes)
       }
+    } else if (clickedId === 'revealTrackFile') {
+      const track = page.getTrack(indexes[0])
+      ipcRenderer.invoke('revealTrackFile', paths.tracks_dir, track.file)
     } else if (clickedId === 'Get Info') {
       trackInfo.visible.open(page.getTrackIds(), indexes[0])
     } else {
@@ -65,6 +69,14 @@
       trackInfo.visible.open(page.getTrackIds(), index)
     }
   }
+  function revealTrackFile() {
+    const index = selection.findFirst($selection.list)
+    if (index !== null) {
+      let firstIndex = selection.findFirst($selection.list) || 0
+      const track = page.getTrack(firstIndex)
+      ipcRenderer.invoke('revealTrackFile', paths.tracks_dir, track.file)
+    }
+  }
   function removeFromPlaylist() {
     if ($page.tracklist.type === 'playlist') {
       const indexes = selection.getSelectedIndexes($selection)
@@ -76,16 +88,17 @@
     deleteTracksInOpen(indexes)
   }
   onMount(() => {
-    ipcRenderer.on('Get Info', getInfo)
     ipcRenderer.on('Play Next', playNext)
     ipcRenderer.on('Add to Queue', addToQueue)
+    ipcRenderer.on('revealTrackFile', revealTrackFile)
     ipcRenderer.on('Remove from Playlist', removeFromPlaylist)
     ipcRenderer.on('Delete from Library', deleteFromLibrary)
   })
   onDestroy(() => {
-    ipcRenderer.off('Get Info', getInfo)
     ipcRenderer.off('Play Next', playNext)
     ipcRenderer.off('Add to Queue', addToQueue)
+    ipcRenderer.off('Get Info', getInfo)
+    ipcRenderer.off('revealTrackFile', revealTrackFile)
     ipcRenderer.off('Remove from Playlist', removeFromPlaylist)
     ipcRenderer.off('Delete from Library', deleteFromLibrary)
   })

@@ -20,8 +20,13 @@ Ferrum is in development and might get updates that no longer work with your lib
 ### ToDo
 
 - Playlist covers
-- Make removing from playlists work when filter or sorting is used (rn, if you remove the first shown track, it would remove the first track in the playlist)
-- iTunes Import overwrites library, but old track/artwork files are still kept. Either move or delete them
+- Import m4a files
+- Move playlists
+- Edit playlists
+- Create playlist folder
+- Allow removing tracks from playlists when filter or sorting is used
+- Move iTunes Import to Rust
+- iTunes Import overwrites library, but old track files are still kept
 - Databases
   - https://github.com/TheNeikos/rustbreak
   - https://github.com/spacejam/sled

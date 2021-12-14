@@ -1,4 +1,6 @@
-const { ipcMain, dialog, Menu } = require('electron')
+const { ipcMain, dialog, Menu, shell } = require('electron')
+const path = require('path')
+const is = require('./is.js')
 
 ipcMain.handle('showMessageBox', async (e, options) => {
   return await dialog.showMessageBox(options)
@@ -16,6 +18,10 @@ ipcMain.handle('showOpenDialog', async (e, attached, options) => {
   } else {
     return await dialog.showOpenDialog(options)
   }
+})
+
+ipcMain.handle('revealTrackFile', async (e, ...paths) => {
+  shell.showItemInFolder(path.join(...paths))
 })
 
 ipcMain.handle('showTrackMenu', (e, list) => {
@@ -40,6 +46,15 @@ ipcMain.handle('showTrackMenu', (e, list) => {
       {
         label: 'Get Info',
         click: () => resolve('Get Info'),
+      },
+      { type: 'separator' },
+      {
+        label: (() => {
+          if (is.mac) return 'Reveal in Finder'
+          else if (is.windows) return 'Reveal in File Explorer'
+          else return 'Reveal in File Manager'
+        })(),
+        click: () => resolve('revealTrackFile'),
       },
       { type: 'separator' },
       {

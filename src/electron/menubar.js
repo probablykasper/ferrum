@@ -97,6 +97,18 @@ module.exports.initMenuBar = (app, mainWindow) => {
         },
         { type: 'separator' },
         {
+          label: (() => {
+            if (is.mac) return 'Reveal in Finder'
+            else if (is.windows) return 'Reveal in File Explorer'
+            else return 'Reveal in File Manager'
+          })(),
+          accelerator: 'Alt+CmdOrCtrl+R',
+          click: () => {
+            mainWindow.webContents.send('revealTrackFile')
+          },
+        },
+        { type: 'separator' },
+        {
           label: 'Remove from Playlist',
           accelerator: '',
           click: () => {
