@@ -26,27 +26,51 @@ export type TrackMD = {
   comments: string
 }
 
+type Current = {
+  ids: TrackID[]
+  index: number
+}
+let current: Current | null = null
+
 export const id: Writable<TrackID | null> = writable(null)
 export const track: Writable<Track | null> = writable(null)
 export const image = writable(null as null | Image)
+
+export function openPrev() {
+  if (current) openIndex(current.index - 1)
+}
+export function openNext() {
+  if (current) openIndex(current.index + 1)
+}
+
+function openIndex(index: number) {
+  if (current && index >= 0 && index < current.ids.length) {
+    current.index = index
+    id.set(current.ids[index])
+    track.set(methods.getTrack(current.ids[index]))
+    methods.loadTags(current.ids[index])
+    loadImage()
+  }
+}
+function close() {
+  id.set(null)
+  track.set(null)
+  image.set(null)
+}
 
 export const visible = (() => {
   const store = writable(false)
   return {
     subscribe: store.subscribe,
-    open: (newId: string) => {
-      id.set(newId)
-      track.set(methods.getTrack(newId))
+    open: (ids: string[], index: number) => {
+      current = { ids, index }
+      openIndex(index)
       store.set(true)
-      methods.loadTags(newId)
-      loadImage()
     },
     set: (value: boolean) => {
       if (value === false) {
         store.set(false)
-        id.set(null)
-        track.set(null)
-        image.set(null)
+        close()
       }
     },
   }

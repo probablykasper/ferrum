@@ -1,6 +1,6 @@
 <script lang="ts">
   import Modal from './Modal.svelte'
-  import { visible, track, image, id, loadImage } from '../stores/trackInfo'
+  import { visible, track, image, id, loadImage, openPrev, openNext } from '../stores/trackInfo'
   import { checkShortcut, focus, focusLast } from '../scripts/helpers'
   import { methods } from '../stores/data'
   import Button from './Button.svelte'
@@ -91,6 +91,12 @@
       if (document.activeElement instanceof HTMLElement) {
         cancel()
       }
+    } else if (checkShortcut(e, '[', { cmdOrCtrl: true })) {
+      console.log('pre')
+      openPrev()
+    } else if (checkShortcut(e, ']', { cmdOrCtrl: true })) {
+      console.log('ne')
+      openNext()
     }
   }
   function keydownNoneSelected(e: KeyboardEvent) {

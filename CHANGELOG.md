@@ -2,12 +2,13 @@
 
 ## Next
 - Add ability to delete tracks from library
-- Add `Cmd+U` / `View > Toggle Queue` to show/hide the queue
+- Add `Ctrl+U` (macOS: `Cmd+U`) and `View > Toggle Queue` to show/hide the queue
 - Add support for changing track artworks using double-click and drag-and-drop
+- Add `Ctrl+]` and `Ctrl+]` (macOS: `Cmd+]` and `Cmd+]`) for opening the next and previous track in the "Get Info" window
 - Add metadata editing of track number, total tracks, disc number and total discs
 - Add more items to the Song menu
 - Add `Escape` shortcut for deselecting tracks
-- Add support selecting tracks via `Cmd+A`, `Shift+Up/Down`, `Alt+Up/Down`, `Shift+Alt+Up/Down`
+- Add support selecting tracks via `Ctrl+A` (macOS: `Cmd+A`), `Shift+Up/Down`, `Alt+Up/Down`, `Shift+Alt+Up/Down`
 - Fix memory leak from opening queue
 - Improve behavior of shift-selecting tracks
 - Make sure newly selected tracks are visible by scrolling to them
