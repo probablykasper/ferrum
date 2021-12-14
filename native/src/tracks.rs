@@ -371,6 +371,7 @@ struct TrackMD {
   trackCount: String,
   discNum: String,
   discCount: String,
+  bpm: String,
   comments: String,
 }
 
@@ -601,6 +602,22 @@ impl Tag {
       }
     }
     Ok(())
+  }
+  pub fn remove_bpm(&mut self) {
+    match self {
+      Tag::Id3(tag) => tag.remove("TBPM"),
+      Tag::Mp4(tag) => tag.remove_bpm(),
+    }
+  }
+  pub fn set_bpm(&mut self, value: u16) {
+    match self {
+      Tag::Id3(tag) => {
+        tag.set_text("TBPM", value.to_string());
+      }
+      Tag::Mp4(tag) => {
+        tag.set_bpm(value);
+      }
+    }
   }
   pub fn remove_comments(&mut self) {
     match self {
@@ -916,7 +933,10 @@ pub fn update_track_info(ctx: CallContext) -> NResult<JsUndefined> {
   // year
   let new_year_i32 = match new_info.year.as_ref() {
     "" => None,
-    value => Some(value.parse().expect("Invalid year")),
+    value => match value.parse() {
+      Ok(n) => Some(n),
+      Err(_) => throw!("Invalid year"),
+    },
   };
   let new_year_i64 = new_year_i32.map(|n| i64::from(n));
   match new_year_i32 {
@@ -927,11 +947,17 @@ pub fn update_track_info(ctx: CallContext) -> NResult<JsUndefined> {
   // track_number, track_count
   let new_track_number: Option<u32> = match new_info.trackNum.as_ref() {
     "" => None,
-    value => Some(value.parse().expect("Invalid track number")),
+    value => match value.parse() {
+      Ok(n) => Some(n),
+      Err(_) => throw!("Invalid track number"),
+    },
   };
   let new_track_count: Option<u32> = match new_info.trackCount.as_ref() {
     "" => None,
-    value => Some(value.parse().expect("Invalid track count")),
+    value => match value.parse() {
+      Ok(n) => Some(n),
+      Err(_) => throw!("Invalid track count"),
+    },
   };
   match tag.set_track_info(new_track_number, new_track_count) {
     Ok(()) => {}
@@ -943,17 +969,35 @@ pub fn update_track_info(ctx: CallContext) -> NResult<JsUndefined> {
   // disc_number, disc_count
   let new_disc_number: Option<u32> = match new_info.discNum.as_ref() {
     "" => None,
-    value => Some(value.parse().expect("Invalid disc number")),
+    value => match value.parse() {
+      Ok(n) => Some(n),
+      Err(_) => throw!("Invalid disc number"),
+    },
   };
   let new_disc_count: Option<u32> = match new_info.discCount.as_ref() {
     "" => None,
-    value => Some(value.parse().expect("Invalid disc count")),
+    value => match value.parse() {
+      Ok(n) => Some(n),
+      Err(_) => throw!("Invalid disc count"),
+    },
   };
   match tag.set_disc_info(new_disc_number, new_disc_count) {
     Ok(()) => {}
     // don't set tag at all if number is required
     Err(SetInfoError::NumberRequired) => tag.set_disc_info(None, None)?,
     Err(e) => Err(e)?,
+  };
+
+  let new_bpm: Option<u16> = match new_info.bpm.as_ref() {
+    "" => None,
+    value => match value.parse() {
+      Ok(n) => Some(n),
+      Err(_) => throw!("Invalid bpm"),
+    },
+  };
+  match new_bpm {
+    None => tag.remove_bpm(),
+    Some(value) => tag.set_bpm(value),
   };
 
   // comment
@@ -991,6 +1035,7 @@ pub fn update_track_info(ctx: CallContext) -> NResult<JsUndefined> {
   track.trackCount = new_track_count;
   track.discNum = new_disc_number;
   track.discCount = new_disc_count;
+  track.bpm = new_bpm.map(|n| n.into());
   track.comments = new_comments;
 
   return ctx.env.get_undefined();

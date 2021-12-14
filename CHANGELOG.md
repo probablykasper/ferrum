@@ -5,7 +5,7 @@
 - Add `Ctrl+U` (macOS: `Cmd+U`) and `View > Toggle Queue` to show/hide the queue
 - Add support for changing track artworks using double-click and drag-and-drop
 - Add `Ctrl+]` and `Ctrl+]` (macOS: `Cmd+]` and `Cmd+]`) for opening the next and previous track in the "Get Info" window
-- Add metadata editing of track number, total tracks, disc number and total discs
+- Add metadata editing of bpm, track number, total tracks, disc number and total discs
 - Add more items to the Song menu
 - Add `Escape` shortcut for deselecting tracks
 - Add support selecting tracks via `Ctrl+A` (macOS: `Cmd+A`), `Shift+Up/Down`, `Alt+Up/Down`, `Shift+Alt+Up/Down`

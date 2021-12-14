@@ -68,7 +68,7 @@
         trackCount,
         discNum,
         discCount,
-        // bpm,
+        bpm,
         // compilation,
         // rating,
         // liked,
@@ -253,7 +253,7 @@
     </div>
     <div class="row">
       <div class="label">BPM</div>
-      <input disabled class="medium" type="text" bind:value={bpm} />
+      <input class="medium" type="text" bind:value={bpm} />
     </div>
     <div class="row">
       <div class="label">Play count</div>
@@ -331,8 +331,6 @@
     color: inherit
     border: 1px solid rgba(#ffffff, 0.25)
     box-sizing: border-box
-    &[disabled]
-      opacity: 0.4
     &.num
       width: 30px
       flex-grow: 0

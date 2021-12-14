@@ -16,9 +16,7 @@ export type TrackMD = {
   trackCount: string
   discNum: string
   discCount: string
-  // discNum: string
-  // discCount: string
-  // bpm: string
+  bpm: string
   // compilation: string
   // rating: string
   // liked: string
