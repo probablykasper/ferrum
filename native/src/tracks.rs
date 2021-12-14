@@ -374,6 +374,19 @@ struct TrackMD {
   comments: String,
 }
 
+pub enum SetInfoError {
+  NumberRequired,
+  Other(String),
+}
+impl From<SetInfoError> for napi::Error {
+  fn from(err: SetInfoError) -> napi::Error {
+    match err {
+      SetInfoError::NumberRequired => napi::Error::from_reason("Number required".to_string()),
+      SetInfoError::Other(s) => napi::Error::from_reason(s),
+    }
+  }
+}
+
 pub enum Tag {
   Id3(id3::Tag),
   Mp4(mp4ameta::Tag),
@@ -497,80 +510,93 @@ impl Tag {
       Tag::Mp4(tag) => tag.set_year(value.to_string()),
     }
   }
-  pub fn remove_track_number(&mut self) {
+  /// For some tag types, `total` cannot exist without `number`. In those
+  /// cases, `total` is assumed to be `None`.
+  pub fn set_track_info(
+    &mut self,
+    number: Option<u32>,
+    total: Option<u32>,
+  ) -> Result<(), SetInfoError> {
     match self {
-      Tag::Id3(tag) => tag.remove_track(),
-      Tag::Mp4(tag) => tag.remove_track_number(),
-    }
-  }
-  pub fn set_track_number(&mut self, value: u32) -> UniResult<()> {
-    match self {
-      Tag::Id3(tag) => tag.set_track(value),
+      Tag::Id3(tag) => match (number, total) {
+        (Some(number), Some(total)) => {
+          tag.set_track(number);
+          tag.set_total_tracks(total);
+        }
+        (Some(number), None) => {
+          tag.remove_total_tracks();
+          tag.set_track(number);
+        }
+        (None, Some(_)) => {
+          return Err(SetInfoError::NumberRequired);
+        }
+        (None, None) => {
+          tag.remove_total_tracks();
+          tag.remove_track();
+        }
+      },
       Tag::Mp4(tag) => {
-        if value > u16::MAX as u32 {
-          throw!("Track number cannot be over {} in MP4", u16::MAX);
-        } else {
-          tag.set_track_number(value as u16);
+        if number.unwrap_or(0) > u16::MAX as u32 {
+          let msg = "Track number too large for this file".to_string();
+          return Err(SetInfoError::Other(msg));
+        }
+        if total.unwrap_or(0) > u16::MAX as u32 {
+          let msg = "Total tracks too large for this file".to_string();
+          return Err(SetInfoError::Other(msg));
+        }
+        match number {
+          Some(number) => tag.set_track_number(number as u16),
+          None => tag.remove_track_number(),
+        }
+        match total {
+          Some(total) => tag.set_total_tracks(total as u16),
+          None => tag.remove_total_tracks(),
         }
       }
-    };
+    }
     Ok(())
   }
-  pub fn remove_track_count(&mut self) {
+  /// For some tag types, `total` cannot exist without `number`. In those
+  /// cases, `total` is assumed to be `None`.
+  pub fn set_disc_info(
+    &mut self,
+    number: Option<u32>,
+    total: Option<u32>,
+  ) -> Result<(), SetInfoError> {
     match self {
-      Tag::Id3(tag) => tag.remove_total_tracks(),
-      Tag::Mp4(tag) => tag.remove_total_tracks(),
-    }
-  }
-  pub fn set_track_count(&mut self, value: u32) -> UniResult<()> {
-    match self {
-      Tag::Id3(tag) => {
-        println!("set_track_count: {}", value);
-        tag.set_total_tracks(value);
-      }
-      Tag::Mp4(tag) => {
-        if value > u16::MAX as u32 {
-          throw!("Total tracks cannot be over {} in MP4", u16::MAX);
-        } else {
-          tag.set_total_tracks(value as u16);
+      Tag::Id3(tag) => match (number, total) {
+        (Some(number), Some(total)) => {
+          tag.set_disc(number);
+          tag.set_total_discs(total);
         }
-      }
-    };
-    Ok(())
-  }
-  pub fn remove_disc_number(&mut self) {
-    match self {
-      Tag::Id3(tag) => tag.remove_disc(),
-      Tag::Mp4(tag) => tag.remove_disc_number(),
-    }
-  }
-  pub fn set_disc_number(&mut self, value: u32) -> UniResult<()> {
-    match self {
-      Tag::Id3(tag) => tag.set_disc(value),
-      Tag::Mp4(tag) => {
-        if value > u16::MAX as u32 {
-          throw!("Disc number cannot be over {} in MP4", u16::MAX);
-        } else {
-          tag.set_disc_number(value as u16);
+        (Some(number), None) => {
+          tag.remove_total_discs();
+          tag.set_disc(number);
         }
-      }
-    };
-    Ok(())
-  }
-  pub fn remove_disc_count(&mut self) {
-    match self {
-      Tag::Id3(tag) => tag.remove_total_discs(),
-      Tag::Mp4(tag) => tag.remove_total_discs(),
-    }
-  }
-  pub fn set_disc_count(&mut self, value: u32) -> UniResult<()> {
-    match self {
-      Tag::Id3(tag) => tag.set_total_discs(value),
+        (None, Some(_)) => {
+          return Err(SetInfoError::NumberRequired);
+        }
+        (None, None) => {
+          tag.remove_total_discs();
+          tag.remove_disc();
+        }
+      },
       Tag::Mp4(tag) => {
-        if value > u16::MAX as u32 {
-          throw!("Total discs cannot be over {} in MP4", u16::MAX);
-        } else {
-          tag.set_total_discs(value as u16);
+        if number.unwrap_or(0) > u16::MAX as u32 {
+          let msg = "Disc number too large for this file".to_string();
+          return Err(SetInfoError::Other(msg));
+        }
+        if total.unwrap_or(0) > u16::MAX as u32 {
+          let msg = "Total discs too large for this file".to_string();
+          return Err(SetInfoError::Other(msg));
+        }
+        match number {
+          Some(number) => tag.set_disc_number(number as u16),
+          None => tag.remove_disc_number(),
+        }
+        match total {
+          Some(total) => tag.set_total_discs(total as u16),
+          None => tag.remove_total_discs(),
         }
       }
     }
@@ -898,45 +924,37 @@ pub fn update_track_info(ctx: CallContext) -> NResult<JsUndefined> {
     Some(value) => tag.set_year(value),
   };
 
-  // track_number
+  // track_number, track_count
   let new_track_number: Option<u32> = match new_info.trackNum.as_ref() {
     "" => None,
     value => Some(value.parse().expect("Invalid track number")),
   };
-  match new_track_number {
-    None => tag.remove_track_number(),
-    Some(value) => tag.set_track_number(value)?,
-  }
-
-  // track_count
   let new_track_count: Option<u32> = match new_info.trackCount.as_ref() {
     "" => None,
     value => Some(value.parse().expect("Invalid track count")),
   };
-  match new_track_count {
-    None => tag.remove_track_count(),
-    Some(value) => tag.set_track_count(value)?,
+  match tag.set_track_info(new_track_number, new_track_count) {
+    Ok(()) => {}
+    // don't set tag at all if number is required
+    Err(SetInfoError::NumberRequired) => tag.set_track_info(None, None)?,
+    Err(e) => Err(e)?,
   }
 
-  // disc_number
+  // disc_number, disc_count
   let new_disc_number: Option<u32> = match new_info.discNum.as_ref() {
     "" => None,
     value => Some(value.parse().expect("Invalid disc number")),
   };
-  match new_disc_number {
-    None => tag.remove_disc_number(),
-    Some(value) => tag.set_disc_number(value)?,
-  }
-
-  // disc_count
   let new_disc_count: Option<u32> = match new_info.discCount.as_ref() {
     "" => None,
     value => Some(value.parse().expect("Invalid disc count")),
   };
-  match new_disc_count {
-    None => tag.remove_disc_count(),
-    Some(value) => tag.set_disc_count(value)?,
-  }
+  match tag.set_disc_info(new_disc_number, new_disc_count) {
+    Ok(()) => {}
+    // don't set tag at all if number is required
+    Err(SetInfoError::NumberRequired) => tag.set_disc_info(None, None)?,
+    Err(e) => Err(e)?,
+  };
 
   // comment
   match new_info.comments.as_ref() {
