@@ -66,8 +66,8 @@
         year,
         trackNum,
         trackCount,
-        // discNum,
-        // discCount,
+        discNum,
+        discCount,
         // bpm,
         // compilation,
         // rating,
@@ -233,9 +233,9 @@
     </div>
     <div class="row num">
       <div class="label">Disc number</div>
-      <input disabled class="num" type="text" bind:value={discNum} class:big={big(discNum)} />
+      <input class="num" type="text" bind:value={discNum} class:big={big(discNum)} />
       <div class="midtext">of</div>
-      <input disabled class="num" type="text" bind:value={discCount} class:big={big(discCount)} />
+      <input class="num" type="text" bind:value={discCount} class:big={big(discCount)} />
     </div>
     <div class="row">
       <div class="label">Compilation</div>

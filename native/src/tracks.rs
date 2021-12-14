@@ -367,9 +367,11 @@ struct TrackMD {
   grouping: String,
   genre: String,
   year: String,
-  comments: String,
   trackNum: String,
   trackCount: String,
+  discNum: String,
+  discCount: String,
+  comments: String,
 }
 
 pub enum Tag {
@@ -534,6 +536,44 @@ impl Tag {
         }
       }
     };
+    Ok(())
+  }
+  pub fn remove_disc_number(&mut self) {
+    match self {
+      Tag::Id3(tag) => tag.remove_disc(),
+      Tag::Mp4(tag) => tag.remove_disc_number(),
+    }
+  }
+  pub fn set_disc_number(&mut self, value: u32) -> UniResult<()> {
+    match self {
+      Tag::Id3(tag) => tag.set_disc(value),
+      Tag::Mp4(tag) => {
+        if value > u16::MAX as u32 {
+          throw!("Disc number cannot be over {} in MP4", u16::MAX);
+        } else {
+          tag.set_disc_number(value as u16);
+        }
+      }
+    };
+    Ok(())
+  }
+  pub fn remove_disc_count(&mut self) {
+    match self {
+      Tag::Id3(tag) => tag.remove_total_discs(),
+      Tag::Mp4(tag) => tag.remove_total_discs(),
+    }
+  }
+  pub fn set_disc_count(&mut self, value: u32) -> UniResult<()> {
+    match self {
+      Tag::Id3(tag) => tag.set_total_discs(value),
+      Tag::Mp4(tag) => {
+        if value > u16::MAX as u32 {
+          throw!("Total discs cannot be over {} in MP4", u16::MAX);
+        } else {
+          tag.set_total_discs(value as u16);
+        }
+      }
+    }
     Ok(())
   }
   pub fn remove_comments(&mut self) {
@@ -878,6 +918,26 @@ pub fn update_track_info(ctx: CallContext) -> NResult<JsUndefined> {
     Some(value) => tag.set_track_count(value)?,
   }
 
+  // disc_number
+  let new_disc_number: Option<u32> = match new_info.discNum.as_ref() {
+    "" => None,
+    value => Some(value.parse().expect("Invalid disc number")),
+  };
+  match new_disc_number {
+    None => tag.remove_disc_number(),
+    Some(value) => tag.set_disc_number(value)?,
+  }
+
+  // disc_count
+  let new_disc_count: Option<u32> = match new_info.discCount.as_ref() {
+    "" => None,
+    value => Some(value.parse().expect("Invalid disc count")),
+  };
+  match new_disc_count {
+    None => tag.remove_disc_count(),
+    Some(value) => tag.set_disc_count(value)?,
+  }
+
   // comment
   match new_info.comments.as_ref() {
     "" => tag.remove_comments(),
@@ -911,6 +971,8 @@ pub fn update_track_info(ctx: CallContext) -> NResult<JsUndefined> {
   track.year = new_year_i64;
   track.trackNum = new_track_number;
   track.trackCount = new_track_count;
+  track.discNum = new_disc_number;
+  track.discCount = new_disc_count;
   track.comments = new_comments;
 
   return ctx.env.get_undefined();

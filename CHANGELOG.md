@@ -4,7 +4,7 @@
 - Add ability to delete tracks from library
 - Add `Cmd+U` / `View > Toggle Queue` to show/hide the queue
 - Add support for changing track artworks using double-click and drag-and-drop
-- Add metadata editing of track number and total tracks
+- Add metadata editing of track number, total tracks, disc number and total discs
 - Add more items to the Song menu
 - Add `Escape` shortcut for deselecting tracks
 - Add support selecting tracks via `Cmd+A`, `Shift+Up/Down`, `Alt+Up/Down`, `Shift+Alt+Up/Down`
