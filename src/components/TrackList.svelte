@@ -310,6 +310,7 @@
 
 <div class="tracklist" on:dragleave={() => (dragToIndex = null)}>
   <div class="header">
+    <div class="dragbar" />
     <h3 class="title">
       {#if $page.tracklist.id === 'root'}
         Songs
@@ -422,19 +423,31 @@
   :global(:focus)
     .selected
       background-color: hsla(var(--hue), 70%, 46%, 1)
+
   .header
-    margin: 20px
-    margin-top: 15px
-    .title
-      margin: 0px
-      font-weight: 500
-    .info
-      font-size: 13px
-      opacity: 0.7
-    .description
-      margin-top: 10px
-      font-size: 14px
-      opacity: 0.7
+    padding-left: 20px
+    padding-right: 20px
+    padding-top: 15px
+    margin-bottom: 20px
+    position: relative
+  .dragbar
+    -webkit-app-region: drag
+    position: absolute
+    height: 35px
+    width: 100%
+    top: 0px
+    left: 0px
+  .title
+    margin: 0px
+    font-weight: 500
+  .info
+    font-size: 13px
+    opacity: 0.7
+  .description
+    margin-top: 10px
+    font-size: 14px
+    opacity: 0.7
+
   .tracklist
     display: flex
     flex-direction: column

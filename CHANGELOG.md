@@ -9,6 +9,7 @@
 - Add more items to the Song menu
 - Add `Escape` shortcut for deselecting tracks
 - Add support selecting tracks via `Ctrl+A` (macOS: `Cmd+A`), `Shift+Up/Down`, `Alt+Up/Down`, `Shift+Alt+Up/Down`
+- Expand the titlebar drag region a bit
 - Fix memory leak from opening queue
 - Improve behavior of shift-selecting tracks
 - Make sure newly selected tracks are visible by scrolling to them

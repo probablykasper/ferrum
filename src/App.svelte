@@ -125,10 +125,10 @@
       .drag-overlay(transition:fade='{{ duration: 100 }}')
         h1 Drop files to import
       .dropzone(on:dragleave='{dragLeave}' on:drop='{drop}' on:dragover='{dragEnterOrOver}')
-    +if('isMac')
-      .titlebar(on:mousedown|self|preventDefault)
   TrackInfo
   PlaylistInfo
+  +if('isMac')
+    .titlebar(on:mousedown|self|preventDefault)
 </template>
 
 <style lang="sass">
@@ -212,6 +212,8 @@
   .titlebar
     height: var(--titlebar-height)
     width: 100%
+    top: 0px
+    left: 0px
     position: absolute
     -webkit-app-region: drag
 </style>
