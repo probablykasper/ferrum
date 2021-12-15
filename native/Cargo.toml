@@ -1,6 +1,6 @@
 [package]
 name = "ferrum"
-version = "0.9.0"
+version = "0.9.1"
 build = "build.rs"
 edition = "2018"
 exclude = ["artifacts.json"]

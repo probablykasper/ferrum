@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.9.1 - 2021 Dec 15
+- Fix "Get Info" shortcut
+
 ## 0.9.0 - 2021 Dec 15
 - Add ability to delete tracks from library
 - Add `Ctrl+U` (macOS: `Cmd+U`) and `View > Toggle Queue` to show/hide the queue
