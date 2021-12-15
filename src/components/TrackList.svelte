@@ -90,6 +90,7 @@
   onMount(() => {
     ipcRenderer.on('Play Next', playNext)
     ipcRenderer.on('Add to Queue', addToQueue)
+    ipcRenderer.on('Get Info', getInfo)
     ipcRenderer.on('revealTrackFile', revealTrackFile)
     ipcRenderer.on('Remove from Playlist', removeFromPlaylist)
     ipcRenderer.on('Delete from Library', deleteFromLibrary)
