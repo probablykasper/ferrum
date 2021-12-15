@@ -1,6 +1,6 @@
 # Changelog
 
-## Next
+## 0.9.0 - 2021 Dec 15
 - Add ability to delete tracks from library
 - Add `Ctrl+U` (macOS: `Cmd+U`) and `View > Toggle Queue` to show/hide the queue
 - Add support for changing track artworks using double-click and drag-and-drop
