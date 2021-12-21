@@ -1,8 +1,9 @@
 # Changelog
 
-## Next
+## 0.10.0 - 2021 Dec 21
 - Add support for importing .m4a files
 - Add `File > Import...` menu
+- Only show one dialog at once
 
 ## 0.9.1 - 2021 Dec 15
 - Fix "Get Info" shortcut
