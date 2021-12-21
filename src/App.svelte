@@ -7,7 +7,7 @@
   import Queue from './components/Queue.svelte'
   import TrackInfo from './components/TrackInfo.svelte'
   import PlaylistInfo from './components/PlaylistInfo.svelte'
-  import { openCount } from './components/Modal.svelte'
+  import { visibleModalsCount } from './stores/modals'
   import { queueVisible } from './stores/queue'
   import { iTunesImport, showOpenDialog } from './stores/window'
   import { isMac, paths, importTracks } from './stores/data'
@@ -38,7 +38,7 @@
   })
 
   async function openImportDialog() {
-    if ($openCount !== 0) {
+    if ($visibleModalsCount !== 0) {
       return
     }
     let result = await showOpenDialog(false, {

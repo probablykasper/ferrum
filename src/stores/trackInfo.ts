@@ -2,6 +2,7 @@ import { writable } from 'svelte/store'
 import type { Writable } from 'svelte/store'
 import { methods } from '../stores/data'
 import type { Track, Image, TrackID } from 'src/stores/libraryTypes'
+import { visibleModalsCount } from './modals'
 
 export type TrackMD = {
   name: string
@@ -61,9 +62,11 @@ export const visible = (() => {
   return {
     subscribe: store.subscribe,
     open: (ids: string[], index: number) => {
-      current = { ids, index }
-      openIndex(index)
-      store.set(true)
+      if (visibleModalsCount.get() == 0) {
+        current = { ids, index }
+        openIndex(index)
+        store.set(true)
+      }
     },
     set: (value: boolean) => {
       if (value === false) {

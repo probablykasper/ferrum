@@ -1,6 +1,7 @@
 <script lang="ts" context="module">
   import { writable } from 'svelte/store'
   import { checkShortcut, focus, focusLast } from '../scripts/helpers'
+  import { visibleModalsCount } from '../stores/modals'
 
   const parentId = writable('root')
   export const visible = (() => {
@@ -8,8 +9,10 @@
     return {
       subscribe: store.subscribe,
       open(newParentId: string) {
-        parentId.set(newParentId)
-        store.set(true)
+        if (visibleModalsCount.get() == 0) {
+          parentId.set(newParentId)
+          store.set(true)
+        }
       },
       close() {
         store.set(false)
