@@ -143,15 +143,16 @@ pub fn generate_filename(dest_dir: &Path, artist: &str, title: &str, ext: &str) 
   return filename;
 }
 
-#[js_function(1)]
+#[js_function(2)]
 pub fn import(ctx: CallContext) -> NResult<JsUndefined> {
   let data: &mut Data = get_data(&ctx)?;
   let track_path_str = arg_to_string(&ctx, 0)?;
+  let now = arg_to_number(&ctx, 1)?;
   let path = Path::new(&track_path_str);
   let ext = path.extension().unwrap_or_default().to_string_lossy();
   let track = match ext.as_ref() {
-    "mp3" => import::import_mp3(&data, &path)?,
-    "m4a" => import::import_m4a(&data, &path)?,
+    "mp3" => import::import_mp3(&data, &path, now)?,
+    "m4a" => import::import_m4a(&data, &path, now)?,
     _ => panic!("Unsupported file extension: {}", ext),
   };
   let id = data.library.generate_id();

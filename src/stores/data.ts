@@ -29,7 +29,7 @@ export type Data = {
   }
   save: () => void
 
-  import_track: (path: string) => void
+  import_track: (path: string, now: MsSinceUnixEpoch) => void
   get_track: (id: TrackID) => Track
   add_play: (id: TrackID) => void
   add_skip: (id: TrackID) => void
@@ -152,9 +152,10 @@ export const paths = (() => {
 
 export async function importTracks(paths: string[]) {
   let errState = null
+  let now = Date.now()
   for (const path of paths) {
     try {
-      data.import_track(path)
+      data.import_track(path, now)
     } catch (err) {
       if (errState === 'skip') continue
       const result = await showMessageBox({
@@ -173,8 +174,8 @@ export async function importTracks(paths: string[]) {
 }
 
 export const methods = {
-  importTrack: (path: string) => {
-    call((data) => data.import_track(path))
+  importTrack: (path: string, now: MsSinceUnixEpoch) => {
+    call((data) => data.import_track(path, now))
   },
   getTrack: (id: TrackID) => {
     return call((data) => data.get_track(id))

@@ -1,6 +1,22 @@
+<script context="module">
+  import { writable } from 'svelte/store'
+  export const openCount = writable(0)
+</script>
+
 <script lang="ts">
   export let visible: boolean
   export let close: () => void
+
+  let firstRun = true
+  function visibleUpdate(visible: boolean) {
+    if (visible) {
+      $openCount++
+    } else if (!visible && !firstRun) {
+      $openCount--
+    }
+    firstRun = false
+  }
+  $: visibleUpdate(visible)
 </script>
 
 {#if visible}

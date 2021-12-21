@@ -33,6 +33,14 @@ module.exports.initMenuBar = (app, mainWindow) => {
         },
         { type: 'separator' },
         {
+          label: 'Import...',
+          accelerator: 'CmdOrCtrl+O',
+          click: () => {
+            mainWindow.webContents.send('import')
+          },
+        },
+        { type: 'separator' },
+        {
           label: 'Import iTunes Library...',
           click: () => {
             mainWindow.webContents.send('itunesImport')

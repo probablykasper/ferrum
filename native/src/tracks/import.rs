@@ -1,7 +1,7 @@
 use crate::data::Data;
 use crate::library_types::Track;
 use crate::tracks::{generate_filename, tag};
-use crate::{get_now_timestamp, sys_time_to_timestamp, UniResult};
+use crate::{sys_time_to_timestamp, UniResult};
 use mp3_metadata;
 use std::fs;
 use std::path::Path;
@@ -46,9 +46,8 @@ fn read_file_metadata(path: &Path) -> UniResult<fs::Metadata> {
   }
 }
 
-pub fn import_m4a(data: &Data, track_path: &Path) -> UniResult<Track> {
+pub fn import_m4a(data: &Data, track_path: &Path, now: i64) -> UniResult<Track> {
   let file_md = read_file_metadata(&track_path)?;
-  let now = get_now_timestamp();
 
   let mut date_modified = match file_md.modified() {
     Ok(sys_time) => sys_time_to_timestamp(&sys_time),
@@ -176,9 +175,8 @@ fn get_first_text_id3(tag: &id3::Tag, id: &str) -> Option<String> {
   let text = frame.content().text()?;
   return Some(text.to_owned());
 }
-pub fn import_mp3(data: &Data, track_path: &Path) -> UniResult<Track> {
+pub fn import_mp3(data: &Data, track_path: &Path, now: i64) -> UniResult<Track> {
   let file_md = read_file_metadata(&track_path)?;
-  let now = get_now_timestamp();
 
   let mut date_modified = match file_md.modified() {
     Ok(sys_time) => sys_time_to_timestamp(&sys_time),

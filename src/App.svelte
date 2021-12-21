@@ -7,8 +7,9 @@
   import Queue from './components/Queue.svelte'
   import TrackInfo from './components/TrackInfo.svelte'
   import PlaylistInfo from './components/PlaylistInfo.svelte'
+  import { openCount } from './components/Modal.svelte'
   import { queueVisible } from './stores/queue'
-  import { iTunesImport } from './stores/window'
+  import { iTunesImport, showOpenDialog } from './stores/window'
   import { isMac, paths, importTracks } from './stores/data'
   import { playPause } from './stores/player'
 
@@ -34,6 +35,23 @@
   ipcRenderer.on('itunesImport', itunesImport)
   onDestroy(() => {
     ipcRenderer.off('itunesImport', itunesImport)
+  })
+
+  async function openImportDialog() {
+    if ($openCount !== 0) {
+      return
+    }
+    let result = await showOpenDialog(false, {
+      properties: ['openFile', 'multiSelections'],
+      filters: [{ name: 'Audio', extensions: ['mp3', 'm4a'] }],
+    })
+    if (!result.canceled && result.filePaths.length >= 1) {
+      importTracks(result.filePaths)
+    }
+  }
+  ipcRenderer.on('import', openImportDialog)
+  onDestroy(() => {
+    ipcRenderer.off('import', openImportDialog)
   })
 
   function toggleQueue() {
