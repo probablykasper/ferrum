@@ -50,7 +50,7 @@ pub enum Tag {
   Mp4(mp4ameta::Tag),
 }
 impl Tag {
-  pub fn read_from_path(path: PathBuf) -> UniResult<Tag> {
+  pub fn read_from_path(path: &PathBuf) -> UniResult<Tag> {
     if !path.exists() {
       throw!("File does not exist: {}", path.to_string_lossy());
     }
@@ -67,13 +67,18 @@ impl Tag {
       "m4a" => {
         let tag = match mp4ameta::Tag::read_from_path(&path) {
           Ok(tag) => tag,
-          Err(_) => {
-            panic!("No m4a tags found in file. Auto creating m4a tags is not yet supported")
-          }
+          Err(e) => match e.kind {
+            mp4ameta::ErrorKind::NoTag => {
+              throw!("No m4a tags found in file. Auto creating m4a tags is not yet supported")
+            }
+            _ => {
+              throw!("Error reading m4a tags: {}", e)
+            }
+          },
         };
         Tag::Mp4(tag)
       }
-      _ => panic!("Unsupported file extension: {}", ext),
+      _ => throw!("Unsupported file extension: {}", ext),
     };
     Ok(tag)
   }

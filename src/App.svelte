@@ -45,7 +45,7 @@
   })
 
   let droppable = false
-  const allowedMimes = ['audio/mpeg']
+  const allowedMimes = ['audio/mpeg', 'audio/x-m4a'] // mp3, m4a
   function getFilePaths(e: DragEvent): string[] {
     if (!e.dataTransfer) return []
     let validPaths: string[] = []

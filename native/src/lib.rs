@@ -50,7 +50,7 @@ fn str_to_option(s: String) -> Option<String> {
 pub type UniResult<T> = std::result::Result<T, UniError>;
 
 pub struct UniError {
-  message: String,
+  pub message: String,
 }
 impl From<String> for UniError {
   fn from(message: String) -> Self {

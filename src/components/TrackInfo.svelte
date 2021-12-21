@@ -92,10 +92,8 @@
         cancel()
       }
     } else if (checkShortcut(e, '[', { cmdOrCtrl: true })) {
-      console.log('pre')
       openPrev()
     } else if (checkShortcut(e, ']', { cmdOrCtrl: true })) {
-      console.log('ne')
       openNext()
     }
   }
