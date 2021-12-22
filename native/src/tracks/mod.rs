@@ -90,7 +90,7 @@ impl Task for ReadCover {
       }
     }
   }
-  fn resolve(self, env: Env, output: Self::Output) -> NResult<Self::JsValue> {
+  fn resolve(&mut self, env: Env, output: Self::Output) -> NResult<Self::JsValue> {
     let result = env.create_arraybuffer_with_data(output)?;
     return Ok(result.into_raw());
   }

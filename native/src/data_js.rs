@@ -31,7 +31,7 @@ impl Task for LoadData {
     let data: Data = load_data(&is_dev)?;
     return Ok(data);
   }
-  fn resolve(self, env: Env, output: Self::Output) -> NResult<Self::JsValue> {
+  fn resolve(&mut self, env: Env, output: Self::Output) -> NResult<Self::JsValue> {
     let mut new_this: JsObject = env.create_object()?;
     env.wrap(&mut new_this, output)?;
     new_this = init_data_instance(new_this)?;
@@ -96,5 +96,5 @@ fn init_data_instance(mut exports: JsObject) -> NResult<JsObject> {
   exports.create_named_method("sort", page::sort_js)?;
   exports.create_named_method("move_tracks", page::move_tracks)?;
 
-  return Ok(exports);
+  Ok(exports)
 }
