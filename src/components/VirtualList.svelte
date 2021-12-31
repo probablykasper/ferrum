@@ -1,5 +1,7 @@
 <script lang="ts">
-  import { onMount, tick } from 'svelte'
+  import { createEventDispatcher, onMount, tick } from 'svelte'
+
+  const dispatch = createEventDispatcher()
 
   export let getItem: Function
   export let itemCount: number = 0
@@ -90,6 +92,7 @@
   on:scroll={handleScroll}
   on:dragleave
   on:keydown
+  on:mousedown|self={() => dispatch('mousedown-self')}
   tabindex="0"
   on:keydown={keydown}>
   <div

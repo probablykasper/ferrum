@@ -147,7 +147,7 @@
     const ids = indexes.map((i) => page.getTrackId(i))
     showTrackMenu(ids, indexes)
   }
-  async function rowKeydown(e: KeyboardEvent) {
+  async function keydown(e: KeyboardEvent) {
     if (checkShortcut(e, 'Enter')) {
       let firstIndex = selection.findFirst($selection.list) || 0
       playRow(firstIndex)
@@ -383,7 +383,8 @@
     itemHeight={24}
     {itemCount}
     bind:this={vlist}
-    on:keydown={rowKeydown}
+    on:keydown={keydown}
+    on:mousedown-self={selection.clear}
     let:item={track}
     let:index>
     <div
