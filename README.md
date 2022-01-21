@@ -20,7 +20,6 @@ Ferrum is in development and might get updates that no longer work with your lib
 ### ToDo
 
 - Playlist covers
-- Import m4a files
 - Move playlists
 - Edit playlists
 - Create playlist folder
