@@ -65,15 +65,7 @@ Napi (the native Rust backend)
 
 ### Publish new version
 1. Update `CHANGELOG.md`
-2. Bump the version number:
-    ```
-    npm version --no-git-tag <version>
-    ```
-3. Manually bump the version number in `native/Cargo.toml`
-4. Check for errors and bump the `Cargo.lock` version number
-    ```
-    cargo check --manifest-path native/Cargo.toml
-    ```
-5. Commit with a tag in format "v#.#.#"
-6. Wait for the GitHub workflow to finish successfully
-7. Add release notes to the generated GitHub release and publish it
+2. Run `npm version --no-git-tag <version>` to bump the version number
+3. Run `npm run check`
+4. Create a git tag in the format `v#.#.#`
+5. Add release notes to the generated GitHub release and publish it

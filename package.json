@@ -13,10 +13,11 @@
     "napi": "electron-build-env napi build --cargo-cwd ./native  ./build --release",
     "napi:dev": "electron-build-env napi build --cargo-cwd ./native  ./build",
     "build": "npm run napi && npm run build:web && electron-builder",
-    "electron-builder": "electron-builder",
     "build:web": "vite build",
+    "electron-builder": "electron-builder",
     "lint": "prettier --check --plugin-search-dir=. src *.js && eslint src *.js && svelte-check",
-    "format": "prettier --write --plugin-search-dir=. src *.js && eslint --fix src *.js"
+    "format": "prettier --write --plugin-search-dir=. src *.js && eslint --fix src *.js",
+    "check": "npm run lint && cargo check --manifest-path native/Cargo.toml"
   },
   "build": {
     "appId": "space.kasper.ferrum",

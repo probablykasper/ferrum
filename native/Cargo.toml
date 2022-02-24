@@ -1,6 +1,6 @@
 [package]
 name = "ferrum"
-version = "private"
+version = "0.0.0"
 publish = false
 build = "build.rs"
 edition = "2018"
