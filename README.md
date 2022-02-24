@@ -38,8 +38,8 @@ Ferrum is in development and might get updates that no longer work with your lib
 
 ### Get started
 
-1. Install Node.js (v14 works)
-2. Install Rust (v1.57 works)
+1. Install Node.js
+2. Install Rust
 3. Run `npm install`
 
 ### Structure
