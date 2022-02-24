@@ -347,7 +347,8 @@
     <div
       class="c playCount"
       class:sort={sortKey === 'playCount'}
-      on:click={() => sortBy('playCount')}>
+      on:click={() => sortBy('playCount')}
+    >
       <span>Plays</span>
     </div>
     <div class="c duration" class:sort={sortKey === 'duration'} on:click={() => sortBy('duration')}>
@@ -359,7 +360,8 @@
     <div
       class="c albumName"
       class:sort={sortKey === 'albumName'}
-      on:click={() => sortBy('albumName')}>
+      on:click={() => sortBy('albumName')}
+    >
       <span>Album</span>
     </div>
     <div class="c comments" class:sort={sortKey === 'comments'} on:click={() => sortBy('comments')}>
@@ -371,7 +373,8 @@
     <div
       class="c dateAdded"
       class:sort={sortKey === 'dateAdded'}
-      on:click={() => sortBy('dateAdded')}>
+      on:click={() => sortBy('dateAdded')}
+    >
       <span>Date Added</span>
     </div>
     <div class="c year" class:sort={sortKey === 'year'} on:click={() => sortBy('year')}>
@@ -386,7 +389,8 @@
     on:keydown={keydown}
     on:mousedown-self={selection.clear}
     let:item={track}
-    let:index>
+    let:index
+  >
     <div
       class="row"
       on:dblclick={(e) => doubleClick(e, index)}
@@ -399,7 +403,8 @@
       on:dragend={dragEndHandler}
       class:odd={index % 2 === 0}
       class:selected={$selection.list[index] === true}
-      class:playing={track.id === $playingId}>
+      class:playing={track.id === $playingId}
+    >
       <div class="c index">
         {#if track.id === $playingId}
           <svg
@@ -407,10 +412,12 @@
             xmlns="http://www.w3.org/2000/svg"
             height="24"
             viewBox="0 0 24 24"
-            width="24">
+            width="24"
+          >
             <path d="M0 0h24v24H0z" fill="none" />
             <path
-              d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z" />
+              d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"
+            />
           </svg>
         {:else}
           {index + 1}

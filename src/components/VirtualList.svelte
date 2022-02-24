@@ -94,10 +94,12 @@
   on:keydown
   on:mousedown|self={() => dispatch('mousedown-self')}
   tabindex="0"
-  on:keydown={keydown}>
+  on:keydown={keydown}
+>
   <div
     class="content"
-    style="height: {itemCount * itemHeight}px; padding-top: {startIndex * itemHeight}px;">
+    style="height: {itemCount * itemHeight}px; padding-top: {startIndex * itemHeight}px;"
+  >
     {#each visibleItems as item, i}
       <slot {item} index={startIndex + i} />
     {/each}

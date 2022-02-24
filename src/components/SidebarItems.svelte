@@ -34,13 +34,15 @@
       class="item"
       class:show={childList.show}
       on:click={() => (childList.show = !childList.show)}
-      on:contextmenu={() => folderContextMenu(childList.id)}>
+      on:contextmenu={() => folderContextMenu(childList.id)}
+    >
       <svg
         class="arrow"
         xmlns="http://www.w3.org/2000/svg"
         width="24"
         height="24"
-        viewBox="0 0 24 24">
+        viewBox="0 0 24 24"
+      >
         <path d="M21 12l-18 12v-24z" />
       </svg>
       <div class="text">{childList.name}</div>
@@ -52,7 +54,8 @@
     <div
       class="item"
       on:mousedown={() => open(childList.id)}
-      class:active={$page.id === childList.id}>
+      class:active={$page.id === childList.id}
+    >
       <div class="arrow" />
       <div class="text">{childList.name}</div>
     </div>
@@ -60,7 +63,8 @@
     <div
       class="item"
       on:mousedown={() => open(childList.id)}
-      class:active={$page.id === childList.id}>
+      class:active={$page.id === childList.id}
+    >
       <div class="arrow" />
       <div class="text">
         {#if childList.id === 'root'}

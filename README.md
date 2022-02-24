@@ -57,40 +57,15 @@ Napi (the native Rust backend)
 - Build output: `build/addon.node`
 
 ### Commands
-
-Run app in dev mode (napi unoptimized):
-```
-npm run dev
-```
-
-Run app in dev mode (napi optimized):
-```
-npm run dev-release
-```
-
-Build app (optimized):
-```
-npm run build
-```
-
-Build web:
-```
-npm run build:web
-```
-
-Format code:
-```
-npm run lint
-```
-
-Run `svelte-check`:
-```
-npm run check
-```
+- `npm run dev`: Start app in dev mode
+- `npm run dev-release`: Start app in dev mode (optimized)
+- `npm run build`: Build
+- `npm run lint`: Lint
+- `npm run format`: Format
 
 ### Publish new version
 1. Update `CHANGELOG.md`
-2. Bump the `package.json` version number
+2. Bump the version number:
     ```
     npm version --no-git-tag <version>
     ```

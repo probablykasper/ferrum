@@ -15,8 +15,8 @@
     "build": "npm run napi && npm run build:web && electron-builder",
     "electron-builder": "electron-builder",
     "build:web": "vite build",
-    "lint": "prettier --write --ignore-path .gitignore *.js *.json src",
-    "check": "svelte-check"
+    "lint": "prettier --check --plugin-search-dir=. src *.js && eslint src *.js && svelte-check",
+    "format": "prettier --write --plugin-search-dir=. src *.js && eslint --fix src *.js"
   },
   "build": {
     "appId": "space.kasper.ferrum",
@@ -87,12 +87,6 @@
   "prettier": {
     "printWidth": 100,
     "semi": false,
-    "singleQuote": true,
-    "htmlWhitespaceSensitivity": "strict",
-    "svelteSortOrder": "options-scripts-markup-styles",
-    "svelteStrictMode": false,
-    "svelteAllowShorthand": true,
-    "svelteBracketNewLine": false,
-    "svelteIndentScriptAndStyle": true
+    "singleQuote": true
   }
 }
