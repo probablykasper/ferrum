@@ -2,6 +2,7 @@ use crate::data::Data;
 use crate::library_types::Track;
 use crate::tracks::{generate_filename, tag};
 use crate::{sys_time_to_timestamp, UniResult};
+use id3::TagLike;
 use mp3_metadata;
 use std::fs;
 use std::path::Path;

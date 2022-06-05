@@ -1,5 +1,5 @@
 use crate::{UniError, UniResult};
-use id3;
+use id3::{self, TagLike};
 use mp4ameta;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -148,7 +148,9 @@ impl Tag {
   }
   pub fn remove_composers(&mut self) {
     match self {
-      Tag::Id3(tag) => tag.remove("TCOM"),
+      Tag::Id3(tag) => {
+        tag.remove("TCOM");
+      }
       Tag::Mp4(tag) => tag.remove_composers(),
     }
   }
@@ -160,7 +162,9 @@ impl Tag {
   }
   pub fn remove_groupings(&mut self) {
     match self {
-      Tag::Id3(tag) => tag.remove("GRP1"),
+      Tag::Id3(tag) => {
+        tag.remove("GRP1");
+      }
       Tag::Mp4(tag) => tag.remove_groupings(),
     }
   }
@@ -294,9 +298,11 @@ impl Tag {
   }
   pub fn remove_bpm(&mut self) {
     match self {
-      Tag::Id3(tag) => tag.remove("TBPM"),
+      Tag::Id3(tag) => {
+        tag.remove("TBPM");
+      }
       Tag::Mp4(tag) => tag.remove_bpm(),
-    }
+    };
   }
   pub fn set_bpm(&mut self, value: u16) {
     match self {
@@ -306,19 +312,21 @@ impl Tag {
       Tag::Mp4(tag) => {
         tag.set_bpm(value);
       }
-    }
+    };
   }
   pub fn remove_comments(&mut self) {
     match self {
-      Tag::Id3(tag) => tag.remove("COMM"),
+      Tag::Id3(tag) => {
+        tag.remove("COMM");
+      }
       Tag::Mp4(tag) => tag.remove_comments(),
-    }
+    };
   }
   pub fn set_comment(&mut self, value: &str) {
     match self {
       Tag::Id3(tag) => {
-        tag.remove("COMM");
-        tag.add_comment(id3::frame::Comment {
+        tag.remove_comment(None, None);
+        tag.add_frame(id3::frame::Comment {
           lang: "eng".to_string(),
           description: "".to_string(),
           text: value.to_string(),

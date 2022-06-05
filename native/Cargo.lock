@@ -191,9 +191,9 @@ dependencies = [
 
 [[package]]
 name = "id3"
-version = "0.6.6"
+version = "1.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e8794bc5f4cab6c6066c8eda098d7e6dd803539758a9870bce042f46cb2eba5d"
+checksum = "dd31887804f41a3dbc0fe928325236dec06e285e8fd803fe6ddce5cacebe05b3"
 dependencies = [
  "bitflags",
  "byteorder",
@@ -326,9 +326,9 @@ dependencies = [
 
 [[package]]
 name = "napi-build"
-version = "1.1.0"
+version = "1.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9fbe11972c601a48aa12a0e2aa032e9e251655ce6c6836cac26e5c0b3b5a5dcc"
+checksum = "ebd4419172727423cf30351406c54f6cc1b354a2cfb4f1dba3e6cd07f6d5522b"
 
 [[package]]
 name = "napi-derive"
