@@ -1,10 +1,10 @@
 <script lang="ts">
-  import type { TrackList, Folder } from '../lib/libraryTypes'
+  import type { TrackList } from '../lib/libraryTypes'
   import { trackLists, page } from '../lib/data'
   import { ipcRenderer } from '../lib/window'
   import { visible as playlistModalVisible } from './PlaylistInfo.svelte'
 
-  export let trackList: Folder
+  export let trackList: { children: string[] }
   let childLists: TrackList[] = []
   $: {
     childLists = []

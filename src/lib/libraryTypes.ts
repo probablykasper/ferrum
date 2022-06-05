@@ -11,6 +11,7 @@ export type MsSinceUnixEpoch = number
 /** Should be 0-100 */
 export type PercentInteger = number
 export interface TrackListsHashMap {
+  root: Special
   [TrackListID: string]: TrackList
 }
 

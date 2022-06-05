@@ -112,7 +112,7 @@ export function call<T>(cb: (data: Data) => T): T {
 
 export const trackLists = (() => {
   const initial = call((data) => data.get_track_lists())
-  const { subscribe, set, update } = writable(initial)
+  const { subscribe, set } = writable(initial)
   return {
     subscribe,
     refresh() {
@@ -152,7 +152,7 @@ export const paths = (() => {
 
 export async function importTracks(paths: string[]) {
   let errState = null
-  let now = Date.now()
+  const now = Date.now()
   for (const path of paths) {
     try {
       data.import_track(path, now)

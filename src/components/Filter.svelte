@@ -12,9 +12,14 @@
   }
 </script>
 
-<template lang="pug">
-  input.search(type='text' class:on='{$filter}' use:filterCmd bind:value='{$filter}' placeholder='Filter')
-</template>
+<input
+  type="text"
+  class="search"
+  class:on={$filter}
+  use:filterCmd
+  bind:value={$filter}
+  placeholder="Filter"
+/>
 
 <style lang="sass">
   input.search

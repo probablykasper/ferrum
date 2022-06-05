@@ -17,7 +17,7 @@
     else prevent = false
     if (prevent) e.preventDefault()
   }
-  async function onContextMenu(e: HTMLDivElement) {
+  async function onContextMenu() {
     const clickedId = await ipcRenderer.invoke('showPlaylistMenu')
     if (clickedId === null) return
     if (clickedId === 'New Playlist') {
@@ -28,20 +28,22 @@
   }
 </script>
 
-<template lang="pug">
-  .sidebar(on:mousedown|self|preventDefault)
-    +if('isMac')
-      .titlebar-spacer
-    .content
-      Filter
-      .items(tabindex='0' on:keydown='{handleKeydown}' bind:this='{viewport}')
-        .spacer
-        SidebarItems(trackList='{special}')
-        .spacer(on:contextmenu='{onContextMenu}')
-        SidebarItems(trackList='{$trackLists.root}')
-        .spacer(on:contextmenu='{onContextMenu}')
-        .bottom-space(on:contextmenu='{onContextMenu}')
-</template>
+<div class="sidebar" on:mousedown|self|preventDefault>
+  {#if isMac}
+    <div class="titlebar-spacer" />
+  {/if}
+  <div class="content">
+    <Filter />
+    <div class="items" tabindex="0" on:keydown={handleKeydown} bind:this={viewport}>
+      <div class="spacer" />
+      <SidebarItems trackList={special} />
+      <div class="spacer" on:contextmenu={onContextMenu} />
+      <SidebarItems trackList={$trackLists.root} />
+      <div class="spacer" on:contextmenu={onContextMenu} />
+      <div class="bottom-space" on:contextmenu={onContextMenu} />
+    </div>
+  </div>
+</div>
 
 <style lang="sass">
   .sidebar

@@ -114,40 +114,54 @@
   }
 </script>
 
-<template lang="pug">
-  svelte:window(on:keydown='{keydown}')
-  svelte:head
-    title Ferrum
-  main(on:dragenter|capture='{dragEnterOrOver}')
-    .meat
-      Sidebar
-      TrackList
-      +if('$queueVisible')
-        Queue
-    Player
-    +if('pageStatus || pageStatusWarnings || pageStatusErr')
-      .page-status-bg
-        .page-status
-          +if('pageStatus')
-            .page-status-item {pageStatus}
-          +if('pageStatusWarnings')
-            .page-status-item
-              b Warnings:
-              pre {pageStatusWarnings}
-          +if('pageStatusErr')
-            .page-status-item
-              b Error:
-              pre {pageStatusErr}
-    +if('droppable')
-      //- if the overlay is always visible, it's not possible to scroll while dragging tracks
-      .drag-overlay(transition:fade='{{ duration: 100 }}')
-        h1 Drop files to import
-      .dropzone(on:dragleave='{dragLeave}' on:drop='{drop}' on:dragover='{dragEnterOrOver}')
-  TrackInfo
-  PlaylistInfo
-  +if('isMac')
-    .titlebar(on:mousedown|self|preventDefault)
-</template>
+<svelte:window on:keydown={keydown} />
+<svelte:head>
+  <title>Ferrum</title>
+</svelte:head>
+
+<main on:dragenter|capture={dragEnterOrOver}>
+  <div class="meat">
+    <Sidebar />
+    <TrackList />
+    {#if $queueVisible}
+      <Queue />
+    {/if}
+  </div>
+  <Player />
+  {#if pageStatus || pageStatusWarnings || pageStatusErr}
+    <div class="page-status-bg">
+      <div class="page-status">
+        {#if pageStatus}
+          <div class="page-status-item">{pageStatus}</div>
+        {/if}
+        {#if pageStatusWarnings}
+          <div class="page-status-item">
+            <b>Warnings:</b>
+            <pre>{pageStatusWarnings}</pre>
+          </div>
+        {/if}
+        {#if pageStatusErr}
+          <div class="page-status-item">
+            <b>Error:</b>
+            <pre>{pageStatusErr}</pre>
+          </div>
+        {/if}
+      </div>
+    </div>
+  {/if}
+  {#if droppable}
+    <!-- if the overlay is always visible, it's not possible to scroll while dragging tracks -->
+    <div class="drag-overlay" transition:fade={{ duration: 100 }}>
+      <h1>Drop files to import</h1>
+    </div>
+    <div class="dropzone" on:dragleave={dragLeave} on:drop={drop} on:dragover={dragEnterOrOver} />
+  {/if}
+</main>
+<TrackInfo />
+<PlaylistInfo />
+{#if isMac}
+  <div class="titlebar" on:mousedown|self|preventDefault />
+{/if}
 
 <style lang="sass">
   :global(:root)
