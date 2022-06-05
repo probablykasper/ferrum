@@ -11,7 +11,7 @@ name = "ferrum"
 crate-type = ["cdylib"]
 
 [build-dependencies]
-napi-build = "1.0.1"
+napi-build = "2.0.0"
 
 [dependencies]
 napi = { version = "2.0.2", features = ["serde-json", "napi4"] }
