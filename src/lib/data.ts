@@ -242,7 +242,7 @@ export const page = (() => {
     return info
   }
 
-  const { subscribe, set, update } = writable(get())
+  const { subscribe, set } = writable(get())
   return {
     subscribe,
     refresh: () => {

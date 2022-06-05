@@ -9,7 +9,7 @@
   function uintFilter(value: string) {
     return value.replace(/[^0-9]*/g, '')
   }
-  function toString(value: any) {
+  function toString(value: unknown) {
     return String(value).replace(/\0/g, '') // remove NULL bytes
   }
   let name = ''

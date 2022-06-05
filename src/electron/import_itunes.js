@@ -10,7 +10,7 @@ module.exports = iTunesImport
 async function iTunesImport(paths, status, warn) {
   const warnings = []
   try {
-    result = await start(paths, status, (warning) => {
+    const result = await start(paths, status, (warning) => {
       warnings.push(warning)
       warn(warning)
     })
@@ -98,7 +98,7 @@ function buffersEqual(buf1, buf2) {
 }
 
 async function popup() {
-  m =
+  const m =
     'WARNING: This will reset/delete your Ferrum library!' +
     '\n' +
     '\nSelect an iTunes "Library.xml" file. To get that file, open iTunes and click on "File > Library > Export Library..."' +
@@ -132,13 +132,13 @@ async function popup() {
   const open = await ipcRenderer.invoke('showOpenDialog', true, {
     properties: ['openFile'],
   })
-  if (!open.canceled && canceled.filePaths && filePaths[0]) {
-    return { dryRun, filePath: filePaths[0] }
+  if (!open.canceled && open.canceled.filePaths && open.canceled.filePaths[0]) {
+    return { dryRun, filePath: open.canceled.filePaths[0] }
   }
   return {}
 }
 
-async function parseTrack(xmlTrack, warn, startTime, dryRun) {
+async function parseTrack(xmlTrack, warn, startTime, dryRun, paths) {
   const track = {}
   const logPrefix = '[' + xmlTrack['Artist'] + ' - ' + xmlTrack['Name'] + ']'
   const REQUIRED = 1
@@ -354,7 +354,6 @@ async function start(paths, status, warn) {
   // const dryRun = false
   const { filePath, dryRun } = await popup()
   if (!filePath) return { cancelled: true }
-  ensureLibExists()
 
   status('Reading iTunes Library file...')
   const xml = await readPlist(filePath)
@@ -400,7 +399,7 @@ async function start(paths, status, warn) {
     const xmlPlaylistItem = xmlMusicPlaylistItems[i]
     const iTunesId = xmlPlaylistItem['Track ID']
     const xmlTrack = xml.Tracks[iTunesId]
-    const track = await parseTrack(xmlTrack, warn, startTime, dryRun)
+    const track = await parseTrack(xmlTrack, warn, startTime, dryRun, paths)
     let id
 
     do {
@@ -502,5 +501,5 @@ async function start(paths, status, warn) {
   }
   const json = JSON.stringify(newLibrary, null, '  ')
   await addon.atomic_file_save(paths.library_json, json)
-  return result
+  return { cancelled: false }
 }

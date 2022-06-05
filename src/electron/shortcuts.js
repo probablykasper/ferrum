@@ -19,10 +19,13 @@ function tryRegistering(mainWindow) {
 }
 
 async function requestLoop(mainWindow) {
-  for (let i = 0; true; i++) {
+  let firstRequest = true
+  for (;;) {
     let msg = 'No accessibility permissions detected.'
-    if (i === 0) {
+    if (!firstRequest) {
       msg = 'Click Done when you have granted Ferrum accessibility permissions.'
+    } else {
+      firstRequest = true
     }
     const result = await dialog.showMessageBox(mainWindow, {
       type: 'info',

@@ -13,7 +13,7 @@ type Callback = () => void | Promise<void>
 interface Handlers {
   [key: string]: Callback
 }
-let handlers: Handlers = {}
+const handlers: Handlers = {}
 function setHandler(name: string, callback: Callback) {
   handlers[name] = callback
 }

@@ -20,10 +20,10 @@
   async function itunesImport() {
     const result = await iTunesImport(
       paths,
-      (status: any) => {
+      (status: string) => {
         pageStatus = status
       },
-      (warning: any) => {
+      (warning: string) => {
         console.warn(warning)
         pageStatusWarnings += warning + '\n'
       }

@@ -24,8 +24,8 @@ ipcMain.handle('revealTrackFile', async (e, ...paths) => {
   shell.showItemInFolder(path.join(...paths))
 })
 
-ipcMain.handle('showTrackMenu', (e, list) => {
-  return new Promise((resolve, reject) => {
+ipcMain.handle('showTrackMenu', (_e, list) => {
+  return new Promise((resolve) => {
     for (const item of list) {
       item.click = () => resolve(item.id)
     }
@@ -67,8 +67,9 @@ ipcMain.handle('showTrackMenu', (e, list) => {
   })
 })
 
-ipcMain.handle('showPlaylistMenu', (e, list) => {
-  return new Promise((resolve, reject) => {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+ipcMain.handle('showPlaylistMenu', (_e, _list) => {
+  return new Promise((resolve) => {
     const menu = Menu.buildFromTemplate([
       {
         label: 'New Playlist',

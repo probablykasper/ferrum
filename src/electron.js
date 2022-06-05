@@ -1,6 +1,5 @@
 const { app, ipcMain, session, BrowserWindow, dialog, protocol } = require('electron')
 const is = require('./electron/is.js')
-const fs = require('fs').promises
 if (is.dev) app.setName('Ferrum Dev')
 
 const menubar = require('./electron/menubar.js')
@@ -64,7 +63,7 @@ app.on('ready', async () => {
 
   protocol.registerFileProtocol('file', (request, callback) => {
     const url = decodeURI(request.url)
-    const path = url.substr(7)
+    const path = url.substring(7)
     callback(path)
   })
 
@@ -109,8 +108,9 @@ app.on('ready', async () => {
   })
 
   app.on('activate', () => {
-    if (mainWindow === null) ready()
-    else mainWindow.show()
+    if (mainWindow !== null) {
+      mainWindow.show()
+    }
   })
 
   menubar.initMenuBar(app, mainWindow)

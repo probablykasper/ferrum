@@ -68,8 +68,8 @@ export const coverSrc = (() => {
   return {
     async newFromTrackId(id: TrackID) {
       try {
-        let buf = await methods.readCoverAsync(id)
-        let url = URL.createObjectURL(new Blob([buf], {}))
+        const buf = await methods.readCoverAsync(id)
+        const url = URL.createObjectURL(new Blob([buf], {}))
         set(url)
       } catch (e) {
         set(null)
@@ -79,7 +79,7 @@ export const coverSrc = (() => {
   }
 })()
 
-audio.ontimeupdate = (e) => {
+audio.ontimeupdate = () => {
   currentTime.set(audio.currentTime)
 }
 
@@ -87,7 +87,7 @@ audio.addEventListener('error', async (e) => {
   stop()
   let message = 'Audio playback error'
   let detail = 'Unknown error'
-  let audio = e.target as HTMLAudioElement
+  const audio = e.target as HTMLAudioElement
   if (audio && audio.error) {
     detail = audio.error.message
     if (audio.error.code === audio.error.MEDIA_ERR_SRC_NOT_SUPPORTED) {
@@ -132,7 +132,7 @@ function startPlayingId(id: TrackID) {
   }
 }
 
-audio.oncanplay = (e) => {
+audio.oncanplay = () => {
   if (waitingToPlay) {
     waitingToPlay = false
     startPlayback()
@@ -190,7 +190,7 @@ quit.setHandler('player', () => {
   stop()
 })
 
-audio.onended = (e) => {
+audio.onended = () => {
   const nextId = queue.getNext()
   if (nextId) {
     savePlayTime()
@@ -225,7 +225,7 @@ export function previous() {
   }
 }
 
-export function seek(to: number, fastSeek: boolean = false) {
+export function seek(to: number, fastSeek = false) {
   const newTime = Math.min(to, audio.duration || 0)
   if (fastSeek && audio.fastSeek) {
     audio.fastSeek(to)

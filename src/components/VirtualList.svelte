@@ -3,14 +3,15 @@
 
   const dispatch = createEventDispatcher()
 
-  export let getItem: Function
-  export let itemCount: number = 0
-  export let itemHeight: number = 0
+  type T = $$Generic
+  export let getItem: (index: number) => T
+  export let itemCount: number
+  export let itemHeight: number
   let startIndex = -1
   let endIndex = -1
   let height = 0
   let scrollTop = 0
-  let visibleItems: any[] = []
+  let visibleItems: T[] = []
 
   export function scrollToItem(index: number) {
     const top = index * itemHeight

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { page, filter } from '../lib/data'
+  import { filter } from '../lib/data'
   import { ipcRenderer } from '../lib/window'
   function filterCmd(node: HTMLInputElement) {
     function handler() {
