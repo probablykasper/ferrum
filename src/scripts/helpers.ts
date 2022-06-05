@@ -1,4 +1,4 @@
-import type { Folder, Special, TrackListsHashMap } from '../stores/libraryTypes'
+import type { Folder, Special, TrackListsHashMap } from '../lib/libraryTypes'
 
 export function getDuration(dur: number) {
   dur = Math.round(dur)

@@ -1,7 +1,7 @@
 import { writable } from 'svelte/store'
 import type { Writable } from 'svelte/store'
-import { methods } from '../stores/data'
-import type { Track, Image, TrackID } from 'src/stores/libraryTypes'
+import { methods } from './data'
+import type { Track, Image, TrackID } from 'src/lib/libraryTypes'
 import { visibleModalsCount } from './modals'
 
 export type TrackMD = {

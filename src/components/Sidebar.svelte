@@ -1,8 +1,8 @@
 <script lang="ts">
   import SidebarItems from './SidebarItems.svelte'
   import Filter from './Filter.svelte'
-  import { isMac, trackLists } from '../stores/data'
-  import { ipcRenderer } from '../stores/window'
+  import { isMac, trackLists } from '../lib/data'
+  import { ipcRenderer } from '../lib/window'
   import { visible as playlistModalVisible } from './PlaylistInfo.svelte'
   const special = {
     children: ['root'],

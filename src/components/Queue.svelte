@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { queue } from '../stores/queue'
-  import { methods } from '../stores/data'
+  import { queue } from '../lib/queue'
+  import { methods } from '../lib/data'
   import { fade } from 'svelte/transition'
   import { onDestroy } from 'svelte'
 

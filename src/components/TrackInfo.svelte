@@ -1,10 +1,10 @@
 <script lang="ts">
   import Modal from './Modal.svelte'
-  import { visible, track, image, id, loadImage, openPrev, openNext } from '../stores/trackInfo'
+  import { visible, track, image, id, loadImage, openPrev, openNext } from '../lib/trackInfo'
   import { checkShortcut, focus, focusLast } from '../scripts/helpers'
-  import { methods } from '../stores/data'
+  import { methods } from '../lib/data'
   import Button from './Button.svelte'
-  import { showOpenDialog } from '../stores/window'
+  import { showOpenDialog } from '../lib/window'
 
   function uintFilter(value: string) {
     return value.replace(/[^0-9]*/g, '')

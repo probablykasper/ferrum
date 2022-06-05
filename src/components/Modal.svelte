@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { visibleModalsCount } from '../stores/modals'
+  import { visibleModalsCount } from '../lib/modals'
 
   export let visible: boolean
   export let close: () => void

@@ -1,7 +1,7 @@
 <script lang="ts">
-  import type { TrackList, Folder } from '../stores/libraryTypes'
-  import { trackLists, page } from '../stores/data'
-  import { ipcRenderer } from '../stores/window'
+  import type { TrackList, Folder } from '../lib/libraryTypes'
+  import { trackLists, page } from '../lib/data'
+  import { ipcRenderer } from '../lib/window'
   import { visible as playlistModalVisible } from './PlaylistInfo.svelte'
 
   export let trackList: Folder

@@ -1,7 +1,7 @@
 <script lang="ts" context="module">
   import { writable } from 'svelte/store'
   import { checkShortcut, focus, focusLast } from '../scripts/helpers'
-  import { visibleModalsCount } from '../stores/modals'
+  import { visibleModalsCount } from '../lib/modals'
 
   const parentId = writable('root')
   export const visible = (() => {
@@ -28,8 +28,8 @@
 
 <script lang="ts">
   import { onDestroy } from 'svelte'
-  import { ipcRenderer } from '../stores/window'
-  import { newPlaylist } from '../stores/data'
+  import { ipcRenderer } from '../lib/window'
+  import { newPlaylist } from '../lib/data'
   import Modal from './Modal.svelte'
   import Button from './Button.svelte'
 

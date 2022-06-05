@@ -9,8 +9,8 @@
     addTracksToPlaylist,
     deleteTracksInOpen,
     paths,
-  } from '../stores/data'
-  import { newPlaybackInstance, playingId } from '../stores/player'
+  } from '../lib/data'
+  import { newPlaybackInstance, playingId } from '../lib/player'
   import {
     getDuration,
     formatDate,
@@ -18,12 +18,12 @@
     checkShortcut,
     flattenChildLists,
   } from '../scripts/helpers'
-  import { newSelection } from '../stores/selection'
-  import { showMessageBox } from '../stores/window'
-  import * as trackInfo from '../stores/trackInfo'
-  import { appendToUserQueue, prependToUserQueue } from '../stores/queue'
-  import { ipcRenderer } from '../stores/window'
-  import type { TrackID, Special } from '../stores/libraryTypes'
+  import { newSelection } from '../lib/selection'
+  import { showMessageBox } from '../lib/window'
+  import * as trackInfo from '../lib/trackInfo'
+  import { appendToUserQueue, prependToUserQueue } from '../lib/queue'
+  import { ipcRenderer } from '../lib/window'
+  import type { TrackID, Special } from '../lib/libraryTypes'
   import { onDestroy, onMount } from 'svelte'
 
   export async function showTrackMenu(ids: TrackID[], indexes: number[]) {

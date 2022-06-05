@@ -12,10 +12,10 @@
     playingId,
     coverSrc,
     volume,
-  } from '../stores/player'
+  } from '../lib/player'
   import { getDuration } from '../scripts/helpers'
-  import { queueVisible, toggleQueueVisibility } from '../stores/queue'
-  import { isDev } from '../stores/data'
+  import { queueVisible, toggleQueueVisibility } from '../lib/queue'
+  import { isDev } from '../lib/data'
 
   let sliderBeingDragged = false
   const sliderSteps = 400

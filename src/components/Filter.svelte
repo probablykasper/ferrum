@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { page, filter } from '../stores/data'
-  import { ipcRenderer } from '../stores/window'
+  import { page, filter } from '../lib/data'
+  import { ipcRenderer } from '../lib/window'
   function filterCmd(node: HTMLInputElement) {
     function handler() {
       node.select()
