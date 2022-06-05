@@ -1,5 +1,9 @@
 # Changelog
 
+## Next
+- Update logo to macOS 11 style
+- Clear selection when clicking on empty rows
+
 ## 0.10.0 - 2021 Dec 21
 - Add support for importing .m4a files
 - Add `File > Import...` menu
