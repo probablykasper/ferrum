@@ -17,7 +17,7 @@
     checkMouseShortcut,
     checkShortcut,
     flattenChildLists,
-  } from '../scripts/helpers'
+  } from '../lib/helpers'
   import { newSelection } from '../lib/selection'
   import { showMessageBox } from '../lib/window'
   import * as trackInfo from '../lib/trackInfo'

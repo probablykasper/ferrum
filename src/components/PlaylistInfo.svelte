@@ -1,6 +1,6 @@
 <script lang="ts" context="module">
   import { writable } from 'svelte/store'
-  import { checkShortcut, focus, focusLast } from '../scripts/helpers'
+  import { checkShortcut, focus, focusLast } from '../lib/helpers'
   import { visibleModalsCount } from '../lib/modals'
 
   const parentId = writable('root')

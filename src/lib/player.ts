@@ -1,6 +1,6 @@
 import { writable } from 'svelte/store'
 import type { Writable } from 'svelte/store'
-import { clamp } from '../scripts/helpers'
+import { clamp } from './helpers'
 import quit from './quit'
 import { methods, paths } from './data'
 import type { Track, TrackID } from './libraryTypes'

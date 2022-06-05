@@ -13,7 +13,7 @@
     coverSrc,
     volume,
   } from '../lib/player'
-  import { getDuration } from '../scripts/helpers'
+  import { getDuration } from '../lib/helpers'
   import { queueVisible, toggleQueueVisibility } from '../lib/queue'
   import { isDev } from '../lib/data'
 

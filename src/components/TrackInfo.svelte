@@ -1,7 +1,7 @@
 <script lang="ts">
   import Modal from './Modal.svelte'
   import { visible, track, image, id, loadImage, openPrev, openNext } from '../lib/trackInfo'
-  import { checkShortcut, focus, focusLast } from '../scripts/helpers'
+  import { checkShortcut, focus, focusLast } from '../lib/helpers'
   import { methods } from '../lib/data'
   import Button from './Button.svelte'
   import { showOpenDialog } from '../lib/window'
