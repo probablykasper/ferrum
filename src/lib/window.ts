@@ -7,8 +7,8 @@ export const ipcRenderer = electron.ipcRenderer
 const invoke = ipcRenderer.invoke
 
 type addon = {
-  copy_file: Function
-  atomic_file_save: Function
+  copy_file: (from: string, to: string) => void
+  atomic_file_save: (filePath: string, content: string) => void
   load_data: (isDev: boolean) => Data
   load_data_async: (isDev: boolean) => Promise<Data>
 }
@@ -16,7 +16,11 @@ declare global {
   interface Window {
     addon: addon
     toFileUrl: (...args: string[]) => string
-    iTunesImport: Function
+    iTunesImport: (
+      paths: { library_dir: string; tracks_dir: string; library_json: string },
+      statusHandler: (status: string) => void,
+      warningHandler: (status: string) => void
+    ) => { err: Error | null; cancelled: boolean | null | undefined }
   }
 }
 

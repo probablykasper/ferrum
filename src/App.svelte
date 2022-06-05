@@ -28,7 +28,7 @@
         pageStatusWarnings += warning + '\n'
       }
     )
-    if (result.err) pageStatusErr = result.err.stack
+    if (result.err) pageStatusErr = String(result.err.stack)
     else if (result.cancelled) pageStatus = ''
     else pageStatus = 'Done. Restart Ferrum'
   }
