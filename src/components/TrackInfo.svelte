@@ -103,6 +103,17 @@
     }
   }
 
+  function prevImage() {
+    if ($image && $image.index >= 1) {
+      loadImage($image.index - 1)
+    }
+  }
+  function nextImage() {
+    if ($image && $image.index < $image.total_images - 1) {
+      loadImage($image.index + 1)
+    }
+  }
+
   let droppable = false
   const allowedMimes = ['image/jpeg', 'image/png']
   function getFilePath(e: DragEvent): string | null {
@@ -152,6 +163,10 @@
       } else {
         loadImage(Math.max(0, $image.index - 1))
       }
+    } else if (checkShortcut(e, 'ArrowLeft')) {
+      prevImage()
+    } else if (checkShortcut(e, 'ArrowRight')) {
+      nextImage()
     } else {
       keydownNoneSelected(e)
     }
@@ -162,8 +177,8 @@
       filters: [{ name: 'Images', extensions: ['jpg', 'jpeg', 'png'] }],
     })
     if (!result.canceled && result.filePaths.length === 1) {
-      methods.setImage(0, result.filePaths[0])
-      loadImage(0)
+      methods.setImage($image?.index || 0, result.filePaths[0])
+      loadImage($image?.index || 0)
     }
   }
 </script>
@@ -204,10 +219,10 @@
         </div>
         {#if $image !== null && $image.total_images >= 2}
           {@const imageIndex = $image.index}
-          <div class="cover-subtitle" on:mousedown|preventDefault>
+          <div class="cover-subtitle">
             <div class="arrow" class:unclickable={imageIndex <= 0}>
               <svg
-                on:click={() => loadImage(imageIndex - 1)}
+                on:click={prevImage}
                 clip-rule="evenodd"
                 fill-rule="evenodd"
                 stroke-linejoin="round"
@@ -227,7 +242,7 @@
             </div>
             <div class="arrow" class:unclickable={imageIndex >= $image.total_images - 1}>
               <svg
-                on:click={() => loadImage(imageIndex + 1)}
+                on:click={nextImage}
                 clip-rule="evenodd"
                 fill-rule="evenodd"
                 stroke-linejoin="round"
@@ -375,12 +390,13 @@
     font-size: 11px
     opacity: 0.8
     width: 100%
+    margin-top: 1px
     text-align: center
     display: flex
     align-items: center
     justify-content: center
     .subtitle-text
-      margin: 0px 4px
+      width: 36px
     .arrow
       margin-top: 1px
       display: flex
@@ -388,7 +404,7 @@
       &.unclickable
         pointer-events: none
         svg
-          opacity: 0.25
+          opacity: 0.35
     svg
       background-color: transparent
       outline: none

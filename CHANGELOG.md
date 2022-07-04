@@ -1,7 +1,8 @@
 # Changelog
 
 ## Next
-- Support .opus files with multiple pictures
+- Add support for showing and removing specific pictures for tracks with multiple pictures
+- Add support for .opus files with multiple pictures
 
 ## 0.12.0 - 2022 Jul 4
 - Add support for .opus files
