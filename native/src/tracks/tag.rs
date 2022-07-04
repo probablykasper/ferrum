@@ -39,10 +39,6 @@ pub fn id3_timestamp_from_year(year: i32) -> id3::Timestamp {
   };
 }
 
-fn lofty_key(key: &str) -> lofty::ItemKey {
-  return lofty::ItemKey::Unknown(key.to_string());
-}
-
 pub struct Image<'a> {
   pub index: usize,
   pub total_images: usize,
@@ -114,6 +110,8 @@ impl Tag {
         };
       }
       Tag::Lofty(tag) => {
+        println!("items {:?}", tag.items());
+        println!("save to {:?}", path);
         match tag.save_to_path(path) {
           Ok(_) => (),
           Err(e) => panic!("Unable to tag file: {}", e),
@@ -168,7 +166,7 @@ impl Tag {
       Tag::Id3(tag) => tag.remove_album_artist(),
       Tag::Mp4(tag) => tag.remove_album_artists(),
       Tag::Lofty(tag) => {
-        let _ = tag.remove_key(&lofty_key("ALBUMARTIST"));
+        let _ = tag.remove_key(&lofty::ItemKey::AlbumArtist);
       }
     }
   }
@@ -177,7 +175,8 @@ impl Tag {
       Tag::Id3(tag) => tag.set_album_artist(value),
       Tag::Mp4(tag) => tag.set_album_artist(value),
       Tag::Lofty(tag) => {
-        tag.insert_text(lofty_key("ALBUMARTIST"), value.to_string());
+        let inserted = tag.insert_text(lofty::ItemKey::AlbumArtist, value.to_string());
+        assert!(inserted, "Failed to set album artist");
       }
     }
   }
@@ -188,7 +187,7 @@ impl Tag {
       }
       Tag::Mp4(tag) => tag.remove_composers(),
       Tag::Lofty(tag) => {
-        let _ = tag.remove_key(&lofty_key("COMPOSER"));
+        let _ = tag.remove_key(&lofty::ItemKey::Composer);
       }
     }
   }
@@ -197,7 +196,8 @@ impl Tag {
       Tag::Id3(tag) => tag.set_text("TCOM", value),
       Tag::Mp4(tag) => tag.set_composer(value),
       Tag::Lofty(tag) => {
-        tag.insert_text(lofty_key("COMPOSER"), value.to_string());
+        let inserted = tag.insert_text(lofty::ItemKey::Composer, value.to_string());
+        assert!(inserted, "Failed to set composer");
       }
     }
   }
@@ -208,7 +208,7 @@ impl Tag {
       }
       Tag::Mp4(tag) => tag.remove_groupings(),
       Tag::Lofty(tag) => {
-        let _ = tag.remove_key(&lofty_key("GROUPING"));
+        let _ = tag.remove_key(&lofty::ItemKey::ContentGroup);
       }
     }
   }
@@ -217,7 +217,8 @@ impl Tag {
       Tag::Id3(tag) => tag.set_text("GRP1", value),
       Tag::Mp4(tag) => tag.set_grouping(value),
       Tag::Lofty(tag) => {
-        tag.insert_text(lofty_key("GROUPING"), value.to_string());
+        let inserted = tag.insert_text(lofty::ItemKey::ContentGroup, value.to_string());
+        assert!(inserted, "Failed to set grouping");
       }
     }
   }
@@ -377,7 +378,7 @@ impl Tag {
       }
       Tag::Mp4(tag) => tag.remove_bpm(),
       Tag::Lofty(tag) => {
-        let _ = tag.remove_key(&lofty_key("BPM"));
+        let _ = tag.remove_key(&lofty::ItemKey::BPM);
       }
     };
   }
@@ -390,7 +391,8 @@ impl Tag {
         tag.set_bpm(value);
       }
       Tag::Lofty(tag) => {
-        tag.insert_text(lofty_key("BPM"), value.to_string());
+        let inserted = tag.insert_text(lofty::ItemKey::BPM, value.to_string());
+        assert!(inserted, "Failed to set BPM");
       }
     };
   }
