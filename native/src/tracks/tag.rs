@@ -1,9 +1,8 @@
 use crate::{UniError, UniResult};
 use id3::{self, TagLike};
-use lofty::ogg::{OpusFile, VorbisComments};
-use lofty::{Accessor, AudioFile, TagExt};
+use lofty::{Accessor, TagExt};
 use mp4ameta;
-use std::fs::{self, File};
+use std::fs;
 use std::path::{Path, PathBuf};
 
 pub enum SetInfoError {
@@ -40,6 +39,10 @@ pub fn id3_timestamp_from_year(year: i32) -> id3::Timestamp {
   };
 }
 
+fn lofty_key(key: &str) -> lofty::ItemKey {
+  return lofty::ItemKey::Unknown(key.to_string());
+}
+
 pub struct Image<'a> {
   pub index: usize,
   pub total_images: usize,
@@ -50,7 +53,7 @@ pub struct Image<'a> {
 pub enum Tag {
   Id3(id3::Tag),
   Mp4(mp4ameta::Tag),
-  VorbisComments(VorbisComments),
+  Lofty(lofty::Tag),
 }
 impl Tag {
   pub fn read_from_path(path: &PathBuf) -> UniResult<Tag> {
@@ -82,16 +85,15 @@ impl Tag {
         Tag::Mp4(tag)
       }
       "opus" => {
-        let mut file = match File::open(&path) {
-          Ok(file) => file,
-          Err(e) => throw!("Unable to open file: {}", e),
+        let mut tagged_file = match lofty::read_from_path(path, false) {
+          Ok(f) => f,
+          Err(e) => throw!("Unable to read file: {}", e),
         };
-        let opusfile = match OpusFile::read_from(&mut file, true) {
-          Ok(opusfile) => opusfile,
-          Err(e) => throw!("Unable to read opus tags: {}", e),
+        let tag = match tagged_file.take(lofty::TagType::VorbisComments) {
+          Some(t) => t,
+          None => lofty::Tag::new(lofty::TagType::VorbisComments),
         };
-        // TODO don't clone
-        Tag::VorbisComments(opusfile.vorbis_comments().clone())
+        Tag::Lofty(tag)
       }
       _ => throw!("Unsupported file extension: {}", ext),
     };
@@ -111,7 +113,7 @@ impl Tag {
           Err(e) => panic!("Unable to tag file: {}", e.description),
         };
       }
-      Tag::VorbisComments(tag) => {
+      Tag::Lofty(tag) => {
         match tag.save_to_path(path) {
           Ok(_) => (),
           Err(e) => panic!("Unable to tag file: {}", e),
@@ -123,50 +125,50 @@ impl Tag {
     match self {
       Tag::Id3(tag) => tag.remove_title(),
       Tag::Mp4(tag) => tag.remove_title(),
-      Tag::VorbisComments(tag) => tag.remove_title(),
+      Tag::Lofty(tag) => tag.remove_title(),
     }
   }
   pub fn set_title(&mut self, value: &str) {
     match self {
       Tag::Id3(tag) => tag.set_title(value),
       Tag::Mp4(tag) => tag.set_title(value),
-      Tag::VorbisComments(tag) => tag.set_title(value.to_string()),
+      Tag::Lofty(tag) => tag.set_title(value.to_string()),
     }
   }
   pub fn remove_artists(&mut self) {
     match self {
       Tag::Id3(tag) => tag.remove_artist(),
       Tag::Mp4(tag) => tag.remove_artists(),
-      Tag::VorbisComments(tag) => tag.remove_artist(),
+      Tag::Lofty(tag) => tag.remove_artist(),
     }
   }
   pub fn set_artist(&mut self, value: &str) {
     match self {
       Tag::Id3(tag) => tag.set_artist(value),
       Tag::Mp4(tag) => tag.set_artist(value),
-      Tag::VorbisComments(tag) => tag.set_artist(value.to_string()),
+      Tag::Lofty(tag) => tag.set_artist(value.to_string()),
     }
   }
   pub fn remove_album(&mut self) {
     match self {
       Tag::Id3(tag) => tag.remove_album(),
       Tag::Mp4(tag) => tag.remove_album(),
-      Tag::VorbisComments(tag) => tag.remove_album(),
+      Tag::Lofty(tag) => tag.remove_album(),
     }
   }
   pub fn set_album(&mut self, value: &str) {
     match self {
       Tag::Id3(tag) => tag.set_album(value),
       Tag::Mp4(tag) => tag.set_album(value),
-      Tag::VorbisComments(tag) => tag.set_album(value.to_string()),
+      Tag::Lofty(tag) => tag.set_album(value.to_string()),
     }
   }
   pub fn remove_album_artists(&mut self) {
     match self {
       Tag::Id3(tag) => tag.remove_album_artist(),
       Tag::Mp4(tag) => tag.remove_album_artists(),
-      Tag::VorbisComments(tag) => {
-        let _ = tag.remove("ALBUMARTIST");
+      Tag::Lofty(tag) => {
+        let _ = tag.remove_key(&lofty_key("ALBUMARTIST"));
       }
     }
   }
@@ -174,7 +176,9 @@ impl Tag {
     match self {
       Tag::Id3(tag) => tag.set_album_artist(value),
       Tag::Mp4(tag) => tag.set_album_artist(value),
-      Tag::VorbisComments(tag) => tag.insert("ALBUMARTIST".to_string(), value.to_string(), true),
+      Tag::Lofty(tag) => {
+        tag.insert_text(lofty_key("ALBUMARTIST"), value.to_string());
+      }
     }
   }
   pub fn remove_composers(&mut self) {
@@ -183,8 +187,8 @@ impl Tag {
         tag.remove("TCOM");
       }
       Tag::Mp4(tag) => tag.remove_composers(),
-      Tag::VorbisComments(tag) => {
-        let _ = tag.remove("COMPOSER");
+      Tag::Lofty(tag) => {
+        let _ = tag.remove_key(&lofty_key("COMPOSER"));
       }
     }
   }
@@ -192,7 +196,9 @@ impl Tag {
     match self {
       Tag::Id3(tag) => tag.set_text("TCOM", value),
       Tag::Mp4(tag) => tag.set_composer(value),
-      Tag::VorbisComments(tag) => tag.insert("COMPOSER".to_string(), value.to_string(), true),
+      Tag::Lofty(tag) => {
+        tag.insert_text(lofty_key("COMPOSER"), value.to_string());
+      }
     }
   }
   pub fn remove_groupings(&mut self) {
@@ -201,8 +207,8 @@ impl Tag {
         tag.remove("GRP1");
       }
       Tag::Mp4(tag) => tag.remove_groupings(),
-      Tag::VorbisComments(tag) => {
-        let _ = tag.remove("GROUPING");
+      Tag::Lofty(tag) => {
+        let _ = tag.remove_key(&lofty_key("GROUPING"));
       }
     }
   }
@@ -210,21 +216,23 @@ impl Tag {
     match self {
       Tag::Id3(tag) => tag.set_text("GRP1", value),
       Tag::Mp4(tag) => tag.set_grouping(value),
-      Tag::VorbisComments(tag) => tag.insert("GROUPING".to_string(), value.to_string(), true),
+      Tag::Lofty(tag) => {
+        tag.insert_text(lofty_key("GROUPING"), value.to_string());
+      }
     }
   }
   pub fn remove_genres(&mut self) {
     match self {
       Tag::Id3(tag) => tag.remove_genre(),
       Tag::Mp4(tag) => tag.remove_genres(),
-      Tag::VorbisComments(tag) => tag.remove_genre(),
+      Tag::Lofty(tag) => tag.remove_genre(),
     }
   }
   pub fn set_genre(&mut self, value: &str) {
     match self {
       Tag::Id3(tag) => tag.set_genre(value),
       Tag::Mp4(tag) => tag.set_genre(value),
-      Tag::VorbisComments(tag) => tag.set_genre(value.to_string()),
+      Tag::Lofty(tag) => tag.set_genre(value.to_string()),
     }
   }
   pub fn remove_year(&mut self) {
@@ -234,7 +242,7 @@ impl Tag {
         tag.remove_date_recorded();
       }
       Tag::Mp4(tag) => tag.remove_year(),
-      Tag::VorbisComments(tag) => tag.remove_year(),
+      Tag::Lofty(tag) => tag.remove_year(),
     }
   }
   pub fn set_year(&mut self, value: i32) {
@@ -244,7 +252,7 @@ impl Tag {
         tag.set_date_recorded(id3_timestamp_from_year(value));
       }
       Tag::Mp4(tag) => tag.set_year(value.to_string()),
-      Tag::VorbisComments(tag) => {
+      Tag::Lofty(tag) => {
         let u = if value < 0 { 0 } else { value as u32 };
         tag.set_year(u);
       }
@@ -293,7 +301,7 @@ impl Tag {
           None => tag.remove_total_tracks(),
         }
       }
-      Tag::VorbisComments(tag) => {
+      Tag::Lofty(tag) => {
         match number {
           Some(number) => tag.set_track(number),
           None => tag.remove_track(),
@@ -349,7 +357,7 @@ impl Tag {
           None => tag.remove_total_discs(),
         }
       }
-      Tag::VorbisComments(tag) => {
+      Tag::Lofty(tag) => {
         match number {
           Some(number) => tag.set_disk(number),
           None => tag.remove_disk(),
@@ -368,8 +376,8 @@ impl Tag {
         tag.remove("TBPM");
       }
       Tag::Mp4(tag) => tag.remove_bpm(),
-      Tag::VorbisComments(tag) => {
-        let _ = tag.remove("BPM");
+      Tag::Lofty(tag) => {
+        let _ = tag.remove_key(&lofty_key("BPM"));
       }
     };
   }
@@ -381,8 +389,8 @@ impl Tag {
       Tag::Mp4(tag) => {
         tag.set_bpm(value);
       }
-      Tag::VorbisComments(tag) => {
-        tag.insert("BPM".to_string(), value.to_string(), true);
+      Tag::Lofty(tag) => {
+        tag.insert_text(lofty_key("BPM"), value.to_string());
       }
     };
   }
@@ -392,7 +400,7 @@ impl Tag {
         tag.remove("COMM");
       }
       Tag::Mp4(tag) => tag.remove_comments(),
-      Tag::VorbisComments(tag) => tag.remove_comment(),
+      Tag::Lofty(tag) => tag.remove_comment(),
     };
   }
   pub fn set_comment(&mut self, value: &str) {
@@ -406,7 +414,7 @@ impl Tag {
         });
       }
       Tag::Mp4(tag) => tag.set_comment(value),
-      Tag::VorbisComments(tag) => tag.set_comment(value.to_string()),
+      Tag::Lofty(tag) => tag.set_comment(value.to_string()),
     }
   }
   pub fn set_image(&mut self, index: usize, path: PathBuf) -> UniResult<()> {
@@ -480,26 +488,8 @@ impl Tag {
         }
         tag.set_artworks(artworks);
       }
-      Tag::VorbisComments(tag) => {
-        let mut file = match File::open(path) {
-          Ok(file) => file,
-          Err(e) => throw!("Unable to open file: {}", e),
-        };
-        let picture = match lofty::Picture::from_reader(&mut file) {
-          Ok(picture) => picture,
-          Err(e) => throw!("Unable to read picture: {}", e),
-        };
-        let picture_info = match lofty::PictureInformation::from_picture(&picture) {
-          Ok(picture_info) => picture_info,
-          Err(e) => throw!("Unable to read picture: {}", e),
-        };
+      Tag::Lofty(_tag) => {
         panic!("set_image not yet supported");
-        match picture.mime_type() {
-          lofty::MimeType::Png | lofty::MimeType::Jpeg => {
-            tag.insert_picture(picture, Some(picture_info));
-          }
-          m => throw!("Unsupported file type: {}", m.to_string()),
-        }
       }
     }
     Ok(())
@@ -528,26 +518,20 @@ impl Tag {
         }),
         None => None,
       },
-      Tag::VorbisComments(tag) => {
-        for item in tag.items() {
-          println!("{:?}", item);
+      Tag::Lofty(tag) => {
+        let pictures = tag.pictures();
+        match pictures.get(index) {
+          Some(pic) => {
+            let data = pic.data();
+            Some(Image {
+              index,
+              total_images: pictures.len(),
+              data,
+              mime_type: pic.mime_type().to_string(),
+            })
+          }
+          None => None,
         }
-        None
-        // // TODO don't clone
-        // let lofty_tag = lofty::Tag::from(tag.clone());
-        // let pictures = lofty_tag.pictures();
-        // match pictures.get(index) {
-        //   Some(pic) => {
-        //     let data = pic.data();
-        //     Some(Image {
-        //       index,
-        //       total_images: pictures.len(),
-        //       data: data,
-        //       mime_type: pic.mime_type().to_string(),
-        //     })
-        //   }
-        //   None => None,
-        // }
       }
     }
   }
@@ -570,11 +554,8 @@ impl Tag {
         artworks.remove(index);
         tag.set_artworks(artworks);
       }
-      Tag::VorbisComments(tag) => {
-        // let lofty_tag = lofty::Tag::from(*tag);
-        // let pictures = lofty_tag.pictures();
+      Tag::Lofty(_tag) => {
         panic!("set_image not yet supported");
-        // pictures.remove(index);
       }
     }
   }
