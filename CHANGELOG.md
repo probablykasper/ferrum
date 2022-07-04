@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.12.0 - 2022 Jul 4
+- Add support for .opus files
+
 ## 0.11.0 - 2022 Jun 5
 - Update logo to macOS 11 style
 - Clear selection when clicking on empty rows
