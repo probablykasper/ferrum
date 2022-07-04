@@ -489,27 +489,19 @@ impl Tag {
         tag.set_artworks(artworks);
       }
       Tag::Lofty(tag) => {
-        if tag.picture_count() > 1 {
-          panic!("Cannot set image for file with multiple images (unsupported)");
-        } else {
-          let mut file = match File::open(path) {
-            Ok(file) => file,
-            Err(e) => throw!("Unable to open file: {}", e),
-          };
-          let picture = match lofty::Picture::from_reader(&mut file) {
-            Ok(picture) => picture,
-            Err(e) => throw!("Unable to read picture: {}", e),
-          };
-          match picture.mime_type() {
-            lofty::MimeType::Png | lofty::MimeType::Jpeg => {
-              if let Some(p1) = tag.pictures().get(0) {
-                let ptype = p1.pic_type();
-                tag.remove_picture_type(ptype);
-              }
-              tag.push_picture(picture);
-            }
-            _ => throw!("Unsupported picture type"),
+        let mut file = match File::open(path) {
+          Ok(file) => file,
+          Err(e) => throw!("Unable to open file: {}", e),
+        };
+        let picture = match lofty::Picture::from_reader(&mut file) {
+          Ok(picture) => picture,
+          Err(e) => throw!("Unable to read picture: {}", e),
+        };
+        match picture.mime_type() {
+          lofty::MimeType::Png | lofty::MimeType::Jpeg => {
+            tag.set_picture(index, picture);
           }
+          _ => throw!("Unsupported picture type"),
         }
       }
     }
@@ -576,14 +568,7 @@ impl Tag {
         tag.set_artworks(artworks);
       }
       Tag::Lofty(tag) => {
-        if tag.picture_count() > 1 {
-          panic!("Cannot remove image from file with multiple images (unsupported)");
-        } else {
-          if let Some(p1) = tag.pictures().get(0) {
-            let ptype = p1.pic_type();
-            tag.remove_picture_type(ptype);
-          }
-        }
+        tag.remove_picture(index);
       }
     }
   }

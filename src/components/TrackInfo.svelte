@@ -140,14 +140,18 @@
     droppable = false
     const path = getFilePath(e)
     if (path !== null) {
-      methods.setImage(0, path)
-      loadImage()
+      methods.setImage($image?.index || 0, path)
+      loadImage($image?.index || 0)
     }
   }
   function coverKeydown(e: KeyboardEvent) {
-    if (checkShortcut(e, 'Backspace')) {
-      methods.removeImage(0)
-      loadImage()
+    if (checkShortcut(e, 'Backspace') && $image) {
+      methods.removeImage($image.index)
+      if ($image.index < $image.total_images - 1) {
+        loadImage($image.index)
+      } else {
+        loadImage(Math.max(0, $image.index - 1))
+      }
     } else {
       keydownNoneSelected(e)
     }
@@ -159,7 +163,7 @@
     })
     if (!result.canceled && result.filePaths.length === 1) {
       methods.setImage(0, result.filePaths[0])
-      loadImage()
+      loadImage(0)
     }
   }
 </script>
@@ -169,28 +173,76 @@
 <Modal bind:visible={$visible} close={cancel}>
   <form class="modal" on:submit|preventDefault={save}>
     <div class="header" class:has-subtitle={$image !== null && $image.total_images >= 2}>
-      <div
-        class="cover"
-        class:droppable
-        on:dragenter={dragEnterOrOver}
-        on:dragover={dragEnterOrOver}
-        on:dragleave={dragLeave}
-        on:drop={drop}
-        on:dblclick={selectCover}
-        on:keydown={coverKeydown}
-        tabindex="0"
-      >
-        {#if $image === null}
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-            <path
-              d="M23 0l-15.996 3.585v13.04c-2.979-.589-6.004 1.671-6.004 4.154 0 2.137 1.671 3.221 3.485 3.221 2.155 0 4.512-1.528 4.515-4.638v-10.9l12-2.459v8.624c-2.975-.587-6 1.664-6 4.141 0 2.143 1.715 3.232 3.521 3.232 2.14 0 4.476-1.526 4.479-4.636v-17.364z"
+      <div class="cover-area" class:droppable tabindex="0" on:keydown={coverKeydown}>
+        <div
+          class="cover"
+          on:dragenter={dragEnterOrOver}
+          on:dragover={dragEnterOrOver}
+          on:dragleave={dragLeave}
+          on:drop={drop}
+          on:dblclick={selectCover}
+        >
+          {#if $image === null}
+            <svg
+              class="cover-svg outline-element"
+              xmlns="http://www.w3.org/2000/svg"
+              width="8"
+              height="8"
+              viewBox="0 0 24 24"
+            >
+              <path
+                d="M23 0l-15.996 3.585v13.04c-2.979-.589-6.004 1.671-6.004 4.154 0 2.137 1.671 3.221 3.485 3.221 2.155 0 4.512-1.528 4.515-4.638v-10.9l12-2.459v8.624c-2.975-.587-6 1.664-6 4.141 0 2.143 1.715 3.232 3.521 3.232 2.14 0 4.476-1.526 4.479-4.636v-17.364z"
+              />
+            </svg>
+          {:else}
+            <img
+              class="outline-element"
+              alt=""
+              src={'data:' + $image.mime_type + ';base64,' + $image.data}
             />
-          </svg>
-        {:else}
-          <img alt="" src={'data:' + $image.mime_type + ';base64,' + $image.data} />
-        {/if}
+          {/if}
+        </div>
         {#if $image !== null && $image.total_images >= 2}
-          <div class="cover-subtitle">{$image.index + 1} / {$image.total_images}</div>
+          {@const imageIndex = $image.index}
+          <div class="cover-subtitle" on:mousedown|preventDefault>
+            <div class="arrow" class:unclickable={imageIndex <= 0}>
+              <svg
+                on:click={() => loadImage(imageIndex - 1)}
+                clip-rule="evenodd"
+                fill-rule="evenodd"
+                stroke-linejoin="round"
+                stroke-miterlimit="2"
+                width="18"
+                height="18"
+                fill="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+                ><path
+                  d="m13.789 7.155c.141-.108.3-.157.456-.157.389 0 .755.306.755.749v8.501c0 .445-.367.75-.755.75-.157 0-.316-.05-.457-.159-1.554-1.203-4.199-3.252-5.498-4.258-.184-.142-.29-.36-.29-.592 0-.23.107-.449.291-.591 1.299-1.002 3.945-3.044 5.498-4.243z"
+                /></svg
+              >
+            </div>
+            <div class="subtitle-text">
+              {$image.index + 1} / {$image.total_images}
+            </div>
+            <div class="arrow" class:unclickable={imageIndex >= $image.total_images - 1}>
+              <svg
+                on:click={() => loadImage(imageIndex + 1)}
+                clip-rule="evenodd"
+                fill-rule="evenodd"
+                stroke-linejoin="round"
+                stroke-miterlimit="2"
+                width="18"
+                height="18"
+                fill="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+                ><path
+                  d="m10.211 7.155c-.141-.108-.3-.157-.456-.157-.389 0-.755.306-.755.749v8.501c0 .445.367.75.755.75.157 0 .316-.05.457-.159 1.554-1.203 4.199-3.252 5.498-4.258.184-.142.29-.36.29-.592 0-.23-.107-.449-.291-.591-1.299-1.002-3.945-3.044-5.498-4.243z"
+                /></svg
+              >
+            </div>
+          </div>
         {/if}
       </div>
       <div>
@@ -288,23 +340,28 @@
   .artist
     font-size: 13px
     opacity: 0.7
-  .cover
+  .cover-area
     margin-right: 20px
-  .cover
     position: relative
-    transition: box-shadow 40ms ease-out
     outline: none
-    &:focus
+    &:focus .outline-element
       box-shadow: 0px 0px 0px 2px var(--accent-1)
-    &.droppable
+    &.droppable .outline-element
       box-shadow: 0px 0px 0px 2px var(--accent-1)
-    &:focus.droppable
+    &:focus.droppable .outline-element
       box-shadow: 0px 0px 0px 4px var(--accent-1)
+  .cover
+    transition: box-shadow 40ms ease-out
+    width: $cover-size
+    height: $cover-size
+    display: flex
+    align-items: center
+    justify-content: center
     img
       display: block
-      width: $cover-size
-      flex-shrink: 0
-    svg
+      max-width: $cover-size
+      max-height: $cover-size
+    svg.cover-svg
       display: block
       padding: 26px
       width: $cover-size
@@ -319,6 +376,29 @@
     opacity: 0.8
     width: 100%
     text-align: center
+    display: flex
+    align-items: center
+    justify-content: center
+    .subtitle-text
+      margin: 0px 4px
+    .arrow
+      margin-top: 1px
+      display: flex
+      color: #ffffff
+      &.unclickable
+        pointer-events: none
+        svg
+          opacity: 0.25
+    svg
+      background-color: transparent
+      outline: none
+      border: none
+      padding: 0px
+      opacity: 1
+      transition: 0.05s ease-out
+      &:active
+        opacity: 0.7
+        transform: scale(0.95)
   .row
     padding: 2px 0px
     display: flex

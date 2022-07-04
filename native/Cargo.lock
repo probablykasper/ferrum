@@ -256,8 +256,7 @@ dependencies = [
 [[package]]
 name = "lofty"
 version = "0.7.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3f4e4309226629ef3486925c6a1b346241abeb30758e307b3ca9cfd66587bf4f"
+source = "git+https://github.com/Serial-ATA/lofty-rs?rev=22bd6a7#22bd6a75133ab5ff65b9b09c743ddc26c90b777d"
 dependencies = [
  "base64",
  "byteorder",

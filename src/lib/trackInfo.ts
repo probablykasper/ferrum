@@ -48,7 +48,7 @@ function openIndex(index: number) {
     id.set(current.ids[index])
     track.set(methods.getTrack(current.ids[index]))
     methods.loadTags(current.ids[index])
-    loadImage()
+    loadImage(0)
   }
 }
 function close() {
@@ -77,6 +77,6 @@ export const visible = (() => {
   }
 })()
 
-export function loadImage() {
-  image.set(methods.getImage(0))
+export function loadImage(index: number) {
+  image.set(methods.getImage(index))
 }
