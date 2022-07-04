@@ -2,7 +2,7 @@ use crate::{UniError, UniResult};
 use id3::{self, TagLike};
 use lofty::{Accessor, TagExt};
 use mp4ameta;
-use std::fs;
+use std::fs::{self, File};
 use std::path::{Path, PathBuf};
 
 pub enum SetInfoError {
@@ -110,8 +110,6 @@ impl Tag {
         };
       }
       Tag::Lofty(tag) => {
-        println!("items {:?}", tag.items());
-        println!("save to {:?}", path);
         match tag.save_to_path(path) {
           Ok(_) => (),
           Err(e) => panic!("Unable to tag file: {}", e),
@@ -490,8 +488,29 @@ impl Tag {
         }
         tag.set_artworks(artworks);
       }
-      Tag::Lofty(_tag) => {
-        panic!("set_image not yet supported");
+      Tag::Lofty(tag) => {
+        if tag.picture_count() > 1 {
+          panic!("Cannot set image for file with multiple images (unsupported)");
+        } else {
+          let mut file = match File::open(path) {
+            Ok(file) => file,
+            Err(e) => throw!("Unable to open file: {}", e),
+          };
+          let picture = match lofty::Picture::from_reader(&mut file) {
+            Ok(picture) => picture,
+            Err(e) => throw!("Unable to read picture: {}", e),
+          };
+          match picture.mime_type() {
+            lofty::MimeType::Png | lofty::MimeType::Jpeg => {
+              if let Some(p1) = tag.pictures().get(0) {
+                let ptype = p1.pic_type();
+                tag.remove_picture_type(ptype);
+              }
+              tag.push_picture(picture);
+            }
+            _ => throw!("Unsupported picture type"),
+          }
+        }
       }
     }
     Ok(())
@@ -556,8 +575,15 @@ impl Tag {
         artworks.remove(index);
         tag.set_artworks(artworks);
       }
-      Tag::Lofty(_tag) => {
-        panic!("set_image not yet supported");
+      Tag::Lofty(tag) => {
+        if tag.picture_count() > 1 {
+          panic!("Cannot remove image from file with multiple images (unsupported)");
+        } else {
+          if let Some(p1) = tag.pictures().get(0) {
+            let ptype = p1.pic_type();
+            tag.remove_picture_type(ptype);
+          }
+        }
       }
     }
   }
