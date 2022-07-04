@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { checkShortcut } from '../lib/helpers'
   import { visibleModalsCount } from '../lib/modals'
 
   export let visible: boolean
@@ -14,10 +15,32 @@
     firstRun = false
   }
   $: visibleUpdate(visible)
+
+  let container: HTMLDivElement
+  $: focusElements =
+    container?.querySelectorAll(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    ) || []
+  $: firstFocusElement = focusElements[0]
+  $: lastFocusElement = focusElements[focusElements.length - 1]
+
+  function keydown(e: KeyboardEvent) {
+    if (checkShortcut(e, 'Tab')) {
+      if (document.activeElement?.isSameNode(lastFocusElement)) {
+        ;(firstFocusElement as HTMLElement).focus()
+        e.preventDefault()
+      }
+    } else if (checkShortcut(e, 'Tab', { shift: true })) {
+      if (document.activeElement?.isSameNode(firstFocusElement)) {
+        ;(lastFocusElement as HTMLElement).focus()
+        e.preventDefault()
+      }
+    }
+  }
 </script>
 
 {#if visible}
-  <div class="container">
+  <div class="container" bind:this={container} on:keydown={keydown}>
     <div class="backdrop" on:click|self={close} />
     <div class="box">
       <slot />
