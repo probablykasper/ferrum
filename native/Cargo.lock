@@ -140,6 +140,7 @@ dependencies = [
  "dirs",
  "id3",
  "linked-hash-map",
+ "lofty",
  "mp3-metadata",
  "mp4ameta",
  "nanoid",
@@ -250,6 +251,21 @@ checksum = "7fb9b38af92608140b86b693604b9ffcc5824240a484d1ecd4795bacb2fe88f3"
 dependencies = [
  "serde",
  "serde_test",
+]
+
+[[package]]
+name = "lofty"
+version = "0.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3f4e4309226629ef3486925c6a1b346241abeb30758e307b3ca9cfd66587bf4f"
+dependencies = [
+ "base64",
+ "byteorder",
+ "cfg-if",
+ "flate2",
+ "ogg_pager",
+ "once_cell",
+ "paste",
 ]
 
 [[package]]
@@ -407,10 +423,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "ogg_pager"
+version = "0.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2a846c4c0578b95d4568e6f48210dd6045e7a9572af2b020062d06b6dea049f4"
+dependencies = [
+ "byteorder",
+]
+
+[[package]]
 name = "once_cell"
 version = "1.12.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7709cef83f0c1f58f666e746a08b21e0085f7440fa6a29cc194d68aac97a4225"
+
+[[package]]
+name = "paste"
+version = "1.0.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0c520e05135d6e763148b6426a837e239041653ba7becd2e538c076c738025fc"
 
 [[package]]
 name = "percent-encoding"

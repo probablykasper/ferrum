@@ -153,6 +153,7 @@ pub fn import(ctx: CallContext) -> NResult<JsUndefined> {
   let track = match ext.as_ref() {
     "mp3" => import::import_mp3(&data, &path, now)?,
     "m4a" => import::import_m4a(&data, &path, now)?,
+    "opus" => import::import_opus(&data, &path, now)?,
     _ => panic!("Unsupported file extension: {}", ext),
   };
   let id = data.library.generate_id();

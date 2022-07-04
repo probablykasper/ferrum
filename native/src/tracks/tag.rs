@@ -1,7 +1,9 @@
 use crate::{UniError, UniResult};
 use id3::{self, TagLike};
+use lofty::ogg::{OpusFile, VorbisComments};
+use lofty::{Accessor, AudioFile, TagExt};
 use mp4ameta;
-use std::fs;
+use std::fs::{self, File};
 use std::path::{Path, PathBuf};
 
 pub enum SetInfoError {
@@ -48,6 +50,7 @@ pub struct Image<'a> {
 pub enum Tag {
   Id3(id3::Tag),
   Mp4(mp4ameta::Tag),
+  VorbisComments(VorbisComments),
 }
 impl Tag {
   pub fn read_from_path(path: &PathBuf) -> UniResult<Tag> {
@@ -78,6 +81,18 @@ impl Tag {
         };
         Tag::Mp4(tag)
       }
+      "opus" => {
+        let mut file = match File::open(&path) {
+          Ok(file) => file,
+          Err(e) => throw!("Unable to open file: {}", e),
+        };
+        let opusfile = match OpusFile::read_from(&mut file, true) {
+          Ok(opusfile) => opusfile,
+          Err(e) => throw!("Unable to read opus tags: {}", e),
+        };
+        // TODO don't clone
+        Tag::VorbisComments(opusfile.vorbis_comments().clone())
+      }
       _ => throw!("Unsupported file extension: {}", ext),
     };
     Ok(tag)
@@ -96,54 +111,70 @@ impl Tag {
           Err(e) => panic!("Unable to tag file: {}", e.description),
         };
       }
+      Tag::VorbisComments(tag) => {
+        match tag.save_to_path(path) {
+          Ok(_) => (),
+          Err(e) => panic!("Unable to tag file: {}", e),
+        };
+      }
     }
   }
   pub fn remove_title(&mut self) {
     match self {
       Tag::Id3(tag) => tag.remove_title(),
       Tag::Mp4(tag) => tag.remove_title(),
+      Tag::VorbisComments(tag) => tag.remove_title(),
     }
   }
   pub fn set_title(&mut self, value: &str) {
     match self {
       Tag::Id3(tag) => tag.set_title(value),
       Tag::Mp4(tag) => tag.set_title(value),
+      Tag::VorbisComments(tag) => tag.set_title(value.to_string()),
     }
   }
   pub fn remove_artists(&mut self) {
     match self {
       Tag::Id3(tag) => tag.remove_artist(),
       Tag::Mp4(tag) => tag.remove_artists(),
+      Tag::VorbisComments(tag) => tag.remove_artist(),
     }
   }
   pub fn set_artist(&mut self, value: &str) {
     match self {
       Tag::Id3(tag) => tag.set_artist(value),
       Tag::Mp4(tag) => tag.set_artist(value),
+      Tag::VorbisComments(tag) => tag.set_artist(value.to_string()),
     }
   }
   pub fn remove_album(&mut self) {
     match self {
       Tag::Id3(tag) => tag.remove_album(),
       Tag::Mp4(tag) => tag.remove_album(),
+      Tag::VorbisComments(tag) => tag.remove_album(),
     }
   }
   pub fn set_album(&mut self, value: &str) {
     match self {
       Tag::Id3(tag) => tag.set_album(value),
       Tag::Mp4(tag) => tag.set_album(value),
+      Tag::VorbisComments(tag) => tag.set_album(value.to_string()),
     }
   }
   pub fn remove_album_artists(&mut self) {
     match self {
       Tag::Id3(tag) => tag.remove_album_artist(),
       Tag::Mp4(tag) => tag.remove_album_artists(),
+      Tag::VorbisComments(tag) => {
+        let _ = tag.remove("ALBUMARTIST");
+      }
     }
   }
   pub fn set_album_artist(&mut self, value: &str) {
     match self {
       Tag::Id3(tag) => tag.set_album_artist(value),
       Tag::Mp4(tag) => tag.set_album_artist(value),
+      Tag::VorbisComments(tag) => tag.insert("ALBUMARTIST".to_string(), value.to_string(), true),
     }
   }
   pub fn remove_composers(&mut self) {
@@ -152,12 +183,16 @@ impl Tag {
         tag.remove("TCOM");
       }
       Tag::Mp4(tag) => tag.remove_composers(),
+      Tag::VorbisComments(tag) => {
+        let _ = tag.remove("COMPOSER");
+      }
     }
   }
   pub fn set_composer(&mut self, value: &str) {
     match self {
       Tag::Id3(tag) => tag.set_text("TCOM", value),
       Tag::Mp4(tag) => tag.set_composer(value),
+      Tag::VorbisComments(tag) => tag.insert("COMPOSER".to_string(), value.to_string(), true),
     }
   }
   pub fn remove_groupings(&mut self) {
@@ -166,24 +201,30 @@ impl Tag {
         tag.remove("GRP1");
       }
       Tag::Mp4(tag) => tag.remove_groupings(),
+      Tag::VorbisComments(tag) => {
+        let _ = tag.remove("GROUPING");
+      }
     }
   }
   pub fn set_grouping(&mut self, value: &str) {
     match self {
       Tag::Id3(tag) => tag.set_text("GRP1", value),
       Tag::Mp4(tag) => tag.set_grouping(value),
+      Tag::VorbisComments(tag) => tag.insert("GROUPING".to_string(), value.to_string(), true),
     }
   }
   pub fn remove_genres(&mut self) {
     match self {
       Tag::Id3(tag) => tag.remove_genre(),
       Tag::Mp4(tag) => tag.remove_genres(),
+      Tag::VorbisComments(tag) => tag.remove_genre(),
     }
   }
   pub fn set_genre(&mut self, value: &str) {
     match self {
       Tag::Id3(tag) => tag.set_genre(value),
       Tag::Mp4(tag) => tag.set_genre(value),
+      Tag::VorbisComments(tag) => tag.set_genre(value.to_string()),
     }
   }
   pub fn remove_year(&mut self) {
@@ -193,6 +234,7 @@ impl Tag {
         tag.remove_date_recorded();
       }
       Tag::Mp4(tag) => tag.remove_year(),
+      Tag::VorbisComments(tag) => tag.remove_year(),
     }
   }
   pub fn set_year(&mut self, value: i32) {
@@ -202,6 +244,10 @@ impl Tag {
         tag.set_date_recorded(id3_timestamp_from_year(value));
       }
       Tag::Mp4(tag) => tag.set_year(value.to_string()),
+      Tag::VorbisComments(tag) => {
+        let u = if value < 0 { 0 } else { value as u32 };
+        tag.set_year(u);
+      }
     }
   }
   /// For some tag types, `total` cannot exist without `number`. In those
@@ -245,6 +291,16 @@ impl Tag {
         match total {
           Some(total) => tag.set_total_tracks(total as u16),
           None => tag.remove_total_tracks(),
+        }
+      }
+      Tag::VorbisComments(tag) => {
+        match number {
+          Some(number) => tag.set_track(number),
+          None => tag.remove_track(),
+        }
+        match total {
+          Some(total) => tag.set_track_total(total),
+          None => tag.remove_track_total(),
         }
       }
     }
@@ -293,6 +349,16 @@ impl Tag {
           None => tag.remove_total_discs(),
         }
       }
+      Tag::VorbisComments(tag) => {
+        match number {
+          Some(number) => tag.set_disk(number),
+          None => tag.remove_disk(),
+        }
+        match total {
+          Some(total) => tag.set_disk_total(total),
+          None => tag.remove_disk_total(),
+        }
+      }
     }
     Ok(())
   }
@@ -302,6 +368,9 @@ impl Tag {
         tag.remove("TBPM");
       }
       Tag::Mp4(tag) => tag.remove_bpm(),
+      Tag::VorbisComments(tag) => {
+        let _ = tag.remove("BPM");
+      }
     };
   }
   pub fn set_bpm(&mut self, value: u16) {
@@ -312,6 +381,9 @@ impl Tag {
       Tag::Mp4(tag) => {
         tag.set_bpm(value);
       }
+      Tag::VorbisComments(tag) => {
+        tag.insert("BPM".to_string(), value.to_string(), true);
+      }
     };
   }
   pub fn remove_comments(&mut self) {
@@ -320,6 +392,7 @@ impl Tag {
         tag.remove("COMM");
       }
       Tag::Mp4(tag) => tag.remove_comments(),
+      Tag::VorbisComments(tag) => tag.remove_comment(),
     };
   }
   pub fn set_comment(&mut self, value: &str) {
@@ -333,6 +406,7 @@ impl Tag {
         });
       }
       Tag::Mp4(tag) => tag.set_comment(value),
+      Tag::VorbisComments(tag) => tag.set_comment(value.to_string()),
     }
   }
   pub fn set_image(&mut self, index: usize, path: PathBuf) -> UniResult<()> {
@@ -406,6 +480,27 @@ impl Tag {
         }
         tag.set_artworks(artworks);
       }
+      Tag::VorbisComments(tag) => {
+        let mut file = match File::open(path) {
+          Ok(file) => file,
+          Err(e) => throw!("Unable to open file: {}", e),
+        };
+        let picture = match lofty::Picture::from_reader(&mut file) {
+          Ok(picture) => picture,
+          Err(e) => throw!("Unable to read picture: {}", e),
+        };
+        let picture_info = match lofty::PictureInformation::from_picture(&picture) {
+          Ok(picture_info) => picture_info,
+          Err(e) => throw!("Unable to read picture: {}", e),
+        };
+        panic!("set_image not yet supported");
+        match picture.mime_type() {
+          lofty::MimeType::Png | lofty::MimeType::Jpeg => {
+            tag.insert_picture(picture, Some(picture_info));
+          }
+          m => throw!("Unsupported file type: {}", m.to_string()),
+        }
+      }
     }
     Ok(())
   }
@@ -413,7 +508,7 @@ impl Tag {
     match self {
       Tag::Id3(tag) => match tag.pictures().nth(index) {
         Some(pic) => Some(Image {
-          index: index,
+          index,
           total_images: tag.pictures().count(),
           data: &pic.data,
           mime_type: pic.mime_type.clone(),
@@ -422,7 +517,7 @@ impl Tag {
       },
       Tag::Mp4(tag) => match tag.artworks().nth(index) {
         Some(artwork) => Some(Image {
-          index: index,
+          index,
           total_images: tag.artworks().count(),
           data: artwork.data,
           mime_type: match artwork.fmt {
@@ -433,6 +528,27 @@ impl Tag {
         }),
         None => None,
       },
+      Tag::VorbisComments(tag) => {
+        for item in tag.items() {
+          println!("{:?}", item);
+        }
+        None
+        // // TODO don't clone
+        // let lofty_tag = lofty::Tag::from(tag.clone());
+        // let pictures = lofty_tag.pictures();
+        // match pictures.get(index) {
+        //   Some(pic) => {
+        //     let data = pic.data();
+        //     Some(Image {
+        //       index,
+        //       total_images: pictures.len(),
+        //       data: data,
+        //       mime_type: pic.mime_type().to_string(),
+        //     })
+        //   }
+        //   None => None,
+        // }
+      }
     }
   }
   pub fn remove_image(&mut self, index: usize) {
@@ -453,6 +569,12 @@ impl Tag {
         let mut artworks: Vec<_> = tag.take_artworks().collect();
         artworks.remove(index);
         tag.set_artworks(artworks);
+      }
+      Tag::VorbisComments(tag) => {
+        // let lofty_tag = lofty::Tag::from(*tag);
+        // let pictures = lofty_tag.pictures();
+        panic!("set_image not yet supported");
+        // pictures.remove(index);
       }
     }
   }

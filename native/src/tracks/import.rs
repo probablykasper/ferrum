@@ -3,8 +3,10 @@ use crate::library_types::Track;
 use crate::tracks::{generate_filename, tag};
 use crate::{sys_time_to_timestamp, UniResult};
 use id3::TagLike;
+use lofty::ogg::OpusFile;
+use lofty::{Accessor, AudioFile, TagExt};
 use mp3_metadata;
-use std::fs;
+use std::fs::{self, File};
 use std::path::Path;
 
 fn get_and_fix_id3_year(tag: &mut id3::Tag) -> Option<i64> {
@@ -45,6 +47,109 @@ fn read_file_metadata(path: &Path) -> UniResult<fs::Metadata> {
     Ok(md) => Ok(md),
     Err(e) => throw!("Unable to read file metadata: {}", e),
   }
+}
+
+pub fn import_opus(data: &Data, track_path: &Path, now: i64) -> UniResult<Track> {
+  let file_md = read_file_metadata(&track_path)?;
+
+  let mut date_modified = match file_md.modified() {
+    Ok(sys_time) => sys_time_to_timestamp(&sys_time),
+    Err(_) => now,
+  };
+
+  let mut file = match File::open(track_path) {
+    Ok(file) => file,
+    Err(e) => throw!("Unable to open file: {}", e),
+  };
+  let mut opusfile = match OpusFile::read_from(&mut file, true) {
+    Ok(opusfile) => opusfile,
+    Err(e) => throw!("Unable to read opus tags: {}", e),
+  };
+  let opus_properties = opusfile.properties().clone();
+
+  let mut tag_changed = false;
+  let tag = opusfile.vorbis_comments_mut();
+
+  let title = match tag.title() {
+    Some(title) => title.to_owned(),
+    None => {
+      let file_stem = match track_path.file_stem() {
+        Some(stem) => stem.to_string_lossy().into_owned(),
+        None => "".to_string(),
+      };
+      tag.set_title(file_stem.clone());
+      tag_changed = true;
+      file_stem
+    }
+  };
+  let artist = tag.artist();
+
+  let tracks_dir = &data.paths.tracks_dir;
+  let filename = generate_filename(&tracks_dir, artist.unwrap_or(""), &title, "opus");
+  let dest_path = tracks_dir.join(&filename);
+
+  fs::copy(track_path, &dest_path).expect("Error copying file");
+  println!(
+    "{} -> {}",
+    track_path.to_string_lossy(),
+    dest_path.to_string_lossy()
+  );
+
+  if tag_changed {
+    println!("Writing:::::::");
+    tag.save_to_path(&dest_path).expect("Unable to tag file");
+    // manually set date_modified because the date_modified doens't seem to
+    // immediately update after tag.write_to_path().
+    date_modified = now;
+  }
+
+  let track = Track {
+    size: file_md.len() as i64,
+    duration: opus_properties.duration().as_secs_f64(),
+    bitrate: (opus_properties.audio_bitrate() * 1000).into(), // kbps to bps
+    sampleRate: opus_properties.input_sample_rate().into(),
+    file: filename,
+    dateModified: date_modified,
+    dateAdded: now,
+    name: title.to_string(),
+    importedFrom: None,
+    originalId: None,
+    artist: artist.unwrap_or_default().to_string(),
+    composer: tag.get("COMPOSER").map(|s| s.to_string()),
+    sortName: tag.get("TITLESORT").map(|s| s.to_string()),
+    sortArtist: tag.get("ARTISTSORT").map(|s| s.to_string()),
+    sortComposer: tag.get("COMPOSERSORT").map(|s| s.to_string()),
+    genre: tag.genre().map(|s| s.to_owned()),
+    rating: None,
+    year: tag.year().map(|y| y.into()),
+    bpm: match tag.get("BPM") {
+      Some(n) => n.parse().ok(),
+      None => None,
+    },
+    comments: tag.comment().map(|s| s.to_owned()),
+    grouping: tag.get("GROUPING").map(|s| s.to_string()),
+    liked: None,
+    disliked: None,
+    disabled: None,
+    compilation: None,
+    albumName: tag.album().map(|s| s.to_string()),
+    albumArtist: tag.get("ALBUMARTIST").map(|s| s.to_string()),
+    sortAlbumName: tag.get("ALBUMSORT").map(|s| s.to_string()),
+    sortAlbumArtist: tag.get("ALBUMARTISTSORT").map(|s| s.to_string()),
+    trackNum: tag.track(),
+    trackCount: tag.track_total(),
+    discNum: tag.disk(),
+    discCount: tag.disk_total(),
+    dateImported: None,
+    playCount: None,
+    plays: None,
+    playsImported: None,
+    skipCount: None,
+    skips: None,
+    skipsImported: None,
+    volume: None,
+  };
+  Ok(track)
 }
 
 pub fn import_m4a(data: &Data, track_path: &Path, now: i64) -> UniResult<Track> {
@@ -124,7 +229,6 @@ pub fn import_m4a(data: &Data, track_path: &Path, now: i64) -> UniResult<Track> 
   }
   println!("Images: {:?}", tag.images().collect::<Vec<_>>().len());
 
-  // assign to variable first due to lifetimes
   let track = Track {
     size: file_md.len() as i64,
     duration: duration.as_secs_f64(),
@@ -240,7 +344,6 @@ pub fn import_mp3(data: &Data, track_path: &Path, now: i64) -> UniResult<Track> 
     date_modified = now;
   }
 
-  // assign to variable first due to lifetimes
   let track = Track {
     size: file_md.len() as i64,
     duration,

@@ -43,7 +43,7 @@
     }
     let result = await showOpenDialog(false, {
       properties: ['openFile', 'multiSelections'],
-      filters: [{ name: 'Audio', extensions: ['mp3', 'm4a'] }],
+      filters: [{ name: 'Audio', extensions: ['mp3', 'm4a', 'opus'] }],
     })
     if (!result.canceled && result.filePaths.length >= 1) {
       importTracks(result.filePaths)
@@ -63,7 +63,7 @@
   })
 
   let droppable = false
-  const allowedMimes = ['audio/mpeg', 'audio/x-m4a'] // mp3, m4a
+  const allowedMimes = ['audio/mpeg', 'audio/x-m4a', 'audio/ogg'] // mp3, m4a
   function getFilePaths(e: DragEvent): string[] {
     if (!e.dataTransfer) return []
     let validPaths: string[] = []
