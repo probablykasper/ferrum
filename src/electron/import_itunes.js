@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
 const { ipcRenderer } = require('electron')
 const simplePlist = require('simple-plist')
 const path = require('path')

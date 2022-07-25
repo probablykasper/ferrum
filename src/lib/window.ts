@@ -20,7 +20,7 @@ declare global {
       paths: { library_dir: string; tracks_dir: string; library_json: string },
       statusHandler: (status: string) => void,
       warningHandler: (status: string) => void
-    ) => { err: Error | null; cancelled: boolean | null | undefined }
+    ) => Promise<{ err: Error | null; cancelled: boolean | null | undefined }>
   }
 }
 

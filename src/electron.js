@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
 const { app, ipcMain, session, BrowserWindow, dialog, protocol } = require('electron')
 const is = require('./electron/is.js')
 if (is.dev) app.setName('Ferrum Dev')

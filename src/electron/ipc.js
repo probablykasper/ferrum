@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
 const { ipcMain, dialog, Menu, shell } = require('electron')
 const path = require('path')
 const is = require('./is.js')

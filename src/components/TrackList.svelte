@@ -23,7 +23,7 @@
   import * as trackInfo from '../lib/trackInfo'
   import { appendToUserQueue, prependToUserQueue } from '../lib/queue'
   import { ipcRenderer } from '../lib/window'
-  import type { TrackID, Special } from '../lib/libraryTypes'
+  import type { TrackID, Special, Track } from '../lib/libraryTypes'
   import { onDestroy, onMount } from 'svelte'
 
   export async function showTrackMenu(ids: TrackID[], indexes: number[]) {
@@ -299,11 +299,11 @@
       const track = page.getTrack(index)
       return { ...track, id: page.getTrackId(index) }
     } catch (err) {
-      return {}
+      return null
     }
   }
 
-  let vlist: VList
+  let vlist: VList<Track>
 
   let itemCount = 0
   page.subscribe((page) => {
@@ -391,48 +391,50 @@
     let:item={track}
     let:index
   >
-    <div
-      class="row"
-      on:dblclick={(e) => doubleClick(e, index)}
-      on:mousedown={(e) => rowMouseDown(e, index)}
-      on:click={(e) => rowClick(e, index)}
-      on:contextmenu={(e) => onContextMenu(e, index)}
-      draggable="true"
-      on:dragstart={onDragStart}
-      on:dragover={(e) => onDragOver(e, index)}
-      on:dragend={dragEndHandler}
-      class:odd={index % 2 === 0}
-      class:selected={$selection.list[index] === true}
-      class:playing={track.id === $playingId}
-    >
-      <div class="c index">
-        {#if track.id === $playingId}
-          <svg
-            class="playing-icon"
-            xmlns="http://www.w3.org/2000/svg"
-            height="24"
-            viewBox="0 0 24 24"
-            width="24"
-          >
-            <path d="M0 0h24v24H0z" fill="none" />
-            <path
-              d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"
-            />
-          </svg>
-        {:else}
-          {index + 1}
-        {/if}
+    {#if track !== null}
+      <div
+        class="row"
+        on:dblclick={(e) => doubleClick(e, index)}
+        on:mousedown={(e) => rowMouseDown(e, index)}
+        on:click={(e) => rowClick(e, index)}
+        on:contextmenu={(e) => onContextMenu(e, index)}
+        draggable="true"
+        on:dragstart={onDragStart}
+        on:dragover={(e) => onDragOver(e, index)}
+        on:dragend={dragEndHandler}
+        class:odd={index % 2 === 0}
+        class:selected={$selection.list[index] === true}
+        class:playing={track.id === $playingId}
+      >
+        <div class="c index">
+          {#if track.id === $playingId}
+            <svg
+              class="playing-icon"
+              xmlns="http://www.w3.org/2000/svg"
+              height="24"
+              viewBox="0 0 24 24"
+              width="24"
+            >
+              <path d="M0 0h24v24H0z" fill="none" />
+              <path
+                d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"
+              />
+            </svg>
+          {:else}
+            {index + 1}
+          {/if}
+        </div>
+        <div class="c name">{track.name}</div>
+        <div class="c playCount">{track.playCount || ''}</div>
+        <div class="c duration">{track.duration ? getDuration(track.duration) : ''}</div>
+        <div class="c artist">{track.artist}</div>
+        <div class="c albumName">{track.albumName || ''}</div>
+        <div class="c comments">{track.comments || ''}</div>
+        <div class="c genre">{track.genre || ''}</div>
+        <div class="c dateAdded">{formatDate(track.dateAdded)}</div>
+        <div class="c year">{track.year || ''}</div>
       </div>
-      <div class="c name">{track.name}</div>
-      <div class="c playCount">{track.playCount || ''}</div>
-      <div class="c duration">{getDuration(track.duration || '')}</div>
-      <div class="c artist">{track.artist}</div>
-      <div class="c albumName">{track.albumName || ''}</div>
-      <div class="c comments">{track.comments || ''}</div>
-      <div class="c genre">{track.genre || ''}</div>
-      <div class="c dateAdded">{formatDate(track.dateAdded)}</div>
-      <div class="c year">{track.year || ''}</div>
-    </div>
+    {/if}
   </VList>
   <div class="drag-line" class:show={dragToIndex !== null} bind:this={dragLine} />
 </div>

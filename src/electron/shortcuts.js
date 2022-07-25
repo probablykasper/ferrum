@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
 const { globalShortcut, dialog, systemPreferences } = require('electron')
 const is = require('./is.js')
 

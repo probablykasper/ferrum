@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
 const { Menu, shell } = require('electron')
 const is = require('./is.js')
 
