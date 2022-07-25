@@ -1,20 +1,21 @@
+use std::collections::HashSet;
+use std::time::Instant;
+
 use crate::data::Data;
 use crate::data_js::get_data;
 use crate::js::{arg_to_bool, arg_to_number, arg_to_number_vector, arg_to_string, nerr};
 use crate::library::{get_track_field_type, TrackField};
 use crate::library_types::{SpecialTrackListName, TrackID, TrackList};
 use crate::sort::sort;
-use crate::{filter, page, UniResult};
+use crate::{filter, UniResult};
 use napi::{CallContext, JsObject, JsString, JsUndefined, JsUnknown, Result as NResult};
 use napi_derive::js_function;
 
 #[js_function(1)]
 pub fn open_playlist(ctx: CallContext) -> NResult<JsUndefined> {
   let data: &mut Data = get_data(&ctx)?;
-  data.open_playlist_id = arg_to_string(&ctx, 0)?;
-  data.open_playlist_track_ids = page::get_track_ids(&data)?;
-  data.page_track_ids = None;
-  match data.library.get_tracklist(&data.open_playlist_id)? {
+  let id = arg_to_string(&ctx, 0)?;
+  match data.library.get_tracklist(&id)? {
     TrackList::Special(_) => {
       sort(data, "dateAdded", true)?;
     }
@@ -23,6 +24,9 @@ pub fn open_playlist(ctx: CallContext) -> NResult<JsUndefined> {
       data.sort_desc = true;
     }
   };
+  data.open_playlist_id = id;
+  data.open_playlist_track_ids = get_track_ids(&data)?;
+  data.page_track_ids = None;
   return ctx.env.get_undefined();
 }
 
@@ -70,27 +74,38 @@ pub fn get_page_track_ids(ctx: CallContext) -> NResult<JsUnknown> {
   return ctx.env.to_js_value(page_track_ids);
 }
 
-pub fn get_track_ids(data: &Data) -> UniResult<Vec<TrackID>> {
-  match data.library.get_tracklist(&data.open_playlist_id)? {
+fn get_tracklist_track_ids(data: &Data, playlist_id: &str) -> UniResult<Vec<TrackID>> {
+  match data.library.get_tracklist(playlist_id)? {
     TrackList::Playlist(playlist) => {
-      let mut ids: Vec<TrackID> = Vec::new();
-      for track_id in &playlist.tracks {
-        ids.push(track_id.to_string());
-      }
-      return Ok(ids);
+      let ids = playlist
+        .tracks
+        .iter()
+        .map(|track_id| track_id.to_string())
+        .collect();
+      Ok(ids)
     }
-    TrackList::Folder(_) => return Err("Cannot get length of folder")?,
+    TrackList::Folder(folder) => {
+      let mut ids: HashSet<TrackID> = HashSet::new();
+      for child in &folder.children {
+        let child_ids = get_tracklist_track_ids(data, &child)?;
+        ids.extend(child_ids);
+      }
+      Ok(ids.into_iter().collect())
+    }
     TrackList::Special(special) => match special.name {
       SpecialTrackListName::Root => {
         let track_keys = data.library.tracks.keys();
-        let mut ids: Vec<TrackID> = Vec::new();
-        for track in track_keys {
-          ids.push(track.to_string());
-        }
-        return Ok(ids);
+        let ids = track_keys.map(|track| track.to_string()).collect();
+        Ok(ids)
       }
     },
-  };
+  }
+}
+pub fn get_track_ids(data: &Data) -> UniResult<Vec<TrackID>> {
+  let now = Instant::now();
+  let ids = get_tracklist_track_ids(data, &data.open_playlist_id)?;
+  println!("Load page tracks: {}ms", now.elapsed().as_millis());
+  Ok(ids)
 }
 
 #[js_function(0)]

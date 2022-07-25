@@ -36,15 +36,18 @@
     <div
       class="item"
       style:padding-left={14 * level + 'px'}
+      class:active={$page.id === childList.id}
       class:show={childList.show}
-      on:click={() => (childList.show = !childList.show)}
+      on:mousedown={() => open(childList.id)}
       on:contextmenu={() => folderContextMenu(childList.id)}
     >
       <svg
         class="arrow"
+        on:mousedown|stopPropagation
+        on:click={() => (childList.show = !childList.show)}
         xmlns="http://www.w3.org/2000/svg"
-        width="6"
-        height="6"
+        width="24"
+        height="24"
         viewBox="0 0 24 24"
       >
         <path d="M21 12l-18 12v-24z" />
@@ -111,6 +114,8 @@
   .arrow
     margin-left: 2px
     padding: 6px
+    width: 6px
+    height: 6px
     flex-shrink: 0
     fill: white
     transition: 120ms transform cubic-bezier(0, 0.02, 0.2, 1)

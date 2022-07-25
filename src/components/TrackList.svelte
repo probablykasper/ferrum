@@ -262,7 +262,12 @@
   }
   let dragToIndex: null | number = null
   function onDragOver(e: DragEvent, index: number) {
-    if (!$page.sort_desc || $page.sort_key !== 'index' || $filter) {
+    if (
+      !$page.sort_desc ||
+      $page.sort_key !== 'index' ||
+      $filter ||
+      $page.tracklist.type !== 'playlist'
+    ) {
       dragToIndex = null
       return
     }
@@ -328,7 +333,7 @@
     <h3 class="title">
       {#if $page.tracklist.id === 'root'}
         Songs
-      {:else if $page.tracklist.type === 'playlist'}
+      {:else if $page.tracklist.type !== 'special'}
         {$page.tracklist.name}
       {/if}
     </h3>
