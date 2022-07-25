@@ -43,8 +43,8 @@
       <svg
         class="arrow"
         xmlns="http://www.w3.org/2000/svg"
-        width="24"
-        height="24"
+        width="6"
+        height="6"
         viewBox="0 0 24 24"
       >
         <path d="M21 12l-18 12v-24z" />
@@ -108,15 +108,14 @@
     display: none
     &.show
       display: block
-  .show > svg.arrow
-    transform: rotate(90deg)
   .arrow
     margin-left: 2px
     padding: 6px
-    width: 6px
-    height: 6px
     flex-shrink: 0
     fill: white
+    transition: 120ms transform cubic-bezier(0, 0.02, 0.2, 1)
+  .show > svg.arrow
+    transform: rotate(90deg)
   .text
     overflow: hidden
     text-overflow: ellipsis
