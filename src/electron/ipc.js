@@ -75,6 +75,10 @@ ipcMain.handle('showPlaylistMenu', (_e, _list) => {
         label: 'New Playlist',
         click: () => resolve('New Playlist'),
       },
+      {
+        label: 'New Folder',
+        click: () => resolve('New Playlist Folder'),
+      },
     ])
     menu.once('will-close', () => resolve())
     menu.popup()

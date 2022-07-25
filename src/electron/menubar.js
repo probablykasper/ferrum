@@ -31,6 +31,12 @@ module.exports.initMenuBar = (app, mainWindow) => {
             mainWindow.webContents.send('newPlaylist')
           },
         },
+        {
+          label: 'New Playlist Folder',
+          click: () => {
+            mainWindow.webContents.send('newPlaylistFolder')
+          },
+        },
         { type: 'separator' },
         {
           label: 'Import...',

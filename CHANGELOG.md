@@ -1,6 +1,7 @@
 # Changelog
 
 ## Next
+- Add support for creating playlist folders
 - Add support for showing and removing specific pictures for tracks with multiple pictures
 - Add support for .opus files with multiple pictures
 - Trap focus in modals

@@ -135,13 +135,13 @@ export function deleteTracksInOpen(indexes: number[]) {
   page.refresh()
   methods.save()
 }
-export function newPlaylist(
-  name: string,
-  description: string,
-  isFolder: boolean,
+export type PlaylistInfo = {
   parentId: string
-) {
-  call((data) => data.new_playlist(name, description, isFolder, parentId))
+  name: string
+  description: string
+}
+export function newPlaylist(info: PlaylistInfo, isFolder: boolean) {
+  call((data) => data.new_playlist(info.name, info.description, isFolder, info.parentId))
   methods.save()
   trackLists.refresh()
 }

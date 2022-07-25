@@ -3,7 +3,7 @@
   import Filter from './Filter.svelte'
   import { isMac, trackLists } from '../lib/data'
   import { ipcRenderer } from '../lib/window'
-  import { visible as playlistModalVisible } from './PlaylistInfo.svelte'
+  import { open as openNewPlaylistModal } from './PlaylistInfo.svelte'
   const special = {
     children: ['root'],
   }
@@ -19,9 +19,12 @@
   }
   async function onContextMenu() {
     const clickedId = await ipcRenderer.invoke('showPlaylistMenu')
-    if (clickedId === null) return
-    if (clickedId === 'New Playlist') {
-      playlistModalVisible.open('root')
+    if (clickedId === null) {
+      return
+    } else if (clickedId === 'New Playlist') {
+      openNewPlaylistModal('root', false)
+    } else if (clickedId === 'New Playlist Folder') {
+      openNewPlaylistModal('root', true)
     } else {
       console.error('Unknown contextMenu ID', clickedId)
     }

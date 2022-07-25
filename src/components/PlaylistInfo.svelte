@@ -2,80 +2,89 @@
   import { writable } from 'svelte/store'
   import { checkShortcut, focus, focusLast } from '../lib/helpers'
   import { visibleModalsCount } from '../lib/modals'
+  import { newPlaylist, PlaylistInfo } from '../lib/data'
 
-  const parentId = writable('root')
-  export const visible = (() => {
-    const store = writable(false)
-    return {
-      subscribe: store.subscribe,
-      open(newParentId: string) {
-        if (visibleModalsCount.get() == 0) {
-          parentId.set(newParentId)
-          store.set(true)
-        }
-      },
-      close() {
-        store.set(false)
-      },
+  const visible = writable(false)
+  const createFolder = writable(false)
+  const info = writable({
+    parentId: 'root',
+    name: '',
+    description: '',
+  } as PlaylistInfo)
+  export function open(parentId: string, newIsFolder: boolean) {
+    if (visibleModalsCount.get() == 0) {
+      info.set({
+        parentId,
+        name: '',
+        description: '',
+      })
+      createFolder.set(newIsFolder)
+      visible.set(true)
     }
-  })()
-  visible.subscribe((newValue) => {
-    if (newValue === false) {
-      focusLast()
-    }
-  })
+  }
+  function close() {
+    visible.set(false)
+    focusLast()
+  }
 </script>
 
 <script lang="ts">
   import { onDestroy } from 'svelte'
   import { ipcRenderer } from '../lib/window'
-  import { newPlaylist } from '../lib/data'
   import Modal from './Modal.svelte'
   import Button from './Button.svelte'
 
-  let title = ''
-  let description = ''
   function rows(value: string) {
     const matches = value.match(/\n/g) || []
     return Math.max(3, Math.min(matches.length + 1, 10))
   }
-  $: if ($visible) {
-    title = ''
-    description = ''
-  }
 
   function save() {
-    newPlaylist(title, description, false, $parentId)
-    visible.close()
+    newPlaylist($info, $createFolder)
+    close()
   }
+
   function keydown(e: KeyboardEvent) {
     if (checkShortcut(e, 'escape')) {
       if (document.activeElement instanceof HTMLElement) {
-        visible.close()
+        close()
       }
     }
   }
 
-  function open() {
-    visible.open('root')
+  function newPlaylistHandler() {
+    open('root', false)
   }
-  ipcRenderer.on('newPlaylist', open)
+  function newPlaylistFolderHandler() {
+    open('root', true)
+  }
+  ipcRenderer.on('newPlaylist', newPlaylistHandler)
+  ipcRenderer.on('newPlaylistFolder', newPlaylistFolderHandler)
   onDestroy(() => {
-    ipcRenderer.off('newPlaylist', open)
+    ipcRenderer.off('newPlaylist', newPlaylistHandler)
+    ipcRenderer.off('newPlaylistFolder', newPlaylistFolderHandler)
   })
 </script>
 
 <svelte:window on:keydown={keydown} />
 
-<Modal visible={$visible} close={() => visible.close()}>
+<Modal visible={$visible} {close}>
   <form class="modal" on:submit|preventDefault={save}>
-    <h3>New Playlist</h3>
+    {#if $createFolder}
+      <h3>New Playlist Folder</h3>
+    {:else}
+      <h3>New Playlist</h3>
+    {/if}
     <div class="spacer" />
-    <input type="text" bind:value={title} use:focus placeholder="Title" />
-    <textarea rows={rows(description)} bind:value={description} placeholder="Description" />
+    <input type="text" bind:value={$info.name} use:focus placeholder="Title" />
+    <textarea
+      rows={rows($info.description)}
+      bind:value={$info.description}
+      placeholder="Description"
+    />
     <div class="spacer" />
     <div class="bottom">
-      <Button secondary on:click={() => visible.close()}>Cancel</Button>
+      <Button secondary on:click={close}>Cancel</Button>
       <Button submit>Save</Button>
     </div>
   </form>

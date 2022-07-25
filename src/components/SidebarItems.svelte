@@ -2,9 +2,10 @@
   import type { TrackList } from '../lib/libraryTypes'
   import { trackLists, page } from '../lib/data'
   import { ipcRenderer } from '../lib/window'
-  import { visible as playlistModalVisible } from './PlaylistInfo.svelte'
+  import { open as openNewPlaylistModal } from './PlaylistInfo.svelte'
 
   export let trackList: { children: string[] }
+  export let level = 0
   let childLists: TrackList[] = []
   $: {
     childLists = []
@@ -21,7 +22,9 @@
     const clickedId = await ipcRenderer.invoke('showPlaylistMenu')
     if (clickedId === null) return
     if (clickedId === 'New Playlist') {
-      playlistModalVisible.open(folderId)
+      openNewPlaylistModal(folderId, false)
+    } else if (clickedId === 'New Playlist Folder') {
+      openNewPlaylistModal(folderId, true)
     } else {
       console.error('Unknown contextMenu ID', clickedId)
     }
@@ -32,6 +35,7 @@
   {#if childList.type === 'folder'}
     <div
       class="item"
+      style:padding-left={14 * level + 'px'}
       class:show={childList.show}
       on:click={() => (childList.show = !childList.show)}
       on:contextmenu={() => folderContextMenu(childList.id)}
@@ -48,7 +52,7 @@
       <div class="text">{childList.name}</div>
     </div>
     <div class="sub" class:show={childList.show}>
-      <svelte:self trackList={childList} />
+      <svelte:self trackList={childList} level={level + 1} />
     </div>
   {:else if childList.type === 'playlist'}
     <div
@@ -57,11 +61,12 @@
       class:active={$page.id === childList.id}
     >
       <div class="arrow" />
-      <div class="text">{childList.name}</div>
+      <div class="text" style:padding-left={14 * level + 'px'}>{childList.name}</div>
     </div>
   {:else}
     <div
       class="item"
+      style:padding-left={14 * level + 'px'}
       on:mousedown={() => open(childList.id)}
       class:active={$page.id === childList.id}
     >
@@ -100,7 +105,6 @@
     margin-right: 10px
     box-sizing: border-box
   .sub
-    margin-left: calc(2px + 6px*2)
     display: none
     &.show
       display: block
