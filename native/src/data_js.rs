@@ -14,7 +14,7 @@ pub fn get_data<'a>(ctx: &'a CallContext) -> NResult<&'a mut Data> {
 pub fn load_data_js(ctx: CallContext) -> NResult<JsObject> {
   let is_dev = arg_to_bool(&ctx, 0)?;
 
-  let data: Data = load_data(&is_dev)?;
+  let data: Data = load_data(is_dev)?;
 
   let mut new_this: JsObject = ctx.env.create_object()?;
   ctx.env.wrap(&mut new_this, data)?;
@@ -27,8 +27,8 @@ impl Task for LoadData {
   type Output = Data;
   type JsValue = JsObject;
   fn compute(&mut self) -> NResult<Self::Output> {
-    let is_dev = &self.0;
-    let data: Data = load_data(&is_dev)?;
+    let is_dev = self.0;
+    let data: Data = load_data(is_dev)?;
     return Ok(data);
   }
   fn resolve(&mut self, env: Env, output: Self::Output) -> NResult<Self::JsValue> {
@@ -42,7 +42,7 @@ impl Task for LoadData {
 pub fn load_data_async(ctx: CallContext) -> NResult<JsObject> {
   let is_dev = arg_to_bool(&ctx, 0)?;
 
-  let data: Data = load_data(&is_dev)?;
+  let data: Data = load_data(is_dev)?;
 
   let mut new_this: JsObject = ctx.env.create_object()?;
   ctx.env.wrap(&mut new_this, data)?;

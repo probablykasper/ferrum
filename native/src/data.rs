@@ -5,6 +5,7 @@ use crate::tracks::Tag;
 use crate::{page, UniResult};
 use atomicwrites::{AllowOverwrite, AtomicFile};
 use serde::Serialize;
+use std::env;
 use std::io::{Error, ErrorKind, Write};
 use std::time::Instant;
 
@@ -58,23 +59,27 @@ impl Data {
   }
 }
 
-pub fn load_data(is_dev: &bool) -> UniResult<Data> {
-  let app_name = if *is_dev { "Ferrum Dev" } else { "Ferrum" };
-
-  let music_dir = dirs::audio_dir().ok_or("Music folder not found")?;
-  let library_dir = music_dir.join(app_name);
-  let library_json_path = library_dir.clone().join("Library.json");
-
-  let paths = Paths {
-    library_dir: library_dir.clone(),
-    tracks_dir: library_dir.join("Tracks"),
-    library_json: library_json_path,
+pub fn load_data(is_dev: bool) -> UniResult<Data> {
+  let paths = if is_dev {
+    let appdata_dir = env::current_dir().unwrap().join("appdata");
+    let library_dir = appdata_dir.join("Library");
+    Paths {
+      library_dir: library_dir.clone(),
+      tracks_dir: library_dir.join("Tracks"),
+      library_json: library_dir.join("Library.json"),
+  } else {
+    let music_dir = dirs::audio_dir().ok_or("Music folder not found")?;
+    let library_dir = music_dir.join("Ferrum");
+    Paths {
+      library_dir: library_dir.clone(),
+      tracks_dir: library_dir.join("Tracks"),
+      library_json: library_dir.join("Library.json"),
   };
 
   let loaded_library = load_library(&paths);
 
   let mut data = Data {
-    is_dev: *is_dev,
+    is_dev: is_dev,
     paths: paths,
     library: loaded_library,
     open_playlist_id: "root".to_string(),

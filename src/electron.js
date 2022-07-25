@@ -30,8 +30,13 @@ process.on('unhandledRejection', (error) => {
 })
 
 const appData = app.getPath('appData')
-const electronDataPath = path.join(appData, app.name, 'Electron Data')
-app.setPath('userData', electronDataPath)
+if (is.dev) {
+  const electronDataPath = path.join(appData, 'space.kasper.ferrum.dev', 'Electron Data')
+  app.setPath('userData', electronDataPath)
+} else {
+  const electronDataPath = path.join(appData, 'space.kasper.ferrum', 'Electron Data')
+  app.setPath('userData', electronDataPath)
+}
 
 let quitting = false
 

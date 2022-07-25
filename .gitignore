@@ -1,6 +1,7 @@
-/node_modules/
+/node_modules
 /build/app
 /build/web
 /build/addon.node
-/native/target/
+/native/target
 /native/artifacts.json
+/appdata

@@ -7,6 +7,7 @@
 - Support showing and removing specific pictures for tracks with multiple pictures
 - Update button design
 - Trap focus in modals
+- Store electron data in new `space.kasper.ferrum` app data folder
 
 ## 0.12.0 - 2022 Jul 4
 - Add support for .opus files
