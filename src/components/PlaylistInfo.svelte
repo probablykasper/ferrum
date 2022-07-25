@@ -85,7 +85,7 @@
     <div class="spacer" />
     <div class="bottom">
       <Button secondary on:click={close}>Cancel</Button>
-      <Button submit>Save</Button>
+      <Button type="submit">Save</Button>
     </div>
   </form>
 </Modal>

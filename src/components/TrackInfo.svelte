@@ -332,7 +332,7 @@
     </div>
     <div class="spacer" />
     <div class="bottom">
-      <Button secondary on:click={cancel}>Cancel</Button><Button submit>Save</Button>
+      <Button secondary on:click={cancel}>Cancel</Button><Button type="submit">Save</Button>
     </div>
   </form>
 </Modal>
