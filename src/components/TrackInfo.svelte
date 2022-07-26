@@ -53,8 +53,36 @@
       comments = toString(track.comments || '')
     }
   })
-  function save() {
-    if ($id) {
+  function isEdited() {
+    if (!$track) {
+      return false
+    }
+    const isUnedited =
+      name === $track.name &&
+      artist === $track.artist &&
+      albumName === ($track.albumName || '') &&
+      albumArtist === ($track.albumArtist || '') &&
+      composer === ($track.composer || '') &&
+      grouping === ($track.grouping || '') &&
+      genre === ($track.genre || '') &&
+      year === toString($track.year || '') &&
+      trackNum === toString($track.trackNum || '') &&
+      trackCount === toString($track.trackCount || '') &&
+      discNum === toString($track.discNum || '') &&
+      discCount === toString($track.discCount || '') &&
+      bpm === toString($track.bpm || '') &&
+      compilation === ($track.compilation || false) &&
+      rating === ($track.rating || 0) &&
+      liked === ($track.liked || false) &&
+      playCount === ($track.playCount || 0) &&
+      comments === toString($track.comments || '')
+    return !isUnedited
+  }
+  function save(hideAfter = true) {
+    if ($id === null) {
+      return
+    }
+    if (isEdited()) {
       methods.updateTrackInfo($id, {
         name,
         artist,
@@ -75,6 +103,8 @@
         // playCount,
         comments,
       })
+    }
+    if (hideAfter) {
       visible.set(false)
       focusLast()
     }
@@ -92,8 +122,10 @@
         cancel()
       }
     } else if (checkShortcut(e, '[', { cmdOrCtrl: true })) {
+      save(false)
       openPrev()
     } else if (checkShortcut(e, ']', { cmdOrCtrl: true })) {
+      save(false)
       openNext()
     }
   }
@@ -186,7 +218,7 @@
 <svelte:window on:keydown={keydown} />
 <svelte:body on:keydown|self={keydownNoneSelected} />
 <Modal bind:visible={$visible} close={cancel}>
-  <form class="modal" on:submit|preventDefault={save}>
+  <form class="modal" on:submit|preventDefault={() => save()}>
     <div class="header" class:has-subtitle={$image !== null && $image.total_images >= 2}>
       <div class="cover-area" class:droppable tabindex="0" on:keydown={coverKeydown}>
         <div
