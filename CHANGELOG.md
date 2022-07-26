@@ -1,6 +1,6 @@
 # Changelog
 
-## Next
+## 0.13.0 - 2022 Jul 26
 - Ability to create playlist folders
 - Support moving playlists between folders
 - You can now open a playlist folder and see all it's tracks
