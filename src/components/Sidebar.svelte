@@ -1,14 +1,17 @@
 <script lang="ts">
-  import SidebarItems, { hideFolder, showFolder } from './SidebarItems.svelte'
+  import SidebarItems, { hideFolder, showFolder, SidebarItemHandle } from './SidebarItems.svelte'
   import Filter from './Filter.svelte'
   import { isMac, trackLists, page } from '../lib/data'
   import { ipcRenderer } from '../lib/window'
   import { open as openNewPlaylistModal } from './PlaylistInfo.svelte'
+  import { writable } from 'svelte/store'
+  import { setContext } from 'svelte'
 
   const special = {
     children: ['root'],
   }
   let viewport: HTMLDivElement
+  const itemHandle = setContext('itemHandle', writable(null as SidebarItemHandle | null))
 
   function handleKeydown(e: KeyboardEvent) {
     const selectedList = $trackLists[$page.tracklist.id]
@@ -25,6 +28,10 @@
       hideFolder(selectedList.id)
     } else if (e.key == 'ArrowRight' && selectedList.type === 'folder') {
       showFolder(selectedList.id)
+    } else if (e.key == 'ArrowUp') {
+      $itemHandle?.arrowUpDown('ArrowUp')
+    } else if (e.key == 'ArrowDown') {
+      $itemHandle?.arrowUpDown('ArrowDown')
     } else {
       prevent = false
     }

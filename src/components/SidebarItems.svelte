@@ -1,6 +1,10 @@
 <script lang="ts" context="module">
   import { trackLists, page, methods } from '../lib/data'
 
+  export type SidebarItemHandle = {
+    arrowUpDown(key: 'ArrowUp' | 'ArrowDown'): void
+  }
+
   let shownFolders = writable(new Set(methods.shownPlaylistFolders()))
   export function showFolder(id: string) {
     shownFolders.update((folders) => {
@@ -22,9 +26,9 @@
   import type { TrackList } from '../lib/libraryTypes'
   import { ipcRenderer } from '../lib/window'
   import { open as openNewPlaylistModal } from './PlaylistInfo.svelte'
-  import { writable } from 'svelte/store'
-  import { checkShortcut } from '../lib/helpers'
+  import { Writable, writable } from 'svelte/store'
   import { createEventDispatcher, SvelteComponent } from 'svelte'
+  import { getContext } from 'svelte'
 
   export let trackList: { children: string[] }
   export let level = 0
@@ -65,9 +69,9 @@
     }
   }
   export function selectLast() {
-    const lastList = childLists[childLists.length - 1]
-    console.log(lastList)
-    open(lastList.id)
+    if (childLists[childLists.length - 1]) {
+      open(childLists[childLists.length - 1].id)
+    }
   }
   async function selectUp(i: number) {
     const prevId = trackList.children[i - 1] || null
@@ -88,26 +92,23 @@
       dispatch('selectDown')
     }
   }
-</script>
 
-<svelte:body
-  on:keydown={(e) => {
-    if (checkShortcut(e, 'ArrowUp')) {
-      const index = trackList.children.findIndex((id) => id === $page.tracklist.id)
-      if (index >= 0) {
-        selectUp(index)
-        e.stopPropagation()
-        e.stopImmediatePropagation()
-      }
-    } else if (checkShortcut(e, 'ArrowDown')) {
-      const index = trackList.children.findIndex((id) => id === $page.tracklist.id)
-      if (index >= 0) {
-        selectDown(index)
-        e.stopPropagation()
-        e.stopImmediatePropagation()
-      }
+  export function arrowUpDown(key: 'ArrowUp' | 'ArrowDown') {
+    const index = trackList.children.findIndex((id) => id === $page.tracklist.id)
+    if (index < 0) {
+      return
     }
-  }} />
+    if (key === 'ArrowUp') {
+      selectUp(index)
+    } else {
+      selectDown(index)
+    }
+  }
+  $: if (trackList.children.includes($page.id)) {
+    const itemHandle = getContext<Writable<SidebarItemHandle | null>>('itemHandle')
+    itemHandle.set({ arrowUpDown })
+  }
+</script>
 
 {#each childLists as childList, i}
   {#if childList.type === 'folder'}
