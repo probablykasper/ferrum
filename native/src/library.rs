@@ -10,11 +10,13 @@ pub struct Paths {
   pub library_dir: PathBuf,
   pub tracks_dir: PathBuf,
   pub library_json: PathBuf,
+  pub local_data_dir: PathBuf,
 }
 impl Paths {
   fn ensure_dirs_exists(&self) -> Result<(), Error> {
     create_dir_all(&self.library_dir)?;
     create_dir_all(&self.tracks_dir)?;
+    create_dir_all(&self.local_data_dir)?;
     return Ok(());
   }
 }

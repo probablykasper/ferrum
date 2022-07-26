@@ -1,7 +1,7 @@
 <script lang="ts">
-  import SidebarItems from './SidebarItems.svelte'
+  import SidebarItems, { hideFolder, showFolder } from './SidebarItems.svelte'
   import Filter from './Filter.svelte'
-  import { isMac, trackLists } from '../lib/data'
+  import { isMac, trackLists, page } from '../lib/data'
   import { ipcRenderer } from '../lib/window'
   import { open as openNewPlaylistModal } from './PlaylistInfo.svelte'
   const special = {
@@ -9,13 +9,26 @@
   }
   let viewport: HTMLDivElement
   function handleKeydown(e: KeyboardEvent) {
+    const selectedList = $trackLists[$page.tracklist.id]
     let prevent = true
-    if (e.key == 'Home') viewport.scrollTop = 0
-    else if (e.key == 'End') viewport.scrollTop = viewport.scrollHeight
-    else if (e.key == 'PageUp') viewport.scrollTop -= viewport.clientHeight
-    else if (e.key == 'PageDown') viewport.scrollTop += viewport.clientHeight
-    else prevent = false
-    if (prevent) e.preventDefault()
+    if (e.key == 'Home') {
+      viewport.scrollTop = 0
+    } else if (e.key == 'End') {
+      viewport.scrollTop = viewport.scrollHeight
+    } else if (e.key == 'PageUp') {
+      viewport.scrollTop -= viewport.clientHeight
+    } else if (e.key == 'PageDown') {
+      viewport.scrollTop += viewport.clientHeight
+    } else if (e.key == 'ArrowLeft' && selectedList.type === 'folder') {
+      hideFolder(selectedList.id)
+    } else if (e.key == 'ArrowRight' && selectedList.type === 'folder') {
+      showFolder(selectedList.id)
+    } else {
+      prevent = false
+    }
+    if (prevent) {
+      e.preventDefault()
+    }
   }
   async function onContextMenu() {
     const clickedId = await ipcRenderer.invoke('showPlaylistMenu')

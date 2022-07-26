@@ -63,7 +63,6 @@ impl Library {
     Folder {
       id: self.generate_id(),
       name,
-      show: false,
       description,
       liked: None,
       disliked: None,
@@ -253,8 +252,6 @@ pub struct Playlist {
 pub struct Folder {
   pub id: TrackListID,
   pub name: String,
-  #[serde(default)]
-  pub show: bool,
   #[serde(default, skip_serializing_if = "Option::is_none")]
   pub description: Option<String>,
   #[serde(default, skip_serializing_if = "Option::is_none")]

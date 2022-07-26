@@ -1,8 +1,29 @@
+<script lang="ts" context="module">
+  import { trackLists, page, methods } from '../lib/data'
+
+  let shownFolders = writable(new Set(methods.shownPlaylistFolders()))
+  export function showFolder(id: string) {
+    shownFolders.update((folders) => {
+      folders.add(id)
+      return folders
+    })
+    methods.viewFolderSetShow(id, true)
+  }
+  export function hideFolder(id: string) {
+    shownFolders.update((folders) => {
+      folders.delete(id)
+      return folders
+    })
+    methods.viewFolderSetShow(id, false)
+  }
+</script>
+
 <script lang="ts">
   import type { TrackList } from '../lib/libraryTypes'
-  import { trackLists, page } from '../lib/data'
   import { ipcRenderer } from '../lib/window'
   import { open as openNewPlaylistModal } from './PlaylistInfo.svelte'
+  import { writable } from 'svelte/store'
+  import { checkShortcut } from '../lib/helpers'
 
   export let trackList: { children: string[] }
   export let level = 0
@@ -31,20 +52,33 @@
   }
 </script>
 
+<svelte:body
+  on:keydown={(e) => {
+    if (checkShortcut(e, 'ArrowUp')) {
+      console.log('up')
+    }
+  }} />
+
 {#each childLists as childList}
   {#if childList.type === 'folder'}
     <div
       class="item"
       style:padding-left={14 * level + 'px'}
       class:active={$page.id === childList.id}
-      class:show={childList.show}
+      class:show={$shownFolders.has(childList.id)}
       on:mousedown={() => open(childList.id)}
       on:contextmenu={() => folderContextMenu(childList.id)}
     >
       <svg
         class="arrow"
         on:mousedown|stopPropagation
-        on:click={() => (childList.show = !childList.show)}
+        on:click={() => {
+          if ($shownFolders.has(childList.id)) {
+            hideFolder(childList.id)
+          } else {
+            showFolder(childList.id)
+          }
+        }}
         xmlns="http://www.w3.org/2000/svg"
         width="24"
         height="24"
@@ -54,7 +88,7 @@
       </svg>
       <div class="text">{childList.name}</div>
     </div>
-    <div class="sub" class:show={childList.show}>
+    <div class="sub" class:show={$shownFolders.has(childList.id)}>
       <svelte:self trackList={childList} level={level + 1} />
     </div>
   {:else if childList.type === 'playlist'}

@@ -1,5 +1,6 @@
 use crate::library::{load_library, Paths};
 use crate::library_types::{Library, TrackID, TrackListID};
+use crate::sidebar_view::SidebarView;
 use crate::sort::sort;
 use crate::tracks::Tag;
 use crate::{page, UniResult};
@@ -13,6 +14,7 @@ pub struct Data {
   pub paths: Paths,
   pub is_dev: bool,
   pub library: Library,
+  pub view_cache: SidebarView,
   /// All tracks on the current page, even if they are filtered out
   pub open_playlist_track_ids: Vec<TrackID>,
   /// The visible tracks on the current page
@@ -67,6 +69,10 @@ pub fn load_data(is_dev: bool) -> UniResult<Data> {
       library_dir: library_dir.clone(),
       tracks_dir: library_dir.join("Tracks"),
       library_json: library_dir.join("Library.json"),
+      local_data_dir: dirs::data_local_dir()
+        .ok_or("Local data folder not found")?
+        .join("space.kasper.ferrum.dev"),
+    }
   } else {
     let music_dir = dirs::audio_dir().ok_or("Music folder not found")?;
     let library_dir = music_dir.join("Ferrum");
@@ -74,14 +80,20 @@ pub fn load_data(is_dev: bool) -> UniResult<Data> {
       library_dir: library_dir.clone(),
       tracks_dir: library_dir.join("Tracks"),
       library_json: library_dir.join("Library.json"),
+      local_data_dir: dirs::data_local_dir()
+        .ok_or("Local data folder not found")?
+        .join("space.kasper.ferrum"),
+    }
   };
 
   let loaded_library = load_library(&paths);
+  let loaded_cache = SidebarView::load(&paths);
 
   let mut data = Data {
-    is_dev: is_dev,
-    paths: paths,
+    is_dev,
+    paths,
     library: loaded_library,
+    view_cache: loaded_cache,
     open_playlist_id: "root".to_string(),
     open_playlist_track_ids: vec![],
     page_track_ids: None,

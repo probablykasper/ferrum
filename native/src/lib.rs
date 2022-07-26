@@ -1,3 +1,7 @@
+use serde::de::DeserializeOwned;
+use std::fs::File;
+use std::io::BufReader;
+use std::path::PathBuf;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 macro_rules! nerr {
@@ -22,6 +26,7 @@ mod data_js;
 mod filter;
 mod page;
 mod playlists;
+mod sidebar_view;
 mod tracks;
 
 fn get_now_timestamp() -> i64 {
@@ -75,4 +80,20 @@ impl From<napi::Error> for UniError {
       message: n_err.reason,
     }
   }
+}
+
+fn path_to_json<J>(path: PathBuf) -> UniResult<J>
+where
+  J: DeserializeOwned,
+{
+  let file = match File::open(path) {
+    Ok(f) => f,
+    Err(err) => throw!("Error opening file: {}", err),
+  };
+  let reader = BufReader::new(file);
+  let json = match serde_json::from_reader(reader) {
+    Ok(json) => json,
+    Err(err) => throw!("Error parsing file: {:?}", err),
+  };
+  Ok(json)
 }

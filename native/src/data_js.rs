@@ -1,5 +1,6 @@
 use crate::data::{load_data, Data};
 use crate::js::arg_to_bool;
+use crate::sidebar_view;
 use crate::{filter, page, playlists, tracks};
 use napi::{CallContext, Env, JsObject, JsUndefined, JsUnknown, Result as NResult, Task};
 use napi_derive::js_function;
@@ -95,6 +96,12 @@ fn init_data_instance(mut exports: JsObject) -> NResult<JsObject> {
   exports.create_named_method("get_page_info", page::get_page_info)?;
   exports.create_named_method("sort", page::sort_js)?;
   exports.create_named_method("move_tracks", page::move_tracks)?;
+
+  exports.create_named_method(
+    "shown_playlist_folders",
+    sidebar_view::shown_playlist_folders,
+  )?;
+  exports.create_named_method("view_folder_set_show", sidebar_view::view_folder_set_show)?;
 
   Ok(exports)
 }

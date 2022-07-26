@@ -56,6 +56,9 @@ export type Data = {
   get_page_info: () => PageInfo
   sort: (key: string, keep_filter: boolean) => void
   move_tracks: (indexes: number[], to_index: number) => { from: number; to: number }
+
+  shown_playlist_folders: () => string[]
+  view_folder_set_show: (id: string, show: boolean) => void
 }
 
 function getErrorMessage(err: unknown): string {
@@ -213,6 +216,12 @@ export const methods = {
   },
   removeImage: (index: number) => {
     return call((data) => data.remove_image(index))
+  },
+  shownPlaylistFolders: () => {
+    return call((data) => data.shown_playlist_folders())
+  },
+  viewFolderSetShow: (id: string, show: boolean) => {
+    return call((data) => data.view_folder_set_show(id, show))
   },
 }
 

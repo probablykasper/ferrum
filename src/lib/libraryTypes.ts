@@ -103,7 +103,6 @@ export type Playlist = {
 export type Folder = {
   type: 'folder'
   id: TrackListID
-  show: boolean
   name: string
   description?: string
   liked?: string
