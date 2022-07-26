@@ -31,14 +31,15 @@
     box-sizing: border-box
     color: inherit
     background-color: hsla(var(--hue), 68%, 90%, 0.08)
-    border-radius: 3px
     outline: none
-    border: 2px solid transparent
+    border: 1px solid rgba(255, 255, 255, 0.15)
     &:focus
-      background-color: hsla(var(--hue), 68%, 90%, 0.1)
+      background-color: hsla(var(--hue), 65%, 60%, 0.2)
+      outline: 2px solid var(--accent-1)
+      outline-offset: -1px
     &.on:focus
-      border: 2px solid hsla(var(--hue), 60%, 50%, 1)
+      outline: 2px solid hsl(160, 60%, 40%)
     &.on
-      border: 2px solid hsl(var(--hue), 15%, 35%)
-      background-color: hsla(var(--hue), 68%, 90%, 0.1)
+      background-color: hsla(160, 65%, 60%, 0.15)
+      border: 1px solid hsl(160, 50%, 60%, 0.2)
 </style>

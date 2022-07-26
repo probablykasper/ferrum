@@ -25,6 +25,7 @@
   import { ipcRenderer } from '../lib/window'
   import type { TrackID, Special, Track } from '../lib/libraryTypes'
   import { onDestroy, onMount } from 'svelte'
+  import { dragged } from '../lib/drag-drop'
 
   export async function showTrackMenu(ids: TrackID[], indexes: number[]) {
     const trackLists = $trackListsStore
@@ -253,8 +254,10 @@
       } else {
         dragElDiv.innerText = indexes.length + ' items'
       }
+      dragged.tracks.indexes = indexes
+      dragged.tracks.ids = indexes.map((i) => page.getTrackId(i))
       e.dataTransfer.setDragImage(dragEl, 0, 0)
-      e.dataTransfer.setData('ferrumtracks', '')
+      e.dataTransfer.setData('ferrum.tracks', '')
     }
   }
   function globalDragOverHandler(e: DragEvent) {
@@ -275,7 +278,7 @@
       dragging &&
       e.currentTarget &&
       e.dataTransfer &&
-      e.dataTransfer.types[0] === 'ferrumtracks'
+      e.dataTransfer.types[0] === 'ferrum.tracks'
     ) {
       const rowEl = e.currentTarget as HTMLDivElement
       const dim = rowEl.getBoundingClientRect()

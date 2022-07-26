@@ -1,5 +1,5 @@
 <script lang="ts" context="module">
-  import { trackLists, page, methods } from '../lib/data'
+  import { trackLists, page, methods, addTracksToPlaylist } from '../lib/data'
 
   export type SidebarItemHandle = {
     arrowUpDown(key: 'ArrowUp' | 'ArrowDown'): void
@@ -29,7 +29,9 @@
   import { Writable, writable } from 'svelte/store'
   import { createEventDispatcher, SvelteComponent } from 'svelte'
   import { getContext } from 'svelte'
+  import { dragged } from '../lib/drag-drop'
 
+  export let show = true
   export let trackList: { children: string[] }
   export let level = 0
   let childLists: TrackList[] = []
@@ -108,40 +110,43 @@
     const itemHandle = getContext<Writable<SidebarItemHandle | null>>('itemHandle')
     itemHandle.set({ arrowUpDown })
   }
+
+  let dragTrackOntoIndex = null as number | null
 </script>
 
-{#each childLists as childList, i}
-  {#if childList.type === 'folder'}
-    <div
-      class="item"
-      style:padding-left={14 * level + 'px'}
-      class:active={$page.id === childList.id}
-      class:show={$shownFolders.has(childList.id)}
-      on:mousedown={() => open(childList.id)}
-      on:contextmenu={() => folderContextMenu(childList.id)}
-    >
-      <svg
-        class="arrow"
-        on:mousedown|stopPropagation
-        on:click={() => {
-          if ($shownFolders.has(childList.id)) {
-            hideFolder(childList.id)
-          } else {
-            showFolder(childList.id)
-          }
-        }}
-        xmlns="http://www.w3.org/2000/svg"
-        width="24"
-        height="24"
-        viewBox="0 0 24 24"
+<div class="sub" class:show>
+  {#each childLists as childList, i}
+    {#if childList.type === 'folder'}
+      <div
+        class="item"
+        style:padding-left={14 * level + 'px'}
+        class:active={$page.id === childList.id}
+        class:show={$shownFolders.has(childList.id)}
+        on:mousedown={() => open(childList.id)}
+        on:contextmenu={() => folderContextMenu(childList.id)}
       >
-        <path d="M21 12l-18 12v-24z" />
-      </svg>
-      <div class="text">{childList.name}</div>
-    </div>
-    <div class="sub" class:show={$shownFolders.has(childList.id)}>
+        <svg
+          class="arrow"
+          on:mousedown|stopPropagation
+          on:click={() => {
+            if ($shownFolders.has(childList.id)) {
+              hideFolder(childList.id)
+            } else {
+              showFolder(childList.id)
+            }
+          }}
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+        >
+          <path d="M21 12l-18 12v-24z" />
+        </svg>
+        <div class="text">{childList.name}</div>
+      </div>
       <svelte:self
         bind:this={itemChildren[i]}
+        show={$shownFolders.has(childList.id)}
         trackList={childList}
         level={level + 1}
         on:selectUp={() => {
@@ -155,66 +160,87 @@
           }
         }}
       />
-    </div>
-  {:else if childList.type === 'playlist'}
-    <div
-      class="item"
-      on:mousedown={() => open(childList.id)}
-      class:active={$page.id === childList.id}
-    >
-      <div class="arrow" />
-      <div class="text" style:padding-left={14 * level + 'px'}>{childList.name}</div>
-    </div>
-  {:else}
-    <div
-      class="item"
-      style:padding-left={14 * level + 'px'}
-      on:mousedown={() => open(childList.id)}
-      class:active={$page.id === childList.id}
-    >
-      <div class="arrow" />
-      <div class="text">
-        {#if childList.id === 'root'}
-          Songs
-        {:else}
+    {:else if childList.type === 'playlist'}
+      <div
+        class="item"
+        style:padding-left={14 * level + 'px'}
+        on:mousedown={() => open(childList.id)}
+        class:active={$page.id === childList.id}
+        class:droppable={dragTrackOntoIndex === i}
+        on:drop={(e) => {
+          if (e.currentTarget && e.dataTransfer?.types[0] === 'ferrum.tracks') {
+            addTracksToPlaylist(childList.id, dragged.tracks.ids)
+          }
+          dragTrackOntoIndex = null
+        }}
+      >
+        <div class="arrow" />
+        <div
+          class="text"
+          on:dragover={(e) => {
+            if (e.currentTarget && e.dataTransfer?.types[0] === 'ferrum.tracks') {
+              dragTrackOntoIndex = i
+            }
+          }}
+          on:dragleave|self={() => (dragTrackOntoIndex = null)}
+        >
           {childList.name}
-        {/if}
+        </div>
       </div>
-    </div>
-  {/if}
-{/each}
+    {:else}
+      <div
+        class="item"
+        style:padding-left={14 * level + 'px'}
+        on:mousedown={() => open(childList.id)}
+        class:active={$page.id === childList.id}
+      >
+        <div class="arrow" />
+        <div class="text">
+          {#if childList.id === 'root'}
+            Songs
+          {:else}
+            {childList.name}
+          {/if}
+        </div>
+      </div>
+    {/if}
+  {/each}
+</div>
 
 <style lang="sass">
   .active
     // box-shadow: inset 2px 0px 0px 0px hsl(var(--hue), 70%, 60%)
     // background: linear-gradient(90deg, hsl(var(--hue), 35%, 25%) 30%, #ffffff00)
-
     box-shadow: inset 2px 0px 0px 0px hsl(var(--hue), 30%, 60%)
     background-image: linear-gradient(90deg, hsl(var(--hue), 20%, 25%) 30%, #ffffff00)
-
   :global(:focus)
     .active
       box-shadow: inset 2px 0px 0px 0px hsl(var(--hue), 70%, 60%)
       background-image: linear-gradient(90deg, hsl(var(--hue), 45%, 30%) 30%, #ffffff00)
   .item
-    height: 24px
     white-space: nowrap
     overflow: hidden
     text-overflow: ellipsis
-    position: relative
     display: flex
     align-items: center
     margin-right: 10px
     box-sizing: border-box
+    z-index: 1
+  .item.droppable .text
+    border-radius: 6px
+    box-shadow: inset 0px 0px 0px 2px var(--accent-1)
+    background-color: hsla(var(--hue), 74%, 53%, 0.25)
   .sub
     display: none
     &.show
       display: block
   .arrow
     margin-left: 2px
+    margin-right: -8px
     padding: 6px
     width: 6px
     height: 6px
+    z-index: 1
     flex-shrink: 0
     fill: white
     transition: 120ms transform cubic-bezier(0, 0.02, 0.2, 1)
@@ -224,4 +250,9 @@
     overflow: hidden
     text-overflow: ellipsis
     padding-right: 10px
+    padding-left: 8px
+    height: 24px
+    line-height: 24px
+    flex-grow: 1
+    position: relative
 </style>
