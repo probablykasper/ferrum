@@ -3,6 +3,7 @@
 ## Next
 - Ability to create playlist folders
 - You can now open a playlist folder and see all it's tracks
+- Add `Up`/`Down` sidebar shortcuts
 - Support for .opus files with multiple pictures
 - Support showing and removing specific pictures for tracks with multiple pictures
 - Remember opened sidebar folders when the app relaunches

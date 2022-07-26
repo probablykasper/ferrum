@@ -4,10 +4,12 @@
   import { isMac, trackLists, page } from '../lib/data'
   import { ipcRenderer } from '../lib/window'
   import { open as openNewPlaylistModal } from './PlaylistInfo.svelte'
+
   const special = {
     children: ['root'],
   }
   let viewport: HTMLDivElement
+
   function handleKeydown(e: KeyboardEvent) {
     const selectedList = $trackLists[$page.tracklist.id]
     let prevent = true
@@ -42,6 +44,9 @@
       console.error('Unknown contextMenu ID', clickedId)
     }
   }
+  function open(id: string) {
+    if ($page.id !== id) page.openPlaylist(id)
+  }
 </script>
 
 <div class="sidebar" on:mousedown|self|preventDefault>
@@ -52,9 +57,21 @@
     <Filter />
     <div class="items" tabindex="0" on:keydown={handleKeydown} bind:this={viewport}>
       <div class="spacer" />
-      <SidebarItems trackList={special} />
+      <SidebarItems
+        trackList={special}
+        on:selectDown={() => {
+          if ($trackLists.root.children[0]) {
+            open($trackLists.root.children[0])
+          }
+        }}
+      />
       <div class="spacer" on:contextmenu={onContextMenu} />
-      <SidebarItems trackList={$trackLists.root} />
+      <SidebarItems
+        trackList={$trackLists.root}
+        on:selectUp={() => {
+          open(special.children[special.children.length - 1])
+        }}
+      />
       <div class="spacer" on:contextmenu={onContextMenu} />
       <div class="bottom-space" on:contextmenu={onContextMenu} />
     </div>

@@ -24,6 +24,7 @@
   import { open as openNewPlaylistModal } from './PlaylistInfo.svelte'
   import { writable } from 'svelte/store'
   import { checkShortcut } from '../lib/helpers'
+  import { createEventDispatcher, SvelteComponent } from 'svelte'
 
   export let trackList: { children: string[] }
   export let level = 0
@@ -50,16 +51,65 @@
       console.error('Unknown contextMenu ID', clickedId)
     }
   }
+
+  function hasShowingChildren(id: string) {
+    const list = $trackLists[id]
+    return list.type === 'folder' && $shownFolders.has(id) && list.children.length >= 1
+  }
+
+  let itemChildren: SvelteComponent[] = []
+  const dispatch = createEventDispatcher()
+  export function selectFirst() {
+    if (childLists[0]) {
+      open(childLists[0].id)
+    }
+  }
+  export function selectLast() {
+    const lastList = childLists[childLists.length - 1]
+    console.log(lastList)
+    open(lastList.id)
+  }
+  async function selectUp(i: number) {
+    const prevId = trackList.children[i - 1] || null
+    if (i === 0) {
+      dispatch('selectUp')
+    } else if (prevId && hasShowingChildren(prevId)) {
+      itemChildren[i - 1].selectLast()
+    } else if (prevId) {
+      open(prevId)
+    }
+  }
+  async function selectDown(i: number) {
+    if (hasShowingChildren(trackList.children[i])) {
+      itemChildren[i].selectFirst()
+    } else if (trackList.children[i + 1]) {
+      open(trackList.children[i + 1])
+    } else {
+      dispatch('selectDown')
+    }
+  }
 </script>
 
 <svelte:body
   on:keydown={(e) => {
     if (checkShortcut(e, 'ArrowUp')) {
-      console.log('up')
+      const index = trackList.children.findIndex((id) => id === $page.tracklist.id)
+      if (index >= 0) {
+        selectUp(index)
+        e.stopPropagation()
+        e.stopImmediatePropagation()
+      }
+    } else if (checkShortcut(e, 'ArrowDown')) {
+      const index = trackList.children.findIndex((id) => id === $page.tracklist.id)
+      if (index >= 0) {
+        selectDown(index)
+        e.stopPropagation()
+        e.stopImmediatePropagation()
+      }
     }
   }} />
 
-{#each childLists as childList}
+{#each childLists as childList, i}
   {#if childList.type === 'folder'}
     <div
       class="item"
@@ -89,7 +139,21 @@
       <div class="text">{childList.name}</div>
     </div>
     <div class="sub" class:show={$shownFolders.has(childList.id)}>
-      <svelte:self trackList={childList} level={level + 1} />
+      <svelte:self
+        bind:this={itemChildren[i]}
+        trackList={childList}
+        level={level + 1}
+        on:selectUp={() => {
+          open(childList.id)
+        }}
+        on:selectDown={() => {
+          if (i < trackList.children.length - 1) {
+            open(trackList.children[i + 1])
+          } else {
+            dispatch('selectDown')
+          }
+        }}
+      />
     </div>
   {:else if childList.type === 'playlist'}
     <div
