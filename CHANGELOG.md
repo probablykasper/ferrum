@@ -9,7 +9,7 @@
 - Support showing and removing specific pictures for tracks with multiple pictures
 - Remember opened sidebar folders when the app relaunches
 - Save changes when going to next/previous track info window
-- Update button design
+- Update button, filter and sidebar design
 - Trap focus in modals
 - Store electron data in new `space.kasper.ferrum` app data folder
 

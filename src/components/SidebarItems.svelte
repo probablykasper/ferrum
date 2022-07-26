@@ -208,15 +208,17 @@
 </div>
 
 <style lang="sass">
-  .active
+  .item.active
     // box-shadow: inset 2px 0px 0px 0px hsl(var(--hue), 70%, 60%)
-    // background: linear-gradient(90deg, hsl(var(--hue), 35%, 25%) 30%, #ffffff00)
+    // background: linear-gradient(90deg, hsl(var(--hue), 35%, 25%) 30%, transparent)
     box-shadow: inset 2px 0px 0px 0px hsl(var(--hue), 30%, 60%)
-    background-image: linear-gradient(90deg, hsl(var(--hue), 20%, 25%) 30%, #ffffff00)
+    background-image: linear-gradient(90deg, hsl(var(--hue), 20%, 25%) 30%, transparent 66.6666%)
+    background-position: 0% 0%
   :global(:focus)
     .active
       box-shadow: inset 2px 0px 0px 0px hsl(var(--hue), 70%, 60%)
-      background-image: linear-gradient(90deg, hsl(var(--hue), 45%, 30%) 30%, #ffffff00)
+      background-image: linear-gradient(90deg, hsl(var(--hue), 45%, 30%) 30%, transparent 66.6666%)
+      background-position: 0% 0%
   .item
     white-space: nowrap
     overflow: hidden
@@ -226,6 +228,9 @@
     margin-right: 10px
     box-sizing: border-box
     z-index: 1
+    background-position: 100% 0%
+    background-size: 150% 150%
+    transition: 300ms background-position cubic-bezier(0, 0.02, 0.2, 1)
   .item.droppable .text
     border-radius: 6px
     box-shadow: inset 0px 0px 0px 2px var(--accent-1)
