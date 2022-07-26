@@ -14,8 +14,10 @@ use napi_derive::js_function;
 #[js_function(1)]
 pub fn open_playlist(ctx: CallContext) -> NResult<JsUndefined> {
   let data: &mut Data = get_data(&ctx)?;
-  let id = arg_to_string(&ctx, 0)?;
-  match data.library.get_tracklist(&id)? {
+  data.open_playlist_id = arg_to_string(&ctx, 0)?;
+  data.open_playlist_track_ids = get_track_ids(&data)?;
+  data.page_track_ids = None;
+  match data.library.get_tracklist(&data.open_playlist_id)? {
     TrackList::Special(_) => {
       sort(data, "dateAdded", true)?;
     }
@@ -24,9 +26,6 @@ pub fn open_playlist(ctx: CallContext) -> NResult<JsUndefined> {
       data.sort_desc = true;
     }
   };
-  data.open_playlist_id = id;
-  data.open_playlist_track_ids = get_track_ids(&data)?;
-  data.page_track_ids = None;
   return ctx.env.get_undefined();
 }
 

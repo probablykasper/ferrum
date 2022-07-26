@@ -289,8 +289,6 @@
     background-position: 100% 0%
     background-size: 150% 150%
     transition: 260ms background-position cubic-bezier(0, 0.02, 0.2, 1)
-  .prevent-child-drop > :global(*)
-    pointer-events: none
   .item.droppable .text
     border-radius: 6px
     box-shadow: inset 0px 0px 0px 2px var(--accent-1)

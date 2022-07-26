@@ -488,7 +488,7 @@
         *
           pointer-events: none
       .c.sort span
-        font-weight: bold
+        font-weight: 600
       .c.sort span::after
         content: '▲'
         padding-left: 1px
@@ -550,7 +550,7 @@
         min-width: 130px
       .year
         width: 0px
-        min-width: 35px
+        min-width: 37px
   .drag-line
     position: absolute
     width: 100%
