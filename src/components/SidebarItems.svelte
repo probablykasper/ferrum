@@ -116,15 +116,16 @@
   let dragTrackOntoIndex = null as number | null
   let dragPlaylistOntoIndex = null as number | null
 
-  let playlistId: string | null = null
+  let dragPlaylistId: string | null = null
   function onDragStart(e: DragEvent, tracklist: TrackList) {
     if (e.dataTransfer && tracklist.type !== 'special' && parentId) {
       e.dataTransfer.effectAllowed = 'move'
-      playlistId = tracklist.id
+      dragPlaylistId = tracklist.id
       dragGhost.setInnerText(tracklist.name)
       dragged.playlist = {
-        id: playlistId,
+        id: dragPlaylistId,
         fromFolder: parentId,
+        level,
       }
       e.dataTransfer.setDragImage(dragGhost.dragEl, 0, 0)
       e.dataTransfer.setData('ferrum.playlist', '')
@@ -147,7 +148,9 @@
           if (
             e.currentTarget &&
             e.dataTransfer?.types[0] === 'ferrum.playlist' &&
-            dragged.playlist
+            dragged.playlist &&
+            level <= dragged.playlist.level &&
+            dragged.playlist.id !== childList.id
           ) {
             movePlaylist(dragged.playlist.id, dragged.playlist.fromFolder, childList.id)
           }
@@ -176,7 +179,13 @@
         <div
           class="text"
           on:dragover={(e) => {
-            if (e.currentTarget && e.dataTransfer?.types[0] === 'ferrum.playlist') {
+            if (
+              e.currentTarget &&
+              e.dataTransfer?.types[0] === 'ferrum.playlist' &&
+              dragged.playlist &&
+              level <= dragged.playlist.level &&
+              dragged.playlist.id !== childList.id
+            ) {
               dragPlaylistOntoIndex = i
               e.preventDefault()
             }
@@ -280,6 +289,8 @@
     background-position: 100% 0%
     background-size: 150% 150%
     transition: 260ms background-position cubic-bezier(0, 0.02, 0.2, 1)
+  .prevent-child-drop > :global(*)
+    pointer-events: none
   .item.droppable .text
     border-radius: 6px
     box-shadow: inset 0px 0px 0px 2px var(--accent-1)

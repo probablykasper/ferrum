@@ -3,7 +3,7 @@ use std::path::PathBuf;
 use crate::data::Data;
 use crate::data_js::get_data;
 use crate::js::{arg_to_bool, arg_to_number_vector, arg_to_string, arg_to_string_vector};
-use crate::library_types::{Library, SpecialTrackListName, TrackList};
+use crate::library_types::{Library, SpecialTrackListName, TrackID, TrackList};
 use crate::{str_to_option, UniResult};
 use napi::{CallContext, JsUndefined, JsUnknown, Result as NResult};
 use napi_derive::js_function;
@@ -172,6 +172,28 @@ pub fn new_playlist(ctx: CallContext) -> NResult<JsUndefined> {
   return ctx.env.get_undefined();
 }
 
+fn get_all_tracklist_children(data: &Data, playlist_id: &str) -> UniResult<Vec<TrackID>> {
+  let direct_children = match data.library.get_tracklist(playlist_id)? {
+    TrackList::Folder(folder) => &folder.children,
+    TrackList::Special(special) => &special.children,
+    TrackList::Playlist(_) => return Ok(Vec::new()),
+  };
+  let mut all_children = Vec::new();
+  for child_id in direct_children {
+    all_children.push(child_id.clone());
+    match data.library.get_tracklist(child_id)? {
+      TrackList::Playlist(_) => {}
+      TrackList::Folder(folder) => {
+        all_children.extend(get_all_tracklist_children(data, &folder.id)?)
+      }
+      TrackList::Special(special) => {
+        all_children.extend(get_all_tracklist_children(data, &special.id)?)
+      }
+    }
+  }
+  Ok(all_children)
+}
+
 fn get_children_if_user_editable<'a>(
   library: &'a mut Library,
   id: &'a str,
@@ -202,6 +224,11 @@ pub fn move_playlist(ctx: CallContext) -> NResult<JsUndefined> {
 
   // check that the to_id is valid before we remove it from from_id
   get_children_if_user_editable(&mut data.library, &to_id)?;
+
+  let from_id_children = get_all_tracklist_children(&data, &id)?;
+  if from_id_children.contains(&to_id) {
+    throw!("Cannot move playlist to a child of itself");
+  }
 
   let children = get_children_if_user_editable(&mut data.library, &from_id)?;
   let i = match children.iter().position(|child_id| child_id == &id) {

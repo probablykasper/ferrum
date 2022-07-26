@@ -1,6 +1,7 @@
 type DragPlaylist = {
   id: string
   fromFolder: string
+  level: number
 }
 
 export const dragged = {
