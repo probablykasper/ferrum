@@ -46,6 +46,7 @@ export type Data = {
   remove_from_open_playlist: (indexes: number[]) => void
   delete_tracks_in_open: (indexes: number[]) => void
   new_playlist: (name: string, description: string, isFolder: boolean, parentId: string) => void
+  move_playlist: (id: string, fromParent: string, toParent: string) => void
 
   refresh_page: () => void
   open_playlist: (id: TrackListID) => void
@@ -145,6 +146,11 @@ export type PlaylistInfo = {
 }
 export function newPlaylist(info: PlaylistInfo, isFolder: boolean) {
   call((data) => data.new_playlist(info.name, info.description, isFolder, info.parentId))
+  methods.save()
+  trackLists.refresh()
+}
+export function movePlaylist(id: TrackListID, fromParent: TrackListID, toParent: TrackListID) {
+  call((data) => data.move_playlist(id, fromParent, toParent))
   methods.save()
   trackLists.refresh()
 }

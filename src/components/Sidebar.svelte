@@ -71,6 +71,7 @@
             open($trackLists.root.children[0])
           }
         }}
+        parentId={null}
       />
       <div class="spacer" on:contextmenu={onContextMenu} />
       <SidebarItems
@@ -78,6 +79,7 @@
         on:selectUp={() => {
           open(special.children[special.children.length - 1])
         }}
+        parentId={$trackLists.root.id}
       />
       <div class="spacer" on:contextmenu={onContextMenu} />
       <div class="bottom-space" on:contextmenu={onContextMenu} />

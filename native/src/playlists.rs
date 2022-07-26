@@ -26,8 +26,8 @@ pub fn add_tracks(ctx: CallContext) -> NResult<JsUndefined> {
   let mut track_ids: Vec<String> = arg_to_string_vector(&ctx, 1)?;
   let playlist = match data.library.get_tracklist_mut(&playlist_id)? {
     TrackList::Playlist(playlist) => playlist,
-    TrackList::Folder(_) => return Err(nerr!("Cannot add track to folder")),
-    TrackList::Special(_) => return Err(nerr!("Cannot add track to special playlist")),
+    TrackList::Folder(_) => throw!("Cannot add track to folder"),
+    TrackList::Special(_) => throw!("Cannot add track to special playlist"),
   };
   playlist.tracks.append(&mut track_ids);
   return ctx.env.get_undefined();
@@ -41,14 +41,14 @@ pub fn remove_from_open(ctx: CallContext) -> NResult<JsUndefined> {
   indexes_to_remove.dedup();
   let playlist = match data.library.get_tracklist_mut(&data.open_playlist_id)? {
     TrackList::Playlist(playlist) => playlist,
-    TrackList::Folder(_) => return Err(nerr!("Cannot remove track from folder")),
-    TrackList::Special(_) => return Err(nerr!("Cannot remove track from special playlist")),
+    TrackList::Folder(_) => throw!("Cannot remove track from folder"),
+    TrackList::Special(_) => throw!("Cannot remove track from special playlist"),
   };
   if data.sort_key != "index" || data.sort_desc != true {
-    return Err(nerr!("Cannot remove track when custom sorting is used"));
+    throw!("Cannot remove track when custom sorting is used");
   }
   if data.filter != "" {
-    return Err(nerr!("Cannot remove track when filter is used"));
+    throw!("Cannot remove track when filter is used");
   }
   let mut new_list = Vec::new();
   let mut indexes_to_remove = indexes_to_remove.iter();
@@ -152,11 +152,11 @@ pub fn new_playlist(ctx: CallContext) -> NResult<JsUndefined> {
 
   let parent = match library.trackLists.get_mut(&parent_id) {
     Some(parent) => parent,
-    None => return Err(nerr!("Parent not found")),
+    None => throw!("Parent not found"),
   };
 
   match parent {
-    TrackList::Playlist(_) => return Err(nerr!("Parent cannot be playlist")),
+    TrackList::Playlist(_) => throw!("Parent cannot be playlist"),
     TrackList::Folder(folder) => {
       folder.children.push(list.id().to_string());
       library.trackLists.insert(list.id().to_string(), list);
@@ -168,6 +168,46 @@ pub fn new_playlist(ctx: CallContext) -> NResult<JsUndefined> {
       }
     },
   };
+
+  return ctx.env.get_undefined();
+}
+
+#[js_function(3)]
+pub fn move_playlist(ctx: CallContext) -> NResult<JsUndefined> {
+  let data: &mut Data = get_data(&ctx)?;
+  let id = arg_to_string(&ctx, 0)?;
+  let from_id = arg_to_string(&ctx, 1)?;
+  let to_id = arg_to_string(&ctx, 2)?;
+
+  match data.library.trackLists.get(&id) {
+    Some(TrackList::Special(_)) => throw!("Cannot move special playlist"),
+    None => throw!("List not found"),
+    _ => {}
+  };
+
+  match data.library.trackLists.get(&to_id) {
+    Some(TrackList::Folder(folder)) => folder,
+    None => throw!("Attempted to move to non-existant folder"),
+    _ => throw!("Attempted to move to non-folder"),
+  };
+
+  let from_folder = match data.library.trackLists.get_mut(&from_id) {
+    Some(TrackList::Folder(folder)) => folder,
+    None => throw!("Attempted to move from non-existant folder"),
+    _ => throw!("Attempted to move from non-folder"),
+  };
+  let mut children = from_folder.children.iter();
+  let i = match children.position(|child_id| child_id == &id) {
+    None => throw!("Could not find playlist"),
+    Some(i) => i,
+  };
+  from_folder.children.remove(i);
+
+  let to_folder = match data.library.trackLists.get_mut(&to_id) {
+    Some(TrackList::Folder(folder)) => folder,
+    _ => throw!("Unexpected"),
+  };
+  to_folder.children.push(id.clone());
 
   return ctx.env.get_undefined();
 }

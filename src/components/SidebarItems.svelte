@@ -1,5 +1,5 @@
 <script lang="ts" context="module">
-  import { trackLists, page, methods, addTracksToPlaylist } from '../lib/data'
+  import { trackLists, page, methods, addTracksToPlaylist, movePlaylist } from '../lib/data'
 
   export type SidebarItemHandle = {
     arrowUpDown(key: 'ArrowUp' | 'ArrowDown'): void
@@ -31,6 +31,7 @@
   import { getContext } from 'svelte'
   import { dragged } from '../lib/drag-drop'
 
+  export let parentId: string | null
   export let show = true
   export let trackList: { children: string[] }
   export let level = 0
@@ -112,7 +113,29 @@
   }
 
   let dragTrackOntoIndex = null as number | null
+  let dragPlaylistOntoIndex = null as number | null
+
+  let dragEl: HTMLElement
+  let dragElDiv: HTMLElement
+  let playlistId: string | null = null
+  function onDragStart(e: DragEvent, tracklist: TrackList) {
+    if (e.dataTransfer && tracklist.type !== 'special' && parentId) {
+      e.dataTransfer.effectAllowed = 'move'
+      playlistId = tracklist.id
+      dragElDiv.innerText = tracklist.name
+      dragged.playlist = {
+        id: playlistId,
+        fromFolder: parentId,
+      }
+      e.dataTransfer.setDragImage(dragEl, 0, 0)
+      e.dataTransfer.setData('ferrum.playlist', '')
+    }
+  }
 </script>
+
+<div class="drag-ghost" bind:this={dragEl}>
+  <div bind:this={dragElDiv} />
+</div>
 
 <div class="sub" class:show>
   {#each childLists as childList, i}
@@ -121,7 +144,21 @@
         class="item"
         style:padding-left={14 * level + 'px'}
         class:active={$page.id === childList.id}
+        draggable="true"
+        on:dragstart={(e) => onDragStart(e, childList)}
         class:show={$shownFolders.has(childList.id)}
+        class:droppable={dragPlaylistOntoIndex === i}
+        on:drop={(e) => {
+          if (
+            e.currentTarget &&
+            e.dataTransfer?.types[0] === 'ferrum.playlist' &&
+            dragged.playlist
+          ) {
+            console.log('move')
+            movePlaylist(dragged.playlist.id, dragged.playlist.fromFolder, childList.id)
+          }
+          dragPlaylistOntoIndex = null
+        }}
         on:mousedown={() => open(childList.id)}
         on:contextmenu={() => folderContextMenu(childList.id)}
       >
@@ -142,12 +179,26 @@
         >
           <path d="M21 12l-18 12v-24z" />
         </svg>
-        <div class="text">{childList.name}</div>
+        <div
+          class="text"
+          on:dragover={(e) => {
+            if (e.currentTarget && e.dataTransfer?.types[0] === 'ferrum.playlist') {
+              dragPlaylistOntoIndex = i
+              e.preventDefault()
+            }
+          }}
+          on:dragleave|self={() => {
+            dragPlaylistOntoIndex = null
+          }}
+        >
+          {childList.name}
+        </div>
       </div>
       <svelte:self
         bind:this={itemChildren[i]}
         show={$shownFolders.has(childList.id)}
         trackList={childList}
+        parentId={childList.id}
         level={level + 1}
         on:selectUp={() => {
           open(childList.id)
@@ -164,8 +215,10 @@
       <div
         class="item"
         style:padding-left={14 * level + 'px'}
-        on:mousedown={() => open(childList.id)}
+        draggable="true"
+        on:dragstart={(e) => onDragStart(e, childList)}
         class:active={$page.id === childList.id}
+        on:mousedown={() => open(childList.id)}
         class:droppable={dragTrackOntoIndex === i}
         on:drop={(e) => {
           if (e.currentTarget && e.dataTransfer?.types[0] === 'ferrum.tracks') {
@@ -182,7 +235,9 @@
               dragTrackOntoIndex = i
             }
           }}
-          on:dragleave|self={() => (dragTrackOntoIndex = null)}
+          on:dragleave|self={() => {
+            dragTrackOntoIndex = null
+          }}
         >
           {childList.name}
         </div>
@@ -230,7 +285,7 @@
     z-index: 1
     background-position: 100% 0%
     background-size: 150% 150%
-    transition: 300ms background-position cubic-bezier(0, 0.02, 0.2, 1)
+    transition: 260ms background-position cubic-bezier(0, 0.02, 0.2, 1)
   .item.droppable .text
     border-radius: 6px
     box-shadow: inset 0px 0px 0px 2px var(--accent-1)
@@ -260,4 +315,15 @@
     line-height: 24px
     flex-grow: 1
     position: relative
+  .drag-ghost
+    font-size: 14px
+    top: -1000px
+    position: absolute
+    background-color: transparent
+    padding-left: 3px
+    div
+      background-color: var(--drag-bg-color)
+      padding: 4px 8px
+      max-width: 300px
+      border-radius: 3px
 </style>

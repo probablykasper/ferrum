@@ -2,6 +2,7 @@
 
 ## Next
 - Ability to create playlist folders
+- Support moving playlists between folders
 - You can now open a playlist folder and see all it's tracks
 - Add songs to playlists using drag-and-drop
 - Add `Up`/`Down` sidebar shortcuts
