@@ -233,11 +233,10 @@
     newPlaybackInstance(page.getTrackIds(), index)
   }
 
-  let dragEl: HTMLElement
-  let dragElDiv: HTMLElement
   let dragLine: HTMLElement
   let dragging = false
   let indexes: number[] = []
+  import * as dragGhost from './DragGhost.svelte'
   function onDragStart(e: DragEvent) {
     if (e.dataTransfer) {
       indexes = []
@@ -250,13 +249,13 @@
       e.dataTransfer.effectAllowed = 'move'
       if (indexes.length === 1) {
         const track = page.getTrack(indexes[0])
-        dragElDiv.innerText = track.artist + ' - ' + track.name
+        dragGhost.setInnerText(track.artist + ' - ' + track.name)
       } else {
-        dragElDiv.innerText = indexes.length + ' items'
+        dragGhost.setInnerText(indexes.length + ' items')
       }
       dragged.tracks.indexes = indexes
       dragged.tracks.ids = indexes.map((i) => page.getTrackId(i))
-      e.dataTransfer.setDragImage(dragEl, 0, 0)
+      e.dataTransfer.setDragImage(dragGhost.dragEl, 0, 0)
       e.dataTransfer.setData('ferrum.tracks', '')
     }
   }
@@ -325,10 +324,6 @@
 </script>
 
 <svelte:window on:dragover={globalDragOverHandler} />
-
-<div class="drag-ghost" bind:this={dragEl}>
-  <div bind:this={dragElDiv} />
-</div>
 
 <div class="tracklist" on:dragleave={() => (dragToIndex = null)}>
   <div class="header">
@@ -556,17 +551,6 @@
       .year
         width: 0px
         min-width: 35px
-  .drag-ghost
-    font-size: 14px
-    top: -1000px
-    position: absolute
-    background-color: transparent
-    padding-left: 3px
-    div
-      background-color: var(--drag-bg-color)
-      padding: 4px 8px
-      max-width: 300px
-      border-radius: 3px
   .drag-line
     position: absolute
     width: 100%

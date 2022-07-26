@@ -12,6 +12,7 @@
   import { iTunesImport, showOpenDialog } from './lib/window'
   import { isMac, paths, importTracks } from './lib/data'
   import { playPause } from './lib/player'
+  import DragGhost from './components/DragGhost.svelte'
 
   let pageStatus = ''
   let pageStatusWarnings = ''
@@ -159,6 +160,7 @@
 </main>
 <TrackInfo />
 <PlaylistInfo />
+<DragGhost />
 {#if isMac}
   <div class="titlebar" on:mousedown|self|preventDefault />
 {/if}

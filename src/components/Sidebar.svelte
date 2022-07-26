@@ -1,11 +1,12 @@
 <script lang="ts">
   import SidebarItems, { hideFolder, showFolder, SidebarItemHandle } from './SidebarItems.svelte'
   import Filter from './Filter.svelte'
-  import { isMac, trackLists, page } from '../lib/data'
+  import { isMac, trackLists, page, movePlaylist } from '../lib/data'
   import { ipcRenderer } from '../lib/window'
   import { open as openNewPlaylistModal } from './PlaylistInfo.svelte'
   import { writable } from 'svelte/store'
   import { setContext } from 'svelte'
+  import { dragged } from '../lib/drag-drop'
 
   const special = {
     children: ['root'],
@@ -54,6 +55,8 @@
   function open(id: string) {
     if ($page.id !== id) page.openPlaylist(id)
   }
+
+  let rootDroppable = false
 </script>
 
 <div class="sidebar" on:mousedown|self|preventDefault>
@@ -62,7 +65,28 @@
   {/if}
   <div class="content">
     <Filter />
-    <div class="items" tabindex="0" on:keydown={handleKeydown} bind:this={viewport}>
+    <div
+      class="items"
+      tabindex="0"
+      on:keydown={handleKeydown}
+      bind:this={viewport}
+      class:droppable={rootDroppable}
+      on:dragover|self={(e) => {
+        if (e.currentTarget && e.dataTransfer?.types[0] === 'ferrum.playlist') {
+          rootDroppable = true
+          e.preventDefault()
+        }
+      }}
+      on:dragleave|self={() => {
+        rootDroppable = false
+      }}
+      on:drop|self={(e) => {
+        if (e.currentTarget && e.dataTransfer?.types[0] === 'ferrum.playlist' && dragged.playlist) {
+          movePlaylist(dragged.playlist.id, dragged.playlist.fromFolder, 'root')
+          rootDroppable = false
+        }
+      }}
+    >
       <div class="spacer" />
       <SidebarItems
         trackList={special}
@@ -73,7 +97,7 @@
         }}
         parentId={null}
       />
-      <div class="spacer" on:contextmenu={onContextMenu} />
+      <div class="spacer pointer-events-none" on:contextmenu={onContextMenu} />
       <SidebarItems
         trackList={$trackLists.root}
         on:selectUp={() => {
@@ -81,13 +105,15 @@
         }}
         parentId={$trackLists.root.id}
       />
-      <div class="spacer" on:contextmenu={onContextMenu} />
-      <div class="bottom-space" on:contextmenu={onContextMenu} />
+      <div class="spacer pointer-events-none" on:contextmenu={onContextMenu} />
+      <div class="bottom-space pointer-events-none" on:contextmenu={onContextMenu} />
     </div>
   </div>
 </div>
 
 <style lang="sass">
+  .pointer-events-none
+    pointer-events: none
   .sidebar
     width: 230px
     min-width: 230px
@@ -118,4 +144,7 @@
     flex-direction: column
   .bottom-space
     flex-grow: 1
+  .droppable
+    box-shadow: inset 0px 0px 0px 2px var(--accent-1)
+    background-color: hsla(var(--hue), 74%, 53%, 0.1)
 </style>

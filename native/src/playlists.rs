@@ -172,6 +172,21 @@ pub fn new_playlist(ctx: CallContext) -> NResult<JsUndefined> {
   return ctx.env.get_undefined();
 }
 
+fn get_children_if_user_editable<'a>(
+  library: &'a mut Library,
+  id: &'a str,
+) -> UniResult<&'a mut Vec<String>> {
+  let children = match library.trackLists.get_mut(id) {
+    Some(TrackList::Folder(folder)) => &mut folder.children,
+    Some(TrackList::Special(special)) => match special.name {
+      SpecialTrackListName::Root => &mut special.children,
+    },
+    None => throw!("Attempted to move from/to non-existant folder"),
+    _ => throw!("Attempted to move from/to non-folder"),
+  };
+  Ok(children)
+}
+
 #[js_function(3)]
 pub fn move_playlist(ctx: CallContext) -> NResult<JsUndefined> {
   let data: &mut Data = get_data(&ctx)?;
@@ -185,29 +200,18 @@ pub fn move_playlist(ctx: CallContext) -> NResult<JsUndefined> {
     _ => {}
   };
 
-  match data.library.trackLists.get(&to_id) {
-    Some(TrackList::Folder(folder)) => folder,
-    None => throw!("Attempted to move to non-existant folder"),
-    _ => throw!("Attempted to move to non-folder"),
-  };
+  // check that the to_id is valid before we remove it from from_id
+  get_children_if_user_editable(&mut data.library, &to_id)?;
 
-  let from_folder = match data.library.trackLists.get_mut(&from_id) {
-    Some(TrackList::Folder(folder)) => folder,
-    None => throw!("Attempted to move from non-existant folder"),
-    _ => throw!("Attempted to move from non-folder"),
-  };
-  let mut children = from_folder.children.iter();
-  let i = match children.position(|child_id| child_id == &id) {
+  let children = get_children_if_user_editable(&mut data.library, &from_id)?;
+  let i = match children.iter().position(|child_id| child_id == &id) {
     None => throw!("Could not find playlist"),
     Some(i) => i,
   };
-  from_folder.children.remove(i);
+  children.remove(i);
 
-  let to_folder = match data.library.trackLists.get_mut(&to_id) {
-    Some(TrackList::Folder(folder)) => folder,
-    _ => throw!("Unexpected"),
-  };
-  to_folder.children.push(id.clone());
+  let to_folder_children = get_children_if_user_editable(&mut data.library, &to_id)?;
+  to_folder_children.push(id.clone());
 
   return ctx.env.get_undefined();
 }

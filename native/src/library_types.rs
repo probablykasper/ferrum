@@ -280,6 +280,7 @@ pub struct Special {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
+#[non_exhaustive]
 pub enum SpecialTrackListName {
   Root,
 }

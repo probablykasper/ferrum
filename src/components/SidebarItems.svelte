@@ -30,6 +30,7 @@
   import { createEventDispatcher, SvelteComponent } from 'svelte'
   import { getContext } from 'svelte'
   import { dragged } from '../lib/drag-drop'
+  import * as dragGhost from './DragGhost.svelte'
 
   export let parentId: string | null
   export let show = true
@@ -115,27 +116,21 @@
   let dragTrackOntoIndex = null as number | null
   let dragPlaylistOntoIndex = null as number | null
 
-  let dragEl: HTMLElement
-  let dragElDiv: HTMLElement
   let playlistId: string | null = null
   function onDragStart(e: DragEvent, tracklist: TrackList) {
     if (e.dataTransfer && tracklist.type !== 'special' && parentId) {
       e.dataTransfer.effectAllowed = 'move'
       playlistId = tracklist.id
-      dragElDiv.innerText = tracklist.name
+      dragGhost.setInnerText(tracklist.name)
       dragged.playlist = {
         id: playlistId,
         fromFolder: parentId,
       }
-      e.dataTransfer.setDragImage(dragEl, 0, 0)
+      e.dataTransfer.setDragImage(dragGhost.dragEl, 0, 0)
       e.dataTransfer.setData('ferrum.playlist', '')
     }
   }
 </script>
-
-<div class="drag-ghost" bind:this={dragEl}>
-  <div bind:this={dragElDiv} />
-</div>
 
 <div class="sub" class:show>
   {#each childLists as childList, i}
@@ -154,7 +149,6 @@
             e.dataTransfer?.types[0] === 'ferrum.playlist' &&
             dragged.playlist
           ) {
-            console.log('move')
             movePlaylist(dragged.playlist.id, dragged.playlist.fromFolder, childList.id)
           }
           dragPlaylistOntoIndex = null
@@ -315,15 +309,4 @@
     line-height: 24px
     flex-grow: 1
     position: relative
-  .drag-ghost
-    font-size: 14px
-    top: -1000px
-    position: absolute
-    background-color: transparent
-    padding-left: 3px
-    div
-      background-color: var(--drag-bg-color)
-      padding: 4px 8px
-      max-width: 300px
-      border-radius: 3px
 </style>
