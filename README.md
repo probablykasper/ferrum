@@ -53,7 +53,7 @@ Web (the frontend)
 - Build output: `build/web/`
 
 Napi (the native Rust backend)
-- Source code: `native/`
+- Source code: `src-native/`
 - Build output: `build/addon.node`
 
 ### Commands

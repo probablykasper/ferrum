@@ -89,6 +89,7 @@ fn get_page_ids(data: &mut Data, indexes: Vec<u32>) -> UniResult<Vec<String>> {
 }
 
 fn delete_file(path: &PathBuf) -> UniResult<()> {
+  #[allow(unused_mut)]
   let mut trash_context = trash::TrashContext::new();
 
   #[cfg(target_os = "macos")]

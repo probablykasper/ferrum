@@ -2,9 +2,9 @@ use crate::data_js::{load_data_async, load_data_js};
 use atomicwrites::{AllowOverwrite, AtomicFile};
 use napi::{
   CallContext, Error as NapiError, JsBoolean, JsNumber, JsObject, JsString, JsTypedArray,
-  JsUndefined, Result as NResult,
+  Result as NResult,
 };
-use napi_derive::{js_function, module_exports};
+use napi_derive::module_exports;
 use std::convert::TryFrom;
 use std::convert::TryInto;
 use std::fs::copy;
@@ -70,27 +70,26 @@ pub fn arg_to_string_vector(ctx: &CallContext, arg: usize) -> NResult<Vec<String
   return Ok(vector);
 }
 
-#[js_function(2)]
-fn copy_file(ctx: CallContext) -> NResult<JsUndefined> {
-  let from = arg_to_string(&ctx, 0)?;
-  let to = arg_to_string(&ctx, 1)?;
-  copy(from, to)?;
-  return ctx.env.get_undefined();
+#[napi]
+#[allow(dead_code)]
+fn copy_file(from: String, to: String) -> napi::Result<()> {
+  match copy(from, to) {
+    Ok(_) => Ok(()),
+    Err(err) => Err(err.into()),
+  }
 }
 
-#[js_function(2)]
-fn atomic_file_save(ctx: CallContext) -> NResult<JsUndefined> {
-  let file_path = arg_to_string(&ctx, 0)?;
-  let content = arg_to_string(&ctx, 1)?;
+#[napi]
+#[allow(dead_code)]
+fn atomic_file_save(file_path: String, content: String) {
   let af = AtomicFile::new(file_path, AllowOverwrite);
   af.write(|f| f.write_all(content.as_bytes())).unwrap();
-  return ctx.env.get_undefined();
 }
 
 #[module_exports]
 fn init(mut exports: JsObject) -> NResult<()> {
-  exports.create_named_method("copy_file", copy_file)?;
-  exports.create_named_method("atomic_file_save", atomic_file_save)?;
+  // exports.create_named_method("copy_file", copy_file)?;
+  // exports.create_named_method("atomic_file_save", atomic_file_save)?;
   exports.create_named_method("load_data", load_data_js)?;
   exports.create_named_method("load_data_async", load_data_async)?;
   Ok(())

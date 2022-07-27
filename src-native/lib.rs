@@ -16,6 +16,9 @@ macro_rules! throw {
   }
 }
 
+#[macro_use]
+extern crate napi_derive;
+
 mod js;
 mod library;
 mod library_types;

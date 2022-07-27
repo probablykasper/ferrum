@@ -2,6 +2,6 @@
 /build/app
 /build/web
 /build/addon.node
-/native/target
-/native/artifacts.json
+/build/addon.d.ts
+/target
 /appdata
