@@ -1,6 +1,6 @@
 # Changelog
 
-## Next
+## 0.13.1 - 2022 Jul 28
 - Show scrollbar only when needed
 
 ## 0.13.0 - 2022 Jul 26
