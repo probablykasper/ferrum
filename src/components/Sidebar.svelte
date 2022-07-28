@@ -126,7 +126,7 @@
     flex-shrink: 0
   .content
     padding-top: 5px
-    overflow-y: scroll
+    overflow-y: auto
     display: flex
     flex-direction: column
     flex-grow: 1
