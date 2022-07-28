@@ -110,7 +110,7 @@
 <style lang="sass">
   .viewport
     height: 100%
-    overflow-y: scroll
+    overflow-y: auto
     outline: none
     background-color: inherit
   .content
