@@ -1,5 +1,8 @@
 # Changelog
 
+## Next
+- Show scrollbar only when needed
+
 ## 0.13.0 - 2022 Jul 26
 - Ability to create playlist folders
 - Support moving playlists between folders

@@ -17,7 +17,7 @@
     "electron-builder": "electron-builder",
     "lint": "prettier --check --plugin-search-dir=. src *.js && eslint src *.js && svelte-check",
     "format": "prettier --write --plugin-search-dir=. src *.js && eslint --fix src *.js",
-    "check": "npm run lint && cargo check --manifest-path native/Cargo.toml"
+    "check": "npm run lint && cargo check"
   },
   "build": {
     "appId": "space.kasper.ferrum",
