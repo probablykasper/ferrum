@@ -22,7 +22,6 @@ Ferrum is in development and might get updates that no longer work with your lib
 - Playlist covers
 - Move playlists
 - Edit playlists
-- Create playlist folder
 - Allow removing tracks from playlists when filter or sorting is used
 - Move iTunes Import to Rust
 - iTunes Import overwrites library, but old track files are still kept
@@ -30,11 +29,6 @@ Ferrum is in development and might get updates that no longer work with your lib
   - https://github.com/TheNeikos/rustbreak
   - https://github.com/spacejam/sled
   - https://github.com/Owez/tinydb
-- Gapless audio
-  - https://github.com/RustAudio/rodio
-  - https://github.com/regosen/Gapless-5
-  - https://github.com/sudara/stitches
-  - https://www.npmjs.com/package/gapless.js
 
 ### Get started
 
