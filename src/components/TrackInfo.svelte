@@ -1,9 +1,9 @@
 <script lang="ts" context="module">
   import { writable } from 'svelte/store'
   import type { Writable } from 'svelte/store'
-  import { methods } from '$lib/data'
-  import type { Track, Image, TrackID } from '$lib//libraryTypes'
-  import { visibleModalsCount } from '$lib/modals'
+  import { methods } from '@/lib/data'
+  import type { Track, Image, TrackID } from '@/lib/libraryTypes'
+  import { visibleModalsCount } from '@/lib/modals'
 
   type CurrentList = {
     ids: TrackID[]
@@ -52,9 +52,9 @@
 
 <script lang="ts">
   import Modal from './Modal.svelte'
-  import { checkShortcut, focus, focusLast } from '$lib/helpers'
+  import { checkShortcut, focus, focusLast } from '@/lib/helpers'
   import Button from './Button.svelte'
-  import { showOpenDialog } from '$lib/window'
+  import { showOpenDialog } from '@/lib/window'
 
   function uintFilter(value: string) {
     return value.replace(/[^0-9]*/g, '')
