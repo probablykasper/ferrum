@@ -7,14 +7,23 @@
     currentTime,
     seek,
     playingTrack,
+    playingId,
     previous,
     next,
     coverSrc,
     volume,
   } from '../lib/player'
   import { getDuration } from '../lib/helpers'
-  import { queueVisible, toggleQueueVisibility } from '../lib/queue'
-  import { isDev } from '../lib/data'
+  import {
+    appendToUserQueue,
+    prependToUserQueue,
+    queueVisible,
+    toggleQueueVisibility,
+  } from '../lib/queue'
+  import { addTracksToPlaylist, isDev, paths, methods } from '../lib/data'
+  import { showTrackMenu } from '@/lib/menus'
+  import { open as openTrackInfo } from './TrackInfo.svelte'
+  import { ipcRenderer } from '@/lib/window'
 
   let sliderBeingDragged = false
   const sliderSteps = 400
@@ -31,29 +40,48 @@
     sliderBeingDragged = false
     seek((e.target.value / sliderSteps) * $duration || 0)
   }
+  async function playingContextMenu() {
+    if (!$playingId) return
+    const trackId = $playingId
+    const clickedId = await showTrackMenu([$playingId], 0)
+
+    if (clickedId === 'Play Next') {
+      prependToUserQueue([trackId])
+    } else if (clickedId === 'Add to Queue') {
+      appendToUserQueue([trackId])
+    } else if (clickedId.startsWith('add-to-')) {
+      const pId = clickedId.substring('add-to-'.length)
+      addTracksToPlaylist(pId, [trackId])
+    } else if (clickedId === 'revealTrackFile') {
+      const track = methods.getTrack(trackId)
+      ipcRenderer.invoke('revealTrackFile', paths.tracks_dir, track.file)
+    } else if (clickedId === 'Get Info') {
+      openTrackInfo([trackId], 0)
+    }
+  }
 </script>
 
 <div class="player" class:stopped={$stopped} on:mousedown|self|preventDefault class:dev={isDev}>
   <div class="left">
     {#if !$stopped}
-      {#if $coverSrc}
-        <img src={$coverSrc} alt="" class="cover" />
-      {:else}
-        <svg
-          class="cover"
-          xmlns="http://www.w3.org/2000/svg"
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-        >
-          <path
-            d="M23 0l-15.996 3.585v13.04c-2.979-.589-6.004 1.671-6.004 4.154 0 2.137 1.671 3.221 3.485 3.221 2.155 0 4.512-1.528 4.515-4.638v-10.9l12-2.459v8.624c-2.975-.587-6 1.664-6 4.141 0 2.143 1.715 3.232 3.521 3.232 2.14 0 4.476-1.526 4.479-4.636v-17.364z"
-          />
-        </svg>
-      {/if}
-      <div class="track-info">
-        <div class="name">{$playingTrack.name}</div>
-        <div class="artist">{$playingTrack.artist}</div>
+      <div class="cover" on:contextmenu={playingContextMenu}>
+        {#if $coverSrc}
+          <img src={$coverSrc} alt="" />
+        {:else}
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+            <path
+              d="M23 0l-15.996 3.585v13.04c-2.979-.589-6.004 1.671-6.004 4.154 0 2.137 1.671 3.221 3.485 3.221 2.155 0 4.512-1.528 4.515-4.638v-10.9l12-2.459v8.624c-2.975-.587-6 1.664-6 4.141 0 2.143 1.715 3.232 3.521 3.232 2.14 0 4.476-1.526 4.479-4.636v-17.364z"
+            />
+          </svg>
+        {/if}
+      </div>
+      <div on:contextmenu={playingContextMenu}>
+        <div class="name">
+          {$playingTrack.name}
+        </div>
+        <div class="artist">
+          {$playingTrack.artist}
+        </div>
       </div>
     {/if}
   </div>
@@ -192,12 +220,15 @@
   .left
     width: 30%
     display: flex
+    align-items: center
     height: 100%
-    img.cover
+    .cover
+      height: 100%
+    img
       height: 100%
       max-width: 120px
       object-fit: contain
-    svg.cover
+    svg
       height: 100%
       padding: 18px
       width: auto
@@ -205,16 +236,13 @@
       background: var(--empty-cover-bg-color)
       fill: var(--empty-cover-color)
       border-radius: 2px
-    .track-info
+    .name
       margin-left: 15px
-      display: flex
-      flex-direction: column
-      justify-content: center
-      .name
-        font-size: 14px
-      .artist
-        font-size: 12px
-        opacity: 0.8
+      font-size: 14px
+    .artist
+      margin-left: 15px
+      font-size: 12px
+      opacity: 0.8
   .middle
     width: 40%
   .right

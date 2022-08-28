@@ -1,6 +1,7 @@
 # Changelog
 
 ## Next
+- Show track context menu in player
 - Fix saving of updated track artworks
 - Thinner sort column header font
 - Fix plays column being too narrow
