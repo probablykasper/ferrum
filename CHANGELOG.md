@@ -2,6 +2,8 @@
 
 ## Next
 - Fix saving of updated track artworks
+- Thinner sort column header font
+- Fix plays column being too narrow
 
 ## 0.13.1 - 2022 Jul 28
 - Show scrollbar only when needed

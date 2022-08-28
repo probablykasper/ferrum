@@ -488,7 +488,7 @@
         *
           pointer-events: none
       .c.sort span
-        font-weight: 600
+        font-weight: 500
       .c.sort span::after
         content: '▲'
         padding-left: 1px
@@ -531,7 +531,7 @@
         width: 170%
       .playCount
         width: 0px
-        min-width: 40px
+        min-width: 42px
         text-align: right
       .duration
         width: 0px
