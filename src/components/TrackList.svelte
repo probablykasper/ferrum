@@ -5,54 +5,22 @@
     softRefreshPage,
     removeFromOpenPlaylist,
     filter,
-    trackLists as trackListsStore,
-    addTracksToPlaylist,
     deleteTracksInOpen,
     paths,
+    addTracksToPlaylist,
   } from '../lib/data'
   import { newPlaybackInstance, playingId } from '../lib/player'
-  import {
-    getDuration,
-    formatDate,
-    checkMouseShortcut,
-    checkShortcut,
-    flattenChildLists,
-  } from '../lib/helpers'
+  import { getDuration, formatDate, checkMouseShortcut, checkShortcut } from '../lib/helpers'
   import { newSelection } from '../lib/selection'
   import { showMessageBox } from '../lib/window'
   import { open as openTrackInfo } from './TrackInfo.svelte'
   import { appendToUserQueue, prependToUserQueue } from '../lib/queue'
   import { ipcRenderer } from '../lib/window'
-  import type { TrackID, Special, Track } from '../lib/libraryTypes'
+  import type { Track } from '../lib/libraryTypes'
   import { onDestroy, onMount } from 'svelte'
   import { dragged } from '../lib/drag-drop'
-
-  export async function showTrackMenu(ids: TrackID[], indexes: number[]) {
-    const trackLists = $trackListsStore
-    const flat = flattenChildLists(trackLists.root as Special, trackLists, '', 'add-to-')
-
-    const clickedId = await ipcRenderer.invoke('showTrackMenu', flat)
-    if (clickedId === null) return
-    if (clickedId === 'Play Next') {
-      prependToUserQueue(ids)
-    } else if (clickedId === 'Add to Queue') {
-      appendToUserQueue(ids)
-    } else if (clickedId.startsWith('add-to-')) {
-      const pId = clickedId.substring('add-to-'.length)
-      addTracksToPlaylist(pId, ids)
-    } else if (clickedId === 'Remove from Playlist') {
-      if ($page.tracklist.type === 'playlist') {
-        removeFromOpenPlaylist(indexes)
-      }
-    } else if (clickedId === 'revealTrackFile') {
-      const track = page.getTrack(indexes[0])
-      ipcRenderer.invoke('revealTrackFile', paths.tracks_dir, track.file)
-    } else if (clickedId === 'Get Info') {
-      openTrackInfo(page.getTrackIds(), indexes[0])
-    } else {
-      console.error('Unknown contextMenu ID', clickedId)
-    }
-  }
+  import * as dragGhost from './DragGhost.svelte'
+  import { showTrackMenu } from '@/lib/menus'
 
   function playNext() {
     const indexes = selection.getSelectedIndexes($selection)
@@ -142,11 +110,28 @@
       playRow(index)
     }
   }
-  function onContextMenu(e: MouseEvent, index: number) {
+  async function rowContextMenu(e: MouseEvent, index: number) {
     rowMouseDown(e, index, true)
     const indexes = selection.getSelectedIndexes($selection)
     const ids = indexes.map((i) => page.getTrackId(i))
-    showTrackMenu(ids, indexes)
+    const clickedId = await showTrackMenu($page.tracklist.type === 'playlist')
+    if (clickedId === 'Play Next') {
+      prependToUserQueue(ids)
+    } else if (clickedId === 'Add to Queue') {
+      appendToUserQueue(ids)
+    } else if (clickedId.startsWith('add-to-')) {
+      const pId = clickedId.substring('add-to-'.length)
+      addTracksToPlaylist(pId, ids)
+    } else if (clickedId === 'Remove from Playlist') {
+      if ($page.tracklist.type === 'playlist') {
+        removeFromOpenPlaylist(indexes)
+      }
+    } else if (clickedId === 'revealTrackFile') {
+      const track = page.getTrack(indexes[0])
+      ipcRenderer.invoke('revealTrackFile', paths.tracks_dir, track.file)
+    } else if (clickedId === 'Get Info') {
+      openTrackInfo(page.getTrackIds(), indexes[0])
+    }
   }
   async function keydown(e: KeyboardEvent) {
     if (checkShortcut(e, 'Enter')) {
@@ -236,7 +221,6 @@
   let dragLine: HTMLElement
   let dragging = false
   let indexes: number[] = []
-  import * as dragGhost from './DragGhost.svelte'
   function onDragStart(e: DragEvent) {
     if (e.dataTransfer) {
       indexes = []
@@ -400,7 +384,7 @@
         on:dblclick={(e) => doubleClick(e, index)}
         on:mousedown={(e) => rowMouseDown(e, index)}
         on:click={(e) => rowClick(e, index)}
-        on:contextmenu={(e) => onContextMenu(e, index)}
+        on:contextmenu={(e) => rowContextMenu(e, index)}
         draggable="true"
         on:dragstart={onDragStart}
         on:dragover={(e) => onDragOver(e, index)}

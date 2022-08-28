@@ -25,7 +25,7 @@ ipcMain.handle('revealTrackFile', async (e, ...paths) => {
   shell.showItemInFolder(path.join(...paths))
 })
 
-ipcMain.handle('showTrackMenu', (_e, list) => {
+ipcMain.handle('showTrackMenu', (_e, list, playlist) => {
   return new Promise((resolve) => {
     for (const item of list) {
       item.click = () => resolve(item.id)
@@ -57,10 +57,11 @@ ipcMain.handle('showTrackMenu', (_e, list) => {
         })(),
         click: () => resolve('revealTrackFile'),
       },
-      { type: 'separator' },
+      { type: 'separator', visible: playlist === true },
       {
         label: 'Remove from Playlist',
         click: () => resolve('Remove from Playlist'),
+        visible: playlist === true,
       },
     ])
     menu.once('will-close', () => resolve())
