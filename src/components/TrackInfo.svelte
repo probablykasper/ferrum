@@ -63,6 +63,7 @@
     return String(value).replace(/\0/g, '') // remove NULL bytes
   }
 
+  let imageEdited = false
   let name = ''
   let artist = ''
   let albumName = ''
@@ -83,6 +84,7 @@
   let playCount = 0
   let comments = ''
   function setInfo(track: Track) {
+    imageEdited = false
     name = track.name
     artist = track.artist
     albumName = track.albumName || ''
@@ -109,6 +111,7 @@
       return false
     }
     const isUnedited =
+      !imageEdited &&
       name === $track.name &&
       artist === $track.artist &&
       albumName === ($track.albumName || '') &&
@@ -235,12 +238,14 @@
     const path = getFilePath(e)
     if (path !== null) {
       methods.setImage($image?.index || 0, path)
+      imageEdited = true
       loadImage($image?.index || 0)
     }
   }
   function coverKeydown(e: KeyboardEvent) {
     if (checkShortcut(e, 'Backspace') && $image) {
       methods.removeImage($image.index)
+      imageEdited = true
       if ($image.index < $image.total_images - 1) {
         loadImage($image.index)
       } else {
@@ -261,6 +266,7 @@
     })
     if (!result.canceled && result.filePaths.length === 1) {
       methods.setImage($image?.index || 0, result.filePaths[0])
+      imageEdited = true
       loadImage($image?.index || 0)
     }
   }

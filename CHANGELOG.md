@@ -1,5 +1,8 @@
 # Changelog
 
+## Next
+- Fix saving of updated track artworks
+
 ## 0.13.1 - 2022 Jul 28
 - Show scrollbar only when needed
 
