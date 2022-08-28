@@ -1,10 +1,60 @@
+<script lang="ts" context="module">
+  import { writable } from 'svelte/store'
+  import type { Writable } from 'svelte/store'
+  import { methods } from '$lib/data'
+  import type { Track, Image, TrackID } from '$lib//libraryTypes'
+  import { visibleModalsCount } from '$lib/modals'
+
+  type CurrentList = {
+    ids: TrackID[]
+    index: number
+  }
+  let currentList: CurrentList | null = null
+
+  const id: Writable<TrackID | null> = writable(null)
+  const track: Writable<Track | null> = writable(null)
+  const image = writable(null as null | Image)
+
+  function openIndex(index: number) {
+    if (currentList && index >= 0 && index < currentList.ids.length) {
+      currentList.index = index
+      id.set(currentList.ids[index])
+      track.set(methods.getTrack(currentList.ids[index]))
+      methods.loadTags(currentList.ids[index])
+      loadImage(0)
+    }
+  }
+  function close() {
+    id.set(null)
+    track.set(null)
+    image.set(null)
+    currentList = null
+  }
+
+  export function open(ids: string[], index: number) {
+    if (visibleModalsCount.get() == 0) {
+      currentList = { ids, index }
+      openIndex(index)
+    }
+  }
+
+  function openPrev() {
+    if (currentList) openIndex(currentList.index - 1)
+  }
+  function openNext() {
+    if (currentList) openIndex(currentList.index + 1)
+  }
+
+  function loadImage(index: number) {
+    image.set(methods.getImage(index))
+  }
+</script>
+
 <script lang="ts">
   import Modal from './Modal.svelte'
-  import { visible, track, image, id, loadImage, openPrev, openNext } from '../lib/trackInfo'
-  import { checkShortcut, focus, focusLast } from '../lib/helpers'
-  import { methods } from '../lib/data'
+  import { checkShortcut, focus, focusLast } from '$lib/helpers'
   import Button from './Button.svelte'
-  import { showOpenDialog } from '../lib/window'
+  import { showOpenDialog } from '$lib/window'
 
   function uintFilter(value: string) {
     return value.replace(/[^0-9]*/g, '')
@@ -12,6 +62,7 @@
   function toString(value: unknown) {
     return String(value).replace(/\0/g, '') // remove NULL bytes
   }
+
   let name = ''
   let artist = ''
   let albumName = ''
@@ -31,28 +82,28 @@
   let liked = false
   let playCount = 0
   let comments = ''
-  track.subscribe((track) => {
-    if (track) {
-      name = track.name
-      artist = track.artist
-      albumName = track.albumName || ''
-      albumArtist = track.albumArtist || ''
-      composer = track.composer || ''
-      grouping = track.grouping || ''
-      genre = track.genre || ''
-      year = toString(track.year || '')
-      trackNum = toString(track.trackNum || '')
-      trackCount = toString(track.trackCount || '')
-      discNum = toString(track.discNum || '')
-      discCount = toString(track.discCount || '')
-      bpm = toString(track.bpm || '')
-      compilation = track.compilation || false
-      rating = track.rating || 0
-      liked = track.liked || false
-      playCount = track.playCount || 0
-      comments = toString(track.comments || '')
-    }
-  })
+  function setInfo(track: Track) {
+    name = track.name
+    artist = track.artist
+    albumName = track.albumName || ''
+    albumArtist = track.albumArtist || ''
+    composer = track.composer || ''
+    grouping = track.grouping || ''
+    genre = track.genre || ''
+    year = toString(track.year || '')
+    trackNum = toString(track.trackNum || '')
+    trackCount = toString(track.trackCount || '')
+    discNum = toString(track.discNum || '')
+    discCount = toString(track.discCount || '')
+    bpm = toString(track.bpm || '')
+    compilation = track.compilation || false
+    rating = track.rating || 0
+    liked = track.liked || false
+    playCount = track.playCount || 0
+    comments = toString(track.comments || '')
+  }
+  $: if ($track) setInfo($track)
+
   function isEdited() {
     if (!$track) {
       return false
@@ -105,7 +156,7 @@
       })
     }
     if (hideAfter) {
-      visible.set(false)
+      close()
       focusLast()
     }
   }
@@ -113,7 +164,7 @@
     return v.length >= 3
   }
   function cancel() {
-    visible.set(false)
+    close()
     focusLast()
   }
   function keydown(e: KeyboardEvent) {
@@ -217,7 +268,7 @@
 
 <svelte:window on:keydown={keydown} />
 <svelte:body on:keydown|self={keydownNoneSelected} />
-<Modal bind:visible={$visible} close={cancel}>
+<Modal showIf={$id !== null} onClose={cancel}>
   <form class="modal" on:submit|preventDefault={() => save()}>
     <div class="header" class:has-subtitle={$image !== null && $image.total_images >= 2}>
       <div class="cover-area" class:droppable tabindex="0" on:keydown={coverKeydown}>

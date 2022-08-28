@@ -8,7 +8,6 @@ import type {
   TrackListID,
   TrackListsHashMap,
 } from './libraryTypes'
-import type { TrackMD } from './trackInfo'
 import { showMessageBox, addon } from './window'
 
 type PageInfo = {
@@ -180,6 +179,27 @@ export async function importTracks(paths: string[]) {
   }
   methods.save()
   page.refresh()
+}
+
+export type TrackMD = {
+  name: string
+  artist: string
+  albumName: string
+  albumArtist: string
+  composer: string
+  grouping: string
+  genre: string
+  year: string
+  trackNum: string
+  trackCount: string
+  discNum: string
+  discCount: string
+  bpm: string
+  // compilation: string
+  // rating: string
+  // liked: string
+  // playCount: string
+  comments: string
 }
 
 export const methods = {

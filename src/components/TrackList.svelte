@@ -20,7 +20,7 @@
   } from '../lib/helpers'
   import { newSelection } from '../lib/selection'
   import { showMessageBox } from '../lib/window'
-  import * as trackInfo from '../lib/trackInfo'
+  import { open as openTrackInfo } from './TrackInfo.svelte'
   import { appendToUserQueue, prependToUserQueue } from '../lib/queue'
   import { ipcRenderer } from '../lib/window'
   import type { TrackID, Special, Track } from '../lib/libraryTypes'
@@ -48,7 +48,7 @@
       const track = page.getTrack(indexes[0])
       ipcRenderer.invoke('revealTrackFile', paths.tracks_dir, track.file)
     } else if (clickedId === 'Get Info') {
-      trackInfo.visible.open(page.getTrackIds(), indexes[0])
+      openTrackInfo(page.getTrackIds(), indexes[0])
     } else {
       console.error('Unknown contextMenu ID', clickedId)
     }
@@ -67,7 +67,7 @@
   function getInfo() {
     const index = selection.findFirst($selection.list)
     if (index !== null) {
-      trackInfo.visible.open(page.getTrackIds(), index)
+      openTrackInfo(page.getTrackIds(), index)
     }
   }
   function revealTrackFile() {

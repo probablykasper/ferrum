@@ -2,8 +2,8 @@
   import { checkShortcut } from '../lib/helpers'
   import { visibleModalsCount } from '../lib/modals'
 
-  export let visible: boolean
-  export let close: () => void
+  export let showIf: boolean
+  export let onClose: () => void
 
   let firstRun = true
   function visibleUpdate(visible: boolean) {
@@ -14,7 +14,7 @@
     }
     firstRun = false
   }
-  $: visibleUpdate(visible)
+  $: visibleUpdate(showIf)
 
   let container: HTMLDivElement
   $: focusElements =
@@ -39,9 +39,9 @@
   }
 </script>
 
-{#if visible}
+{#if showIf}
   <div class="container" bind:this={container} on:keydown={keydown}>
-    <div class="backdrop" on:click|self={close} />
+    <div class="backdrop" on:click|self={onClose} />
     <div class="box">
       <slot />
     </div>

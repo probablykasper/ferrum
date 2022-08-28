@@ -68,7 +68,7 @@
 
 <svelte:window on:keydown={keydown} />
 
-<Modal visible={$visible} {close}>
+<Modal showIf={$visible} onClose={close}>
   <form class="modal" on:submit|preventDefault={save}>
     {#if $createFolder}
       <h3>New Playlist Folder</h3>
