@@ -2,11 +2,10 @@
 const path = require('path')
 const iTunesImport = require('./import_itunes.js')
 window.addon = require('../../build/addon.node')
-const { pathToFileURL } = require('url')
 
-window.toFileUrl = (...args) => {
+window.joinPaths = (...args) => {
   const combinedPath = path.join(...args)
-  return pathToFileURL(combinedPath).href
+  return combinedPath
 }
 
 window.iTunesImport = iTunesImport

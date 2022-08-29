@@ -15,7 +15,7 @@ type addon = {
 declare global {
   interface Window {
     addon: addon
-    toFileUrl: (...args: string[]) => string
+    joinPaths: (...args: string[]) => string
     iTunesImport: (
       paths: { library_dir: string; tracks_dir: string; library_json: string },
       statusHandler: (status: string) => void,
@@ -48,4 +48,4 @@ export async function showOpenDialog(attached: boolean, options: OpenDialogOptio
 
 export const addon = window.addon
 export const iTunesImport = window.iTunesImport
-export const toFileUrl = window.toFileUrl
+export const joinPaths = window.joinPaths

@@ -54,8 +54,6 @@ app.on('ready', async () => {
     webPreferences: {
       nativeWindowOpen: true,
       contextIsolation: false,
-      // Allow file:// during development, since the app is loaded via http
-      webSecurity: !is.dev,
       nodeIntegration: true,
       preload: path.resolve(__dirname, './electron/preload.js'),
     },
@@ -67,20 +65,17 @@ app.on('ready', async () => {
     await shortcuts.initMediaKeys(mainWindow)
   }
 
-  protocol.registerFileProtocol('file', (request, callback) => {
+  protocol.registerFileProtocol('track', (request, callback) => {
     const url = decodeURI(request.url)
     const path = url.substring(7)
     callback(path)
   })
 
-  // Electron shows a warning when unsafe-eval is enabled, so we disable
-  // security warnings. Somehow devtools doesn't open without unsafe-eval.
-  process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = true
   session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
     callback({
       responseHeaders: {
         ...details.responseHeaders,
-        'Content-Security-Policy': ["script-src 'self' 'unsafe-inline' 'unsafe-eval';"],
+        'Content-Security-Policy': ["script-src 'self' 'unsafe-inline';"],
       },
     })
   })

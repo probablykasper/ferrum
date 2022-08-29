@@ -4,7 +4,7 @@ import { clamp } from './helpers'
 import quit from './quit'
 import { methods, paths } from './data'
 import type { Track, TrackID } from './libraryTypes'
-import { showMessageBox, toFileUrl, ipcRenderer } from './window'
+import { showMessageBox, ipcRenderer, joinPaths } from './window'
 import * as queue from './queue'
 
 const audio = new Audio()
@@ -117,7 +117,7 @@ function startPlayback() {
 
 function startPlayingId(id: TrackID) {
   const track = methods.getTrack(id)
-  const fileUrl = toFileUrl(paths.tracks_dir, track.file)
+  const fileUrl = 'track:' + joinPaths(paths.tracks_dir, track.file)
   waitingToPlay = true
   audio.src = fileUrl
   playingTrack.set(track)
