@@ -135,8 +135,12 @@
   }
   async function keydown(e: KeyboardEvent) {
     if (checkShortcut(e, 'Enter')) {
-      let firstIndex = selection.findFirst($selection.list) || 0
-      playRow(firstIndex)
+      let firstIndex = selection.findFirst($selection.list)
+      if (firstIndex !== null) {
+        playRow(firstIndex)
+      } else if (!$playingId) {
+        playRow(0)
+      }
     } else if (
       checkShortcut(e, 'Backspace') &&
       $selection.count > 0 &&

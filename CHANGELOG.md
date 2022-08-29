@@ -2,6 +2,7 @@
 
 ## Next
 - Add playlist editing
+- Restrict `Enter` shortcut when no tracks are selected
 - Show track context menu in player
 - Fix saving of updated track artworks
 - Thinner sort column header font
