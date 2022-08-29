@@ -25,7 +25,7 @@
     "artifactName": "${productName}-v${version}-${os}.${ext}",
     "mac": {
       "category": "public.app-category.music",
-      "icon": "build/icons/icon.icns",
+      "icon": "assets/icons/icon.icns",
       "target": [
         "dmg"
       ],
@@ -35,7 +35,7 @@
     },
     "linux": {
       "category": "Audio",
-      "icon": "build/icons/icon.icns",
+      "icon": "assets/icons/icon.icns",
       "maintainer": "kasper.space <example@example.com>",
       "target": [
         "deb",
@@ -43,7 +43,7 @@
       ]
     },
     "win": {
-      "icon": "build/icons/icon.ico",
+      "icon": "assets/icons/icon.ico",
       "target": [
         "nsis"
       ]

@@ -1,7 +1,4 @@
 /node_modules
-/build/app
-/build/web
-/build/addon.node
-/build/addon.d.ts
+/build
 /target
 /appdata
