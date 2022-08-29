@@ -1,4 +1,5 @@
-import path from 'path'
+import { resolve } from 'path'
+import { exec } from 'child_process'
 import { defineConfig } from 'vite'
 import { svelte } from '@sveltejs/vite-plugin-svelte'
 import sveltePreprocess from 'svelte-preprocess'
@@ -6,19 +7,15 @@ import sveltePreprocess from 'svelte-preprocess'
 export default defineConfig({
   root: './src',
   base: './', // use relative paths
-  // publicDir: '../public',
   clearScreen: false,
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'),
+      '@': resolve(__dirname, './src'),
     },
   },
   server: {
-    port: process.env.PORT || 8089,
+    port: Number(process.env.PORT) || 8089,
     strictPort: true,
-    fsServe: {
-      root: '../',
-    },
   },
   build: {
     outDir: '../build/web',
@@ -31,5 +28,16 @@ export default defineConfig({
     svelte({
       preprocess: sveltePreprocess(),
     }),
+    {
+      name: 'transform-file',
+      configureServer(server) {
+        server.httpServer?.once('listening', () => {
+          console.log('\nStarting Electron...')
+          const child = exec('NODE_ENV=development electron .')
+          child.stdout?.pipe(process.stdout)
+          child.stderr?.pipe(process.stderr)
+        })
+      },
+    },
   ],
 })

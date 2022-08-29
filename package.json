@@ -6,10 +6,8 @@
   "version": "0.13.1",
   "repository": "https://github.com/probablykasper/ferrum",
   "scripts": {
-    "dev": "npm run napi:dev && concurrently -n web,app -c green,blue npm:dev:web npm:dev:app",
-    "dev-release": "npm run napi && concurrently -n web,app -c green,blue npm:dev:web npm:dev:app",
-    "dev:web": "vite",
-    "dev:app": "NODE_ENV=development electron .",
+    "dev": "npm run napi:dev && vite",
+    "dev-release": "npm run napi && vite",
     "napi": "napi build ./build --dts addon.d.ts --release",
     "napi:dev": "napi build ./build --dts addon.d.ts",
     "build": "npm run napi && npm run build:web && electron-builder",
