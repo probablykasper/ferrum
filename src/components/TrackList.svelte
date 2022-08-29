@@ -241,14 +241,13 @@
       } else {
         dragGhost.setInnerText(indexes.length + ' items')
       }
-      dragged.tracks.indexes = indexes
-      dragged.tracks.ids = indexes.map((i) => page.getTrackId(i))
+      dragged.tracks = {
+        ids: indexes.map((i) => page.getTrackId(i)),
+        playlistIndexes: indexes,
+      }
       e.dataTransfer.setDragImage(dragGhost.dragEl, 0, 0)
       e.dataTransfer.setData('ferrum.tracks', '')
     }
-  }
-  function globalDragOverHandler(e: DragEvent) {
-    if (dragging) e.preventDefault()
   }
   let dragToIndex: null | number = null
   function onDragOver(e: DragEvent, index: number) {
@@ -262,11 +261,12 @@
       return
     }
     if (
-      dragging &&
+      dragged.tracks?.playlistIndexes &&
       e.currentTarget &&
       e.dataTransfer &&
       e.dataTransfer.types[0] === 'ferrum.tracks'
     ) {
+      e.preventDefault()
       const rowEl = e.currentTarget as HTMLDivElement
       const dim = rowEl.getBoundingClientRect()
       if (e.offsetY < rowEl.clientHeight / 2) {
@@ -310,8 +310,6 @@
     if (vlist) vlist.refresh()
   })
 </script>
-
-<svelte:window on:dragover={globalDragOverHandler} />
 
 <div class="tracklist" on:dragleave={() => (dragToIndex = null)}>
   <div class="header">

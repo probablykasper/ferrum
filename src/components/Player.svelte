@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import {
     stopped,
     paused,
@@ -24,6 +24,8 @@
   import { showTrackMenu } from '@/lib/menus'
   import { open as openTrackInfo } from './TrackInfo.svelte'
   import { ipcRenderer } from '@/lib/window'
+  import { dragged } from '@/lib/drag-drop'
+  import * as dragGhost from './DragGhost.svelte'
 
   let sliderBeingDragged = false
   const sliderSteps = 400
@@ -36,14 +38,14 @@
   function sliderMousedown() {
     sliderBeingDragged = true
   }
-  function sliderMouseup(e) {
+  function sliderMouseup() {
     sliderBeingDragged = false
-    seek((e.target.value / sliderSteps) * $duration || 0)
+    seek((sliderValue / sliderSteps) * $duration || 0)
   }
   async function playingContextMenu() {
     if (!$playingId) return
     const trackId = $playingId
-    const clickedId = await showTrackMenu([$playingId], 0)
+    const clickedId = await showTrackMenu(false)
 
     if (clickedId === 'Play Next') {
       prependToUserQueue([trackId])
@@ -59,12 +61,25 @@
       openTrackInfo([trackId], 0)
     }
   }
+
+  function dragStart(e: DragEvent) {
+    if (e.dataTransfer && $playingId) {
+      e.dataTransfer.effectAllowed = 'move'
+      const track = methods.getTrack($playingId)
+      dragGhost.setInnerText(track.artist + ' - ' + track.name)
+      dragged.tracks = {
+        ids: [$playingId],
+      }
+      e.dataTransfer.setDragImage(dragGhost.dragEl, 0, 0)
+      e.dataTransfer.setData('ferrum.tracks', '')
+    }
+  }
 </script>
 
 <div class="player" class:stopped={$stopped} on:mousedown|self|preventDefault class:dev={isDev}>
   <div class="left">
-    {#if !$stopped}
-      <div class="cover" on:contextmenu={playingContextMenu}>
+    {#if !$stopped && $playingTrack}
+      <div class="cover" on:contextmenu={playingContextMenu} on:dragstart={dragStart}>
         {#if $coverSrc}
           <img src={$coverSrc} alt="" />
         {:else}
@@ -75,7 +90,7 @@
           </svg>
         {/if}
       </div>
-      <div on:contextmenu={playingContextMenu}>
+      <div on:contextmenu={playingContextMenu} on:dragstart={dragStart} draggable="true">
         <div class="name">
           {$playingTrack.name}
         </div>
@@ -143,7 +158,7 @@
           class="high"
           xmlns="http://www.w3.org/2000/svg"
           height="24px"
-          viewbox="0 0 24 24"
+          viewBox="0 0 24 24"
           width="24px"
           fill="#000000"
         >
@@ -156,7 +171,7 @@
           class="low"
           xmlns="http://www.w3.org/2000/svg"
           height="24px"
-          viewbox="0 0 24 24"
+          viewBox="0 0 24 24"
           width="24px"
           fill="#000000"
         >
@@ -169,7 +184,7 @@
           class="mute"
           xmlns="http://www.w3.org/2000/svg"
           height="24px"
-          viewbox="0 0 24 24"
+          viewBox="0 0 24 24"
           width="24px"
           fill="#000000"
         >

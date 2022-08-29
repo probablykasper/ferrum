@@ -226,7 +226,7 @@
         on:mousedown={() => open(childList.id)}
         class:droppable={dragTrackOntoIndex === i}
         on:drop={(e) => {
-          if (e.currentTarget && e.dataTransfer?.types[0] === 'ferrum.tracks') {
+          if (e.currentTarget && e.dataTransfer?.types[0] === 'ferrum.tracks' && dragged.tracks) {
             addTracksToPlaylist(childList.id, dragged.tracks.ids)
           }
           dragTrackOntoIndex = null
@@ -239,6 +239,7 @@
           on:dragover={(e) => {
             if (e.currentTarget && e.dataTransfer?.types[0] === 'ferrum.tracks') {
               dragTrackOntoIndex = i
+              e.preventDefault()
             }
           }}
           on:dragleave|self={() => {

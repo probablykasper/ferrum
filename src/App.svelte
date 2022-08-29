@@ -87,11 +87,12 @@
     return false
   }
   function dragEnterOrOver(e: DragEvent) {
-    e.preventDefault()
     droppable = hasFiles(e)
+    if (droppable) {
+      e.preventDefault()
+    }
   }
-  function dragLeave(e: DragEvent) {
-    e.preventDefault()
+  function dragLeave() {
     droppable = false
   }
   function drop(e: DragEvent) {

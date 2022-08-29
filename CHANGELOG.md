@@ -2,8 +2,8 @@
 
 ## Next
 - Add playlist editing
+- Add context menu and drag-and-drop to currently playing track
 - Restrict `Enter` shortcut when no tracks are selected
-- Show track context menu in player
 - Fix saving of updated track artworks
 - Thinner sort column header font
 - Fix plays column being too narrow

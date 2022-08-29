@@ -29,7 +29,7 @@ export default defineConfig({
       preprocess: sveltePreprocess(),
     }),
     {
-      name: 'transform-file',
+      name: 'electron-start',
       configureServer(server) {
         server.httpServer?.once('listening', () => {
           console.log('\nStarting Electron...')
