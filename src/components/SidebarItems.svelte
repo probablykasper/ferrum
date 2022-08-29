@@ -25,7 +25,10 @@
 <script lang="ts">
   import type { TrackList } from '../lib/libraryTypes'
   import { ipcRenderer } from '../lib/window'
-  import { open as openNewPlaylistModal } from './PlaylistInfo.svelte'
+  import {
+    openNew as openNewPlaylistModal,
+    edit as openEditPlaylistModal,
+  } from './PlaylistInfo.svelte'
   import { Writable, writable } from 'svelte/store'
   import { createEventDispatcher, SvelteComponent } from 'svelte'
   import { getContext } from 'svelte'
@@ -48,15 +51,14 @@
   function open(id: string) {
     if ($page.id !== id) page.openPlaylist(id)
   }
-  async function folderContextMenu(folderId: string) {
-    const clickedId = await ipcRenderer.invoke('showPlaylistMenu')
-    if (clickedId === null) return
-    if (clickedId === 'New Playlist') {
-      openNewPlaylistModal(folderId, false)
-    } else if (clickedId === 'New Playlist Folder') {
-      openNewPlaylistModal(folderId, true)
-    } else {
-      console.error('Unknown contextMenu ID', clickedId)
+  async function tracklistContextMenu(id: string, isFolder: boolean) {
+    const clickedId = await ipcRenderer.invoke('showTracklistMenu', isFolder)
+    if (clickedId === 'Edit Details') {
+      openEditPlaylistModal(id, isFolder)
+    } else if (clickedId === 'New Playlist') {
+      openNewPlaylistModal(id, false)
+    } else if (clickedId === 'New Folder') {
+      openNewPlaylistModal(id, true)
     }
   }
 
@@ -157,7 +159,7 @@
           dragPlaylistOntoIndex = null
         }}
         on:mousedown={() => open(childList.id)}
-        on:contextmenu={() => folderContextMenu(childList.id)}
+        on:contextmenu={() => tracklistContextMenu(childList.id, true)}
       >
         <svg
           class="arrow"
@@ -229,6 +231,7 @@
           }
           dragTrackOntoIndex = null
         }}
+        on:contextmenu={() => tracklistContextMenu(childList.id, false)}
       >
         <div class="arrow" />
         <div

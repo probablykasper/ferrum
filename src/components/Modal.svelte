@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { onDestroy } from 'svelte'
+
   import { checkShortcut } from '../lib/helpers'
   import { visibleModalsCount } from '../lib/modals'
 
@@ -15,6 +17,9 @@
     firstRun = false
   }
   $: visibleUpdate(showIf)
+  onDestroy(() => {
+    if (showIf === true) $visibleModalsCount--
+  })
 
   let container: HTMLDivElement
   $: focusElements =

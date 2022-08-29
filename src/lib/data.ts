@@ -45,6 +45,7 @@ export type Data = {
   remove_from_open_playlist: (indexes: number[]) => void
   delete_tracks_in_open: (indexes: number[]) => void
   new_playlist: (name: string, description: string, isFolder: boolean, parentId: string) => void
+  update_playlist: (id: string, name: string, description: string) => void
   move_playlist: (id: string, fromParent: string, toParent: string) => void
 
   refresh_page: () => void
@@ -139,14 +140,22 @@ export function deleteTracksInOpen(indexes: number[]) {
   methods.save()
 }
 export type PlaylistInfo = {
-  parentId: string
   name: string
   description: string
+  isFolder: boolean
+  /** ID to edit, or ID to create playlist inside */
+  id: string
 }
-export function newPlaylist(info: PlaylistInfo, isFolder: boolean) {
-  call((data) => data.new_playlist(info.name, info.description, isFolder, info.parentId))
+export function newPlaylist(info: PlaylistInfo) {
+  call((data) => data.new_playlist(info.name, info.description, info.isFolder, info.id))
   methods.save()
   trackLists.refresh()
+}
+export function updatePlaylist(id: string, name: string, description: string) {
+  call((data) => data.update_playlist(id, name, description))
+  methods.save()
+  trackLists.refresh()
+  page.refresh()
 }
 export function movePlaylist(id: TrackListID, fromParent: TrackListID, toParent: TrackListID) {
   call((data) => data.move_playlist(id, fromParent, toParent))

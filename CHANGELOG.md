@@ -1,6 +1,7 @@
 # Changelog
 
 ## Next
+- Add playlist editing
 - Show track context menu in player
 - Fix saving of updated track artworks
 - Thinner sort column header font

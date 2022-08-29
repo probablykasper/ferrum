@@ -69,19 +69,32 @@ ipcMain.handle('showTrackMenu', (_e, list, playlist) => {
   })
 })
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-ipcMain.handle('showPlaylistMenu', (_e, _list) => {
+ipcMain.handle('showTracklistMenu', (e, isFolder, newOnly) => {
   return new Promise((resolve) => {
-    const menu = Menu.buildFromTemplate([
+    const editMenu = [
+      {
+        label: 'Edit Details',
+        click: () => resolve('Edit Details'),
+      },
+    ]
+    const newMenu = [
       {
         label: 'New Playlist',
         click: () => resolve('New Playlist'),
       },
       {
         label: 'New Folder',
-        click: () => resolve('New Playlist Folder'),
+        click: () => resolve('New Folder'),
       },
-    ])
+    ]
+    let menuItems = editMenu
+    if (newOnly) {
+      menuItems = newMenu
+    } else if (isFolder) {
+      menuItems = [...editMenu, { type: 'separator' }, ...newMenu]
+    }
+
+    const menu = Menu.buildFromTemplate(menuItems)
     menu.once('will-close', () => resolve())
     menu.popup()
   })

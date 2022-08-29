@@ -86,6 +86,7 @@ fn init_data_instance(mut exports: JsObject) -> NResult<JsObject> {
   exports.create_named_method("remove_from_open_playlist", playlists::remove_from_open)?;
   exports.create_named_method("delete_tracks_in_open", playlists::delete_tracks_in_open)?;
   exports.create_named_method("new_playlist", playlists::new_playlist)?;
+  exports.create_named_method("update_playlist", playlists::update_playlist)?;
   exports.create_named_method("move_playlist", playlists::move_playlist)?;
 
   exports.create_named_method("refresh_page", page::refresh)?;

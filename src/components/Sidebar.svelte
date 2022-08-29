@@ -3,7 +3,7 @@
   import Filter from './Filter.svelte'
   import { isMac, trackLists, page, movePlaylist } from '../lib/data'
   import { ipcRenderer } from '../lib/window'
-  import { open as openNewPlaylistModal } from './PlaylistInfo.svelte'
+  import { openNew as openNewPlaylistModal } from './PlaylistInfo.svelte'
   import { writable } from 'svelte/store'
   import { setContext } from 'svelte'
   import { dragged } from '../lib/drag-drop'
@@ -41,15 +41,11 @@
     }
   }
   async function onContextMenu() {
-    const clickedId = await ipcRenderer.invoke('showPlaylistMenu')
-    if (clickedId === null) {
-      return
-    } else if (clickedId === 'New Playlist') {
+    const clickedId = await ipcRenderer.invoke('showTracklistMenu', true, true)
+    if (clickedId === 'New Playlist') {
       openNewPlaylistModal('root', false)
-    } else if (clickedId === 'New Playlist Folder') {
+    } else if (clickedId === 'New Folder') {
       openNewPlaylistModal('root', true)
-    } else {
-      console.error('Unknown contextMenu ID', clickedId)
     }
   }
   function open(id: string) {
@@ -57,6 +53,21 @@
   }
 
   let rootDroppable = false
+  function dragover(e: DragEvent) {
+    if (e.currentTarget && e.dataTransfer?.types[0] === 'ferrum.playlist') {
+      rootDroppable = true
+      e.preventDefault()
+    }
+  }
+  function dragleave() {
+    rootDroppable = false
+  }
+  function drop(e: DragEvent) {
+    if (e.currentTarget && e.dataTransfer?.types[0] === 'ferrum.playlist' && dragged.playlist) {
+      movePlaylist(dragged.playlist.id, dragged.playlist.fromFolder, 'root')
+      rootDroppable = false
+    }
+  }
 </script>
 
 <div class="sidebar" on:mousedown|self|preventDefault>
@@ -71,21 +82,6 @@
       on:keydown={handleKeydown}
       bind:this={viewport}
       class:droppable={rootDroppable}
-      on:dragover|self={(e) => {
-        if (e.currentTarget && e.dataTransfer?.types[0] === 'ferrum.playlist') {
-          rootDroppable = true
-          e.preventDefault()
-        }
-      }}
-      on:dragleave|self={() => {
-        rootDroppable = false
-      }}
-      on:drop|self={(e) => {
-        if (e.currentTarget && e.dataTransfer?.types[0] === 'ferrum.playlist' && dragged.playlist) {
-          movePlaylist(dragged.playlist.id, dragged.playlist.fromFolder, 'root')
-          rootDroppable = false
-        }
-      }}
     >
       <div class="spacer" />
       <SidebarItems
@@ -97,7 +93,13 @@
         }}
         parentId={null}
       />
-      <div class="spacer pointer-events-none" on:contextmenu={onContextMenu} />
+      <div
+        class="spacer"
+        on:contextmenu={onContextMenu}
+        on:dragover={dragover}
+        on:dragleave={dragleave}
+        on:drop={drop}
+      />
       <SidebarItems
         trackList={$trackLists.root}
         on:selectUp={() => {
@@ -105,15 +107,18 @@
         }}
         parentId={$trackLists.root.id}
       />
-      <div class="spacer pointer-events-none" on:contextmenu={onContextMenu} />
-      <div class="bottom-space pointer-events-none" on:contextmenu={onContextMenu} />
+      <div
+        class="bottom-space spacer"
+        on:contextmenu={onContextMenu}
+        on:dragover={dragover}
+        on:dragleave={dragleave}
+        on:drop={drop}
+      />
     </div>
   </div>
 </div>
 
 <style lang="sass">
-  .pointer-events-none
-    pointer-events: none
   .sidebar
     width: 230px
     min-width: 230px

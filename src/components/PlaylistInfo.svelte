@@ -1,29 +1,39 @@
 <script lang="ts" context="module">
-  import { writable } from 'svelte/store'
+  import { get, writable } from 'svelte/store'
   import { checkShortcut, focus, focusLast } from '../lib/helpers'
   import { visibleModalsCount } from '../lib/modals'
-  import { newPlaylist, PlaylistInfo } from '../lib/data'
+  import { newPlaylist, PlaylistInfo, trackLists, updatePlaylist } from '../lib/data'
 
-  const visible = writable(false)
-  const createFolder = writable(false)
-  const info = writable({
-    parentId: 'root',
-    name: '',
-    description: '',
-  } as PlaylistInfo)
-  export function open(parentId: string, newIsFolder: boolean) {
+  const editMode = writable(false)
+  const info = writable(null as PlaylistInfo | null)
+
+  export function edit(id: string, isFolder: boolean) {
     if (visibleModalsCount.get() == 0) {
+      const list = get(trackLists)[id]
+      if (list.type !== 'special') {
+        editMode.set(true)
+        info.set({
+          name: list.name,
+          description: list.description || '',
+          isFolder: isFolder,
+          id,
+        })
+      }
+    }
+  }
+  export function openNew(parentId: string, isFolder: boolean) {
+    if (visibleModalsCount.get() == 0) {
+      editMode.set(false)
       info.set({
-        parentId,
         name: '',
         description: '',
+        isFolder: isFolder,
+        id: parentId,
       })
-      createFolder.set(newIsFolder)
-      visible.set(true)
     }
   }
   function close() {
-    visible.set(false)
+    info.set(null)
     focusLast()
   }
 </script>
@@ -40,8 +50,14 @@
   }
 
   function save() {
-    newPlaylist($info, $createFolder)
-    close()
+    if ($info) {
+      if ($editMode) {
+        updatePlaylist($info.id, $info.name, $info.description)
+      } else {
+        newPlaylist($info)
+      }
+      close()
+    }
   }
 
   function keydown(e: KeyboardEvent) {
@@ -51,12 +67,17 @@
       }
     }
   }
+  function formKeydown(e: KeyboardEvent) {
+    if (checkShortcut(e, 'enter', { cmdOrCtrl: true })) {
+      save()
+    }
+  }
 
   function newPlaylistHandler() {
-    open('root', false)
+    openNew('root', false)
   }
   function newPlaylistFolderHandler() {
-    open('root', true)
+    openNew('root', true)
   }
   ipcRenderer.on('newPlaylist', newPlaylistHandler)
   ipcRenderer.on('newPlaylistFolder', newPlaylistFolderHandler)
@@ -68,27 +89,27 @@
 
 <svelte:window on:keydown={keydown} />
 
-<Modal showIf={$visible} onClose={close}>
-  <form class="modal" on:submit|preventDefault={save}>
-    {#if $createFolder}
-      <h3>New Playlist Folder</h3>
-    {:else}
-      <h3>New Playlist</h3>
-    {/if}
-    <div class="spacer" />
-    <input type="text" bind:value={$info.name} use:focus placeholder="Title" />
-    <textarea
-      rows={rows($info.description)}
-      bind:value={$info.description}
-      placeholder="Description"
-    />
-    <div class="spacer" />
-    <div class="bottom">
-      <Button secondary on:click={close}>Cancel</Button>
-      <Button type="submit">Save</Button>
-    </div>
-  </form>
-</Modal>
+{#if $info}
+  <Modal showIf={true} onClose={close}>
+    <form class="modal" on:submit|preventDefault={save} on:keydown={formKeydown}>
+      <h3>
+        {$editMode ? 'Edit' : 'New'} Playlist {#if $info.isFolder}Folder{/if}
+      </h3>
+      <div class="spacer" />
+      <input type="text" bind:value={$info.name} use:focus placeholder="Title" />
+      <textarea
+        rows={rows($info.description)}
+        bind:value={$info.description}
+        placeholder="Description"
+      />
+      <div class="spacer" />
+      <div class="bottom">
+        <Button secondary on:click={close}>Cancel</Button>
+        <Button type="submit">Save</Button>
+      </div>
+    </form>
+  </Modal>
+{/if}
 
 <style lang="sass">
   form

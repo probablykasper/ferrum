@@ -173,6 +173,29 @@ pub fn new_playlist(ctx: CallContext) -> NResult<JsUndefined> {
   return ctx.env.get_undefined();
 }
 
+#[js_function(4)]
+pub fn update_playlist(ctx: CallContext) -> NResult<JsUndefined> {
+  let data: &mut Data = get_data(&ctx)?;
+  let id = arg_to_string(&ctx, 0)?;
+  let name = arg_to_string(&ctx, 1)?;
+  let description = arg_to_string(&ctx, 2)?;
+
+  match data.library.trackLists.get_mut(&id) {
+    Some(TrackList::Special(_)) => throw!("Cannot edit special playlists"),
+    Some(TrackList::Playlist(playlist)) => {
+      playlist.name = name;
+      playlist.description = str_to_option(description);
+    }
+    Some(TrackList::Folder(folder)) => {
+      folder.name = name;
+      folder.description = str_to_option(description);
+    }
+    None => throw!("Playlist not found"),
+  };
+
+  return ctx.env.get_undefined();
+}
+
 fn get_all_tracklist_children(data: &Data, playlist_id: &str) -> UniResult<Vec<TrackID>> {
   let direct_children = match data.library.get_tracklist(playlist_id)? {
     TrackList::Folder(folder) => &folder.children,
