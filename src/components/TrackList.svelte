@@ -115,11 +115,13 @@
     const indexes = selection.getSelectedIndexes($selection)
     const ids = indexes.map((i) => page.getTrackId(i))
     const clickedId = await showTrackMenu($page.tracklist.type === 'playlist')
+    console.log(clickedId)
+
     if (clickedId === 'Play Next') {
       prependToUserQueue(ids)
     } else if (clickedId === 'Add to Queue') {
       appendToUserQueue(ids)
-    } else if (clickedId.startsWith('add-to-')) {
+    } else if (clickedId?.startsWith('add-to-')) {
       const pId = clickedId.substring('add-to-'.length)
       addTracksToPlaylist(pId, ids)
     } else if (clickedId === 'Remove from Playlist') {

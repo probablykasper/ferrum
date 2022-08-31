@@ -52,7 +52,7 @@
     if ($page.id !== id) page.openPlaylist(id)
   }
   async function tracklistContextMenu(id: string, isFolder: boolean) {
-    const clickedId = await ipcRenderer.invoke('showTracklistMenu', isFolder)
+    const clickedId = (await ipcRenderer.invoke('showTracklistMenu', isFolder)) as string | null
     if (clickedId === 'Edit Details') {
       openEditPlaylistModal(id, isFolder)
     } else if (clickedId === 'New Playlist') {

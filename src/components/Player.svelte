@@ -51,7 +51,7 @@
       prependToUserQueue([trackId])
     } else if (clickedId === 'Add to Queue') {
       appendToUserQueue([trackId])
-    } else if (clickedId.startsWith('add-to-')) {
+    } else if (clickedId?.startsWith('add-to-')) {
       const pId = clickedId.substring('add-to-'.length)
       addTracksToPlaylist(pId, [trackId])
     } else if (clickedId === 'revealTrackFile') {

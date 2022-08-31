@@ -41,7 +41,7 @@
     }
   }
   async function onContextMenu() {
-    const clickedId = await ipcRenderer.invoke('showTracklistMenu', true, true)
+    const clickedId = (await ipcRenderer.invoke('showTracklistMenu', true, true)) as string | null
     if (clickedId === 'New Playlist') {
       openNewPlaylistModal('root', false)
     } else if (clickedId === 'New Folder') {

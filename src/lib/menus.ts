@@ -8,7 +8,7 @@ export async function showTrackMenu(playlist = false) {
   const trackLists = get(trackListsStore)
   const flat = flattenChildLists(trackLists.root as Special, trackLists, '', 'add-to-')
 
-  const clickedId = await ipcRenderer.invoke('showTrackMenu', flat, playlist)
+  const clickedId = (await ipcRenderer.invoke('showTrackMenu', flat, playlist)) as string | null
 
   return clickedId
 }
