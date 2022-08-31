@@ -79,7 +79,7 @@ app.whenReady().then(async () => {
   })
 
   if (is.dev) mainWindow.loadURL(process.env.VITE_DEV_SERVER_URL || 'missing')
-  else mainWindow.loadFile(path.resolve(__dirname, '../build/web/index.html'))
+  else mainWindow.loadFile(path.resolve(__dirname, '../web/index.html'))
 
   if (is.dev) mainWindow.webContents.openDevTools()
 

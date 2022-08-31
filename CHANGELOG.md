@@ -1,6 +1,7 @@
 # Changelog
 
 ## Next
+- Fix app launch error
 - Fix app exit when launch fails
 
 ## 0.14.0 - 2022 Aug 31
