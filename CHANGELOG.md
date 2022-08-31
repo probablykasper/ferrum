@@ -1,6 +1,6 @@
 # Changelog
 
-## Next
+## 0.14.0 - 2022 Aug 31
 - Add playlist editing
 - Add context menu and drag-and-drop to currently playing track
 - Restrict `Enter` shortcut when no tracks are selected
