@@ -1,8 +1,7 @@
-/* eslint-disable @typescript-eslint/no-var-requires */
-const { Menu, shell } = require('electron')
-const is = require('./is.js')
+import { Menu, shell } from 'electron'
+import is from './is'
 
-module.exports.initMenuBar = (app, mainWindow) => {
+export function initMenuBar(app, mainWindow) {
   const template = [
     ...(is.mac
       ? [

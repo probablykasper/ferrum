@@ -15,6 +15,8 @@ type addon = {
 declare global {
   interface Window {
     addon: addon
+    isDev: boolean
+    isMac: boolean
     joinPaths: (...args: string[]) => string
     iTunesImport: (
       paths: { library_dir: string; tracks_dir: string; library_json: string },

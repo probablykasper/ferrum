@@ -1,20 +1,23 @@
-/* eslint-disable @typescript-eslint/no-var-requires */
-const { ipcMain, dialog, Menu, shell } = require('electron')
-const path = require('path')
-const is = require('./is.js')
+import { ipcMain, dialog, Menu, shell, BrowserWindow } from 'electron'
+import path from 'path'
+import is from './is'
 
 ipcMain.handle('showMessageBox', async (e, options) => {
   return await dialog.showMessageBox(options)
 })
 
 ipcMain.handle('showMessageBoxAttached', async (e, options) => {
-  const window = e.sender.getOwnerBrowserWindow()
-  return await dialog.showMessageBox(window, options)
+  const window = BrowserWindow.fromWebContents(e.sender)
+  if (window) {
+    return await dialog.showMessageBox(window, options)
+  } else {
+    return await dialog.showMessageBox(options)
+  }
 })
 
 ipcMain.handle('showOpenDialog', async (e, attached, options) => {
-  const window = e.sender.getOwnerBrowserWindow()
-  if (attached === true) {
+  const window = BrowserWindow.fromWebContents(e.sender)
+  if (attached === true && window) {
     return await dialog.showOpenDialog(window, options)
   } else {
     return await dialog.showOpenDialog(options)
@@ -64,7 +67,7 @@ ipcMain.handle('showTrackMenu', (_e, list, playlist) => {
         visible: playlist === true,
       },
     ])
-    menu.once('will-close', () => resolve())
+    menu.once('menu-will-close', () => resolve(null))
     menu.popup()
   })
 })
@@ -87,7 +90,7 @@ ipcMain.handle('showTracklistMenu', (e, isFolder, newOnly) => {
         click: () => resolve('New Folder'),
       },
     ]
-    let menuItems = editMenu
+    let menuItems: Electron.MenuItemConstructorOptions[] = editMenu
     if (newOnly) {
       menuItems = newMenu
     } else if (isFolder) {
@@ -95,7 +98,7 @@ ipcMain.handle('showTracklistMenu', (e, isFolder, newOnly) => {
     }
 
     const menu = Menu.buildFromTemplate(menuItems)
-    menu.once('will-close', () => resolve())
+    menu.once('menu-will-close', () => resolve(null))
     menu.popup()
   })
 })

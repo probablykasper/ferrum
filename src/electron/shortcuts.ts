@@ -1,9 +1,8 @@
-/* eslint-disable @typescript-eslint/no-var-requires */
-const { globalShortcut, dialog, systemPreferences } = require('electron')
-const is = require('./is.js')
+import { globalShortcut, dialog, systemPreferences } from 'electron'
+import is from './is'
 
 function tryRegistering(mainWindow) {
-  let success1 = globalShortcut.register('MediaPlayPause', () => {
+  const success1 = globalShortcut.register('MediaPlayPause', () => {
     if (mainWindow !== null) mainWindow.webContents.send('playPause')
   })
   if (!success1) return false
@@ -56,8 +55,8 @@ async function getTrustedAccessibilityMacOS(mainWindow) {
   }
 }
 
-async function initMediaKeys(mainWindow) {
-  let success = tryRegistering(mainWindow)
+export async function initMediaKeys(mainWindow) {
+  const success = tryRegistering(mainWindow)
   if (!success) {
     if (is.mac) {
       if (systemPreferences.isTrustedAccessibilityClient(false)) {
@@ -76,4 +75,3 @@ async function initMediaKeys(mainWindow) {
     }
   }
 }
-module.exports = { initMediaKeys }

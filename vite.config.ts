@@ -1,11 +1,10 @@
 import { resolve } from 'path'
-import { exec } from 'child_process'
 import { defineConfig } from 'vite'
 import { svelte } from '@sveltejs/vite-plugin-svelte'
 import sveltePreprocess from 'svelte-preprocess'
+import { electronX } from 'vite-plugin-electron-x'
 
 export default defineConfig({
-  root: './src',
   base: './', // use relative paths
   clearScreen: false,
   resolve: {
@@ -13,12 +12,8 @@ export default defineConfig({
       '@': resolve(__dirname, './src'),
     },
   },
-  server: {
-    port: Number(process.env.PORT) || 8089,
-    strictPort: true,
-  },
   build: {
-    outDir: '../build/web',
+    outDir: './build/web',
     emptyOutDir: true,
     minify: false,
     sourcemap: true,
@@ -28,16 +23,21 @@ export default defineConfig({
     svelte({
       preprocess: sveltePreprocess(),
     }),
-    {
-      name: 'electron-start',
-      configureServer(server) {
-        server.httpServer?.once('listening', () => {
-          console.log('\nStarting Electron...')
-          const child = exec('NODE_ENV=development electron .')
-          child.stdout?.pipe(process.stdout)
-          child.stderr?.pipe(process.stderr)
-        })
+    electronX({
+      dev: {
+        env: {
+          NODE_ENV: 'development',
+        },
       },
-    },
+      main: {
+        entry: './src/electron/main.ts',
+        outDir: './build/electron',
+      },
+      preload: {
+        entry: './src/electron/preload.ts',
+        external: [resolve('./build/addon.node'), 'simple-plist'],
+        outDir: './build/electron',
+      },
+    }),
   ],
 })

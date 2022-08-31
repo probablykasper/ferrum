@@ -1,30 +1,98 @@
-/* eslint-disable @typescript-eslint/no-var-requires */
-const { ipcRenderer } = require('electron')
-const simplePlist = require('simple-plist')
-const path = require('path')
-const url = require('url')
-const fs = require('fs')
-const mm = require('music-metadata')
-const addon = require('../../build/addon.node')
+import { ipcRenderer } from 'electron'
+import simplePlist from 'simple-plist'
+import path from 'path'
+import url from 'url'
+import fs from 'fs'
+import mm from 'music-metadata'
+import addon from '../../build/addon.node'
+import {
+  Playlist as LibraryPlaylist,
+  Folder as LibraryFolder,
+  Track as LibraryTrack,
+  TrackListsHashMap,
+  SpecialTrackListName,
+} from '../lib/libraryTypes'
 
-module.exports = iTunesImport
-async function iTunesImport(paths, status, warn) {
-  const warnings = []
+type Track = LibraryTrack & {
+  importedFrom: 'itunes'
+  dateImported: number
+  duration: number
+  bitrate: number
+  sampleRate: number
+  name: string
+  originalId: string
+}
+
+type XmlTrack = {
+  'Date Modified': Date
+  'Date Added': Date
+  'Play Date UTC': Date
+  importedFrom: 'itunes'
+  Artist?: string
+  Name?: string
+  'Persistent ID'?: string
+  Composer?: string
+  'Sort Name'?: string
+  'Sort Artist'?: string
+  'Sort Composer'?: string
+  Genre?: string
+  Rating?: unknown // TODO
+  Year?: unknown // TODO
+  BPM?: unknown // TODO
+  Comments?: string
+  Grouping?: string
+  'Play Count'?: unknown // TODO
+  'Volume Adjustment': number
+}
+
+type TrackList = Playlist | Folder
+
+type Playlist = LibraryPlaylist & {
+  importedFrom: 'itunes'
+  originalId: string
+  dateImported: number
+}
+
+type Folder = LibraryFolder & {
+  name: string
+  description?: string
+  liked?: string
+  disliked?: string
+  /** For example "itunes" */
+  importedFrom?: string
+  /** For example iTunes Persistent ID */
+  originalId?: string
+  dateImported?: number
+  dateCreated?: number
+  children: string[]
+}
+
+type Paths = {
+  library_dir: string
+  tracks_dir: string
+  library_json: string
+}
+
+type Result = { cancelled: boolean; warnings: string[]; err?: Error }
+export async function iTunesImport(
+  paths: Paths,
+  status: (msg: string) => void,
+  warn: (msg: string) => void
+): Promise<Result> {
+  const warnings: string[] = []
   try {
     const result = await start(paths, status, (warning) => {
       warnings.push(warning)
       warn(warning)
     })
-    result.warnings = warnings
-    return result
+    return { ...result, warnings }
   } catch (err) {
-    if (!err.message) err.message = err.code
     console.error(err)
-    return { err, warnings }
+    return { err: new Error('Unknown'), warnings, cancelled: true }
   }
 }
 
-function sanitizeFilename(str) {
+function sanitizeFilename(str: string) {
   str = str.replaceAll('/', '_')
   str = str.replaceAll('?', '_')
   str = str.replaceAll('<', '_')
@@ -40,7 +108,7 @@ function sanitizeFilename(str) {
   return str.substring(0, 230)
 }
 
-function generateFilename(track, originalPath, tracksDir) {
+function generateFilename(track: Track, originalPath: string, tracksDir: string): string {
   const name = track.name || ''
   const artist = track.artist || ''
   const beginning = sanitizeFilename(artist + ' - ' + name)
@@ -61,7 +129,7 @@ function generateFilename(track, originalPath, tracksDir) {
   let filename
   for (let i = 0; i < 999; i++) {
     if (i === 500) {
-      throw new Error('Already got 500 tracks with that artist and title')
+      break
     }
     filename = beginning + ending + ext
     const filepath = path.join(tracksDir, filename)
@@ -69,13 +137,13 @@ function generateFilename(track, originalPath, tracksDir) {
       fileNum++
       ending = ' ' + fileNum
     } else {
-      break
+      return filename
     }
   }
-  return filename
+  throw new Error('Already got 500 tracks with that artist and title')
 }
 
-function readPlist(filePath) {
+function readPlist(filePath: string) {
   return new Promise((resolve, reject) => {
     simplePlist.readFile(filePath, (err, data) => {
       if (err) reject(err)
@@ -88,13 +156,13 @@ function makeId(length = 10) {
   let result = ''
   const characters = 'abcdefghijklmnopqrstuvwxyz234567'
   const charactersLength = characters.length
-  for (var i = 0; i < length; i++) {
+  for (let i = 0; i < length; i++) {
     result += characters.charAt(Math.floor(Math.random() * charactersLength))
   }
   return result
 }
 
-function buffersEqual(buf1, buf2) {
+function buffersEqual(buf1: Buffer, buf2: Buffer) {
   return Buffer.compare(buf1, buf2) === 0
 }
 
@@ -139,26 +207,37 @@ async function popup() {
   return {}
 }
 
-async function parseTrack(xmlTrack, warn, startTime, dryRun, paths) {
-  const track = {}
+enum Info {
+  Required = 1,
+  Recommended = 1,
+}
+
+async function parseTrack(
+  xmlTrack: XmlTrack,
+  warn: (msg: string) => void,
+  startTime: number,
+  dryRun: boolean,
+  paths: Paths
+) {
+  const track: Track = {
+    importedFrom: 'itunes',
+    dateImported: startTime,
+  }
   const logPrefix = '[' + xmlTrack['Artist'] + ' - ' + xmlTrack['Name'] + ']'
-  const REQUIRED = 1
-  const RECOMMENDED = 2
-  const addIfTruthy = function (prop, value, info) {
+  function addIfTruthy(prop: string, value: string | Date | undefined, info?: Info) {
     if (value instanceof Date) {
       track[prop] = value.getTime()
     } else if (value) {
       track[prop] = value
-    } else if (info === REQUIRED) {
+    } else if (info === Info.Required) {
       throw new Error(logPrefix + ` Track missing required field "${prop}"`)
-    } else if (info === RECOMMENDED) {
+    } else if (info === Info.Recommended) {
       warn(logPrefix + ` Missing recommended field "${prop}"`)
     }
   }
-  addIfTruthy('name', xmlTrack['Name'], RECOMMENDED)
+  addIfTruthy('name', xmlTrack['Name'], Info.Recommended)
   addIfTruthy('originalId', xmlTrack['Persistent ID'])
-  track['importedFrom'] = 'itunes'
-  addIfTruthy('artist', xmlTrack['Artist'], RECOMMENDED)
+  addIfTruthy('artist', xmlTrack['Artist'], Info.Recommended)
   addIfTruthy('composer', xmlTrack['Composer'])
   addIfTruthy('sortName', xmlTrack['Sort Name'])
   addIfTruthy('sortArtist', xmlTrack['Sort Artist'])
@@ -167,16 +246,15 @@ async function parseTrack(xmlTrack, warn, startTime, dryRun, paths) {
   addIfTruthy('rating', xmlTrack['Rating'])
   addIfTruthy('year', xmlTrack['Year'])
   addIfTruthy('bpm', xmlTrack['BPM'])
-  addIfTruthy('dateModified', xmlTrack['Date Modified'], REQUIRED)
-  addIfTruthy('dateAdded', xmlTrack['Date Added'], REQUIRED)
-  track['dateImported'] = startTime
+  addIfTruthy('dateModified', xmlTrack['Date Modified'], Info.Required)
+  addIfTruthy('dateAdded', xmlTrack['Date Added'], Info.Required)
   addIfTruthy('comments', xmlTrack['Comments'])
   addIfTruthy('grouping', xmlTrack['Grouping'])
   if (xmlTrack['Play Count'] && xmlTrack['Play Count'] >= 1) {
     track['playCount'] = xmlTrack['Play Count']
     // Unlike "Skip Date" etc, "Play Date" is a non-UTC Mac HFS+ timestamp, but
     // luckily "Play Date UTC" is a normal date.
-    let playDate = xmlTrack['Play Date UTC']
+    const playDate = xmlTrack['Play Date UTC']
     let importedPlayCount = xmlTrack['Play Count']
     if (playDate !== undefined) {
       // if we have a playDate, add a play for it
@@ -195,7 +273,7 @@ async function parseTrack(xmlTrack, warn, startTime, dryRun, paths) {
   }
   if (xmlTrack['Skip Count'] && xmlTrack['Skip Count'] >= 1) {
     track['skipCount'] = xmlTrack['Skip Count']
-    let skipDate = xmlTrack['Skip Date']
+    const skipDate = xmlTrack['Skip Date']
     let importedSkipCount = xmlTrack['Skip Count']
     if (skipDate !== undefined) {
       // if we have a skipDate, add a skip for it
@@ -334,23 +412,36 @@ async function parseTrack(xmlTrack, warn, startTime, dryRun, paths) {
   return track
 }
 
-function addCommonPlaylistFields(playlist, xmlPlaylist, startTime) {
-  const addIfTruthy = function (prop, value) {
-    if (value) playlist[prop] = value
-  }
+type XmlPlaylist = {
+  Name: string
+  Description?: string
+  Loved?: string
+  Disliked?: string
+  'Playlist Persistent ID': string
+}
+
+function addCommonPlaylistFields(playlist: TrackList, xmlPlaylist: XmlPlaylist, startTime: number) {
   if (!xmlPlaylist['Name']) {
-    throw new Error('Playlist missing required field "Name":', xmlPlaylist)
+    throw new Error('Playlist missing required field "Name": ' + String(xmlPlaylist))
   }
   playlist.name = xmlPlaylist['Name']
-  addIfTruthy('description', xmlPlaylist['Description'])
-  addIfTruthy('liked', xmlPlaylist['Loved'])
-  addIfTruthy('disliked', xmlPlaylist['Disliked'])
+  if (xmlPlaylist['Description']) playlist.description = xmlPlaylist['Description']
+  if (xmlPlaylist['Loved']) playlist.liked = xmlPlaylist['Loved']
+  if (xmlPlaylist['Disliked']) playlist.disliked = xmlPlaylist['Disliked']
   playlist.originalId = xmlPlaylist['Playlist Persistent ID']
   playlist.importedFrom = 'itunes'
   playlist.dateImported = startTime
 }
 
-async function start(paths, status, warn) {
+type StartResult = {
+  err?: Error
+  cancelled: boolean
+}
+async function start(
+  paths: Paths,
+  status: (msg: string) => void,
+  warn: (msg: string) => void
+): Promise<StartResult> {
   // const filePath = '/Users/kasper/Downloads/Library.xml'
   // const dryRun = false
   const { filePath, dryRun } = await popup()
@@ -393,8 +484,9 @@ async function start(paths, status, warn) {
   // contains podcasts, etc.
   const xmlMusicPlaylistItems = xmlMusicPlaylist['Playlist Items']
   const startTime = new Date().getTime()
-  const parsedTracks = {}
-  const trackIdMap = {}
+  const parsedTracks: Record<string, Track> = {}
+  /** iTunes ID -> Ferrum ID */
+  const trackIdMap: Record<string, string> = {}
   for (let i = 0; i < xmlMusicPlaylistItems.length; i++) {
     status(`Parsing tracks... (${i + 1}/${xmlMusicPlaylistItems.length})`)
     const xmlPlaylistItem = xmlMusicPlaylistItems[i]
@@ -412,9 +504,9 @@ async function start(paths, status, warn) {
   }
 
   status('Parsing folders...')
-  const parsedPlaylists = {
+  const parsedPlaylists: TrackListsHashMap = {
     root: {
-      name: 'Root',
+      name: SpecialTrackListName.Root,
       id: 'root',
       type: 'special',
       dateCreated: startTime,
@@ -424,7 +516,7 @@ async function start(paths, status, warn) {
   const folderIdMap = {}
   for (const xmlPlaylist of xmlPlaylists) {
     if (xmlPlaylist['Folder'] !== true) continue
-    const playlist = { type: 'folder', children: [] }
+    const playlist: Folder = { type: 'folder', children: [] }
     addCommonPlaylistFields(playlist, xmlPlaylist, startTime)
     let id
     do {
@@ -494,7 +586,7 @@ async function start(paths, status, warn) {
   if (dryRun) return { cancelled: true }
 
   status('Saving...')
-  let newLibrary = {
+  const newLibrary = {
     version: 1,
     tracks: parsedTracks,
     trackLists: parsedPlaylists,

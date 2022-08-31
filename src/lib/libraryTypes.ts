@@ -124,6 +124,6 @@ export type Special = {
   children: TrackListID[]
 }
 
-enum SpecialTrackListName {
+export enum SpecialTrackListName {
   Root,
 }

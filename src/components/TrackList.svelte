@@ -223,7 +223,6 @@
   }
 
   let dragLine: HTMLElement
-  let dragging = false
   let indexes: number[] = []
   function onDragStart(e: DragEvent) {
     if (e.dataTransfer) {
@@ -233,7 +232,6 @@
           indexes.push(i)
         }
       }
-      dragging = true
       e.dataTransfer.effectAllowed = 'move'
       if (indexes.length === 1) {
         const track = page.getTrack(indexes[0])
@@ -279,7 +277,6 @@
     }
   }
   function dragEndHandler() {
-    dragging = false
     if (dragToIndex !== null) {
       const newSelection = page.moveTracks(indexes, dragToIndex)
       for (let i = newSelection.from; i <= newSelection.to; i++) {

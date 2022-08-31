@@ -1,31 +1,28 @@
-/* eslint-disable @typescript-eslint/no-var-requires */
-const { app, ipcMain, session, BrowserWindow, dialog, protocol } = require('electron')
-const is = require('./electron/is.js')
+import { app, ipcMain, session, BrowserWindow, dialog, protocol } from 'electron'
+import is from './is'
+
 if (is.dev) app.setName('Ferrum Dev')
 
-const menubar = require('./electron/menubar.js')
-const shortcuts = require('./electron/shortcuts.js')
-require('./electron/ipc.js')
-const path = require('path')
+import { initMenuBar } from './menubar'
+import { initMediaKeys } from './shortcuts'
+import('./ipc')
+import path from 'path'
 
-async function errHandler(msg, error) {
-  if (app.isReady()) {
+async function errHandler(msg: string, error: Error) {
+  app.whenReady().then(() => {
     dialog.showMessageBoxSync({
       type: 'error',
       message: msg,
       detail: error.stack,
       title: 'Error',
     })
-  } else {
-    app.on('msg, error', () => {
-      errHandler(msg, error)
-    })
-  }
+    errHandler(msg, error)
+  })
 }
 process.on('uncaughtException', (error) => {
   errHandler('Unhandled Error', error)
 })
-process.on('unhandledRejection', (error) => {
+process.on('unhandledRejection', (error: Error) => {
   errHandler('Unhandled Promise Rejection', error)
 })
 
@@ -44,8 +41,8 @@ app.on('window-all-closed', () => {
   app.quit()
 })
 
-app.on('ready', async () => {
-  let mainWindow = new BrowserWindow({
+app.whenReady().then(async () => {
+  let mainWindow: BrowserWindow | null = new BrowserWindow({
     width: 1300,
     height: 1000,
     minWidth: 850,
@@ -55,14 +52,14 @@ app.on('ready', async () => {
       nativeWindowOpen: true,
       contextIsolation: false,
       nodeIntegration: true,
-      preload: path.resolve(__dirname, './electron/preload.js'),
+      preload: path.resolve(__dirname, './preload.js'),
     },
     backgroundColor: '#0D1115',
     show: false,
   })
 
   if (!is.dev) {
-    await shortcuts.initMediaKeys(mainWindow)
+    await initMediaKeys(mainWindow)
   }
 
   protocol.registerFileProtocol('track', (request, callback) => {
@@ -80,19 +77,19 @@ app.on('ready', async () => {
     })
   })
 
-  if (is.dev) mainWindow.loadURL('http://localhost:' + (process.env.PORT || 8089))
+  if (is.dev) mainWindow.loadURL(process.env.VITE_DEV_SERVER_URL || 'missing')
   else mainWindow.loadFile(path.resolve(__dirname, '../build/web/index.html'))
 
   if (is.dev) mainWindow.webContents.openDevTools()
 
   mainWindow.once('ready-to-show', () => {
-    mainWindow.show()
+    mainWindow?.show()
   })
 
   mainWindow.on('close', (e) => {
     if (!quitting) {
       e.preventDefault()
-      mainWindow.hide()
+      mainWindow?.hide()
     }
   })
   mainWindow.on('closed', () => {
@@ -101,10 +98,10 @@ app.on('ready', async () => {
 
   // doesn't fire on Windows :(
   app.on('before-quit', () => {
-    mainWindow.webContents.send('gonnaQuit')
+    mainWindow?.webContents.send('gonnaQuit')
     ipcMain.once('readyToQuit', () => {
       quitting = true
-      mainWindow.close()
+      mainWindow?.close()
     })
   })
 
@@ -114,5 +111,5 @@ app.on('ready', async () => {
     }
   })
 
-  menubar.initMenuBar(app, mainWindow)
+  initMenuBar(app, mainWindow)
 })
