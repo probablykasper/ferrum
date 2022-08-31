@@ -1,5 +1,8 @@
 # Changelog
 
+## Next
+- Fix app exit when launch fails
+
 ## 0.14.0 - 2022 Aug 31
 - Add playlist editing
 - Add context menu and drag-and-drop to currently playing track

@@ -38,6 +38,8 @@
     ipcRenderer.off('itunesImport', itunesImport)
   })
 
+  ipcRenderer.emit('appLoaded')
+
   async function openImportDialog() {
     if ($visibleModalsCount !== 0) {
       return

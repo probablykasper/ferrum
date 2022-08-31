@@ -36,6 +36,7 @@ if (is.dev) {
 }
 
 let quitting = false
+let appLoaded = false
 
 app.on('window-all-closed', () => {
   app.quit()
@@ -95,14 +96,22 @@ app.whenReady().then(async () => {
   mainWindow.on('closed', () => {
     mainWindow = null
   })
+  ipcMain.once('appLoaded', () => {
+    appLoaded = true
+  })
 
   // doesn't fire on Windows :(
   app.on('before-quit', () => {
-    mainWindow?.webContents.send('gonnaQuit')
-    ipcMain.once('readyToQuit', () => {
+    if (appLoaded) {
+      mainWindow?.webContents.send('gonnaQuit')
+      ipcMain.once('readyToQuit', () => {
+        quitting = true
+        mainWindow?.close()
+      })
+    } else {
       quitting = true
       mainWindow?.close()
-    })
+    }
   })
 
   app.on('activate', () => {
