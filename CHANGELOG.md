@@ -1,6 +1,6 @@
 # Changelog
 
-## Next
+## 0.14.2 - 2022 Aug 31
 - Fix context menus
 
 ## 0.14.1 - 2022 Aug 31
