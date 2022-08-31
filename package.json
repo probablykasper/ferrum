@@ -3,7 +3,7 @@
   "productName": "Ferrum",
   "author": "kasper.space",
   "description": "Music library app",
-  "version": "0.14.0",
+  "version": "0.14.1",
   "repository": "https://github.com/probablykasper/ferrum",
   "scripts": {
     "dev": "npm run napi:dev && vite",
