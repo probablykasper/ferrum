@@ -79,9 +79,14 @@
 <div class="player" class:stopped={$stopped} on:mousedown|self|preventDefault class:dev={isDev}>
   <div class="left">
     {#if !$stopped && $playingTrack}
-      <div class="cover" on:contextmenu={playingContextMenu} on:dragstart={dragStart}>
+      <div
+        class="cover"
+        on:contextmenu={playingContextMenu}
+        on:dragstart={dragStart}
+        draggable="true"
+      >
         {#if $coverSrc}
-          <img src={$coverSrc} alt="" />
+          <img src={$coverSrc} alt="" draggable="false" />
         {:else}
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
             <path
