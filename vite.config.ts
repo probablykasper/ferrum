@@ -35,7 +35,7 @@ export default defineConfig({
       },
       preload: {
         entry: './src/electron/preload.ts',
-        external: [resolve('./build/addon.node'), 'simple-plist'],
+        external: [/^.*\.node$/, 'simple-plist'],
         outDir: './build/electron',
       },
     }),
