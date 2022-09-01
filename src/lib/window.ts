@@ -17,12 +17,13 @@ declare global {
     addon: addon
     isDev: boolean
     isMac: boolean
+    isWindows: boolean
     joinPaths: (...args: string[]) => string
     iTunesImport: (
       paths: { library_dir: string; tracks_dir: string; library_json: string },
       statusHandler: (status: string) => void,
       warningHandler: (status: string) => void
-    ) => Promise<{ err: Error | null; cancelled: boolean | null | undefined }>
+    ) => Promise<{ err?: Error; cancelled: boolean }>
   }
 }
 

@@ -14,16 +14,9 @@
     volume,
   } from '../lib/player'
   import { getDuration } from '../lib/helpers'
-  import {
-    appendToUserQueue,
-    prependToUserQueue,
-    queueVisible,
-    toggleQueueVisibility,
-  } from '../lib/queue'
-  import { addTracksToPlaylist, isDev, paths, methods } from '../lib/data'
+  import { queueVisible, toggleQueueVisibility } from '../lib/queue'
+  import { isDev, methods } from '../lib/data'
   import { showTrackMenu } from '@/lib/menus'
-  import { open as openTrackInfo } from './TrackInfo.svelte'
-  import { ipcRenderer } from '@/lib/window'
   import { dragged } from '@/lib/drag-drop'
   import * as dragGhost from './DragGhost.svelte'
 
@@ -43,22 +36,8 @@
     seek((sliderValue / sliderSteps) * $duration || 0)
   }
   async function playingContextMenu() {
-    if (!$playingId) return
-    const trackId = $playingId
-    const clickedId = await showTrackMenu(false)
-
-    if (clickedId === 'Play Next') {
-      prependToUserQueue([trackId])
-    } else if (clickedId === 'Add to Queue') {
-      appendToUserQueue([trackId])
-    } else if (clickedId?.startsWith('add-to-')) {
-      const pId = clickedId.substring('add-to-'.length)
-      addTracksToPlaylist(pId, [trackId])
-    } else if (clickedId === 'revealTrackFile') {
-      const track = methods.getTrack(trackId)
-      ipcRenderer.invoke('revealTrackFile', paths.tracks_dir, track.file)
-    } else if (clickedId === 'Get Info') {
-      openTrackInfo([trackId], 0)
+    if ($playingId) {
+      await showTrackMenu([$playingId])
     }
   }
 

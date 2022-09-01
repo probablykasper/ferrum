@@ -1,3 +1,4 @@
+import type { FlattenedListMenuItem } from '@/electron/types'
 import type { Folder, Special, TrackListsHashMap } from './libraryTypes'
 
 export function getDuration(dur: number) {
@@ -79,8 +80,7 @@ export function flattenChildLists(
   prefix: string,
   idPrefix: string
 ) {
-  type Item = { label: string; enabled: boolean; id?: string }
-  let flat: Item[] = []
+  let flat: FlattenedListMenuItem[] = []
   for (const childListId of trackList.children) {
     const childList = trackLists[childListId]
     if (childList.type === 'folder') {

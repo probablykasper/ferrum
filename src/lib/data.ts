@@ -20,6 +20,7 @@ type PageInfo = {
 
 export const isDev = window.isDev
 export const isMac = window.isMac
+export const isWindows = window.isWindows
 export type Data = {
   get_paths: () => {
     library_dir: string

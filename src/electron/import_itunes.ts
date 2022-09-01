@@ -76,8 +76,8 @@ type Paths = {
 type Result = { cancelled: boolean; warnings: string[]; err?: Error }
 export async function iTunesImport(
   paths: Paths,
-  status: (msg: string) => void,
-  warn: (msg: string) => void
+  status: (status: string) => void,
+  warn: (status: string) => void
 ): Promise<Result> {
   const warnings: string[] = []
   try {

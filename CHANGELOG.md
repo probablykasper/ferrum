@@ -1,6 +1,7 @@
 # Changelog
 
 ## Next
+- Fix context menus
 - Fix dragging of currently playing artwork
 
 ## 0.14.2 - 2022 Aug 31

@@ -24,16 +24,12 @@
 
 <script lang="ts">
   import type { TrackList } from '../lib/libraryTypes'
-  import { ipcRenderer } from '../lib/window'
-  import {
-    openNew as openNewPlaylistModal,
-    edit as openEditPlaylistModal,
-  } from './PlaylistInfo.svelte'
   import { Writable, writable } from 'svelte/store'
   import { createEventDispatcher, SvelteComponent } from 'svelte'
   import { getContext } from 'svelte'
   import { dragged } from '../lib/drag-drop'
   import * as dragGhost from './DragGhost.svelte'
+  import { showTracklistMenu } from '@/lib/menus'
 
   export let parentId: string | null
   export let show = true
@@ -52,14 +48,7 @@
     if ($page.id !== id) page.openPlaylist(id)
   }
   async function tracklistContextMenu(id: string, isFolder: boolean) {
-    const clickedId = (await ipcRenderer.invoke('showTracklistMenu', isFolder)) as string | null
-    if (clickedId === 'Edit Details') {
-      openEditPlaylistModal(id, isFolder)
-    } else if (clickedId === 'New Playlist') {
-      openNewPlaylistModal(id, false)
-    } else if (clickedId === 'New Folder') {
-      openNewPlaylistModal(id, true)
-    }
+    showTracklistMenu({ id, isFolder, isRoot: false })
   }
 
   function hasShowingChildren(id: string) {

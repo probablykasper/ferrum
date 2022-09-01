@@ -3,10 +3,10 @@
   import Filter from './Filter.svelte'
   import { isMac, trackLists, page, movePlaylist } from '../lib/data'
   import { ipcRenderer } from '../lib/window'
-  import { openNew as openNewPlaylistModal } from './PlaylistInfo.svelte'
   import { writable } from 'svelte/store'
   import { setContext } from 'svelte'
   import { dragged } from '../lib/drag-drop'
+  import { showTracklistMenu } from '@/lib/menus'
 
   const special = {
     children: ['root'],
@@ -41,12 +41,8 @@
     }
   }
   async function onContextMenu() {
-    const clickedId = (await ipcRenderer.invoke('showTracklistMenu', true, true)) as string | null
-    if (clickedId === 'New Playlist') {
-      openNewPlaylistModal('root', false)
-    } else if (clickedId === 'New Folder') {
-      openNewPlaylistModal('root', true)
-    }
+    showTracklistMenu({ id: 'root', isFolder: false, isRoot: true })
+    await ipcRenderer.invoke('showTracklistMenu', true, true)
   }
   function open(id: string) {
     if ($page.id !== id) page.openPlaylist(id)

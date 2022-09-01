@@ -1,26 +1,24 @@
-import { Menu, shell } from 'electron'
+import { App, BrowserWindow, Menu, shell } from 'electron'
+import type { MenuItemConstructorOptions } from 'electron/common'
 import is from './is'
 
-export function initMenuBar(app, mainWindow) {
-  const template = [
-    ...(is.mac
-      ? [
-          {
-            label: app.name,
-            submenu: [
-              { role: 'about' },
-              { type: 'separator' },
-              { role: 'services' },
-              { type: 'separator' },
-              { role: 'hide' },
-              { role: 'hideothers' },
-              { role: 'unhide' },
-              { type: 'separator' },
-              { role: 'quit' },
-            ],
-          },
-        ]
-      : []),
+export function initMenuBar(app: App, mainWindow: BrowserWindow) {
+  const template: MenuItemConstructorOptions[] = [
+    {
+      label: app.name,
+      submenu: [
+        { role: 'about' },
+        { type: 'separator' },
+        { role: 'services' },
+        { type: 'separator' },
+        { role: 'hide' },
+        { role: 'hideOthers' },
+        { role: 'unhide' },
+        { type: 'separator' },
+        { role: 'quit' },
+      ],
+      visible: is.mac,
+    },
     {
       label: 'File',
       submenu: [
@@ -59,7 +57,7 @@ export function initMenuBar(app, mainWindow) {
     {
       label: 'Edit',
       submenu: (() => {
-        const menu = [
+        const menu: MenuItemConstructorOptions[] = [
           { role: 'undo' },
           { role: 'redo' },
           { type: 'separator' },
@@ -192,14 +190,10 @@ export function initMenuBar(app, mainWindow) {
       submenu: [
         { role: 'minimize' },
         { role: 'zoom' },
-        ...(is.mac
-          ? [
-              { type: 'separator' },
-              { role: 'front' },
-              { type: 'separator' },
-              // { role: 'window' },
-            ]
-          : [{ role: 'close' }]),
+        { type: 'separator', visible: is.mac },
+        { role: 'front', visible: is.mac },
+        { type: 'separator', visible: is.mac },
+        { role: 'close', visible: !is.mac },
       ],
     },
     {

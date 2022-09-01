@@ -7,7 +7,6 @@
     filter,
     deleteTracksInOpen,
     paths,
-    addTracksToPlaylist,
   } from '../lib/data'
   import { newPlaybackInstance, playingId } from '../lib/player'
   import { getDuration, formatDate, checkMouseShortcut, checkShortcut } from '../lib/helpers'
@@ -114,26 +113,7 @@
     rowMouseDown(e, index, true)
     const indexes = selection.getSelectedIndexes($selection)
     const ids = indexes.map((i) => page.getTrackId(i))
-    const clickedId = await showTrackMenu($page.tracklist.type === 'playlist')
-    console.log(clickedId)
-
-    if (clickedId === 'Play Next') {
-      prependToUserQueue(ids)
-    } else if (clickedId === 'Add to Queue') {
-      appendToUserQueue(ids)
-    } else if (clickedId?.startsWith('add-to-')) {
-      const pId = clickedId.substring('add-to-'.length)
-      addTracksToPlaylist(pId, ids)
-    } else if (clickedId === 'Remove from Playlist') {
-      if ($page.tracklist.type === 'playlist') {
-        removeFromOpenPlaylist(indexes)
-      }
-    } else if (clickedId === 'revealTrackFile') {
-      const track = page.getTrack(indexes[0])
-      ipcRenderer.invoke('revealTrackFile', paths.tracks_dir, track.file)
-    } else if (clickedId === 'Get Info') {
-      openTrackInfo(page.getTrackIds(), indexes[0])
-    }
+    await showTrackMenu(ids, { indexes, editable: $page.tracklist.type === 'playlist' })
   }
   async function keydown(e: KeyboardEvent) {
     if (checkShortcut(e, 'Enter')) {
