@@ -1,5 +1,8 @@
 # Changelog
 
+## Next
+- Fix adding tracks to playlists
+
 ## 0.14.3 - 2022 Sep 1
 - Fix context menus
 - Fix dragging of currently playing artwork

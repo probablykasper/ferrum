@@ -77,24 +77,23 @@ export function clamp(min: number, max: number, value: number) {
 export function flattenChildLists(
   trackList: Folder | Special,
   trackLists: TrackListsHashMap,
-  prefix: string,
-  idPrefix: string
+  indentPrefix: string
 ) {
   let flat: FlattenedListMenuItem[] = []
   for (const childListId of trackList.children) {
     const childList = trackLists[childListId]
     if (childList.type === 'folder') {
-      const childFlat = flattenChildLists(childList, trackLists, prefix + '   ', idPrefix)
+      const childFlat = flattenChildLists(childList, trackLists, indentPrefix + '   ')
       flat.push({
-        label: prefix + childList.name,
+        label: indentPrefix + childList.name,
         enabled: false,
       })
       flat = flat.concat(childFlat)
     } else if (childList.type === 'playlist') {
       flat.push({
-        label: prefix + childList.name,
+        label: indentPrefix + childList.name,
         enabled: true,
-        id: idPrefix + childList.id,
+        id: childList.id,
       })
     }
   }
