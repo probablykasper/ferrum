@@ -1,7 +1,7 @@
-import { globalShortcut, dialog, systemPreferences } from 'electron'
+import { globalShortcut, dialog, systemPreferences, BrowserWindow } from 'electron'
 import is from './is'
 
-function tryRegistering(mainWindow) {
+function tryRegistering(mainWindow: BrowserWindow) {
   const success1 = globalShortcut.register('MediaPlayPause', () => {
     if (mainWindow !== null) mainWindow.webContents.send('playPause')
   })
@@ -18,7 +18,7 @@ function tryRegistering(mainWindow) {
   return true
 }
 
-async function requestLoop(mainWindow) {
+async function requestLoop(mainWindow: BrowserWindow) {
   let firstRequest = true
   for (;;) {
     let msg = 'No accessibility permissions detected.'
@@ -39,7 +39,7 @@ async function requestLoop(mainWindow) {
   }
 }
 
-async function getTrustedAccessibilityMacOS(mainWindow) {
+async function getTrustedAccessibilityMacOS(mainWindow: BrowserWindow) {
   const result = await dialog.showMessageBox(mainWindow, {
     type: 'info',
     message: 'Ferrum needs accessibility permissions to exclusively take over the media keys',
@@ -55,7 +55,7 @@ async function getTrustedAccessibilityMacOS(mainWindow) {
   }
 }
 
-export async function initMediaKeys(mainWindow) {
+export async function initMediaKeys(mainWindow: BrowserWindow) {
   const success = tryRegistering(mainWindow)
   if (!success) {
     if (is.mac) {
