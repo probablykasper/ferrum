@@ -39,6 +39,7 @@ export type Data = {
   load_tags: (id: TrackID) => void
   get_image: (index: number) => Image
   set_image: (index: number, path: string) => void
+  set_image_data: (index: number, bytes: ArrayBuffer, mime_type: string) => void
   remove_image: (index: number) => void
 
   get_track_lists: () => TrackListsHashMap
@@ -249,6 +250,9 @@ export const methods = {
   },
   setImage: (index: number, path: string) => {
     return call((data) => data.set_image(index, path))
+  },
+  setImageData: (index: number, bytes: ArrayBuffer, mime_type: string) => {
+    return call((data) => data.set_image_data(index, bytes, mime_type))
   },
   removeImage: (index: number) => {
     return call((data) => data.remove_image(index))

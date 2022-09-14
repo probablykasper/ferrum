@@ -1,12 +1,13 @@
 use crate::data::Data;
 use crate::data_js::get_data;
 use crate::get_now_timestamp;
-use crate::js::{arg_to_number, arg_to_string, nerr};
+use crate::js::{arg_to_bytes, arg_to_number, arg_to_string, nerr};
 use crate::library_types::Track;
 use napi::{
   CallContext, Env, JsArrayBuffer, JsObject, JsUndefined, JsUnknown, Result as NResult, Task,
 };
 use napi_derive::js_function;
+use std::fs;
 use std::path::{Path, PathBuf};
 
 mod import;
@@ -217,7 +218,33 @@ pub fn set_image(ctx: CallContext) -> NResult<JsUndefined> {
   let path_str = arg_to_string(&ctx, 1)?;
   let path = data.paths.tracks_dir.join(path_str);
   match &mut data.current_tag {
-    Some(tag) => tag.set_image(index as usize, path)?,
+    Some(tag) => {
+      let ext = path.extension().unwrap_or_default().to_string_lossy();
+      let mime_type = match ext.as_ref() {
+        "jpg" | "jpeg" => "image/jpeg".to_string(),
+        "png" => "image/png".to_string(),
+        "bmp" => "image/bmp".to_string(),
+        ext => throw!("Unsupported file type: {}", ext),
+      };
+      let new_bytes = match fs::read(&path) {
+        Ok(b) => b,
+        Err(e) => throw!("Error reading that file: {}", e),
+      };
+      tag.set_image(index as usize, new_bytes, &mime_type)?;
+    }
+    None => throw!("No tag loaded"),
+  };
+  ctx.env.get_undefined()
+}
+
+#[js_function(3)]
+pub fn set_image_data(ctx: CallContext) -> NResult<JsUndefined> {
+  let data: &mut Data = get_data(&ctx)?;
+  let index: u32 = arg_to_number(&ctx, 0)?;
+  let bytes = arg_to_bytes(&ctx, 1)?;
+  let mime_type = arg_to_string(&ctx, 2)?;
+  match &mut data.current_tag {
+    Some(tag) => tag.set_image(index as usize, bytes, &mime_type)?,
     None => throw!("No tag loaded"),
   };
   ctx.env.get_undefined()

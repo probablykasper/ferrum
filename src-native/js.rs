@@ -1,8 +1,8 @@
 use crate::data_js::{load_data_async, load_data_js};
 use atomicwrites::{AllowOverwrite, AtomicFile};
 use napi::{
-  CallContext, Error as NapiError, JsBoolean, JsNumber, JsObject, JsString, JsTypedArray,
-  Result as NResult,
+  CallContext, Error as NapiError, JsArrayBuffer, JsBoolean, JsNumber, JsObject, JsString,
+  JsTypedArray, Result as NResult,
 };
 use napi_derive::module_exports;
 use std::convert::TryFrom;
@@ -26,6 +26,13 @@ pub fn arg_to_bool(ctx: &CallContext, arg: usize) -> NResult<bool> {
   let js_bool: JsBoolean = ctx.get(arg)?;
   let rust_bool = js_bool.get_value()?;
   return Ok(rust_bool);
+}
+
+pub fn arg_to_bytes(ctx: &CallContext, arg: usize) -> NResult<Vec<u8>> {
+  let js_array_buffer: JsArrayBuffer = ctx.get(arg)?;
+  let buf = js_array_buffer.into_value()?;
+  let bytes: Vec<u8> = buf.to_vec();
+  return Ok(bytes);
 }
 
 pub fn arg_to_number<N: TryFrom<JsNumber, Error = napi::Error>>(

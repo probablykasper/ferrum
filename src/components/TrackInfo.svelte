@@ -259,21 +259,45 @@
       keydownNoneSelected(e)
     }
   }
-  async function selectCover() {
+  async function pickCover() {
     let result = await showOpenDialog(false, {
       properties: ['openFile'],
       filters: [{ name: 'Images', extensions: ['jpg', 'jpeg', 'png'] }],
     })
     if (!result.canceled && result.filePaths.length === 1) {
-      methods.setImage($image?.index || 0, result.filePaths[0])
-      imageEdited = true
-      loadImage($image?.index || 0)
+      replaceCover(result.filePaths[0])
+    }
+  }
+  function replaceCover(filePath: string) {
+    methods.setImage($image?.index || 0, filePath)
+    imageEdited = true
+    loadImage($image?.index || 0)
+  }
+  function replaceCoverData(data: ArrayBuffer, mimeType: string) {
+    methods.setImageData($image?.index || 0, data, mimeType)
+    imageEdited = true
+    loadImage($image?.index || 0)
+  }
+  function coverPaste(e: ClipboardEvent) {
+    if (e.clipboardData && e.clipboardData.files.length === 1) {
+      const file = e.clipboardData.files[0]
+      if (allowedMimes.includes(file.type) && file.path !== '' && file.path) {
+        replaceCover(file.path)
+      } else if (allowedMimes.includes(file.type)) {
+        const reader = new FileReader()
+        reader.onload = (e) => {
+          if (e.target?.result && e.target.result instanceof ArrayBuffer) {
+            replaceCoverData(e.target.result, file.type)
+          }
+        }
+        reader.readAsArrayBuffer(file)
+      }
     }
   }
 </script>
 
 <svelte:window on:keydown={keydown} />
-<svelte:body on:keydown|self={keydownNoneSelected} />
+<svelte:body on:keydown|self={keydownNoneSelected} on:paste={coverPaste} />
 <Modal showIf={$id !== null} onClose={cancel}>
   <form class="modal" on:submit|preventDefault={() => save()}>
     <div class="header" class:has-subtitle={$image !== null && $image.total_images >= 2}>
@@ -284,7 +308,7 @@
           on:dragover={dragEnterOrOver}
           on:dragleave={dragLeave}
           on:drop={drop}
-          on:dblclick={selectCover}
+          on:dblclick={pickCover}
         >
           {#if $image === null}
             <svg

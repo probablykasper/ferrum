@@ -1,5 +1,8 @@
 # Changelog
 
+## Next
+- Support pasting track artworks
+
 ## 0.14.4 - 2022 Sep 1
 - Fix adding tracks to playlists
 

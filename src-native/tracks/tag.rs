@@ -2,7 +2,7 @@ use crate::{UniError, UniResult};
 use id3::{self, TagLike};
 use lofty::{Accessor, TagExt};
 use mp4ameta;
-use std::fs::{self, File};
+use std::io::Cursor;
 use std::path::{Path, PathBuf};
 
 pub enum SetInfoError {
@@ -417,12 +417,7 @@ impl Tag {
       Tag::Lofty(tag) => tag.set_comment(value.to_string()),
     }
   }
-  pub fn set_image(&mut self, index: usize, path: PathBuf) -> UniResult<()> {
-    let new_bytes = match fs::read(&path) {
-      Ok(b) => b,
-      Err(e) => throw!("Error reading that file: {}", e),
-    };
-    let ext = path.extension().unwrap_or_default().to_string_lossy();
+  pub fn set_image(&mut self, index: usize, data: Vec<u8>, mime_type: &str) -> UniResult<()> {
     match self {
       Tag::Id3(tag) => {
         let mut pic_frames: Vec<_> = tag
@@ -430,16 +425,14 @@ impl Tag {
           .filter(|frame| frame.content().picture().is_some())
           .map(|frame| frame.clone())
           .collect();
-        let mime_type = match ext.as_ref() {
-          "jpg" | "jpeg" => "image/jpeg".to_string(),
-          "png" => "image/png".to_string(),
-          ext => throw!("Unsupported file type: {}", ext),
-        };
         let mut new_pic = id3::frame::Picture {
-          mime_type,
+          mime_type: match mime_type {
+            "image/jpeg" | "image/png" => mime_type.to_string(),
+            ext => throw!("Unsupported file type: {}", ext),
+          },
           picture_type: id3::frame::PictureType::Other,
           description: "".to_string(),
-          data: new_bytes,
+          data,
         };
         match pic_frames.get_mut(index) {
           Some(old_frame) => {
@@ -466,13 +459,13 @@ impl Tag {
       Tag::Mp4(tag) => {
         let mut artworks: Vec<_> = tag.take_artworks().collect();
         let new_artwork = mp4ameta::Img {
-          fmt: match ext.as_ref() {
-            "jpg" | "jpeg" => mp4ameta::ImgFmt::Jpeg,
-            "png" => mp4ameta::ImgFmt::Png,
-            "bmp" => mp4ameta::ImgFmt::Bmp,
+          fmt: match mime_type {
+            "image/jpeg" => mp4ameta::ImgFmt::Jpeg,
+            "image/png" => mp4ameta::ImgFmt::Png,
+            "image/bmp" => mp4ameta::ImgFmt::Bmp,
             ext => throw!("Unsupported file type: {}", ext),
           },
-          data: new_bytes,
+          data,
         };
         match artworks.get_mut(index) {
           Some(artwork) => {
@@ -489,11 +482,8 @@ impl Tag {
         tag.set_artworks(artworks);
       }
       Tag::Lofty(tag) => {
-        let mut file = match File::open(path) {
-          Ok(file) => file,
-          Err(e) => throw!("Unable to open file: {}", e),
-        };
-        let picture = match lofty::Picture::from_reader(&mut file) {
+        let mut reader = Cursor::new(data);
+        let picture = match lofty::Picture::from_reader(&mut reader) {
           Ok(picture) => picture,
           Err(e) => throw!("Unable to read picture: {}", e),
         };
