@@ -251,6 +251,8 @@
       } else {
         loadImage(Math.max(0, $image.index - 1))
       }
+    } else if (checkShortcut(e, ' ')) {
+      pickCover()
     } else if (checkShortcut(e, 'ArrowLeft')) {
       prevImage()
     } else if (checkShortcut(e, 'ArrowRight')) {

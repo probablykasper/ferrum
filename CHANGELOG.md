@@ -2,6 +2,7 @@
 
 ## Next
 - Support pasting track artworks
+- Add `Space` shortcut for picking track artwork
 
 ## 0.14.4 - 2022 Sep 1
 - Fix adding tracks to playlists
