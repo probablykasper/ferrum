@@ -1,6 +1,6 @@
 # Changelog
 
-## Next
+## 0.15.0 - 2022 Sep 22
 - Support pasting track artworks
 - Add `Space` shortcut for picking track artwork
 
