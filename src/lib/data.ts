@@ -121,7 +121,7 @@ export const trackLists = (() => {
   const { subscribe, set } = writable(initial)
   return {
     subscribe,
-    refresh() {
+    refreshTrackIdList() {
       set(call((data) => data.get_track_lists()))
     },
   }
@@ -151,18 +151,18 @@ export type PlaylistInfo = {
 export function newPlaylist(info: PlaylistInfo) {
   call((data) => data.new_playlist(info.name, info.description, info.isFolder, info.id))
   methods.save()
-  trackLists.refresh()
+  trackLists.refreshTrackIdList()
 }
 export function updatePlaylist(id: string, name: string, description: string) {
   call((data) => data.update_playlist(id, name, description))
   methods.save()
-  trackLists.refresh()
-  page.refresh()
+  trackLists.refreshTrackIdList()
+  softRefreshPage.refresh()
 }
 export function movePlaylist(id: TrackListID, fromParent: TrackListID, toParent: TrackListID) {
   call((data) => data.move_playlist(id, fromParent, toParent))
   methods.save()
-  trackLists.refresh()
+  trackLists.refreshTrackIdList()
 }
 
 export const paths = (() => {
@@ -224,17 +224,17 @@ export const methods = {
   addPlay: (id: TrackID) => {
     call((data) => data.add_play(id))
     methods.save()
-    page.refresh()
+    softRefreshPage.refresh()
   },
   addSkip: (id: TrackID) => {
     call((data) => data.add_skip(id))
     methods.save()
-    page.refresh()
+    softRefreshPage.refresh()
   },
   addPlayTime: (id: TrackID, startTime: MsSinceUnixEpoch, durationMs: number) => {
     call((data) => data.add_play_time(id, startTime, durationMs))
     methods.save()
-    page.refresh()
+    softRefreshPage.refresh()
   },
   readCoverAsync: (id: TrackID) => data.read_cover_async(id),
   updateTrackInfo: (id: TrackID, md: TrackMD) => {

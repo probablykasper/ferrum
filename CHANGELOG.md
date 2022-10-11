@@ -2,6 +2,7 @@
 
 ## Next
 - Improve queue panel performance
+- Don't clear selection unnecessarily
 - Reload file when updating the currently playing song's info
 
 ## 0.15.0 - 2022 Sep 22
