@@ -24,7 +24,7 @@ export const currentTime = writable(0)
 export const duration = writable(0)
 export const playingTrack: Writable<Track | null> = writable(null)
 export const playingId = derived(queue, () => {
-  const currentId = queue.getCurrent()
+  const currentId = queue.getCurrent()?.id
   if (currentId) {
     coverSrc.newFromTrackId(currentId)
   }
@@ -144,7 +144,7 @@ audio.ondurationchange = () => {
 /** Saves play time if needed */
 function savePlayTime() {
   clearInterval(playTimeCounter)
-  const currentId = queue.getCurrent()
+  const currentId = queue.getCurrent()?.id
   if (playTime >= 1000 && currentId) {
     methods.addPlayTime(currentId, startTime, playTime)
   }
@@ -164,7 +164,7 @@ export function newPlaybackInstance(newQueue: TrackID[], index: number) {
   setNewQueue(newQueue, index)
   const current = queue.getCurrent()
   if (current) {
-    setPlayingFile(current)
+    setPlayingFile(current.id)
   }
 }
 
@@ -175,7 +175,7 @@ export function playPause() {
 }
 
 export function reload() {
-  const id = queue.getCurrent()
+  const id = queue.getCurrent()?.id
   const wasPaused = audio.paused
   if (id && !isStopped) {
     const currentTime = audio.currentTime
@@ -204,8 +204,8 @@ quit.setHandler('player', () => {
 })
 
 audio.onended = () => {
-  const nextId = queue.getNext()
-  const currentId = queue.getCurrent()
+  const nextId = queue.getNext().id
+  const currentId = queue.getCurrent()?.id
   if (nextId && currentId) {
     savePlayTime()
     methods.addPlay(currentId)
@@ -217,8 +217,8 @@ audio.onended = () => {
 }
 
 export function next() {
-  const nextId = queue.getNext()
-  const currentId = queue.getCurrent()
+  const nextId = queue.getNext().id
+  const currentId = queue.getCurrent()?.id
   if (nextId && currentId) {
     savePlayTime()
     methods.addSkip(currentId)
@@ -229,8 +229,8 @@ export function next() {
   }
 }
 export function previous() {
-  const prevId = queue.getPrevious()
-  const currentId = queue.getCurrent()
+  const prevId = queue.getPrevious()?.id
+  const currentId = queue.getCurrent()?.id
   if (prevId && currentId) {
     savePlayTime()
     methods.addSkip(currentId)

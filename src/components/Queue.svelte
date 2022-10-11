@@ -7,9 +7,10 @@
     queue,
     Queue,
   } from '../lib/queue'
+  import { page } from '../lib/data'
   import { onDestroy } from 'svelte'
   import VirtualList from './VirtualListItemed.svelte'
-  import QueueItem from './QueueItem.svelte'
+  import QueueItemComponent from './QueueItem.svelte'
   import { newSelection } from '@/lib/selection'
   import { showTrackMenu } from '@/lib/menus'
   import { dragged } from '@/lib/drag-drop'
@@ -29,7 +30,10 @@
   $: items = getQueue($queue)
 
   function getQueue(queue: Queue) {
+    // reset selection/dragging if queue gets updated
     selection.clear()
+    draggedIndexes = []
+
     const newItems: (number | string)[] = []
     let i = 0
 
@@ -69,7 +73,7 @@
       virtualList.scrollToItem(i)
     },
     async onContextMenu() {
-      const ids = indexes.map((i) => getByQueueIndex(i))
+      const ids = draggedIndexes.map((item) => getByQueueIndex(item).id)
       await showTrackMenu(ids, undefined, true)
     },
   })
@@ -85,26 +89,25 @@
   })
 
   let dragLine: HTMLElement
-  let indexes: number[] = []
+  let draggedIndexes: number[] = []
   function onDragStart(e: DragEvent) {
     if (e.dataTransfer) {
-      indexes = []
+      draggedIndexes = []
       for (let i = 0; i < $selection.list.length; i++) {
         if ($selection.list[i]) {
-          indexes.push(i)
+          draggedIndexes.push(i)
         }
       }
       e.dataTransfer.effectAllowed = 'move'
-      if (indexes.length === 1) {
-        const id = getByQueueIndex(indexes[0])
-        const track = methods.getTrack(id)
+      if (draggedIndexes.length === 1) {
+        const track = methods.getTrack(getByQueueIndex(draggedIndexes[0]).id)
         dragGhost.setInnerText(track.artist + ' - ' + track.name)
       } else {
-        dragGhost.setInnerText(indexes.length + ' items')
+        dragGhost.setInnerText(draggedIndexes.length + ' items')
       }
       dragged.tracks = {
-        ids: indexes.map((i) => getByQueueIndex(i)),
-        queueIndexes: indexes,
+        ids: draggedIndexes.map((i) => getByQueueIndex(i).id),
+        queueIndexes: draggedIndexes,
       }
       e.dataTransfer.setDragImage(dragGhost.dragEl, 0, 0)
       e.dataTransfer.setData('ferrum.tracks', '')
@@ -140,7 +143,7 @@
         dragTopOfItem = false
       }
       const newSelection = dragged.tracks.queueIndexes
-        ? moveIndexes(indexes, dragToIndex, !dragTopOfItem)
+        ? moveIndexes(dragged.tracks.queueIndexes, dragToIndex, !dragTopOfItem)
         : insertIds(dragged.tracks.ids, dragToIndex, !dragTopOfItem)
       for (let i = newSelection.from; i <= newSelection.to; i++) {
         selection.add(i)
@@ -157,6 +160,10 @@
       selection.handleKeyDown(e)
     }
   }
+
+  $: if ($page) {
+    if (virtualList) virtualList.refresh()
+  }
 </script>
 
 <div class="queue">
@@ -165,6 +172,13 @@
     <VirtualList
       bind:this={virtualList}
       {items}
+      getKey={(i) => {
+        if (typeof i === 'number') {
+          return getByQueueIndex(i).qId
+        } else {
+          return i
+        }
+      }}
       itemHeight={54}
       let:item
       on:keydown={keydown}
@@ -185,7 +199,7 @@
           on:drop={dropHandler}
           on:dragend={dragEndHandler}
         >
-          <QueueItem id={getByQueueIndex(item)} />
+          <QueueItemComponent id={getByQueueIndex(item).id} />
         </div>
       {/if}
     </VirtualList>

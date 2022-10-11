@@ -1,11 +1,17 @@
 <script lang="ts">
-  import { methods } from '@/lib/data'
+  import { methods, page } from '@/lib/data'
   import { fade } from 'svelte/transition'
   import { onDestroy } from 'svelte'
 
   export let id: string
   $: track = methods.getTrack(id)
   let objectUrl: string | undefined
+
+  let promise: Promise<string>
+  // reload on page updates
+  $: if ($page) {
+    promise = loadCover(id)
+  }
 
   async function loadCover(id: string) {
     if (objectUrl) {
@@ -24,7 +30,7 @@
 </script>
 
 <div class="box">
-  {#await loadCover(id) then blob}
+  {#await promise then blob}
     <img class="cover" src={blob} alt="" in:fade={{ duration: 300 }} />
   {:catch}
     <svg

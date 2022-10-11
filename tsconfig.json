@@ -1,9 +1,9 @@
 {
   "compilerOptions": {
     "moduleResolution": "node",
-    "target": "es2021",
-    "module": "es2020",
-    "lib": ["es2021"],
+    "target": "ESNext",
+    "useDefineForClassFields": true,
+    "module": "ESNext",
 
     // svelte-preprocess can't tell if you're importing a value or
     // type, so require 'import type' instead of 'import' for types

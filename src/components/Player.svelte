@@ -36,9 +36,9 @@
     seek((sliderValue / sliderSteps) * $duration || 0)
   }
   async function playingContextMenu() {
-    const playingId = queue.getCurrent()
-    if (playingId) {
-      await showTrackMenu([playingId])
+    const playing = queue.getCurrent()
+    if (playing) {
+      await showTrackMenu([playing.id])
     }
   }
 

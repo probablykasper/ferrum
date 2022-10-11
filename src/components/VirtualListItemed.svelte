@@ -6,6 +6,7 @@
   type T = $$Generic
   export let itemHeight: number
   export let items: T[]
+  export let getKey: (item: T, i: number) => unknown
   export let buffer = 5
   let startIndex = 0
   let visibleCount = 0
@@ -88,7 +89,7 @@
     style:height={items.length * itemHeight + 'px'}
     style:padding-top={startIndex * itemHeight + 'px'}
   >
-    {#each { length: visibleCount } as _, i (i + startIndex)}
+    {#each { length: visibleCount } as _, i (getKey(items[i + startIndex], i + startIndex))}
       <slot item={items[i + startIndex]} index={i + startIndex} />
     {/each}
   </div>

@@ -226,14 +226,15 @@
   let virtualList: VirtualList<ReturnType<typeof getItem>>
 
   let itemCount = 0
-  page.subscribe((page) => {
-    itemCount = page.length
+  $: if ($page) {
+    itemCount = $page.length
     if (virtualList) virtualList.refresh()
     selection.clear()
-  })
-  softRefreshPage.subscribe(() => {
-    if (virtualList) virtualList.refresh()
-  })
+  }
+
+  $: if ($softRefreshPage) {
+    virtualList.refresh()
+  }
 </script>
 
 <div
