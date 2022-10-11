@@ -79,8 +79,8 @@
     scrollToItem: (i) => virtualList.scrollToItem(i),
     onContextMenu: async () => {
       const indexes = selection.getSelectedIndexes()
-      const ids = indexes.map((i) => page.getTrackId(i))
-      await showTrackMenu(ids, { indexes, editable: $page.tracklist.type === 'playlist' })
+      const ids = page.getTrackIds()
+      await showTrackMenu(ids, indexes, { editable: $page.tracklist.type === 'playlist' })
     },
   })
 
@@ -232,7 +232,7 @@
     selection.clear()
   }
 
-  $: if ($softRefreshPage) {
+  $: if ($softRefreshPage && virtualList) {
     virtualList.refresh()
   }
 </script>

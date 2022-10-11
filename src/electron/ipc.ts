@@ -42,24 +42,27 @@ ipcMain.handle('showTrackMenu', (e, args: ShowTrackMenuArgs) => {
       { type: 'separator' },
     ]
   }
+  const selectedIds = args.selectedIndexes.map((i) => args.allIds[i])
   const menu = Menu.buildFromTemplate([
     ...queueMenu,
     {
       label: 'Play Next',
       click: () => {
-        e.sender.send('context.Play Next', args.ids)
+        e.sender.send('context.Play Next', selectedIds)
       },
     },
     {
       label: 'Add to Queue',
-      click: () => e.sender.send('context.Add to Queue', args.ids),
+      click: () => {
+        e.sender.send('context.Add to Queue', selectedIds)
+      },
     },
     {
       label: 'Add to Playlist',
       submenu: args.lists.map((item) => {
         return {
           ...item,
-          click: () => e.sender.send('context.Add to Playlist', item.id, args.ids),
+          click: () => e.sender.send('context.Add to Playlist', item.id, selectedIds),
         }
       }),
     },
@@ -67,8 +70,7 @@ ipcMain.handle('showTrackMenu', (e, args: ShowTrackMenuArgs) => {
     {
       label: 'Get Info',
       click: () => {
-        if (args.playlist) e.sender.send('context.Get Info', null, args.playlist.indexes[0])
-        else e.sender.send('context.Get Info', args.ids, 0)
+        e.sender.send('context.Get Info', args.allIds, args.selectedIndexes[0])
       },
     },
     { type: 'separator' },
@@ -78,12 +80,12 @@ ipcMain.handle('showTrackMenu', (e, args: ShowTrackMenuArgs) => {
         else if (is.windows) return 'Reveal in File Explorer'
         else return 'Reveal in File Manager'
       })(),
-      click: () => e.sender.send('context.revealTrackFile', args.ids[0]),
+      click: () => e.sender.send('context.revealTrackFile', selectedIds[0]),
     },
     { type: 'separator', visible: args.playlist?.editable === true },
     {
       label: 'Remove from Playlist',
-      click: () => e.sender.send('context.Remove from Playlist', args.playlist?.indexes),
+      click: () => e.sender.send('context.Remove from Playlist', args.selectedIndexes),
       visible: args.playlist?.editable === true,
     },
   ])

@@ -9,7 +9,7 @@ import {
 import { open as openTrackInfo } from '@/components/TrackInfo.svelte'
 import { flattenChildLists } from '@/lib/helpers'
 import { ipcRenderer } from '@/lib/window'
-import type { Special } from '@/lib/libraryTypes'
+import type { Special, TrackID } from '@/lib/libraryTypes'
 import { get } from 'svelte/store'
 import type { ShowTracklistMenuArgs, ShowTrackMenuArgs } from '@/electron/types'
 import { appendToUserQueue, prependToUserQueue } from './queue'
@@ -19,30 +19,37 @@ import {
 } from '@/components/PlaylistInfo.svelte'
 
 export async function showTrackMenu(
-  ids: string[],
-  playlist?: { indexes: number[]; editable: boolean },
+  allIds: string[],
+  selectedIndexes: number[],
+  playlist?: { editable: boolean },
   queue = false
 ) {
   const trackLists = get(trackListsStore)
   const flat = flattenChildLists(trackLists.root as Special, trackLists, '')
-  const args: ShowTrackMenuArgs = { ids, playlist, queue, lists: flat }
+  const args: ShowTrackMenuArgs = {
+    allIds,
+    selectedIndexes,
+    playlist,
+    queue,
+    lists: flat,
+  }
 
   await ipcRenderer.invoke('showTrackMenu', args)
 }
 
-ipcRenderer.on('context.Play Next', (e, ids: string[]) => {
+ipcRenderer.on('context.Play Next', (e, ids: TrackID[]) => {
   prependToUserQueue(ids)
 })
-ipcRenderer.on('context.Add to Queue', (e, ids: string[]) => {
+ipcRenderer.on('context.Add to Queue', (e, ids: TrackID[]) => {
   appendToUserQueue(ids)
 })
-ipcRenderer.on('context.Add to Playlist', (e, id: string, trackIds: string[]) => {
+ipcRenderer.on('context.Add to Playlist', (e, id: TrackID, trackIds: TrackID[]) => {
   addTracksToPlaylist(id, trackIds)
 })
-ipcRenderer.on('context.Get Info', (e, ids: string[] | null, trackIndex: number) => {
-  openTrackInfo(ids || page.getTrackIds(), trackIndex)
+ipcRenderer.on('context.Get Info', (e, ids: TrackID[], trackIndex: number) => {
+  openTrackInfo(ids, trackIndex)
 })
-ipcRenderer.on('context.revealTrackFile', (e, id: string) => {
+ipcRenderer.on('context.revealTrackFile', (e, id: TrackID) => {
   const track = methods.getTrack(id)
   ipcRenderer.invoke('revealTrackFile', paths.tracks_dir, track.file)
 })

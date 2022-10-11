@@ -73,8 +73,10 @@
       virtualList.scrollToItem(i)
     },
     async onContextMenu() {
-      const ids = draggedIndexes.map((item) => getByQueueIndex(item).id)
-      await showTrackMenu(ids, undefined, true)
+      const indexes = selection.getSelectedIndexes()
+      const allItems = [...$queue.userQueue, ...$queue.autoQueue]
+      const allIds = allItems.map((item) => item.id)
+      await showTrackMenu(allIds, indexes, undefined, true)
     },
   })
 
@@ -161,8 +163,8 @@
     }
   }
 
-  $: if ($page) {
-    if (virtualList) virtualList.refresh()
+  $: if ($page && virtualList) {
+    virtualList.refresh()
   }
 </script>
 
@@ -220,6 +222,7 @@
     box-sizing: border-box
     display: flex
     pointer-events: none
+    overflow: hidden
   .shadow
     height: 100%
     width: 20px

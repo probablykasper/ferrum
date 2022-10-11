@@ -38,7 +38,7 @@
   async function playingContextMenu() {
     const playing = queue.getCurrent()
     if (playing) {
-      await showTrackMenu([playing.id])
+      await showTrackMenu([playing.id], [0])
     }
   }
 
