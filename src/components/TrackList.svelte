@@ -74,45 +74,20 @@
   const sortBy = page.sortBy
   $: sortKey = $page.sort_key
 
-  const selection = newSelection()
+  const selection = newSelection({
+    getItemCount: () => $page.length,
+    scrollToItem: (i) => virtualList.scrollToItem(i),
+    onContextMenu: async () => {
+      const indexes = selection.getSelectedIndexes($selection)
+      const ids = indexes.map((i) => page.getTrackId(i))
+      await showTrackMenu(ids, { indexes, editable: $page.tracklist.type === 'playlist' })
+    },
+  })
 
-  let possibleRowClick = false
-  function rowMouseDown(e: MouseEvent, index: number, ctx = false) {
-    if (e.button !== 0 && !ctx) return
-    const isSelected = $selection.list[index]
-    if (isSelected) {
-      possibleRowClick = true
-    }
-    if (checkMouseShortcut(e) && !isSelected) {
-      selection.clear()
-      selection.add(index)
-    } else if (checkMouseShortcut(e, { cmdOrCtrl: true }) && !isSelected) {
-      selection.add(index)
-    } else if (checkMouseShortcut(e, { shift: true })) {
-      selection.shiftSelectTo(index)
-    }
-  }
-  function rowClick(e: MouseEvent, index: number) {
-    if (possibleRowClick && e.button === 0) {
-      if (checkMouseShortcut(e)) {
-        selection.clear()
-        selection.add(index)
-      } else if (checkMouseShortcut(e, { cmdOrCtrl: true })) {
-        selection.toggle(index)
-      }
-    }
-    possibleRowClick = false
-  }
   function doubleClick(e: MouseEvent, index: number) {
     if (e.button === 0 && checkMouseShortcut(e)) {
       playRow(index)
     }
-  }
-  async function rowContextMenu(e: MouseEvent, index: number) {
-    rowMouseDown(e, index, true)
-    const indexes = selection.getSelectedIndexes($selection)
-    const ids = indexes.map((i) => page.getTrackId(i))
-    await showTrackMenu(ids, { indexes, editable: $page.tracklist.type === 'playlist' })
   }
   async function keydown(e: KeyboardEvent) {
     if (checkShortcut(e, 'Enter')) {
@@ -163,37 +138,8 @@
       if ((await result).buttonClicked === 0) {
         deleteTracksInOpen(indexes)
       }
-    } else if (checkShortcut(e, 'Escape')) {
-      selection.clear()
-    } else if (checkShortcut(e, 'ArrowUp')) {
-      selection.goBackward($page.length - 1)
-      vlist.scrollToItem($selection.lastAdded || 0)
-    } else if (checkShortcut(e, 'ArrowUp', { shift: true })) {
-      selection.shiftSelectBackward()
-      vlist.scrollToItem($selection.lastAdded || 0)
-    } else if (checkShortcut(e, 'ArrowUp', { alt: true })) {
-      selection.clear()
-      selection.add(0)
-      vlist.scrollToItem(0)
-    } else if (checkShortcut(e, 'ArrowUp', { shift: true, alt: true })) {
-      selection.shiftSelectTo(0)
-      vlist.scrollToItem($selection.lastAdded || 0)
-    } else if (checkShortcut(e, 'ArrowDown')) {
-      selection.goForward($page.length - 1)
-      vlist.scrollToItem($selection.lastAdded || 0)
-    } else if (checkShortcut(e, 'ArrowDown', { shift: true })) {
-      selection.shiftSelectForward($page.length - 1)
-      vlist.scrollToItem($selection.lastAdded || 0)
-    } else if (checkShortcut(e, 'ArrowDown', { alt: true })) {
-      selection.clear()
-      selection.add($page.length - 1)
-      vlist.scrollToItem($selection.lastAdded || 0)
-    } else if (checkShortcut(e, 'ArrowDown', { shift: true, alt: true })) {
-      selection.shiftSelectTo($page.length - 1)
-      vlist.scrollToItem($selection.lastAdded || 0)
-    } else if (checkShortcut(e, 'A', { cmdOrCtrl: true })) {
-      selection.add(0, $page.length - 1)
     } else {
+      selection.handleKeyDown(e)
       return
     }
     e.preventDefault()
@@ -276,20 +222,24 @@
     }
   }
 
-  let vlist: VirtualList<ReturnType<typeof getItem>>
+  let virtualList: VirtualList<ReturnType<typeof getItem>>
 
   let itemCount = 0
   page.subscribe((page) => {
     itemCount = page.length
-    if (vlist) vlist.refresh()
+    if (virtualList) virtualList.refresh()
     selection.clear()
   })
   softRefreshPage.subscribe(() => {
-    if (vlist) vlist.refresh()
+    if (virtualList) virtualList.refresh()
   })
 </script>
 
-<div class="tracklist" on:dragleave={() => (dragToIndex = null)}>
+<div
+  class="tracklist"
+  on:dragleave={() => (dragToIndex = null)}
+  class:no-selection={$selection.count === 0}
+>
   <div class="header">
     <div class="dragbar" />
     <h3 class="title">
@@ -352,7 +302,7 @@
     {getItem}
     itemHeight={24}
     {itemCount}
-    bind:this={vlist}
+    bind:this={virtualList}
     on:keydown={keydown}
     on:mousedown-self={selection.clear}
     let:item={track}
@@ -362,9 +312,9 @@
       <div
         class="row"
         on:dblclick={(e) => doubleClick(e, index)}
-        on:mousedown={(e) => rowMouseDown(e, index)}
-        on:click={(e) => rowClick(e, index)}
-        on:contextmenu={(e) => rowContextMenu(e, index)}
+        on:mousedown={(e) => selection.handleMouseDown(e, index)}
+        on:contextmenu={(e) => selection.handleContextMenu(e, index)}
+        on:click={(e) => selection.handleClick(e, index)}
         draggable="true"
         on:dragstart={onDragStart}
         on:dragover={(e) => onDragOver(e, index)}

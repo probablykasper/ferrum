@@ -1,4 +1,5 @@
 import type { FlattenedListMenuItem } from '@/electron/types'
+import { Updater, Writable, writable } from 'svelte/store'
 import type { Folder, Special, TrackListsHashMap } from './libraryTypes'
 
 export function getDuration(dur: number) {
@@ -111,4 +112,21 @@ export function focus(el: HTMLElement) {
 }
 export function focusLast() {
   if (lastActiveElement) lastActiveElement.focus()
+}
+
+type GetterWritable<T> = Writable<T> & { get(): T }
+export function getterWritable<T>(value: T): GetterWritable<T> {
+  const store = writable(value)
+  return {
+    subscribe: store.subscribe,
+    set(newValue: T) {
+      value = newValue
+      store.set(newValue)
+    },
+    update(updater: Updater<T>) {
+      value = updater(value)
+      store.set(value)
+    },
+    get: () => value,
+  }
 }

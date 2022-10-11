@@ -14,7 +14,7 @@
     volume,
   } from '../lib/player'
   import { getDuration } from '../lib/helpers'
-  import { queueVisible, toggleQueueVisibility } from '../lib/queue'
+  import { queueVisible, toggleQueueVisibility, queue } from '../lib/queue'
   import { isDev, methods } from '../lib/data'
   import { showTrackMenu } from '@/lib/menus'
   import { dragged } from '@/lib/drag-drop'
@@ -36,8 +36,9 @@
     seek((sliderValue / sliderSteps) * $duration || 0)
   }
   async function playingContextMenu() {
-    if ($playingId) {
-      await showTrackMenu([$playingId])
+    const playingId = queue.getCurrent()
+    if (playingId) {
+      await showTrackMenu([playingId])
     }
   }
 

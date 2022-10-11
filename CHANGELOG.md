@@ -1,6 +1,7 @@
 # Changelog
 
 ## Next
+- Add queue panel selection
 - Improve queue panel performance
 - Don't clear selection unnecessarily
 - Reload file when updating the currently playing song's info

@@ -1,11 +1,11 @@
-import { writable } from 'svelte/store'
+import { derived, writable } from 'svelte/store'
 import type { Writable } from 'svelte/store'
 import { clamp } from './helpers'
 import quit from './quit'
 import { methods, paths } from './data'
 import type { Track, TrackID } from './libraryTypes'
 import { showMessageBox, ipcRenderer, joinPaths } from './window'
-import * as queue from './queue'
+import { queue, setNewQueue, next as queueNext, prev as queuePrev } from './queue'
 
 const audio = new Audio()
 let isStopped = true
@@ -23,16 +23,13 @@ export const paused = writable(true)
 export const currentTime = writable(0)
 export const duration = writable(0)
 export const playingTrack: Writable<Track | null> = writable(null)
-export const playingId = (() => {
-  const store: Writable<TrackID | null> = writable(null)
-  return {
-    set(id: TrackID) {
-      store.set(id)
-      coverSrc.newFromTrackId(id)
-    },
-    subscribe: store.subscribe,
+export const playingId = derived(queue, () => {
+  const currentId = queue.getCurrent()
+  if (currentId) {
+    coverSrc.newFromTrackId(currentId)
   }
-})()
+  return currentId
+})
 let waitingToPlay = false
 const mediaSession = navigator.mediaSession
 
@@ -115,13 +112,12 @@ function startPlayback() {
   if (mediaSession) mediaSession.playbackState = 'playing'
 }
 
-function startPlayingId(id: TrackID) {
+function setPlayingFile(id: TrackID, paused = false) {
   const track = methods.getTrack(id)
   const fileUrl = 'track:' + joinPaths(paths.tracks_dir, track.file)
-  waitingToPlay = true
+  waitingToPlay = !paused
   audio.src = fileUrl
   playingTrack.set(track)
-  playingId.set(id)
   if (mediaSession) {
     mediaSession.metadata = new MediaMetadata({
       title: track.name,
@@ -145,10 +141,12 @@ audio.ondurationchange = () => {
   duration.set(audio.duration)
 }
 
+/** Saves play time if needed */
 function savePlayTime() {
   clearInterval(playTimeCounter)
-  if (playTime >= 1000) {
-    methods.addPlayTime(queue.getCurrent(), startTime, playTime)
+  const currentId = queue.getCurrent()
+  if (playTime >= 1000 && currentId) {
+    methods.addPlayTime(currentId, startTime, playTime)
   }
   playTime = 0
 }
@@ -163,8 +161,11 @@ function pausePlayback() {
 
 export function newPlaybackInstance(newQueue: TrackID[], index: number) {
   if (!isStopped) pausePlayback()
-  queue.setNewQueue(newQueue, index)
-  startPlayingId(queue.getCurrent())
+  setNewQueue(newQueue, index)
+  const current = queue.getCurrent()
+  if (current) {
+    setPlayingFile(current)
+  }
 }
 
 export function playPause() {
@@ -174,12 +175,15 @@ export function playPause() {
 }
 
 export function reload() {
-  if (isStopped) return
-  const currentTime = audio.currentTime
-  audio.src = ''
-  audio.load()
-  startPlayingId(queue.getCurrent())
-  audio.currentTime = currentTime
+  const id = queue.getCurrent()
+  const wasPaused = audio.paused
+  if (id && !isStopped) {
+    const currentTime = audio.currentTime
+    audio.src = ''
+    audio.load()
+    setPlayingFile(id, wasPaused)
+    audio.currentTime = currentTime
+  }
 }
 
 export function stop() {
@@ -201,11 +205,12 @@ quit.setHandler('player', () => {
 
 audio.onended = () => {
   const nextId = queue.getNext()
-  if (nextId) {
+  const currentId = queue.getCurrent()
+  if (nextId && currentId) {
     savePlayTime()
-    methods.addPlay(queue.getCurrent())
-    startPlayingId(nextId)
-    queue.next()
+    methods.addPlay(currentId)
+    setPlayingFile(nextId)
+    queueNext()
   } else {
     stop()
   }
@@ -213,22 +218,24 @@ audio.onended = () => {
 
 export function next() {
   const nextId = queue.getNext()
-  if (nextId) {
+  const currentId = queue.getCurrent()
+  if (nextId && currentId) {
     savePlayTime()
-    methods.addSkip(queue.getCurrent())
-    startPlayingId(nextId)
-    queue.next()
+    methods.addSkip(currentId)
+    setPlayingFile(nextId)
+    queueNext()
   } else {
     stop()
   }
 }
 export function previous() {
   const prevId = queue.getPrevious()
-  if (prevId) {
+  const currentId = queue.getCurrent()
+  if (prevId && currentId) {
     savePlayTime()
-    methods.addSkip(queue.getCurrent())
-    startPlayingId(prevId)
-    queue.prev()
+    methods.addSkip(currentId)
+    setPlayingFile(prevId)
+    queuePrev()
   } else {
     stop()
   }

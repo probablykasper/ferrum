@@ -4,7 +4,6 @@
   const dispatch = createEventDispatcher()
 
   type T = $$Generic
-  export let itemCount: number
   export let itemHeight: number
   export let items: T[]
   export let buffer = 5
@@ -55,7 +54,7 @@
     return Math.min(itemCount - 1, index)
   }
 
-  $: if (mounted) updateView(scrollTop, height, itemHeight, itemCount)
+  $: if (mounted) updateView(scrollTop, height, itemHeight, items.length)
   function updateView(scrollTop: number, height: number, itemHeight: number, itemCount: number) {
     const newStartIndex = getStartIndex(scrollTop, itemHeight)
     const newEndIndex = getEndIndex(scrollTop, height, itemHeight, itemCount)
@@ -68,7 +67,7 @@
       startIndex = 0
       await tick()
       // we need to wait a tick so properties can finish updating
-      updateView(scrollTop, height, itemHeight, itemCount)
+      updateView(scrollTop, height, itemHeight, items.length)
     }
   }
 </script>
@@ -86,11 +85,11 @@
 >
   <div
     class="content"
-    style:height={itemCount * itemHeight + 'px'}
+    style:height={items.length * itemHeight + 'px'}
     style:padding-top={startIndex * itemHeight + 'px'}
   >
     {#each { length: visibleCount } as _, i (i + startIndex)}
-      <slot item={items[i + startIndex]} />
+      <slot item={items[i + startIndex]} index={i + startIndex} />
     {/each}
   </div>
 </div>

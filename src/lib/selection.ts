@@ -1,4 +1,4 @@
-import { writable } from 'svelte/store'
+import { checkMouseShortcut, checkShortcut, getterWritable } from './helpers'
 
 /**
  * The selection object.
@@ -21,7 +21,7 @@ function createEmpty() {
     shiftAnchor: null,
   }
 }
-function add(selection: Selection, index: number) {
+function addIndex(selection: Selection, index: number) {
   if (selection.list[index] !== true) {
     selection.list[index] = true
     selection.count++
@@ -31,11 +31,11 @@ function add(selection: Selection, index: number) {
 function addRange(selection: Selection, from: number, to: number) {
   if (from < to) {
     for (let i = from; i <= to; i++) {
-      add(selection, i)
+      addIndex(selection, i)
     }
   } else {
     for (let i = from; i >= to; i--) {
-      add(selection, i)
+      addIndex(selection, i)
     }
   }
 }
@@ -102,10 +102,28 @@ function selectTo(selection: Selection, toIndex: number) {
   selection.shiftAnchor = anchor
 }
 
-export function newSelection() {
-  const store = writable(createEmpty())
+type SelectOptions = {
+  getItemCount: () => number
+  scrollToItem: (index: number) => void
+  onContextMenu: () => void
+}
+export function newSelection(options: SelectOptions) {
+  const store = getterWritable(createEmpty())
+  let possibleRowClick = false
 
-  return {
+  function mouseDownSelect(e: MouseEvent, index: number) {
+    const isSelected = store.get().list[index]
+    if (checkMouseShortcut(e) && !isSelected) {
+      selection.clear()
+      selection.add(index)
+    } else if (checkMouseShortcut(e, { cmdOrCtrl: true }) && !isSelected) {
+      selection.add(index)
+    } else if (checkMouseShortcut(e, { shift: true })) {
+      selection.shiftSelectTo(index)
+    }
+  }
+
+  const selection = {
     subscribe: store.subscribe,
     findFirst: findFirst,
     getSelectedIndexes(selection: Selection): number[] {
@@ -117,13 +135,11 @@ export function newSelection() {
       }
       return indexes
     },
-    /**
-     * Add an index to the selection.
-     */
+    /** Add an index to the selection */
     add(fromIndex: number, toIndex?: number) {
       store.update((selection) => {
         if (toIndex === undefined) {
-          add(selection, fromIndex)
+          addIndex(selection, fromIndex)
         } else {
           addRange(selection, fromIndex, toIndex)
         }
@@ -138,11 +154,11 @@ export function newSelection() {
     goBackward(maxIndex: number) {
       store.update((selection) => {
         if (selection.count === 0) {
-          add(selection, maxIndex)
+          addIndex(selection, maxIndex)
         } else if (selection.lastAdded !== null) {
           const newIndex = selection.lastAdded - 1
           selection = createEmpty()
-          add(selection, Math.max(0, newIndex))
+          addIndex(selection, Math.max(0, newIndex))
         }
         return selection
       })
@@ -154,18 +170,16 @@ export function newSelection() {
     goForward(maxIndex: number) {
       store.update((selection) => {
         if (selection.count === 0) {
-          add(selection, 0)
+          addIndex(selection, 0)
         } else if (selection.lastAdded !== null) {
           const newIndex = selection.lastAdded + 1
           selection = createEmpty()
-          add(selection, Math.min(newIndex, maxIndex))
+          addIndex(selection, Math.min(newIndex, maxIndex))
         }
         return selection
       })
     },
-    /**
-     * Expand or shrink selection backwards (shift+up).
-     */
+    /** Expand or shrink selection backwards (shift+up) */
     shiftSelectBackward() {
       store.update((selection) => {
         const anchor = getShiftAnchor(selection)
@@ -177,7 +191,7 @@ export function newSelection() {
           // add prev to selection
           for (let i = selection.lastAdded; i >= 0; i--) {
             if (selection.list[i] !== true) {
-              add(selection, i)
+              addIndex(selection, i)
               return selection
             }
           }
@@ -204,7 +218,7 @@ export function newSelection() {
           // add next to selection
           for (let i = selection.lastAdded; i <= maxIndex; i++) {
             if (selection.list[i] !== true) {
-              add(selection, i)
+              addIndex(selection, i)
               return selection
             }
           }
@@ -235,7 +249,7 @@ export function newSelection() {
           }
           remove(selection, index)
         } else {
-          add(selection, index)
+          addIndex(selection, index)
         }
         selection.shiftAnchor = null
         return selection
@@ -244,5 +258,67 @@ export function newSelection() {
     clear() {
       store.set(createEmpty())
     },
+
+    handleMouseDown(e: MouseEvent, index: number) {
+      if (e.button !== 0) {
+        return
+      }
+      if (store.get().list[index]) {
+        possibleRowClick = true
+      }
+      mouseDownSelect(e, index)
+    },
+    handleContextMenu(e: MouseEvent, index: number) {
+      mouseDownSelect(e, index)
+      options.onContextMenu()
+    },
+    handleClick(e: MouseEvent, index: number) {
+      if (possibleRowClick && e.button === 0) {
+        if (checkMouseShortcut(e)) {
+          selection.clear()
+          selection.add(index)
+        } else if (checkMouseShortcut(e, { cmdOrCtrl: true })) {
+          selection.toggle(index)
+        }
+      }
+      possibleRowClick = false
+    },
+    handleKeyDown(e: KeyboardEvent) {
+      if (checkShortcut(e, 'Escape')) {
+        selection.clear()
+      } else if (checkShortcut(e, 'A', { cmdOrCtrl: true })) {
+        selection.add(0, options.getItemCount() - 1)
+      } else if (checkShortcut(e, 'ArrowUp')) {
+        selection.goBackward(options.getItemCount() - 1)
+        options.scrollToItem(store.get().lastAdded || 0)
+      } else if (checkShortcut(e, 'ArrowUp', { shift: true })) {
+        selection.shiftSelectBackward()
+        options.scrollToItem(store.get().lastAdded || 0)
+      } else if (checkShortcut(e, 'ArrowUp', { alt: true })) {
+        selection.clear()
+        selection.add(0)
+        options.scrollToItem(0)
+      } else if (checkShortcut(e, 'ArrowUp', { shift: true, alt: true })) {
+        selection.shiftSelectTo(0)
+        options.scrollToItem(store.get().lastAdded || 0)
+      } else if (checkShortcut(e, 'ArrowDown')) {
+        selection.goForward(options.getItemCount() - 1)
+        options.scrollToItem(store.get().lastAdded || 0)
+      } else if (checkShortcut(e, 'ArrowDown', { shift: true })) {
+        selection.shiftSelectForward(options.getItemCount() - 1)
+        options.scrollToItem(store.get().lastAdded || 0)
+      } else if (checkShortcut(e, 'ArrowDown', { alt: true })) {
+        selection.clear()
+        selection.add(options.getItemCount() - 1)
+        options.scrollToItem(store.get().lastAdded || 0)
+      } else if (checkShortcut(e, 'ArrowDown', { shift: true, alt: true })) {
+        selection.shiftSelectTo(options.getItemCount() - 1)
+        options.scrollToItem(store.get().lastAdded || 0)
+      } else {
+        return
+      }
+      e.preventDefault()
+    },
   }
+  return selection
 }

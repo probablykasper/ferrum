@@ -1,8 +1,10 @@
 <script lang="ts">
-  import { queue, Queue } from '../lib/queue'
+  import { getByQueueIndex, getQueueLength, queue, Queue } from '../lib/queue'
   import { onDestroy } from 'svelte'
   import VirtualList from './VirtualListItemed.svelte'
   import QueueItem from './QueueItem.svelte'
+  import { newSelection } from '@/lib/selection'
+  import { showTrackMenu } from '@/lib/menus'
 
   let objectUrls: string[] = []
 
@@ -15,51 +17,87 @@
   $: items = getQueue($queue)
 
   function getQueue(queue: Queue) {
-    const nextIndex = queue.currentIndex + 1
+    selection.clear()
+    const newItems: (number | string)[] = []
+    let i = 0
 
-    const userQueue = []
-    for (let i = nextIndex; i < queue.currentIndex + queue.userQueueLength + 1; i++) {
-      userQueue.push(queue.ids[i])
+    if (queue.userQueue.length) {
+      newItems.push('Up Next')
+      queue.userQueue.forEach(() => {
+        newItems.push(i)
+        i++
+      })
     }
 
-    const autoQueue = []
-    for (let i = nextIndex + queue.userQueueLength; i < queue.ids.length; i++) {
-      autoQueue.push(queue.ids[i])
-      if (autoQueue.length >= 20) {
-        break
-      }
+    if (queue.autoQueue.length) {
+      newItems.push('Autoplay')
+      queue.autoQueue.forEach(() => {
+        newItems.push(i)
+        i++
+      })
     }
 
-    const newQueue: (0 | 1 | string)[] = []
-    if (userQueue.length) {
-      newQueue.push(0, ...userQueue)
-    }
-    if (autoQueue.length) {
-      newQueue.push(1, ...autoQueue)
+    if (newItems.length === 0) {
+      newItems.push('Up Next')
     }
 
-    return newQueue
+    return newItems
   }
+
+  let virtualList: VirtualList<typeof items[number]>
+
+  const selection = newSelection({
+    getItemCount: () => getQueueLength(),
+    scrollToItem: (i) => {
+      let itemIndex = 0
+      while (itemIndex <= i) {
+        if (typeof items[itemIndex] === 'string') i++
+        itemIndex++
+      }
+      virtualList.scrollToItem(i)
+    },
+    async onContextMenu() {
+      const indexes = selection.getSelectedIndexes($selection)
+      const ids = indexes.map((i) => getByQueueIndex(i))
+      await showTrackMenu(ids)
+    },
+  })
 </script>
 
 <div class="queue">
   <div class="shadow" />
   <div class="content">
-    <VirtualList {items} itemHeight={54} itemCount={items.length} let:item>
-      <div class="row">
-        {#if item === 0}
-          <h4>Up Next</h4>
-        {:else if item === 1}
-          <h4>Autoplay</h4>
-        {:else}
-          <QueueItem id={item} />
-        {/if}
-      </div>
+    <VirtualList
+      bind:this={virtualList}
+      {items}
+      itemHeight={54}
+      let:item
+      on:keydown={selection.handleKeyDown}
+      on:mousedown-self={selection.clear}
+    >
+      {#if typeof item === 'string'}
+        <h4 class="row">{item}</h4>
+      {:else}
+        <div
+          class="row"
+          class:selected={$selection.list[item] === true}
+          on:mousedown={(e) => selection.handleMouseDown(e, item)}
+          on:contextmenu={(e) => selection.handleContextMenu(e, item)}
+          on:click={(e) => selection.handleClick(e, item)}
+        >
+          <QueueItem id={getByQueueIndex(item)} />
+        </div>
+      {/if}
     </VirtualList>
   </div>
 </div>
 
 <style lang="sass">
+  .selected
+    background-color: hsla(var(--hue), 16%, 42%, 0.5)
+  :global(:focus)
+    .selected
+      background-color: hsla(var(--hue), 70%, 42%, 1)
   .queue
     position: absolute
     right: 0px
@@ -84,8 +122,8 @@
     align-items: center
     padding: 0px 10px
     box-sizing: border-box
-  h4
+  h4.row
     font-weight: 600
-    padding-left: 8px
-    margin: 12px 0px
+    padding-left: 18px
+    margin: 0px
 </style>
