@@ -1,17 +1,18 @@
 <script lang="ts">
-  import { methods, page } from '@/lib/data'
+  import { methods, page, softRefreshPage } from '@/lib/data'
   import { fade } from 'svelte/transition'
   import { onDestroy } from 'svelte'
+  import type { Track } from '@/lib/libraryTypes'
 
   export let id: string
-  $: track = methods.getTrack(id)
+
+  let track: Track
+  $: $softRefreshPage, (track = methods.getTrack(id))
+
   let objectUrl: string | undefined
 
   let promise: Promise<string>
-  // reload on page updates
-  $: if ($page) {
-    promise = loadCover(id)
-  }
+  $: $page, (promise = loadCover(id))
 
   async function loadCover(id: string) {
     if (objectUrl) {
