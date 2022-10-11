@@ -1,7 +1,6 @@
 import {
   addTracksToPlaylist,
   methods,
-  page,
   paths,
   removeFromOpenPlaylist,
   trackLists as trackListsStore,

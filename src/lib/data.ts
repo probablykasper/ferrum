@@ -241,6 +241,7 @@ export const methods = {
     call((data) => data.update_track_info(id, JSON.stringify(md)))
     methods.save()
     softRefreshPage.refresh()
+    refreshTrackInfo.refresh()
   },
   loadTags: (id: TrackID) => {
     call((data) => data.load_tags(id))
@@ -276,7 +277,7 @@ export const filter = (() => {
     },
   }
 })()
-export const softRefreshPage = (() => {
+function createRefreshStore() {
   const store = writable(0)
   return {
     subscribe: store.subscribe,
@@ -284,7 +285,9 @@ export const softRefreshPage = (() => {
       store.update((n) => n + 1)
     },
   }
-})()
+}
+export const softRefreshPage = createRefreshStore()
+export const refreshTrackInfo = createRefreshStore()
 export const page = (() => {
   function get() {
     const info = call((data) => data.get_page_info())
