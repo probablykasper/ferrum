@@ -52,10 +52,12 @@ function checkModifiers(e: KeyboardEvent | MouseEvent, options: ShortcutOptions)
     meta: !!e.metaKey,
   }
 
+  const ignoreCtrl = isMac && e instanceof MouseEvent
+
   return (
     pressed.shift === target.shift &&
     pressed.alt === target.alt &&
-    pressed.ctrl === target.ctrl &&
+    (pressed.ctrl === target.ctrl || ignoreCtrl) &&
     pressed.meta === target.meta
   )
 }

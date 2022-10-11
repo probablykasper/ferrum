@@ -4,6 +4,7 @@
 - Improve queue panel performance
 - Don't clear selection unnecessarily
 - Reload file when updating the currently playing song's info
+- Fix incorrect handling of macOS `Ctrl+click` context menu
 
 ## 0.15.0 - 2022 Sep 22
 - Support pasting track artworks
