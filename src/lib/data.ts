@@ -43,6 +43,7 @@ export type Data = {
   remove_image: (index: number) => void
 
   get_track_lists: () => TrackListsHashMap
+  playlist_filter_duplicates: (playlistId: TrackListID, trackIds: TrackID[]) => TrackID[]
   add_tracks_to_playlist: (playlistId: TrackListID, trackIds: TrackID[]) => void
   remove_from_open_playlist: (indexes: number[]) => void
   delete_tracks_in_open: (indexes: number[]) => void
@@ -126,10 +127,40 @@ export const trackLists = (() => {
     },
   }
 })()
-export function addTracksToPlaylist(playlistId: TrackListID, trackIds: TrackID[]) {
-  call((data) => data.add_tracks_to_playlist(playlistId, trackIds))
-  page.refresh()
-  methods.save()
+export async function addTracksToPlaylist(
+  playlistId: TrackListID,
+  trackIds: TrackID[],
+  checkDuplicates = true
+) {
+  if (checkDuplicates) {
+    const filteredIds = call((data) => data.playlist_filter_duplicates(playlistId, trackIds))
+    const duplicates = trackIds.length - filteredIds.length
+
+    if (duplicates > 0) {
+      const result = await showMessageBox({
+        type: 'question',
+        message: 'Already added',
+        detail:
+          duplicates > 1
+            ? `${duplicates} songs are already in this playlist`
+            : `${duplicates} song is already in this playlist`,
+        buttons: ['Add anyway', 'Cancel', 'Skip'],
+        defaultId: 0,
+      })
+      if (result.buttonClicked === 1) {
+        return
+      } else if (result.buttonClicked === 2) {
+        trackIds = filteredIds
+      }
+    }
+  }
+  if (trackIds.length >= 1) {
+    call((data) => data.add_tracks_to_playlist(playlistId, trackIds))
+    if (page.get().tracklist.id === playlistId) {
+      page.refresh()
+    }
+    methods.save()
+  }
 }
 export function removeFromOpenPlaylist(indexes: number[]) {
   call((data) => data.remove_from_open_playlist(indexes))
@@ -297,6 +328,7 @@ export const page = (() => {
   const { subscribe, set } = writable(get())
   return {
     subscribe,
+    get,
     refresh: () => {
       call((data) => data.refresh_page())
       set(get())

@@ -1,5 +1,3 @@
-use std::path::PathBuf;
-
 use crate::data::Data;
 use crate::data_js::get_data;
 use crate::js::{arg_to_bool, arg_to_number_vector, arg_to_string, arg_to_string_vector};
@@ -7,6 +5,8 @@ use crate::library_types::{Library, SpecialTrackListName, TrackID, TrackList};
 use crate::{str_to_option, UniResult};
 use napi::{CallContext, JsUndefined, JsUnknown, Result as NResult};
 use napi_derive::js_function;
+use std::collections::HashSet;
+use std::path::PathBuf;
 
 #[cfg(target_os = "macos")]
 use trash::macos::TrashContextExtMacos;
@@ -31,6 +31,24 @@ pub fn add_tracks(ctx: CallContext) -> NResult<JsUndefined> {
   };
   playlist.tracks.append(&mut track_ids);
   return ctx.env.get_undefined();
+}
+
+#[js_function(2)]
+pub fn filter_duplicates(ctx: CallContext) -> NResult<JsUnknown> {
+  let data: &mut Data = get_data(&ctx)?;
+  let playlist_id = arg_to_string(&ctx, 0)?;
+  let track_ids: Vec<String> = arg_to_string_vector(&ctx, 1)?;
+  let mut track_ids: HashSet<String> = HashSet::from_iter(track_ids.into_iter());
+  let playlist = match data.library.get_tracklist_mut(&playlist_id)? {
+    TrackList::Playlist(playlist) => playlist,
+    _ => throw!("Cannot check if folder/special contains track"),
+  };
+  for track in &playlist.tracks {
+    if track_ids.contains(track) {
+      track_ids.remove(track);
+    }
+  }
+  ctx.env.to_js_value(&track_ids)
 }
 
 #[js_function(1)]

@@ -83,6 +83,7 @@ fn init_data_instance(mut exports: JsObject) -> NResult<JsObject> {
   exports.create_named_method("remove_image", tracks::remove_image)?;
 
   exports.create_named_method("get_track_lists", playlists::get_track_lists)?;
+  exports.create_named_method("playlist_filter_duplicates", playlists::filter_duplicates)?;
   exports.create_named_method("add_tracks_to_playlist", playlists::add_tracks)?;
   exports.create_named_method("remove_from_open_playlist", playlists::remove_from_open)?;
   exports.create_named_method("delete_tracks_in_open", playlists::delete_tracks_in_open)?;

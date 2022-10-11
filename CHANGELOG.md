@@ -2,6 +2,7 @@
 
 ## Next
 - Add drag-and-drop, selection and context menus in queue panel
+- Add warning when adding duplicate songs to a playlist
 - Improve queue panel performance
 - Don't clear selection unnecessarily
 - Reload file when updating the currently playing song's info
