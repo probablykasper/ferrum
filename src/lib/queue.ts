@@ -9,7 +9,12 @@ export function toggleQueueVisibility() {
 let ids = [] as TrackID[]
 let currentIndex = -1
 let userQueueLength = 0
-export const queue = writable({ ids, currentIndex, userQueueLength })
+export type Queue = {
+  ids: TrackID[],
+  currentIndex: number,
+  userQueueLength: number,
+}
+export const queue = writable({ ids, currentIndex, userQueueLength } as Queue)
 function updateStore() {
   queue.set({ ids, currentIndex, userQueueLength })
 }

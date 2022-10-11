@@ -1,5 +1,5 @@
 <script lang="ts">
-  import VList from './VirtualList.svelte'
+  import VirtualList from './VirtualList.svelte'
   import {
     page,
     softRefreshPage,
@@ -15,7 +15,6 @@
   import { open as openTrackInfo } from './TrackInfo.svelte'
   import { appendToUserQueue, prependToUserQueue } from '../lib/queue'
   import { ipcRenderer } from '../lib/window'
-  import type { Track } from '../lib/libraryTypes'
   import { onDestroy, onMount } from 'svelte'
   import { dragged } from '../lib/drag-drop'
   import * as dragGhost from './DragGhost.svelte'
@@ -277,7 +276,7 @@
     }
   }
 
-  let vlist: VList<Track>
+  let vlist: VirtualList<ReturnType<typeof getItem>>
 
   let itemCount = 0
   page.subscribe((page) => {
@@ -349,7 +348,7 @@
       <span>Year</span>
     </div>
   </div>
-  <VList
+  <VirtualList
     {getItem}
     itemHeight={24}
     {itemCount}
@@ -403,7 +402,7 @@
         <div class="c year">{track.year || ''}</div>
       </div>
     {/if}
-  </VList>
+  </VirtualList>
   <div class="drag-line" class:show={dragToIndex !== null} bind:this={dragLine} />
 </div>
 

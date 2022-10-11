@@ -4,14 +4,14 @@
   const dispatch = createEventDispatcher()
 
   type T = $$Generic
-  export let getItem: (index: number) => T
   export let itemCount: number
   export let itemHeight: number
-  let startIndex = -1
-  let endIndex = -1
+  export let items: T[]
+  export let buffer = 5
+  let startIndex = 0
+  let visibleCount = 0
   let height = 0
   let scrollTop = 0
-  let visibleItems: T[] = []
 
   export function scrollToItem(index: number) {
     const top = index * itemHeight
@@ -44,7 +44,6 @@
     if (prevent) e.preventDefault()
   }
 
-  const buffer = 5
   function getStartIndex(scrollTop: number, itemHeight: number) {
     let topPixel = scrollTop
     let index = Math.floor(topPixel / itemHeight) - buffer
@@ -60,25 +59,13 @@
   function updateView(scrollTop: number, height: number, itemHeight: number, itemCount: number) {
     const newStartIndex = getStartIndex(scrollTop, itemHeight)
     const newEndIndex = getEndIndex(scrollTop, height, itemHeight, itemCount)
-
-    let newVisibleItems = []
-    for (let i = newStartIndex; i <= newEndIndex; i++) {
-      if (i >= startIndex && i <= endIndex) {
-        newVisibleItems.push(visibleItems[i - startIndex])
-      } else {
-        newVisibleItems.push(getItem(i))
-      }
-    }
-    visibleItems = newVisibleItems
+    visibleCount = newEndIndex - newStartIndex + 1
     startIndex = newStartIndex
-    endIndex = newEndIndex
   }
 
   export async function refresh() {
     if (mounted) {
-      startIndex = -1
-      endIndex = -1
-      visibleItems = []
+      startIndex = 0
       await tick()
       // we need to wait a tick so properties can finish updating
       updateView(scrollTop, height, itemHeight, itemCount)
@@ -102,8 +89,8 @@
     style:height={itemCount * itemHeight + 'px'}
     style:padding-top={startIndex * itemHeight + 'px'}
   >
-    {#each visibleItems as item, i}
-      <slot {item} index={startIndex + i} />
+    {#each { length: visibleCount } as _, i (i + startIndex)}
+      <slot item={items[i + startIndex]} />
     {/each}
   </div>
 </div>
