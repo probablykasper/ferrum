@@ -126,7 +126,8 @@ export function newSelection(options: SelectOptions) {
   const selection = {
     subscribe: store.subscribe,
     findFirst: findFirst,
-    getSelectedIndexes(selection: Selection): number[] {
+    getSelectedIndexes(): number[] {
+      const selection = store.get()
       const indexes = []
       for (let i = 0; i < selection.list.length; i++) {
         if (selection.list[i]) {

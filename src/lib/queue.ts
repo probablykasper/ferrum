@@ -31,6 +31,7 @@ export const queue = (() => {
     getByQueueIndex,
     prependToUserQueue,
     appendToUserQueue,
+    removeIndexes,
   }
 })()
 
@@ -76,13 +77,7 @@ export function moveIndexes(indexes: number[], newIndex: number, top = false) {
   const ids: string[] = []
   queue.update((q) => {
     for (const index of indexes) {
-      if (index < q.userQueue.length) {
-        const removedIds = q.userQueue.splice(index, 1)
-        ids.push(...removedIds)
-      } else {
-        const removedIds = q.autoQueue.splice(index - q.userQueue.length, 1)
-        ids.push(...removedIds)
-      }
+      ids.push(removeIndex(q, index))
       if (index < newIndex) {
         newIndex--
       }
@@ -93,8 +88,6 @@ export function moveIndexes(indexes: number[], newIndex: number, top = false) {
 }
 
 export function insertIds(ids: TrackID[], index: number, top = false) {
-  console.log(ids, index, top)
-
   queue.update((q) => {
     const snapTop = index === q.userQueue.length && top
     if (index < q.userQueue.length || snapTop) {
@@ -108,6 +101,27 @@ export function insertIds(ids: TrackID[], index: number, top = false) {
     from: index,
     to: index + ids.length,
   }
+}
+
+function removeIndex(q: Queue, index: number): TrackID {
+  if (index < q.userQueue.length) {
+    const [removedId] = q.userQueue.splice(index, 1)
+    return removedId
+  } else {
+    const [removedId] = q.autoQueue.splice(index - q.userQueue.length, 1)
+    return removedId
+  }
+}
+
+export function removeIndexes(indexes: number[]) {
+  console.log(indexes)
+
+  queue.update((q) => {
+    for (const index of indexes) {
+      removeIndex(q, index)
+    }
+    return q
+  })
 }
 
 export function next() {

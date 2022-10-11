@@ -15,6 +15,8 @@
   import { dragged } from '@/lib/drag-drop'
   import { methods } from '@/lib/data'
   import * as dragGhost from './DragGhost.svelte'
+  import { ipcRenderer } from '@/lib/window'
+  import { checkShortcut } from '@/lib/helpers'
 
   let objectUrls: string[] = []
 
@@ -67,10 +69,19 @@
       virtualList.scrollToItem(i)
     },
     async onContextMenu() {
-      const indexes = selection.getSelectedIndexes($selection)
       const ids = indexes.map((i) => getByQueueIndex(i))
-      await showTrackMenu(ids)
+      await showTrackMenu(ids, undefined, true)
     },
+  })
+
+  function removeFromQueue() {
+    if ($selection.count >= 1) {
+      queue.removeIndexes(selection.getSelectedIndexes())
+    }
+  }
+  ipcRenderer.on('context.Remove from Queue', removeFromQueue)
+  onDestroy(() => {
+    ipcRenderer.off('context.Remove from Queue', removeFromQueue)
   })
 
   let dragLine: HTMLElement
@@ -124,6 +135,10 @@
       return
     }
     if (dragged.tracks) {
+      if ($queue.userQueue.length === 0) {
+        // if user drags to top of autoqueue, create userqueue
+        dragTopOfItem = false
+      }
       const newSelection = dragged.tracks.queueIndexes
         ? moveIndexes(indexes, dragToIndex, !dragTopOfItem)
         : insertIds(dragged.tracks.ids, dragToIndex, !dragTopOfItem)
@@ -131,6 +146,15 @@
         selection.add(i)
       }
       dragToIndex = null
+    }
+  }
+
+  function keydown(e: KeyboardEvent) {
+    if (checkShortcut(e, 'Backspace') && $selection.count >= 1) {
+      e.preventDefault()
+      removeFromQueue()
+    } else {
+      selection.handleKeyDown(e)
     }
   }
 </script>
@@ -143,7 +167,7 @@
       {items}
       itemHeight={54}
       let:item
-      on:keydown={selection.handleKeyDown}
+      on:keydown={keydown}
       on:mousedown-self={selection.clear}
     >
       {#if typeof item === 'string'}

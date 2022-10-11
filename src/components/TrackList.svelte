@@ -21,12 +21,12 @@
   import { showTrackMenu } from '@/lib/menus'
 
   function playNext() {
-    const indexes = selection.getSelectedIndexes($selection)
+    const indexes = selection.getSelectedIndexes()
     const ids = indexes.map((i) => page.getTrackId(i))
     prependToUserQueue(ids)
   }
   function addToQueue() {
-    const indexes = selection.getSelectedIndexes($selection)
+    const indexes = selection.getSelectedIndexes()
     const ids = indexes.map((i) => page.getTrackId(i))
     appendToUserQueue(ids)
   }
@@ -46,12 +46,12 @@
   }
   function removeFromPlaylist() {
     if ($page.tracklist.type === 'playlist') {
-      const indexes = selection.getSelectedIndexes($selection)
+      const indexes = selection.getSelectedIndexes()
       removeFromOpenPlaylist(indexes)
     }
   }
   function deleteFromLibrary() {
-    const indexes = selection.getSelectedIndexes($selection)
+    const indexes = selection.getSelectedIndexes()
     deleteTracksInOpen(indexes)
   }
   onMount(() => {
@@ -78,7 +78,7 @@
     getItemCount: () => $page.length,
     scrollToItem: (i) => virtualList.scrollToItem(i),
     onContextMenu: async () => {
-      const indexes = selection.getSelectedIndexes($selection)
+      const indexes = selection.getSelectedIndexes()
       const ids = indexes.map((i) => page.getTrackId(i))
       await showTrackMenu(ids, { indexes, editable: $page.tracklist.type === 'playlist' })
     },

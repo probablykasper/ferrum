@@ -20,11 +20,12 @@ import {
 
 export async function showTrackMenu(
   ids: string[],
-  playlist?: { indexes: number[]; editable: boolean }
+  playlist?: { indexes: number[]; editable: boolean },
+  queue = false
 ) {
   const trackLists = get(trackListsStore)
   const flat = flattenChildLists(trackLists.root as Special, trackLists, '')
-  const args: ShowTrackMenuArgs = { ids, playlist, lists: flat }
+  const args: ShowTrackMenuArgs = { ids, playlist, queue, lists: flat }
 
   await ipcRenderer.invoke('showTrackMenu', args)
 }

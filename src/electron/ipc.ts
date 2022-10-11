@@ -30,7 +30,20 @@ ipcMain.handle('revealTrackFile', async (e, ...paths) => {
 })
 
 ipcMain.handle('showTrackMenu', (e, args: ShowTrackMenuArgs) => {
+  let queueMenu: Electron.MenuItemConstructorOptions[] = []
+  if (args.queue) {
+    queueMenu = [
+      {
+        label: 'Remove from Queue',
+        click: () => {
+          e.sender.send('context.Remove from Queue')
+        },
+      },
+      { type: 'separator' },
+    ]
+  }
   const menu = Menu.buildFromTemplate([
+    ...queueMenu,
     {
       label: 'Play Next',
       click: () => {
