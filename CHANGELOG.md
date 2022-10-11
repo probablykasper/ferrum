@@ -1,7 +1,7 @@
 # Changelog
 
 ## Next
-- Add queue panel selection
+- Add drag-and-drop, selection and context menus in queue panel
 - Improve queue panel performance
 - Don't clear selection unnecessarily
 - Reload file when updating the currently playing song's info

@@ -188,22 +188,20 @@
     if (
       dragged.tracks?.playlistIndexes &&
       e.currentTarget &&
-      e.dataTransfer &&
-      e.dataTransfer.types[0] === 'ferrum.tracks'
+      e.dataTransfer?.types[0] === 'ferrum.tracks'
     ) {
       e.preventDefault()
-      const rowEl = e.currentTarget as HTMLDivElement
-      const dim = rowEl.getBoundingClientRect()
-      if (e.offsetY < rowEl.clientHeight / 2) {
-        dragLine.style.top = dim.top - 1 + 'px'
+      const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
+      if (e.pageY < rect.bottom - rect.height / 2) {
+        dragLine.style.top = rect.top - 1 + 'px'
         dragToIndex = index
       } else {
-        dragLine.style.top = dim.bottom - 1 + 'px'
+        dragLine.style.top = rect.bottom - 1 + 'px'
         dragToIndex = index + 1
       }
     }
   }
-  function dragEndHandler() {
+  function dropHandler() {
     if (dragToIndex !== null) {
       const newSelection = page.moveTracks(indexes, dragToIndex)
       for (let i = newSelection.from; i <= newSelection.to; i++) {
@@ -211,6 +209,9 @@
       }
       dragToIndex = null
     }
+  }
+  function dragEndHandler() {
+    dragToIndex = null
   }
 
   function getItem(index: number) {
@@ -318,6 +319,7 @@
         draggable="true"
         on:dragstart={onDragStart}
         on:dragover={(e) => onDragOver(e, index)}
+        on:drop={dropHandler}
         on:dragend={dragEndHandler}
         class:odd={index % 2 === 0}
         class:selected={$selection.list[index] === true}

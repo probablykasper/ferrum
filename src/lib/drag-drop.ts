@@ -1,6 +1,7 @@
 type DraggedTracks = {
   ids: string[]
   playlistIndexes?: number[]
+  queueIndexes?: number[]
 }
 type DraggedPlaylist = {
   id: string
