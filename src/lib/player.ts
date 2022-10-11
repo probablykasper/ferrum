@@ -173,6 +173,15 @@ export function playPause() {
   else pausePlayback()
 }
 
+export function reload() {
+  if (isStopped) return
+  const currentTime = audio.currentTime
+  audio.src = ''
+  audio.load()
+  startPlayingId(queue.getCurrent())
+  audio.currentTime = currentTime
+}
+
 export function stop() {
   waitingToPlay = false
   audio.pause()

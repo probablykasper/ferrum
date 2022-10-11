@@ -55,6 +55,7 @@
   import { checkShortcut, focus, focusLast } from '@/lib/helpers'
   import Button from './Button.svelte'
   import { showOpenDialog } from '@/lib/window'
+  import { reload } from '@/lib/player'
 
   function uintFilter(value: string) {
     return value.replace(/[^0-9]*/g, '')
@@ -157,6 +158,7 @@
         // playCount,
         comments,
       })
+      reload()
     }
     if (hideAfter) {
       close()
