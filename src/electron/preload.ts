@@ -1,6 +1,6 @@
 import path from 'path'
 import is from './is'
-import addon from '../../build/addon.node'
+import addon from 'ferrum-addon'
 import { iTunesImport } from './import_itunes'
 
 window.addon = addon

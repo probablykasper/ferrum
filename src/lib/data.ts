@@ -1,6 +1,7 @@
 import { writable } from 'svelte/store'
-import type { TrackMd } from './libraryTypes'
-import { showMessageBox, addon as innerAddon } from './window'
+import { addon as innerAddon } from '@/lib/window'
+import { showMessageBox } from './window'
+import type { MsSinceUnixEpoch, TrackID, TrackListID, TrackMd } from 'ferrum-addon'
 
 export const isDev = window.isDev
 export const isMac = window.isMac
@@ -122,6 +123,7 @@ export function movePlaylist(id: TrackListID, fromParent: TrackListID, toParent:
 }
 
 export const paths = call((addon) => addon.get_paths())
+console.log(paths)
 
 export async function importTracks(paths: string[]) {
   let errState = null

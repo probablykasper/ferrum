@@ -48,7 +48,7 @@ Web (the frontend)
 
 Napi (the native Rust backend)
 - Source code: `src-native/`
-- Build output: `build/addon.node`
+- Build output: `ferrum-addon/addon.node`
 
 ### Commands
 - `npm run dev`: Start app in dev mode

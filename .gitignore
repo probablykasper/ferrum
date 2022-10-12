@@ -1,4 +1,5 @@
-/node_modules
-/build
-/target
-/appdata
+node_modules
+build
+target
+appdata
+ferrum-addon/addon.node

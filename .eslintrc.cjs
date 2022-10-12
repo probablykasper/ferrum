@@ -10,6 +10,7 @@ module.exports = {
       // https://github.com/sveltejs/eslint-plugin-svelte3/issues/10
       return attributes && attributes.lang && attributes.lang !== 'css'
     },
+    'svelte3/ignore-warnings': () => true, // svelte-check used instead
   },
   parserOptions: {
     sourceType: 'module',

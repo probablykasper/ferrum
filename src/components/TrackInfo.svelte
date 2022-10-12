@@ -2,7 +2,7 @@
   import { writable } from 'svelte/store'
   import type { Writable } from 'svelte/store'
   import { methods } from '@/lib/data'
-  import type { Track, JsImage, TrackID } from '@/lib/libraryTypes'
+  import type { Track, JsImage, TrackID } from 'ferrum-addon'
   import { visibleModalsCount } from '@/lib/modals'
 
   type CurrentList = {

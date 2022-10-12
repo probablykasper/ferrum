@@ -4,14 +4,14 @@ import path from 'path'
 import url from 'url'
 import fs from 'fs'
 import mm from 'music-metadata'
-import addon from '../../build/addon.node'
+import * as addon from 'ferrum-addon'
 import {
   Playlist as LibraryPlaylist,
   Folder as LibraryFolder,
   Track as LibraryTrack,
   TrackListsHashMap,
   SpecialTrackListName,
-} from '../lib/libraryTypes'
+} from 'ferrum-addon'
 
 type Track = LibraryTrack & {
   importedFrom: 'itunes'

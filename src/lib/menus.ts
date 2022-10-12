@@ -8,7 +8,7 @@ import {
 import { open as openTrackInfo } from '@/components/TrackInfo.svelte'
 import { flattenChildLists } from '@/lib/helpers'
 import { ipcRenderer } from '@/lib/window'
-import type { Special, TrackID } from '@/lib/libraryTypes'
+import type { Special, TrackID } from 'ferrum-addon'
 import { get } from 'svelte/store'
 import type { ShowTracklistMenuArgs, ShowTrackMenuArgs } from '@/electron/types'
 import { appendToUserQueue, prependToUserQueue } from './queue'
@@ -50,6 +50,8 @@ ipcRenderer.on('context.Get Info', (e, ids: TrackID[], trackIndex: number) => {
 })
 ipcRenderer.on('context.revealTrackFile', (e, id: TrackID) => {
   const track = methods.getTrack(id)
+  console.log('revealTrackFile', paths.tracksDir, track.file)
+
   ipcRenderer.invoke('revealTrackFile', paths.tracksDir, track.file)
 })
 ipcRenderer.on('context.Remove from Playlist', (e, indexes: number[]) => {

@@ -189,15 +189,17 @@
       {#if typeof item === 'string'}
         <h4 class="row" on:dragover={() => (dragToIndex = null)}>{item}</h4>
       {:else}
+        <!-- @const here to fix bugged type guard -->
+        {@const index = item}
         <div
           class="row"
           class:selected={$selection.list[item] === true}
-          on:mousedown={(e) => selection.handleMouseDown(e, item)}
-          on:contextmenu={(e) => selection.handleContextMenu(e, item)}
-          on:click={(e) => selection.handleClick(e, item)}
+          on:mousedown={(e) => selection.handleMouseDown(e, index)}
+          on:contextmenu={(e) => selection.handleContextMenu(e, index)}
+          on:click={(e) => selection.handleClick(e, index)}
           draggable="true"
           on:dragstart={onDragStart}
-          on:dragover={(e) => onDragOver(e, item)}
+          on:dragover={(e) => onDragOver(e, index)}
           on:drop={dropHandler}
           on:dragend={dragEndHandler}
         >

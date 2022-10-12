@@ -1,6 +1,6 @@
 import type { FlattenedListMenuItem } from '@/electron/types'
 import { Updater, Writable, writable } from 'svelte/store'
-import type { Folder, Special, TrackListsHashMap } from './libraryTypes'
+import type { Folder, Special, TrackListsHashMap } from 'ferrum-addon'
 
 export function getDuration(dur: number) {
   dur = Math.round(dur)

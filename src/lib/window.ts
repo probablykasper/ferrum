@@ -1,5 +1,5 @@
-import type * as Addon from '../../build/addon'
 import type { MessageBoxOptions, OpenDialogOptions } from 'electron'
+import type Addon from 'ferrum-addon/addon'
 const electron = window.require('electron')
 
 export const ipcRenderer = electron.ipcRenderer
@@ -7,27 +7,6 @@ export const ipcRenderer = electron.ipcRenderer
 const invoke = ipcRenderer.invoke
 
 declare global {
-  type TrackID = string
-  type TrackListID = string
-  type PercentInteger = number
-  type MsSinceUnixEpoch = number
-
-  interface Playlist extends Addon.Playlist {
-    type: 'playlist'
-  }
-  interface Folder extends Addon.Folder {
-    type: 'folder'
-  }
-  interface Special extends Addon.Special {
-    type: 'special'
-  }
-  type TrackList = Playlist | Folder | Special
-
-  interface TrackListsHashMap {
-    root: Addon.Special
-    [TrackListID: string]: TrackList
-  }
-
   interface Window {
     addon: typeof Addon
     isDev: boolean

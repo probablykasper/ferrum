@@ -1,5 +1,5 @@
 use crate::data::Data;
-use napi::{Env, JsUndefined, JsUnknown, Result};
+use napi::{Env, JsUndefined, Result};
 
 pub fn get_data<'a>(env: &'a Env) -> Result<&'a mut Data> {
   let data = env.get_instance_data::<Data>()?.ok_or(nerr!("No data"))?;
@@ -22,12 +22,16 @@ pub struct PathsJs {
   pub local_data_dir: String,
 }
 
-#[napi(js_name = "get_paths", ts_return_type = "PathsJs")]
+#[napi(js_name = "get_paths")]
 #[allow(dead_code)]
-pub fn get_paths(env: Env) -> Result<JsUnknown> {
+pub fn get_paths(env: Env) -> Result<PathsJs> {
   let data: &mut Data = get_data(&env)?;
-  let paths = env.to_js_value(&data.paths)?;
-  Ok(paths)
+  Ok(PathsJs {
+    library_dir: data.paths.library_dir.to_string_lossy().into(),
+    tracks_dir: data.paths.tracks_dir.to_string_lossy().into(),
+    library_json: data.paths.library_json.to_string_lossy().into(),
+    local_data_dir: data.paths.local_data_dir.to_string_lossy().into(),
+  })
 }
 
 #[napi(js_name = "save")]

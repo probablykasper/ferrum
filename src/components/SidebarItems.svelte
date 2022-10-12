@@ -23,7 +23,7 @@
 </script>
 
 <script lang="ts">
-  import type { TrackList } from '../lib/libraryTypes'
+  import type { TrackList } from 'ferrum-addon'
   import { Writable, writable } from 'svelte/store'
   import { createEventDispatcher, SvelteComponent } from 'svelte'
   import { getContext } from 'svelte'

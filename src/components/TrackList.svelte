@@ -39,8 +39,7 @@
   function revealTrackFile() {
     const index = selection.findFirst($selection.list)
     if (index !== null) {
-      let firstIndex = selection.findFirst($selection.list) || 0
-      const track = page.getTrack(firstIndex)
+      const track = page.getTrack(index)
       ipcRenderer.invoke('revealTrackFile', paths.tracksDir, track.file)
     }
   }
