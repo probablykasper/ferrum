@@ -1,20 +1,19 @@
+use crate::data::Data;
+use crate::data_js::get_data;
+use crate::js::nerr;
+use crate::library::{get_track_field_type, TrackField};
+use crate::library_types::{SpecialTrackListName, Track, TrackID, TrackList};
+use crate::sort::sort;
+use crate::{filter, UniResult};
+use napi::{Env, JsString, JsUndefined, JsUnknown, Result};
 use std::collections::HashSet;
 use std::time::Instant;
 
-use crate::data::Data;
-use crate::data_js::get_data;
-use crate::js::{arg_to_bool, arg_to_number, arg_to_number_vector, arg_to_string, nerr};
-use crate::library::{get_track_field_type, TrackField};
-use crate::library_types::{SpecialTrackListName, TrackID, TrackList};
-use crate::sort::sort;
-use crate::{filter, UniResult};
-use napi::{CallContext, JsObject, JsString, JsUndefined, JsUnknown, Result as NResult};
-use napi_derive::js_function;
-
-#[js_function(1)]
-pub fn open_playlist(ctx: CallContext) -> NResult<JsUndefined> {
-  let data: &mut Data = get_data(&ctx)?;
-  data.open_playlist_id = arg_to_string(&ctx, 0)?;
+#[napi(js_name = "open_playlist")]
+#[allow(dead_code)]
+pub fn open_playlist(open_playlist_id: String, env: Env) -> Result<JsUndefined> {
+  let data: &mut Data = get_data(&env)?;
+  data.open_playlist_id = open_playlist_id;
   data.open_playlist_track_ids = get_track_ids(&data)?;
   data.page_track_ids = None;
   match data.library.get_tracklist(&data.open_playlist_id)? {
@@ -26,51 +25,54 @@ pub fn open_playlist(ctx: CallContext) -> NResult<JsUndefined> {
       data.sort_desc = true;
     }
   };
-  return ctx.env.get_undefined();
+  return env.get_undefined();
 }
 
-#[js_function(1)]
-pub fn get_page_track(ctx: CallContext) -> NResult<JsUnknown> {
-  let data: &mut Data = get_data(&ctx)?;
-  let index: i64 = arg_to_number(&ctx, 0)?;
+#[napi(js_name = "get_page_track")]
+#[allow(dead_code)]
+pub fn get_page_track(index: i64, env: Env) -> Result<Track> {
+  let data: &mut Data = get_data(&env)?;
   let page_track_ids = data.get_page_tracks();
   let track_id = page_track_ids.get(index as usize).ok_or(nerr!(
     "Track index {} not found in open playlist",
     index.to_string()
   ))?;
-  let tracks = &data.library.tracks;
-  let track = tracks.get(track_id).ok_or(nerr("Track ID not found"))?;
-  let js = ctx.env.to_js_value(track)?;
-  return Ok(js);
+  let track = data
+    .library
+    .tracks
+    .get(track_id)
+    .ok_or(nerr("Track ID not found"))?;
+  return Ok(track.clone());
 }
 
-#[js_function(1)]
-pub fn get_page_track_id(ctx: CallContext) -> NResult<JsString> {
-  let data: &mut Data = get_data(&ctx)?;
-  let index: i64 = arg_to_number(&ctx, 0)?;
+#[napi(js_name = "get_page_track_id")]
+#[allow(dead_code)]
+pub fn get_page_track_id(index: i64, env: Env) -> Result<JsString> {
+  let data: &mut Data = get_data(&env)?;
   let page_track_ids = data.get_page_tracks();
   let track_id = page_track_ids.get(index as usize).ok_or(nerr!(
     "Track index {} not found in open playlist",
     index.to_string()
   ))?;
-  return ctx.env.create_string(track_id);
+  return env.create_string(track_id);
 }
 
-#[js_function(0)]
-pub fn refresh(ctx: CallContext) -> NResult<JsUndefined> {
-  let data: &mut Data = get_data(&ctx)?;
+#[napi(js_name = "refresh_page")]
+#[allow(dead_code)]
+pub fn refresh(env: Env) -> Result<JsUndefined> {
+  let data: &mut Data = get_data(&env)?;
   let sort_key = data.sort_key.clone();
   let sort_desc = data.sort_desc.clone();
   sort(data, &sort_key, sort_desc)?;
   filter::filter(data, data.filter.clone());
-  return ctx.env.get_undefined();
+  return env.get_undefined();
 }
 
-#[js_function(0)]
-pub fn get_page_track_ids(ctx: CallContext) -> NResult<JsUnknown> {
-  let data: &mut Data = get_data(&ctx)?;
-  let page_track_ids = data.get_page_tracks();
-  return ctx.env.to_js_value(page_track_ids);
+#[napi(js_name = "get_page_track_ids")]
+#[allow(dead_code)]
+pub fn get_page_track_ids(env: Env) -> Result<Vec<TrackID>> {
+  let data: &mut Data = get_data(&env)?;
+  Ok(data.get_page_tracks().to_owned())
 }
 
 fn get_tracklist_track_ids(data: &Data, playlist_id: &str) -> UniResult<Vec<TrackID>> {
@@ -107,27 +109,44 @@ pub fn get_track_ids(data: &Data) -> UniResult<Vec<TrackID>> {
   Ok(ids)
 }
 
-#[js_function(0)]
-pub fn get_page_info(ctx: CallContext) -> NResult<JsUnknown> {
-  let data: &mut Data = get_data(&ctx)?;
-  let tracklist = data.library.get_tracklist(&data.open_playlist_id)?;
-
-  let v = serde_json::json!({
-    "id": data.open_playlist_id,
-    "tracklist": tracklist,
-    "sort_key": data.sort_key,
-    "sort_desc": data.sort_desc,
-    "length": data.get_page_tracks().len(),
-  });
-  let js = ctx.env.to_js_value(&v)?;
-  return Ok(js);
+#[napi(object)]
+pub struct PageInfo {
+  pub id: String,
+  #[napi(ts_type = "TrackList")]
+  pub tracklist: JsUnknown,
+  pub sort_key: String,
+  pub sort_desc: bool,
+  pub length: i64,
 }
 
-#[js_function(2)]
-pub fn sort_js(ctx: CallContext) -> NResult<JsUndefined> {
-  let data: &mut Data = get_data(&ctx)?;
-  let sort_key = arg_to_string(&ctx, 0)?;
-  let keep_filter = arg_to_bool(&ctx, 1)?;
+#[allow(dead_code)]
+#[napi(js_name = "get_page_info")]
+pub fn get_page_info(env: Env) -> Result<PageInfo> {
+  let data = get_data(&env)?;
+  let tracklist = data.library.get_tracklist(&data.open_playlist_id)?;
+
+  Ok(PageInfo {
+    id: data.open_playlist_id.clone(),
+    tracklist: env.to_js_value(tracklist)?,
+    sort_key: data.sort_key.clone(),
+    sort_desc: data.sort_desc,
+    length: data.get_page_tracks().len().try_into().expect("Too long"),
+  })
+  // let v = serde_json::json!({
+  //   "id": data.open_playlist_id,
+  //   "tracklist": tracklist,
+  //   "sort_key": data.sort_key,
+  //   "sort_desc": data.sort_desc,
+  //   "length": data.get_page_tracks().len(),
+  // });
+  // let js = env.to_js_value(&v)?;
+  // return Ok(js);
+}
+
+#[napi(js_name = "sort")]
+#[allow(dead_code)]
+pub fn sort_js(sort_key: String, keep_filter: bool, env: Env) -> Result<JsUndefined> {
+  let data: &mut Data = get_data(&env)?;
 
   let old_sort_key = &data.sort_key;
   if &sort_key == old_sort_key {
@@ -146,16 +165,25 @@ pub fn sort_js(ctx: CallContext) -> NResult<JsUndefined> {
   if keep_filter {
     filter::filter(data, data.filter.clone());
   }
-  return ctx.env.get_undefined();
+  return env.get_undefined();
 }
 
-#[js_function(2)]
-pub fn move_tracks(ctx: CallContext) -> NResult<JsObject> {
-  let data: &mut Data = get_data(&ctx)?;
-  let mut indexes_to_move: Vec<u32> = arg_to_number_vector(&ctx, 0)?;
+#[napi(object)]
+pub struct SelectionInfo {
+  pub from: u32,
+  pub to: u32,
+}
+
+#[napi(js_name = "move_tracks")]
+#[allow(dead_code)]
+pub fn move_tracks(
+  mut indexes_to_move: Vec<u32>,
+  to_index: u32,
+  env: Env,
+) -> Result<SelectionInfo> {
+  let data: &mut Data = get_data(&env)?;
   indexes_to_move.sort_unstable();
   indexes_to_move.dedup();
-  let to_index: u32 = arg_to_number(&ctx, 1)?;
   let tracklist = data
     .library
     .trackLists
@@ -194,8 +222,8 @@ pub fn move_tracks(ctx: CallContext) -> NResult<JsObject> {
   start_ids.append(&mut moved_ids);
   start_ids.append(&mut end_ids);
   playlist.tracks = start_ids;
-  let mut new_selection = ctx.env.create_object()?;
-  new_selection.set_named_property("from", ctx.env.create_uint32(new_from)?)?;
-  new_selection.set_named_property("to", ctx.env.create_uint32(new_to)?)?;
-  return Ok(new_selection);
+  Ok(SelectionInfo {
+    from: new_from,
+    to: new_to,
+  })
 }

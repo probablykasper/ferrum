@@ -3,6 +3,7 @@
 use crate::{get_now_timestamp, UniResult};
 use linked_hash_map::LinkedHashMap;
 use nanoid::nanoid;
+use napi::bindgen_prelude::ToNapiValue;
 use serde::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};
 
@@ -120,7 +121,8 @@ pub enum Version {
 /// (track id, start time, duration)
 pub type PlayTime = (TrackID, MsSinceUnixEpoch, i64);
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[napi(object)]
 pub struct Track {
   pub size: i64,
   pub duration: f64,
@@ -132,7 +134,7 @@ pub struct Track {
   pub name: String,
   #[serde(default, skip_serializing_if = "Option::is_none")]
   pub importedFrom: Option<String>,
-  /// Imported ID, like iTunes Persistent ID:
+  /// Imported ID, like iTunes Persistent ID
   #[serde(default, skip_serializing_if = "Option::is_none")]
   pub originalId: Option<String>,
   #[serde(default)]
@@ -199,11 +201,12 @@ pub struct Track {
   pub volume: Option<PercentInteger>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[napi(object)]
 pub struct CountObject {
-  count: i64,
-  fromDate: MsSinceUnixEpoch,
-  toDate: MsSinceUnixEpoch,
+  pub count: i64,
+  pub fromDate: MsSinceUnixEpoch,
+  pub toDate: MsSinceUnixEpoch,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -228,6 +231,7 @@ impl TrackList {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
+#[napi(object)]
 pub struct Playlist {
   pub id: TrackListID,
   pub name: String,
@@ -249,6 +253,7 @@ pub struct Playlist {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
+#[napi(object)]
 pub struct Folder {
   pub id: TrackListID,
   pub name: String,
@@ -272,6 +277,7 @@ pub struct Folder {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
+#[napi(object)]
 pub struct Special {
   pub id: TrackListID,
   pub name: SpecialTrackListName,
@@ -279,8 +285,9 @@ pub struct Special {
   pub children: Vec<TrackListID>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 #[non_exhaustive]
+#[napi]
 pub enum SpecialTrackListName {
   Root,
 }

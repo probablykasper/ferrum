@@ -1,13 +1,10 @@
 use crate::data::Data;
 use crate::data_js::get_data;
-use crate::js::{arg_to_bool, arg_to_string};
 use crate::library::Paths;
 use crate::{path_to_json, UniResult};
 use atomicwrites::AtomicFile;
 use atomicwrites::OverwriteBehavior::AllowOverwrite;
-use napi::JsUndefined;
-use napi::{CallContext, JsUnknown, Result as NResult};
-use napi_derive::js_function;
+use napi::{Env, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 use std::io::Write;
@@ -40,22 +37,22 @@ impl SidebarView {
     Ok(())
   }
 }
-#[js_function(0)]
-pub fn shown_playlist_folders(ctx: CallContext) -> NResult<JsUnknown> {
-  let data: &Data = get_data(&ctx)?;
-  let view_cache = &data.view_cache;
-  ctx.env.to_js_value(&view_cache.shown_playlist_folders)
+#[napi(js_name = "shown_playlist_folders")]
+#[allow(dead_code)]
+pub fn shown_playlist_folders(env: Env) -> Result<Vec<String>> {
+  let data: &Data = get_data(&env)?;
+  let shown_folders = &data.view_cache.shown_playlist_folders;
+  Ok(shown_folders.iter().cloned().collect())
 }
-#[js_function(2)]
-pub fn view_folder_set_show(ctx: CallContext) -> NResult<JsUndefined> {
-  let data: &mut Data = get_data(&ctx)?;
-  let id: String = arg_to_string(&ctx, 0)?;
-  let show: bool = arg_to_bool(&ctx, 1)?;
+#[napi(js_name = "view_folder_set_show")]
+#[allow(dead_code)]
+pub fn view_folder_set_show(id: String, show: bool, env: Env) -> Result<()> {
+  let data: &mut Data = get_data(&env)?;
   if show {
     data.view_cache.shown_playlist_folders.insert(id);
   } else {
     data.view_cache.shown_playlist_folders.remove(&id);
   }
   let _ = data.view_cache.save(&data.paths);
-  ctx.env.get_undefined()
+  Ok(())
 }

@@ -114,7 +114,7 @@ function startPlayback() {
 
 function setPlayingFile(id: TrackID, paused = false) {
   const track = methods.getTrack(id)
-  const fileUrl = 'track:' + joinPaths(paths.tracks_dir, track.file)
+  const fileUrl = 'track:' + joinPaths(paths.tracksDir, track.file)
   waitingToPlay = !paused
   audio.src = fileUrl
   playingTrack.set(track)

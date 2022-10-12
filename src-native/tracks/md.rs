@@ -1,3 +1,5 @@
+#![allow(non_snake_case)]
+
 use super::tag::SetInfoError;
 use super::{generate_filename, Tag};
 use crate::library_types::Track;
@@ -6,23 +8,27 @@ use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::PathBuf;
 
-#[allow(non_snake_case)]
 #[derive(Serialize, Deserialize, Debug)]
+#[napi(object)]
 pub struct TrackMD {
-  name: String,
-  artist: String,
-  albumName: String,
-  albumArtist: String,
-  composer: String,
-  grouping: String,
-  genre: String,
-  year: String,
-  trackNum: String,
-  trackCount: String,
-  discNum: String,
-  discCount: String,
-  bpm: String,
-  comments: String,
+  pub name: String,
+  pub artist: String,
+  pub albumName: String,
+  pub albumArtist: String,
+  pub composer: String,
+  pub grouping: String,
+  pub genre: String,
+  pub year: String,
+  pub trackNum: String,
+  pub trackCount: String,
+  pub discNum: String,
+  pub discCount: String,
+  pub bpm: String,
+  // compilation: String,
+  // rating: String,
+  // liked: String,
+  // playCount: String,
+  pub comments: String,
 }
 
 pub fn update_track_info(

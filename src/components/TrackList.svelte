@@ -41,7 +41,7 @@
     if (index !== null) {
       let firstIndex = selection.findFirst($selection.list) || 0
       const track = page.getTrack(firstIndex)
-      ipcRenderer.invoke('revealTrackFile', paths.tracks_dir, track.file)
+      ipcRenderer.invoke('revealTrackFile', paths.tracksDir, track.file)
     }
   }
   function removeFromPlaylist() {
@@ -72,7 +72,7 @@
   })
 
   const sortBy = page.sortBy
-  $: sortKey = $page.sort_key
+  $: sortKey = $page.sortKey
 
   const selection = newSelection({
     getItemCount: () => $page.length,
@@ -177,8 +177,8 @@
   let dragToIndex: null | number = null
   function onDragOver(e: DragEvent, index: number) {
     if (
-      !$page.sort_desc ||
-      $page.sort_key !== 'index' ||
+      !$page.sortDesc ||
+      $page.sortKey !== 'index' ||
       $filter ||
       $page.tracklist.type !== 'playlist'
     ) {
@@ -256,7 +256,7 @@
       <div class="description">{$page.tracklist.description}</div>
     {/if}
   </div>
-  <div class="row table-header" class:desc={$page.sort_desc}>
+  <div class="row table-header" class:desc={$page.sortDesc}>
     <div class="c index" class:sort={sortKey === 'index'} on:click={() => sortBy('index')}>
       <span>#</span>
     </div>

@@ -20,7 +20,11 @@
   const { ipcRenderer } = window.require('electron')
   async function itunesImport() {
     const result = await iTunesImport(
-      paths,
+      {
+        library_dir: paths.libraryDir,
+        library_json: paths.libraryJson,
+        tracks_dir: paths.tracksDir,
+      },
       (status: string) => {
         pageStatus = status
       },

@@ -1,4 +1,4 @@
-import type { Data } from './data'
+import type * as Addon from '../../build/addon'
 import type { MessageBoxOptions, OpenDialogOptions } from 'electron'
 const electron = window.require('electron')
 
@@ -6,15 +6,30 @@ export const ipcRenderer = electron.ipcRenderer
 
 const invoke = ipcRenderer.invoke
 
-type addon = {
-  copy_file: (from: string, to: string) => void
-  atomic_file_save: (filePath: string, content: string) => void
-  load_data: (isDev: boolean) => Data
-  load_data_async: (isDev: boolean) => Promise<Data>
-}
 declare global {
+  type TrackID = string
+  type TrackListID = string
+  type PercentInteger = number
+  type MsSinceUnixEpoch = number
+
+  interface Playlist extends Addon.Playlist {
+    type: 'playlist'
+  }
+  interface Folder extends Addon.Folder {
+    type: 'folder'
+  }
+  interface Special extends Addon.Special {
+    type: 'special'
+  }
+  type TrackList = Playlist | Folder | Special
+
+  interface TrackListsHashMap {
+    root: Addon.Special
+    [TrackListID: string]: TrackList
+  }
+
   interface Window {
-    addon: addon
+    addon: typeof Addon
     isDev: boolean
     isMac: boolean
     isWindows: boolean

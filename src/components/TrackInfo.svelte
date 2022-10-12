@@ -2,7 +2,7 @@
   import { writable } from 'svelte/store'
   import type { Writable } from 'svelte/store'
   import { methods } from '@/lib/data'
-  import type { Track, Image, TrackID } from '@/lib/libraryTypes'
+  import type { Track, JsImage, TrackID } from '@/lib/libraryTypes'
   import { visibleModalsCount } from '@/lib/modals'
 
   type CurrentList = {
@@ -13,9 +13,9 @@
 
   const id: Writable<TrackID | null> = writable(null)
   const track: Writable<Track | null> = writable(null)
-  const image = writable(null as null | Image)
+  const image = writable(null as null | JsImage)
 
-  function openIndex(index: number) {
+  async function openIndex(index: number) {
     if (currentList && index >= 0 && index < currentList.ids.length) {
       currentList.index = index
       id.set(currentList.ids[index])
@@ -45,7 +45,7 @@
     if (currentList) openIndex(currentList.index + 1)
   }
 
-  function loadImage(index: number) {
+  async function loadImage(index: number) {
     image.set(methods.getImage(index))
   }
 </script>
@@ -197,7 +197,7 @@
     }
   }
   function nextImage() {
-    if ($image && $image.index < $image.total_images - 1) {
+    if ($image && $image.index < $image.totalImages - 1) {
       loadImage($image.index + 1)
     }
   }
@@ -248,7 +248,7 @@
     if (checkShortcut(e, 'Backspace') && $image) {
       methods.removeImage($image.index)
       imageEdited = true
-      if ($image.index < $image.total_images - 1) {
+      if ($image.index < $image.totalImages - 1) {
         loadImage($image.index)
       } else {
         loadImage(Math.max(0, $image.index - 1))
@@ -304,7 +304,7 @@
 <svelte:body on:keydown|self={keydownNoneSelected} on:paste={coverPaste} />
 <Modal showIf={$id !== null} onClose={cancel}>
   <form class="modal" on:submit|preventDefault={() => save()}>
-    <div class="header" class:has-subtitle={$image !== null && $image.total_images >= 2}>
+    <div class="header" class:has-subtitle={$image !== null && $image.totalImages >= 2}>
       <div class="cover-area" class:droppable tabindex="0" on:keydown={coverKeydown}>
         <div
           class="cover"
@@ -330,11 +330,11 @@
             <img
               class="outline-element"
               alt=""
-              src={'data:' + $image.mime_type + ';base64,' + $image.data}
+              src={'data:' + $image.mimeType + ';base64,' + $image.data}
             />
           {/if}
         </div>
-        {#if $image !== null && $image.total_images >= 2}
+        {#if $image !== null && $image.totalImages >= 2}
           {@const imageIndex = $image.index}
           <div class="cover-subtitle">
             <div class="arrow" class:unclickable={imageIndex <= 0}>
@@ -355,9 +355,9 @@
               >
             </div>
             <div class="subtitle-text">
-              {$image.index + 1} / {$image.total_images}
+              {$image.index + 1} / {$image.totalImages}
             </div>
-            <div class="arrow" class:unclickable={imageIndex >= $image.total_images - 1}>
+            <div class="arrow" class:unclickable={imageIndex >= $image.totalImages - 1}>
               <svg
                 on:click={nextImage}
                 clip-rule="evenodd"

@@ -1,18 +1,16 @@
 use crate::data::Data;
 use crate::data_js::get_data;
-use crate::js::arg_to_string;
 use crate::library_types::TrackID;
-use napi::{CallContext, JsUndefined, Result as NResult};
-use napi_derive::js_function;
+use napi::{Env, Result};
 use std::str::Chars;
 use std::time::Instant;
 
-#[js_function(1)]
-pub fn filter_js(ctx: CallContext) -> NResult<JsUndefined> {
-  let data: &mut Data = get_data(&ctx)?;
-  let query = arg_to_string(&ctx, 0)?;
+#[napi(js_name = "filter_open_playlist")]
+#[allow(dead_code)]
+pub fn filter_js(query: String, env: Env) -> Result<()> {
+  let data: &mut Data = get_data(&env)?;
   filter(data, query);
-  return ctx.env.get_undefined();
+  return Ok(());
 }
 
 fn match_at_start(mut haystack: Chars, needle: Chars) -> bool {

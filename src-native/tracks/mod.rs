@@ -1,12 +1,9 @@
 use crate::data::Data;
 use crate::data_js::get_data;
 use crate::get_now_timestamp;
-use crate::js::{arg_to_bytes, arg_to_number, arg_to_string, nerr};
-use crate::library_types::Track;
-use napi::{
-  CallContext, Env, JsArrayBuffer, JsObject, JsUndefined, JsUnknown, Result as NResult, Task,
-};
-use napi_derive::js_function;
+use crate::js::nerr;
+use crate::library_types::{MsSinceUnixEpoch, Track, TrackID};
+use napi::{Env, JsArrayBuffer, JsObject, Result, Task};
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -16,27 +13,26 @@ mod tag;
 
 pub use tag::Tag;
 
-fn id_arg_to_track<'a>(ctx: &'a CallContext, arg: usize) -> NResult<&'a mut Track> {
-  let data: &mut Data = get_data(&ctx)?;
-  let id = arg_to_string(&ctx, arg)?;
+fn id_to_track<'a>(env: &'a Env, id: &String) -> Result<&'a mut Track> {
+  let data: &mut Data = get_data(&env)?;
   let tracks = &mut data.library.tracks;
-  let track = tracks.get_mut(&id).ok_or(nerr("Track ID not found"))?;
+  let track = tracks.get_mut(id).ok_or(nerr("Track ID not found"))?;
   return Ok(track);
 }
 
-#[js_function(1)]
-pub fn get_track(ctx: CallContext) -> NResult<JsUnknown> {
-  let data: &mut Data = get_data(&ctx)?;
-  let id = arg_to_string(&ctx, 0)?;
+#[napi(js_name = "get_track")]
+#[allow(dead_code)]
+pub fn get_track(id: String, env: Env) -> Result<Track> {
+  let data: &mut Data = get_data(&env)?;
   let tracks = &data.library.tracks;
   let track = tracks.get(&id).ok_or(nerr("Track ID not found"))?;
-  let js = ctx.env.to_js_value(&track)?;
-  return Ok(js);
+  Ok(track.clone())
 }
 
-#[js_function(1)]
-pub fn add_play(ctx: CallContext) -> NResult<JsUndefined> {
-  let track = id_arg_to_track(&ctx, 0)?;
+#[napi(js_name = "add_play")]
+#[allow(dead_code)]
+pub fn add_play(track_id: String, env: Env) -> Result<()> {
+  let track = id_to_track(&env, &track_id)?;
   let timestamp = get_now_timestamp();
   match &mut track.plays {
     None => track.plays = Some(vec![timestamp]),
@@ -46,12 +42,13 @@ pub fn add_play(ctx: CallContext) -> NResult<JsUndefined> {
     None => track.playCount = Some(1),
     Some(play_count) => *play_count += 1,
   }
-  return ctx.env.get_undefined();
+  Ok(())
 }
 
-#[js_function(1)]
-pub fn add_skip(ctx: CallContext) -> NResult<JsUndefined> {
-  let track = id_arg_to_track(&ctx, 0)?;
+#[napi(js_name = "add_skip")]
+#[allow(dead_code)]
+pub fn add_skip(track_id: String, env: Env) -> Result<()> {
+  let track = id_to_track(&env, &track_id)?;
   let timestamp = get_now_timestamp();
   match &mut track.skips {
     None => track.skips = Some(vec![timestamp]),
@@ -61,26 +58,24 @@ pub fn add_skip(ctx: CallContext) -> NResult<JsUndefined> {
     None => track.skipCount = Some(1),
     Some(skip_count) => *skip_count += 1,
   }
-  return ctx.env.get_undefined();
+  Ok(())
 }
 
-#[js_function(3)]
-pub fn add_play_time(ctx: CallContext) -> NResult<JsUndefined> {
-  let data: &mut Data = get_data(&ctx)?;
+#[napi(js_name = "add_play_time")]
+#[allow(dead_code)]
+pub fn add_play_time(id: TrackID, start: MsSinceUnixEpoch, dur_ms: i64, env: Env) -> Result<()> {
+  let data: &mut Data = get_data(&env)?;
   let tracks = &mut data.library.tracks;
-  let id = arg_to_string(&ctx, 0)?;
   tracks.get_mut(&id).ok_or(nerr("Track ID not found"))?;
-  let timestamp: i64 = arg_to_number(&ctx, 1)?;
-  let duration: i64 = arg_to_number(&ctx, 2)?;
-  data.library.playTime.push((id, timestamp, duration));
-  return ctx.env.get_undefined();
+  data.library.playTime.push((id, start, dur_ms));
+  Ok(())
 }
 
 struct ReadCover(PathBuf);
 impl Task for ReadCover {
   type Output = Vec<u8>;
   type JsValue = JsArrayBuffer;
-  fn compute(&mut self) -> NResult<Self::Output> {
+  fn compute(&mut self) -> Result<Self::Output> {
     let path = &self.0;
     let tag = Tag::read_from_path(path)?;
     match tag.get_image(0) {
@@ -91,19 +86,20 @@ impl Task for ReadCover {
       }
     }
   }
-  fn resolve(&mut self, env: Env, output: Self::Output) -> NResult<Self::JsValue> {
+  fn resolve(&mut self, env: Env, output: Self::Output) -> Result<Self::JsValue> {
     let result = env.create_arraybuffer_with_data(output)?;
     return Ok(result.into_raw());
   }
 }
-#[js_function(1)]
-pub fn read_cover_async(ctx: CallContext) -> NResult<JsObject> {
-  let data: &mut Data = get_data(&ctx)?;
-  let track = id_arg_to_track(&ctx, 0)?;
+#[napi(js_name = "read_cover_async", ts_return_type = "Promise<ArrayBuffer>")]
+#[allow(dead_code)]
+pub fn read_cover_async(track_id: String, env: Env) -> Result<JsObject> {
+  let data: &mut Data = get_data(&env)?;
+  let track = id_to_track(&env, &track_id)?;
   let tracks_dir = &data.paths.tracks_dir;
   let file_path = tracks_dir.join(&track.file);
   let task = ReadCover(file_path);
-  ctx.env.spawn(task).map(|t| t.promise_object())
+  env.spawn(task).map(|t| t.promise_object())
 }
 
 fn sanitize_filename(input: &String) -> String {
@@ -144,12 +140,11 @@ pub fn generate_filename(dest_dir: &Path, artist: &str, title: &str, ext: &str) 
   return filename;
 }
 
-#[js_function(2)]
-pub fn import(ctx: CallContext) -> NResult<JsUndefined> {
-  let data: &mut Data = get_data(&ctx)?;
-  let track_path_str = arg_to_string(&ctx, 0)?;
-  let now = arg_to_number(&ctx, 1)?;
-  let path = Path::new(&track_path_str);
+#[napi(js_name = "import_file")]
+#[allow(dead_code)]
+pub fn import_file(path: String, now: MsSinceUnixEpoch, env: Env) -> Result<()> {
+  let data: &mut Data = get_data(&env)?;
+  let path = Path::new(&path);
   let ext = path.extension().unwrap_or_default().to_string_lossy();
   let track = match ext.as_ref() {
     "mp3" => import::import_mp3(&data, &path, now)?,
@@ -159,63 +154,57 @@ pub fn import(ctx: CallContext) -> NResult<JsUndefined> {
   };
   let id = data.library.generate_id();
   data.library.tracks.insert(id, track);
-  return ctx.env.get_undefined();
+  Ok(())
 }
 
-#[js_function(1)]
-pub fn load_tags(ctx: CallContext) -> NResult<JsUndefined> {
-  let data: &mut Data = get_data(&ctx)?;
+#[napi(js_name = "load_tags")]
+#[allow(dead_code)]
+pub fn load_tags(track_id: String, env: Env) -> Result<()> {
+  let data: &mut Data = get_data(&env)?;
   data.current_tag = None;
-  let track = id_arg_to_track(&ctx, 0)?;
+  let track = id_to_track(&env, &track_id)?;
 
   let path = data.paths.tracks_dir.join(&track.file);
   let tag = Tag::read_from_path(&path)?;
   data.current_tag = Some(tag);
-  ctx.env.get_undefined()
+  Ok(())
 }
 
-pub fn image_to_js_obj(ctx: &CallContext, img: tag::Image) -> NResult<JsObject> {
-  let mut image_obj = ctx.env.create_object()?;
-
-  let index = ctx.env.create_uint32(img.index as u32)?;
-  image_obj.set_named_property("index", index)?;
-
-  let total_images = ctx.env.create_uint32(img.total_images as u32)?;
-  image_obj.set_named_property("total_images", total_images)?;
-
-  let mime_type = ctx.env.create_string(&img.mime_type)?;
-  image_obj.set_named_property("mime_type", mime_type)?;
-
-  let encoded_data = base64::encode(img.data);
-  let data_str = ctx.env.create_string(&encoded_data)?;
-  image_obj.set_named_property("data", data_str)?;
-
-  Ok(image_obj)
+#[napi(object)]
+pub struct JsImage {
+  pub index: i64,
+  pub total_images: i64,
+  pub mime_type: String,
+  pub data: String,
 }
 
-#[js_function(1)]
-pub fn get_image(ctx: CallContext) -> NResult<JsUnknown> {
-  let data: &mut Data = get_data(&ctx)?;
-  let index: u32 = arg_to_number(&ctx, 0)?;
+#[napi(js_name = "get_image")]
+#[allow(dead_code)]
+pub fn get_image(index: u32, env: Env) -> Result<Option<JsImage>> {
+  let data: &Data = get_data(&env)?;
 
   let tag = match &data.current_tag {
     Some(tag) => tag,
-    None => return Ok(ctx.env.get_null()?.into_unknown()),
+    None => return Ok(None),
   };
-  let image = match tag.get_image(index as usize) {
+  let img = match tag.get_image(index as usize) {
     Some(image) => image,
-    None => return Ok(ctx.env.get_null()?.into_unknown()),
+    None => return Ok(None),
   };
 
-  let image_obj = image_to_js_obj(&ctx, image)?;
-  Ok(image_obj.into_unknown())
+  let js_image = JsImage {
+    index: img.index.try_into().expect("usize conv"),
+    total_images: img.total_images.try_into().expect("usize conv"),
+    mime_type: img.mime_type,
+    data: base64::encode(&img.data),
+  };
+  Ok(Some(js_image))
 }
 
-#[js_function(2)]
-pub fn set_image(ctx: CallContext) -> NResult<JsUndefined> {
-  let data: &mut Data = get_data(&ctx)?;
-  let index: u32 = arg_to_number(&ctx, 0)?;
-  let path_str = arg_to_string(&ctx, 1)?;
+#[napi(js_name = "set_image")]
+#[allow(dead_code)]
+pub fn set_image(index: u32, path_str: String, env: Env) -> Result<()> {
+  let data: &mut Data = get_data(&env)?;
   let path = data.paths.tracks_dir.join(path_str);
   match &mut data.current_tag {
     Some(tag) => {
@@ -234,44 +223,43 @@ pub fn set_image(ctx: CallContext) -> NResult<JsUndefined> {
     }
     None => throw!("No tag loaded"),
   };
-  ctx.env.get_undefined()
+  Ok(())
 }
 
-#[js_function(3)]
-pub fn set_image_data(ctx: CallContext) -> NResult<JsUndefined> {
-  let data: &mut Data = get_data(&ctx)?;
-  let index: u32 = arg_to_number(&ctx, 0)?;
-  let bytes = arg_to_bytes(&ctx, 1)?;
-  let mime_type = arg_to_string(&ctx, 2)?;
+#[napi(js_name = "set_image_data")]
+#[allow(dead_code)]
+pub fn set_image_data(index: u32, bytes: JsArrayBuffer, mime_type: String, env: Env) -> Result<()> {
+  let bytes: Vec<u8> = bytes.into_value()?.to_vec();
+  let data: &mut Data = get_data(&env)?;
   match &mut data.current_tag {
     Some(tag) => tag.set_image(index as usize, bytes, &mime_type)?,
     None => throw!("No tag loaded"),
   };
-  ctx.env.get_undefined()
+  Ok(())
 }
 
-#[js_function(1)]
-pub fn remove_image(ctx: CallContext) -> NResult<JsUndefined> {
-  let data: &mut Data = get_data(&ctx)?;
-  let index: u32 = arg_to_number(&ctx, 0)?;
+#[napi(js_name = "remove_image")]
+#[allow(dead_code)]
+pub fn remove_image(index: u32, env: Env) -> Result<()> {
+  let data: &mut Data = get_data(&env)?;
   match data.current_tag {
     Some(ref mut tag) => tag.remove_image(index as usize),
     None => {}
   };
-  ctx.env.get_undefined()
+  Ok(())
 }
 
-#[js_function(2)]
-pub fn update_track_info(ctx: CallContext) -> NResult<JsUndefined> {
-  let data: &mut Data = get_data(&ctx)?;
-  let track = id_arg_to_track(&ctx, 0)?;
-  let new_info: md::TrackMD = serde_json::from_str(&arg_to_string(&ctx, 1)?)?;
+#[napi(js_name = "update_track_info")]
+#[allow(dead_code)]
+pub fn update_track_info(track_id: String, info: md::TrackMD, env: Env) -> Result<()> {
+  let data: &mut Data = get_data(&env)?;
+  let track = id_to_track(&env, &track_id)?;
 
   let tag = match &mut data.current_tag {
     Some(tag) => tag,
     None => throw!("No tag loaded"),
   };
-  md::update_track_info(&data.paths.tracks_dir, track, tag, new_info)?;
+  md::update_track_info(&data.paths.tracks_dir, track, tag, info)?;
 
-  ctx.env.get_undefined()
+  Ok(())
 }

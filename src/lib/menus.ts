@@ -50,7 +50,7 @@ ipcRenderer.on('context.Get Info', (e, ids: TrackID[], trackIndex: number) => {
 })
 ipcRenderer.on('context.revealTrackFile', (e, id: TrackID) => {
   const track = methods.getTrack(id)
-  ipcRenderer.invoke('revealTrackFile', paths.tracks_dir, track.file)
+  ipcRenderer.invoke('revealTrackFile', paths.tracksDir, track.file)
 })
 ipcRenderer.on('context.Remove from Playlist', (e, indexes: number[]) => {
   removeFromOpenPlaylist(indexes)

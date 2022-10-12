@@ -1,44 +1,41 @@
 use crate::data::Data;
 use crate::data_js::get_data;
-use crate::js::{arg_to_bool, arg_to_number_vector, arg_to_string, arg_to_string_vector};
 use crate::library_types::{Library, SpecialTrackListName, TrackID, TrackList};
 use crate::{str_to_option, UniResult};
-use napi::{CallContext, JsUndefined, JsUnknown, Result as NResult};
-use napi_derive::js_function;
+use napi::{Env, JsUnknown, Result};
 use std::collections::HashSet;
 use std::path::PathBuf;
 
 #[cfg(target_os = "macos")]
 use trash::macos::TrashContextExtMacos;
 
-#[js_function(0)]
-pub fn get_track_lists(ctx: CallContext) -> NResult<JsUnknown> {
-  let data: &mut Data = get_data(&ctx)?;
+#[napi(js_name = "get_track_lists", ts_return_type = "TrackListsHashMap")]
+#[allow(dead_code)]
+pub fn get_track_lists(env: Env) -> Result<JsUnknown> {
+  let data: &mut Data = get_data(&env)?;
   let track_lists = &data.library.trackLists;
-  let js = ctx.env.to_js_value(&track_lists)?;
+  let js = env.to_js_value(&track_lists)?;
   return Ok(js);
 }
 
-#[js_function(2)]
-pub fn add_tracks(ctx: CallContext) -> NResult<JsUndefined> {
-  let data: &mut Data = get_data(&ctx)?;
-  let playlist_id = arg_to_string(&ctx, 0)?;
-  let mut track_ids: Vec<String> = arg_to_string_vector(&ctx, 1)?;
+#[napi(js_name = "add_tracks_to_playlist")]
+#[allow(dead_code)]
+pub fn add_tracks(playlist_id: String, mut track_ids: Vec<String>, env: Env) -> Result<()> {
+  let data: &mut Data = get_data(&env)?;
   let playlist = match data.library.get_tracklist_mut(&playlist_id)? {
     TrackList::Playlist(playlist) => playlist,
     TrackList::Folder(_) => throw!("Cannot add track to folder"),
     TrackList::Special(_) => throw!("Cannot add track to special playlist"),
   };
   playlist.tracks.append(&mut track_ids);
-  return ctx.env.get_undefined();
+  return Ok(());
 }
 
-#[js_function(2)]
-pub fn filter_duplicates(ctx: CallContext) -> NResult<JsUnknown> {
-  let data: &mut Data = get_data(&ctx)?;
-  let playlist_id = arg_to_string(&ctx, 0)?;
-  let track_ids: Vec<String> = arg_to_string_vector(&ctx, 1)?;
-  let mut track_ids: HashSet<String> = HashSet::from_iter(track_ids.into_iter());
+#[napi(js_name = "playlist_filter_duplicates")]
+#[allow(dead_code)]
+pub fn filter_duplicates(playlist_id: String, ids: Vec<String>, env: Env) -> Result<Vec<TrackID>> {
+  let data: &mut Data = get_data(&env)?;
+  let mut track_ids: HashSet<String> = HashSet::from_iter(ids.into_iter());
   let playlist = match data.library.get_tracklist_mut(&playlist_id)? {
     TrackList::Playlist(playlist) => playlist,
     _ => throw!("Cannot check if folder/special contains track"),
@@ -48,13 +45,14 @@ pub fn filter_duplicates(ctx: CallContext) -> NResult<JsUnknown> {
       track_ids.remove(track);
     }
   }
-  ctx.env.to_js_value(&track_ids)
+  let track_ids: Vec<TrackID> = track_ids.into_iter().collect();
+  Ok(track_ids)
 }
 
-#[js_function(1)]
-pub fn remove_from_open(ctx: CallContext) -> NResult<JsUndefined> {
-  let data: &mut Data = get_data(&ctx)?;
-  let mut indexes_to_remove: Vec<u32> = arg_to_number_vector(&ctx, 0)?;
+#[napi(js_name = "remove_from_open_playlist")]
+#[allow(dead_code)]
+pub fn remove_from_open(mut indexes_to_remove: Vec<u32>, env: Env) -> Result<()> {
+  let data: &mut Data = get_data(&env)?;
   indexes_to_remove.sort_unstable();
   indexes_to_remove.dedup();
   let playlist = match data.library.get_tracklist_mut(&data.open_playlist_id)? {
@@ -80,7 +78,7 @@ pub fn remove_from_open(ctx: CallContext) -> NResult<JsUndefined> {
     }
   }
   playlist.tracks = new_list;
-  return ctx.env.get_undefined();
+  return Ok(());
 }
 
 fn remove_from_all_playlists(library: &mut Library, id: &str) {
@@ -119,15 +117,13 @@ fn delete_file(path: &PathBuf) -> UniResult<()> {
   }
 }
 
-#[js_function(1)]
-pub fn delete_tracks_in_open(ctx: CallContext) -> NResult<JsUndefined> {
-  let data: &mut Data = get_data(&ctx)?;
-  let ids_to_delete = {
-    let mut indexes_to_delete: Vec<u32> = arg_to_number_vector(&ctx, 0)?;
-    indexes_to_delete.sort_unstable();
-    indexes_to_delete.dedup();
-    get_page_ids(data, indexes_to_delete)?
-  };
+#[napi(js_name = "delete_tracks_in_open")]
+#[allow(dead_code)]
+pub fn delete_tracks_in_open(mut indexes_to_delete: Vec<u32>, env: Env) -> Result<()> {
+  let data: &mut Data = get_data(&env)?;
+  indexes_to_delete.sort_unstable();
+  indexes_to_delete.dedup();
+  let ids_to_delete = get_page_ids(data, indexes_to_delete)?;
   let library = &mut data.library;
 
   for id_to_delete in &ids_to_delete {
@@ -146,17 +142,20 @@ pub fn delete_tracks_in_open(ctx: CallContext) -> NResult<JsUndefined> {
       .expect("Track ID not found when deleting");
     delete_file(&file_path)?;
   }
-  return ctx.env.get_undefined();
+  return Ok(());
 }
 
-#[js_function(4)]
-pub fn new_playlist(ctx: CallContext) -> NResult<JsUndefined> {
-  let data: &mut Data = get_data(&ctx)?;
+#[napi(js_name = "new_playlist")]
+#[allow(dead_code)]
+pub fn new_playlist(
+  name: String,
+  description: String,
+  is_folder: bool,
+  parent_id: String,
+  env: Env,
+) -> Result<()> {
+  let data: &mut Data = get_data(&env)?;
   let library = &mut data.library;
-  let name = arg_to_string(&ctx, 0)?;
-  let description = arg_to_string(&ctx, 1)?;
-  let is_folder = arg_to_bool(&ctx, 2)?;
-  let parent_id = arg_to_string(&ctx, 3)?;
 
   let list = match is_folder {
     true => {
@@ -188,15 +187,13 @@ pub fn new_playlist(ctx: CallContext) -> NResult<JsUndefined> {
     },
   };
 
-  return ctx.env.get_undefined();
+  return Ok(());
 }
 
-#[js_function(4)]
-pub fn update_playlist(ctx: CallContext) -> NResult<JsUndefined> {
-  let data: &mut Data = get_data(&ctx)?;
-  let id = arg_to_string(&ctx, 0)?;
-  let name = arg_to_string(&ctx, 1)?;
-  let description = arg_to_string(&ctx, 2)?;
+#[napi(js_name = "update_playlist")]
+#[allow(dead_code)]
+pub fn update_playlist(id: String, name: String, description: String, env: Env) -> Result<()> {
+  let data: &mut Data = get_data(&env)?;
 
   match data.library.trackLists.get_mut(&id) {
     Some(TrackList::Special(_)) => throw!("Cannot edit special playlists"),
@@ -211,7 +208,7 @@ pub fn update_playlist(ctx: CallContext) -> NResult<JsUndefined> {
     None => throw!("Playlist not found"),
   };
 
-  return ctx.env.get_undefined();
+  return Ok(());
 }
 
 fn get_all_tracklist_children(data: &Data, playlist_id: &str) -> UniResult<Vec<TrackID>> {
@@ -251,12 +248,10 @@ fn get_children_if_user_editable<'a>(
   Ok(children)
 }
 
-#[js_function(3)]
-pub fn move_playlist(ctx: CallContext) -> NResult<JsUndefined> {
-  let data: &mut Data = get_data(&ctx)?;
-  let id = arg_to_string(&ctx, 0)?;
-  let from_id = arg_to_string(&ctx, 1)?;
-  let to_id = arg_to_string(&ctx, 2)?;
+#[napi(js_name = "move_playlist")]
+#[allow(dead_code)]
+pub fn move_playlist(id: String, from_id: String, to_id: String, env: Env) -> Result<()> {
+  let data: &mut Data = get_data(&env)?;
 
   match data.library.trackLists.get(&id) {
     Some(TrackList::Special(_)) => throw!("Cannot move special playlist"),
@@ -282,5 +277,5 @@ pub fn move_playlist(ctx: CallContext) -> NResult<JsUndefined> {
   let to_folder_children = get_children_if_user_editable(&mut data.library, &to_id)?;
   to_folder_children.push(id.clone());
 
-  return ctx.env.get_undefined();
+  Ok(())
 }

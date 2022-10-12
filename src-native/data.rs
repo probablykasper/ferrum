@@ -59,50 +59,49 @@ impl Data {
       None => &self.open_playlist_track_ids,
     }
   }
-}
+  pub fn load(is_dev: bool) -> UniResult<Data> {
+    let paths = if is_dev {
+      let appdata_dir = env::current_dir().unwrap().join("appdata");
+      let library_dir = appdata_dir.join("Library");
+      Paths {
+        library_dir: library_dir.clone(),
+        tracks_dir: library_dir.join("Tracks"),
+        library_json: library_dir.join("Library.json"),
+        local_data_dir: dirs::data_local_dir()
+          .ok_or("Local data folder not found")?
+          .join("space.kasper.ferrum.dev"),
+      }
+    } else {
+      let music_dir = dirs::audio_dir().ok_or("Music folder not found")?;
+      let library_dir = music_dir.join("Ferrum");
+      Paths {
+        library_dir: library_dir.clone(),
+        tracks_dir: library_dir.join("Tracks"),
+        library_json: library_dir.join("Library.json"),
+        local_data_dir: dirs::data_local_dir()
+          .ok_or("Local data folder not found")?
+          .join("space.kasper.ferrum"),
+      }
+    };
 
-pub fn load_data(is_dev: bool) -> UniResult<Data> {
-  let paths = if is_dev {
-    let appdata_dir = env::current_dir().unwrap().join("appdata");
-    let library_dir = appdata_dir.join("Library");
-    Paths {
-      library_dir: library_dir.clone(),
-      tracks_dir: library_dir.join("Tracks"),
-      library_json: library_dir.join("Library.json"),
-      local_data_dir: dirs::data_local_dir()
-        .ok_or("Local data folder not found")?
-        .join("space.kasper.ferrum.dev"),
-    }
-  } else {
-    let music_dir = dirs::audio_dir().ok_or("Music folder not found")?;
-    let library_dir = music_dir.join("Ferrum");
-    Paths {
-      library_dir: library_dir.clone(),
-      tracks_dir: library_dir.join("Tracks"),
-      library_json: library_dir.join("Library.json"),
-      local_data_dir: dirs::data_local_dir()
-        .ok_or("Local data folder not found")?
-        .join("space.kasper.ferrum"),
-    }
-  };
+    let loaded_library = load_library(&paths);
+    let loaded_cache = SidebarView::load(&paths);
 
-  let loaded_library = load_library(&paths);
-  let loaded_cache = SidebarView::load(&paths);
-
-  let mut data = Data {
-    is_dev,
-    paths,
-    library: loaded_library,
-    view_cache: loaded_cache,
-    open_playlist_id: "root".to_string(),
-    open_playlist_track_ids: vec![],
-    page_track_ids: None,
-    filter: "".to_string(),
-    sort_key: "index".to_string(),
-    sort_desc: true,
-    current_tag: None,
-  };
-  data.open_playlist_track_ids = page::get_track_ids(&data)?;
-  sort(&mut data, "dateAdded", true)?;
-  return Ok(data);
+    let mut data = Data {
+      is_dev,
+      paths,
+      library: loaded_library,
+      view_cache: loaded_cache,
+      open_playlist_id: "root".to_string(),
+      open_playlist_track_ids: vec![],
+      page_track_ids: None,
+      filter: "".to_string(),
+      sort_key: "index".to_string(),
+      sort_desc: true,
+      current_tag: None,
+    };
+    data.open_playlist_track_ids = page::get_track_ids(&data)?;
+    sort(&mut data, "dateAdded", true)?;
+    return Ok(data);
+  }
 }
