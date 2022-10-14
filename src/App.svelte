@@ -171,7 +171,7 @@
     <Sidebar />
     <TrackList {onTrackInfo} />
     {#if $queueVisible}
-      <Queue />
+      <Queue {onTrackInfo} />
     {/if}
   </div>
   <Player />

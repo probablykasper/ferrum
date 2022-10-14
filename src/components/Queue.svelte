@@ -1,13 +1,15 @@
 <script lang="ts">
   import {
+    appendToUserQueue,
     getByQueueIndex,
     getQueueLength,
     insertIds,
     moveIndexes,
+    prependToUserQueue,
     queue,
     Queue,
   } from '../lib/queue'
-  import { page } from '../lib/data'
+  import { page, paths } from '../lib/data'
   import { onDestroy } from 'svelte'
   import VirtualList from './VirtualListItemed.svelte'
   import QueueItemComponent from './QueueItem.svelte'
@@ -16,8 +18,9 @@
   import { dragged } from '@/lib/drag-drop'
   import { methods } from '@/lib/data'
   import * as dragGhost from './DragGhost.svelte'
-  import { ipcRenderer } from '@/lib/window'
-  import { checkShortcut } from '@/lib/helpers'
+  import { ipcListen, ipcRenderer } from '@/lib/window'
+  import { assertUnreachable, checkShortcut } from '@/lib/helpers'
+  import type { TrackID } from 'ferrum-addon/addon'
 
   let objectUrls: string[] = []
 
@@ -79,16 +82,50 @@
       await showTrackMenu(allIds, indexes, undefined, true)
     },
   })
+  $: console.log($selection.list)
 
   function removeFromQueue() {
     if ($selection.count >= 1) {
       queue.removeIndexes(selection.getSelectedIndexes())
     }
   }
-  ipcRenderer.on('context.Remove from Queue', removeFromQueue)
-  onDestroy(() => {
-    ipcRenderer.removeListener('context.Remove from Queue', removeFromQueue)
+  onDestroy(ipcListen('context.Remove from Queue', removeFromQueue))
+
+  let queueElement: HTMLElement
+  export let onTrackInfo: (allIds: TrackID[], index: number) => void
+
+  const trackActionUnlisten = ipcListen('selectedTracksAction', (_, action) => {
+    let firstIndex = selection.findFirst()
+    console.log($selection.list)
+    console.log(firstIndex)
+
+    if (firstIndex === null || !queueElement.contains(document.activeElement)) {
+      return
+    }
+    if (action === 'Play Next') {
+      const indexes = selection.getSelectedIndexes()
+      const ids = indexes.map((i) => queue.getByQueueIndex(i).id)
+      prependToUserQueue(ids)
+    } else if (action === 'Add to Queue') {
+      const indexes = selection.getSelectedIndexes()
+      const ids = indexes.map((i) => queue.getByQueueIndex(i).id)
+      appendToUserQueue(ids)
+    } else if (action === 'Get Info') {
+      const allItems = [...$queue.userQueue, ...$queue.autoQueue]
+      const allIds = allItems.map((item) => item.id)
+      onTrackInfo(allIds, firstIndex)
+    } else if (action === 'revealTrackFile') {
+      const track = methods.getTrack(queue.getByQueueIndex(firstIndex).id)
+      ipcRenderer.invoke('revealTrackFile', paths.tracksDir, track.file)
+    } else if (action === 'Remove from Playlist') {
+      return
+    } else if (action === 'Delete from Library') {
+      return
+    } else {
+      assertUnreachable(action)
+    }
   })
+  onDestroy(trackActionUnlisten)
 
   let dragLine: HTMLElement
   let draggedIndexes: number[] = []
@@ -168,7 +205,7 @@
   }
 </script>
 
-<div class="queue">
+<aside bind:this={queueElement}>
   <div class="shadow" />
   <div class="content">
     <VirtualList
@@ -209,7 +246,7 @@
     </VirtualList>
     <div class="drag-line" class:show={dragToIndex !== null} bind:this={dragLine} />
   </div>
-</div>
+</aside>
 
 <style lang="sass">
   .selected
@@ -217,7 +254,7 @@
   :global(:focus)
     .selected
       background-color: hsla(var(--hue), 70%, 42%, 1)
-  .queue
+  aside
     position: absolute
     right: 0px
     height: 100%
