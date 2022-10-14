@@ -1,8 +1,10 @@
 import { App, BrowserWindow, Menu, shell } from 'electron'
 import type { MenuItemConstructorOptions } from 'electron/common'
 import is from './is'
+import type { WebContents } from './typed_ipc'
 
 export function initMenuBar(app: App, mainWindow: BrowserWindow) {
+  const webContents = mainWindow.webContents as WebContents
   const template: MenuItemConstructorOptions[] = [
     {
       label: app.name,
@@ -26,13 +28,13 @@ export function initMenuBar(app: App, mainWindow: BrowserWindow) {
           label: 'New Playlist',
           accelerator: 'CmdOrCtrl+N',
           click: () => {
-            mainWindow.webContents.send('newPlaylist')
+            webContents.send('newPlaylist', 'root', false)
           },
         },
         {
           label: 'New Playlist Folder',
           click: () => {
-            mainWindow.webContents.send('newPlaylistFolder')
+            webContents.send('newPlaylist', 'root', true)
           },
         },
         { type: 'separator' },
@@ -40,14 +42,14 @@ export function initMenuBar(app: App, mainWindow: BrowserWindow) {
           label: 'Import...',
           accelerator: 'CmdOrCtrl+O',
           click: () => {
-            mainWindow.webContents.send('import')
+            webContents.send('import')
           },
         },
         { type: 'separator' },
         {
           label: 'Import iTunes Library...',
           click: () => {
-            mainWindow.webContents.send('itunesImport')
+            webContents.send('itunesImport')
           },
         },
         { type: 'separator' },
@@ -76,7 +78,7 @@ export function initMenuBar(app: App, mainWindow: BrowserWindow) {
           label: 'Filter',
           accelerator: 'CmdOrCtrl+F',
           click: () => {
-            mainWindow.webContents.send('filter')
+            webContents.send('filter')
           },
         })
         return menu
@@ -89,14 +91,14 @@ export function initMenuBar(app: App, mainWindow: BrowserWindow) {
           label: 'Play Next',
           accelerator: '',
           click: () => {
-            mainWindow.webContents.send('Play Next')
+            webContents.send('Play Next')
           },
         },
         {
           label: 'Add to Queue',
           accelerator: '',
           click: () => {
-            mainWindow.webContents.send('Add to Queue')
+            webContents.send('Add to Queue')
           },
         },
         { type: 'separator' },
@@ -104,7 +106,7 @@ export function initMenuBar(app: App, mainWindow: BrowserWindow) {
           label: 'Get Info',
           accelerator: 'CmdOrCtrl+I',
           click: () => {
-            mainWindow.webContents.send('Get Info')
+            webContents.send('Get Info')
           },
         },
         { type: 'separator' },
@@ -116,7 +118,7 @@ export function initMenuBar(app: App, mainWindow: BrowserWindow) {
           })(),
           accelerator: 'Alt+CmdOrCtrl+R',
           click: () => {
-            mainWindow.webContents.send('revealTrackFile')
+            webContents.send('revealTrackFile')
           },
         },
         { type: 'separator' },
@@ -124,14 +126,14 @@ export function initMenuBar(app: App, mainWindow: BrowserWindow) {
           label: 'Remove from Playlist',
           accelerator: '',
           click: () => {
-            mainWindow.webContents.send('Remove from Playlist')
+            webContents.send('Remove from Playlist')
           },
         },
         {
           label: 'Delete from Library',
           accelerator: 'CmdOrCtrl+Backspace',
           click: () => {
-            mainWindow.webContents.send('Delete from Library')
+            webContents.send('Delete from Library')
           },
         },
       ],
@@ -143,7 +145,7 @@ export function initMenuBar(app: App, mainWindow: BrowserWindow) {
           label: 'Toggle Queue',
           accelerator: 'CmdOrCtrl+U',
           click: () => {
-            mainWindow.webContents.send('Toggle Queue')
+            webContents.send('Toggle Queue')
           },
         },
         { type: 'separator' },
@@ -165,7 +167,7 @@ export function initMenuBar(app: App, mainWindow: BrowserWindow) {
           label: 'Pause',
           // accelerator: 'Space',
           click: () => {
-            mainWindow.webContents.send('playPause')
+            webContents.send('playPause')
           },
         },
         { type: 'separator' },
@@ -173,14 +175,14 @@ export function initMenuBar(app: App, mainWindow: BrowserWindow) {
           label: 'Volume Up',
           accelerator: 'CmdOrCtrl+Up',
           click: () => {
-            mainWindow.webContents.send('volumeUp')
+            webContents.send('volumeUp')
           },
         },
         {
           label: 'Volume Down',
           accelerator: 'CmdOrCtrl+Down',
           click: () => {
-            mainWindow.webContents.send('volumeDown')
+            webContents.send('volumeDown')
           },
         },
       ],

@@ -1,57 +1,82 @@
+<script lang="ts" context="module">
+  import { writable } from 'svelte/store'
+
+  export const modalCount = writable(0)
+</script>
+
 <script lang="ts">
   import { onDestroy } from 'svelte'
-
   import { checkShortcut } from '../lib/helpers'
-  import { visibleModalsCount } from '../lib/modals'
 
-  export let showIf: boolean
-  export let onClose: () => void
+  export let onCancel: () => void
 
-  let firstRun = true
-  function visibleUpdate(visible: boolean) {
-    if (visible) {
-      $visibleModalsCount++
-    } else if (!visible && !firstRun) {
-      $visibleModalsCount--
-    }
-    firstRun = false
-  }
-  $: visibleUpdate(showIf)
+  $modalCount += 1
   onDestroy(() => {
-    if (showIf === true) $visibleModalsCount--
+    $modalCount -= 1
   })
 
-  let container: HTMLDivElement
-  $: focusElements =
-    container?.querySelectorAll(
-      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-    ) || []
-  $: firstFocusElement = focusElements[0]
-  $: lastFocusElement = focusElements[focusElements.length - 1]
+  let lastActiveElement: Element | null = null
 
-  function keydown(e: KeyboardEvent) {
-    if (checkShortcut(e, 'Tab')) {
-      if (document.activeElement?.isSameNode(lastFocusElement)) {
-        ;(firstFocusElement as HTMLElement).focus()
-        e.preventDefault()
+  function focus(el: HTMLElement) {
+    if (lastActiveElement === null) {
+      lastActiveElement = document.activeElement
+    }
+    el.focus()
+  }
+
+  function focusTrap(el: HTMLElement) {
+    let lastActiveElementFallback = document.activeElement || document.body
+
+    function getFocusElements() {
+      return el.querySelectorAll(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      )
+    }
+
+    function handleKeydown(e: KeyboardEvent) {
+      if (checkShortcut(e, 'Tab', { shift: true })) {
+        const focusElements = getFocusElements()
+        const lastFocusElement = focusElements[focusElements.length - 1]
+        if (
+          focusElements[0] &&
+          document.activeElement?.isSameNode(focusElements[0]) &&
+          lastFocusElement instanceof HTMLElement
+        ) {
+          lastFocusElement.focus()
+          e.preventDefault()
+        }
+      } else if (checkShortcut(e, 'Tab')) {
+        const focusElements = getFocusElements()
+        const lastFocusElement = focusElements[focusElements.length - 1]
+        if (
+          document.activeElement?.isSameNode(lastFocusElement) &&
+          focusElements[0] instanceof HTMLElement
+        ) {
+          focusElements[0].focus()
+          e.preventDefault()
+        }
       }
-    } else if (checkShortcut(e, 'Tab', { shift: true })) {
-      if (document.activeElement?.isSameNode(firstFocusElement)) {
-        ;(lastFocusElement as HTMLElement).focus()
-        e.preventDefault()
-      }
+    }
+    el.addEventListener('keydown', handleKeydown)
+    return {
+      destroy() {
+        el.removeEventListener('keydown', handleKeydown)
+        if (lastActiveElement instanceof HTMLElement) {
+          lastActiveElement.focus()
+        } else if (lastActiveElementFallback instanceof HTMLElement) {
+          lastActiveElementFallback.focus()
+        }
+      },
     }
   }
 </script>
 
-{#if showIf}
-  <div class="container" bind:this={container} on:keydown={keydown}>
-    <div class="backdrop" on:click|self={onClose} />
-    <div class="box">
-      <slot />
-    </div>
+<div class="container" use:focusTrap>
+  <div class="backdrop" on:click|self={onCancel} />
+  <div class="box">
+    <slot {focus} />
   </div>
-{/if}
+</div>
 
 <style lang="sass">
   .backdrop

@@ -1,6 +1,5 @@
 import { writable } from 'svelte/store'
-import { addon as innerAddon } from '@/lib/window'
-import { showMessageBox } from './window'
+import { addon as innerAddon, ipcRenderer } from '@/lib/window'
 import type { MsSinceUnixEpoch, TrackID, TrackListID, TrackMd } from 'ferrum-addon'
 
 export const isDev = window.isDev
@@ -34,7 +33,7 @@ export function call<T>(cb: (addon: typeof innerAddon) => T): T {
   try {
     return cb(innerAddon)
   } catch (err) {
-    showMessageBox({
+    ipcRenderer.invoke('showMessageBox', false, {
       type: 'error',
       message: getErrorMessage(err),
       detail: getErrorStack(err),
@@ -63,7 +62,7 @@ export async function addTracksToPlaylist(
     const duplicates = trackIds.length - filteredIds.length
 
     if (duplicates > 0) {
-      const result = await showMessageBox({
+      const result = await ipcRenderer.invoke('showMessageBox', false, {
         type: 'question',
         message: 'Already added',
         detail:
@@ -73,9 +72,9 @@ export async function addTracksToPlaylist(
         buttons: ['Add anyway', 'Cancel', 'Skip'],
         defaultId: 0,
       })
-      if (result.buttonClicked === 1) {
+      if (result.response === 1) {
         return
-      } else if (result.buttonClicked === 2) {
+      } else if (result.response === 2) {
         trackIds = filteredIds
       }
     }
@@ -104,6 +103,7 @@ export type PlaylistInfo = {
   isFolder: boolean
   /** ID to edit, or ID to create playlist inside */
   id: string
+  editMode: boolean
 }
 export function newPlaylist(info: PlaylistInfo) {
   call((addon) => addon.new_playlist(info.name, info.description, info.isFolder, info.id))
@@ -133,14 +133,14 @@ export async function importTracks(paths: string[]) {
       innerAddon.import_file(path, now)
     } catch (err) {
       if (errState === 'skip') continue
-      const result = await showMessageBox({
+      const result = await ipcRenderer.invoke('showMessageBox', false, {
         type: 'error',
         message: 'Error importing track ' + path,
         detail: getErrorMessage(err),
         buttons: errState ? ['OK', 'Skip all errors'] : ['OK'],
         defaultId: 0,
       })
-      if (result.buttonClicked === 1) errState = 'skip'
+      if (result.response === 1) errState = 'skip'
       else errState = 'skippable'
     }
   }

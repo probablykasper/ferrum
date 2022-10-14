@@ -1,4 +1,3 @@
-import type { FlattenedListMenuItem } from '@/electron/types'
 import { Updater, Writable, writable } from 'svelte/store'
 import type { Folder, Special, TrackListsHashMap } from 'ferrum-addon'
 
@@ -77,6 +76,7 @@ export function clamp(min: number, max: number, value: number) {
   return value
 }
 
+type FlattenedListMenuItem = { label: string; enabled: boolean; id: string }
 export function flattenChildLists(
   trackList: Folder | Special,
   trackLists: TrackListsHashMap,
@@ -90,6 +90,7 @@ export function flattenChildLists(
       flat.push({
         label: indentPrefix + childList.name,
         enabled: false,
+        id: childList.id,
       })
       flat = flat.concat(childFlat)
     } else if (childList.type === 'playlist') {
@@ -101,17 +102,6 @@ export function flattenChildLists(
     }
   }
   return flat
-}
-
-let lastActiveElement = document.body
-export function focus(el: HTMLElement) {
-  if (document.activeElement instanceof HTMLElement) {
-    lastActiveElement = document.activeElement
-    el.focus()
-  }
-}
-export function focusLast() {
-  if (lastActiveElement) lastActiveElement.focus()
 }
 
 type GetterWritable<T> = Writable<T> & { get(): T }

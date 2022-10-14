@@ -6,7 +6,6 @@
   import { writable } from 'svelte/store'
   import { setContext } from 'svelte'
   import { dragged } from '../lib/drag-drop'
-  import { showTracklistMenu } from '@/lib/menus'
 
   const special = {
     children: ['root'],
@@ -41,8 +40,11 @@
     }
   }
   async function onContextMenu() {
-    showTracklistMenu({ id: 'root', isFolder: false, isRoot: true })
-    await ipcRenderer.invoke('showTracklistMenu', true, true)
+    await ipcRenderer.invoke('showTracklistMenu', {
+      id: 'root',
+      isFolder: false,
+      isRoot: true,
+    })
   }
   function open(id: string) {
     if ($page.id !== id) page.openPlaylist(id)

@@ -87,7 +87,7 @@
   }
   ipcRenderer.on('context.Remove from Queue', removeFromQueue)
   onDestroy(() => {
-    ipcRenderer.off('context.Remove from Queue', removeFromQueue)
+    ipcRenderer.removeListener('context.Remove from Queue', removeFromQueue)
   })
 
   let dragLine: HTMLElement

@@ -188,7 +188,7 @@ async function popup() {
     '\n    - Disc Count' +
     '\n    - Start time' +
     '\n    - Stop time'
-  const info = await ipcRenderer.invoke('showMessageBox', {
+  const info = await ipcRenderer.invoke('showMessageBox', true, {
     type: 'info',
     title: 'iTunes Import',
     message: m,

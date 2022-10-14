@@ -8,12 +8,12 @@
   "scripts": {
     "dev": "npm run napi:dev && vite",
     "dev-release": "npm run napi && vite",
-    "napi": "napi build src/addon --dts addon.d.ts --release",
-    "napi:dev": "napi build src/addon --dts addon.d.ts",
+    "napi": "napi build ferrum-addon --dts addon.d.ts --release",
+    "napi:dev": "napi build ferrum-addon --dts addon.d.ts",
     "build": "npm run napi && npm run build:web && electron-builder",
     "build:web": "vite build",
     "electron-builder": "electron-builder",
-    "lint": "prettier --check --plugin-search-dir=. src && eslint src && svelte-check --compiler-warnings a11y-click-events-have-key-events:ignore,a11y-no-noninteractive-tabindex:ignore",
+    "lint": "prettier --check --plugin-search-dir=. src && svelte-check --compiler-warnings a11y-click-events-have-key-events:ignore,a11y-no-noninteractive-tabindex:ignore && eslint src",
     "format": "prettier --write --plugin-search-dir=. src && eslint --fix src",
     "check": "npm run lint && cargo check"
   },

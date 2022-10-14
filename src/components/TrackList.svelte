@@ -11,14 +11,13 @@
   import { newPlaybackInstance, playingId } from '../lib/player'
   import { getDuration, formatDate, checkMouseShortcut, checkShortcut } from '../lib/helpers'
   import { newSelection } from '../lib/selection'
-  import { showMessageBox } from '../lib/window'
-  import { open as openTrackInfo } from './TrackInfo.svelte'
   import { appendToUserQueue, prependToUserQueue } from '../lib/queue'
-  import { ipcRenderer } from '../lib/window'
-  import { onDestroy, onMount } from 'svelte'
+  import { ipcListen, ipcRenderer } from '../lib/window'
+  import { onDestroy } from 'svelte'
   import { dragged } from '../lib/drag-drop'
   import * as dragGhost from './DragGhost.svelte'
   import { showTrackMenu } from '@/lib/menus'
+  import type { TrackID } from 'ferrum-addon'
 
   function playNext() {
     const indexes = selection.getSelectedIndexes()
@@ -30,10 +29,11 @@
     const ids = indexes.map((i) => page.getTrackId(i))
     appendToUserQueue(ids)
   }
+  export let onTrackInfo: (allIds: TrackID[], index: number) => void
   function getInfo() {
     const index = selection.findFirst($selection.list)
     if (index !== null) {
-      openTrackInfo(page.getTrackIds(), index)
+      onTrackInfo(page.getTrackIds(), index)
     }
   }
   function revealTrackFile() {
@@ -53,22 +53,12 @@
     const indexes = selection.getSelectedIndexes()
     deleteTracksInOpen(indexes)
   }
-  onMount(() => {
-    ipcRenderer.on('Play Next', playNext)
-    ipcRenderer.on('Add to Queue', addToQueue)
-    ipcRenderer.on('Get Info', getInfo)
-    ipcRenderer.on('revealTrackFile', revealTrackFile)
-    ipcRenderer.on('Remove from Playlist', removeFromPlaylist)
-    ipcRenderer.on('Delete from Library', deleteFromLibrary)
-  })
-  onDestroy(() => {
-    ipcRenderer.off('Play Next', playNext)
-    ipcRenderer.off('Add to Queue', addToQueue)
-    ipcRenderer.off('Get Info', getInfo)
-    ipcRenderer.off('revealTrackFile', revealTrackFile)
-    ipcRenderer.off('Remove from Playlist', removeFromPlaylist)
-    ipcRenderer.off('Delete from Library', deleteFromLibrary)
-  })
+  onDestroy(ipcListen('Play Next', playNext))
+  onDestroy(ipcListen('Add to Queue', addToQueue))
+  onDestroy(ipcListen('Get Info', getInfo))
+  onDestroy(ipcListen('revealTrackFile', revealTrackFile))
+  onDestroy(ipcListen('Remove from Playlist', removeFromPlaylist))
+  onDestroy(ipcListen('Delete from Library', deleteFromLibrary))
 
   const sortBy = page.sortBy
   $: sortKey = $page.sortKey
@@ -104,7 +94,7 @@
     ) {
       e.preventDefault()
       const s = $selection.count > 1 ? 's' : ''
-      const result = showMessageBox({
+      const result = ipcRenderer.invoke('showMessageBox', false, {
         type: 'info',
         message: `Remove ${$selection.count} song${s} from the list?`,
         buttons: ['Remove Song' + s, 'Cancel'],
@@ -116,13 +106,13 @@
           indexes.push(i)
         }
       }
-      if ((await result).buttonClicked === 0) {
+      if ((await result).response === 0) {
         removeFromOpenPlaylist(indexes)
       }
     } else if (checkShortcut(e, 'Backspace', { cmdOrCtrl: true }) && $selection.count > 0) {
       e.preventDefault()
       const s = $selection.count > 1 ? 's' : ''
-      const result = showMessageBox({
+      const result = ipcRenderer.invoke('showMessageBox', false, {
         type: 'info',
         message: `Delete ${$selection.count} song${s} from library?`,
         buttons: [`Delete Song${s}`, 'Cancel'],
@@ -134,7 +124,7 @@
           indexes.push(i)
         }
       }
-      if ((await result).buttonClicked === 0) {
+      if ((await result).response === 0) {
         deleteTracksInOpen(indexes)
       }
     } else {

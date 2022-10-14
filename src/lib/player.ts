@@ -4,7 +4,7 @@ import { clamp } from './helpers'
 import quit from './quit'
 import { methods, paths } from './data'
 import type { Track, TrackID } from 'ferrum-addon'
-import { showMessageBox, ipcRenderer, joinPaths } from './window'
+import { ipcRenderer, joinPaths } from './window'
 import { queue, setNewQueue, next as queueNext, prev as queuePrev } from './queue'
 
 const audio = new Audio()
@@ -94,7 +94,7 @@ audio.addEventListener('error', async (e) => {
       }
     }
   }
-  await showMessageBox({ type: 'error', message, detail })
+  await ipcRenderer.invoke('showMessageBox', false, { type: 'error', message, detail })
 })
 
 let startTime = 0

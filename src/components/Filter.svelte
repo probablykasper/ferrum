@@ -1,22 +1,21 @@
 <script lang="ts">
+  import { onDestroy } from 'svelte'
   import { filter } from '../lib/data'
-  import { ipcRenderer } from '../lib/window'
-  function filterCmd(node: HTMLInputElement) {
-    function handler() {
-      node.select()
-    }
-    ipcRenderer.on('filter', handler)
-    return {
-      destroy: () => ipcRenderer.off('filter', handler),
-    }
-  }
+  import { ipcListen } from '../lib/window'
+
+  let filterInput: HTMLInputElement
+  onDestroy(
+    ipcListen('filter', () => {
+      filterInput.select()
+    })
+  )
 </script>
 
 <input
+  bind:this={filterInput}
   type="text"
   class="search"
   class:on={$filter}
-  use:filterCmd
   bind:value={$filter}
   placeholder="Filter"
 />

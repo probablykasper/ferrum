@@ -5,19 +5,19 @@
   import Player from './components/Player.svelte'
   import Sidebar from './components/Sidebar.svelte'
   import Queue from './components/Queue.svelte'
-  import TrackInfo from './components/TrackInfo.svelte'
-  import PlaylistInfo from './components/PlaylistInfo.svelte'
-  import { visibleModalsCount } from './lib/modals'
+  import TrackInfo, { TrackInfoList } from './components/TrackInfo.svelte'
+  import PlaylistInfoModal from './components/PlaylistInfo.svelte'
   import { queueVisible } from './lib/queue'
-  import { iTunesImport, showOpenDialog } from './lib/window'
-  import { isMac, paths, importTracks } from './lib/data'
+  import { ipcListen, iTunesImport, ipcRenderer } from '@/lib/window'
+  import { isMac, paths, importTracks, PlaylistInfo, trackLists } from './lib/data'
   import { playPause } from './lib/player'
   import DragGhost from './components/DragGhost.svelte'
+  import type { TrackID } from 'ferrum-addon/addon'
+  import { modalCount } from './components/Modal.svelte'
 
   let pageStatus = ''
   let pageStatusWarnings = ''
   let pageStatusErr = ''
-  const { ipcRenderer } = window.require('electron')
   async function itunesImport() {
     const result = await iTunesImport(
       {
@@ -39,16 +39,16 @@
   }
   ipcRenderer.on('itunesImport', itunesImport)
   onDestroy(() => {
-    ipcRenderer.off('itunesImport', itunesImport)
+    ipcRenderer.removeListener('itunesImport', itunesImport)
   })
 
   ipcRenderer.emit('appLoaded')
 
   async function openImportDialog() {
-    if ($visibleModalsCount !== 0) {
+    if ($modalCount !== 0) {
       return
     }
-    let result = await showOpenDialog(false, {
+    let result = await ipcRenderer.invoke('showOpenDialog', false, {
       properties: ['openFile', 'multiSelections'],
       filters: [{ name: 'Audio', extensions: ['mp3', 'm4a', 'opus'] }],
     })
@@ -58,7 +58,7 @@
   }
   ipcRenderer.on('import', openImportDialog)
   onDestroy(() => {
-    ipcRenderer.off('import', openImportDialog)
+    ipcRenderer.removeListener('import', openImportDialog)
   })
 
   function toggleQueue() {
@@ -66,7 +66,7 @@
   }
   ipcRenderer.on('Toggle Queue', toggleQueue)
   onDestroy(() => {
-    ipcRenderer.off('Toggle Queue', toggleQueue)
+    ipcRenderer.removeListener('Toggle Queue', toggleQueue)
   })
 
   let droppable = false
@@ -120,6 +120,45 @@
       }
     }
   }
+
+  let trackInfoList: TrackInfoList | null = null
+  function onTrackInfo(ids: TrackID[], trackIndex: number) {
+    if ($modalCount === 0) {
+      trackInfoList = { ids, index: trackIndex }
+    }
+  }
+  onDestroy(
+    ipcListen('context.Get Info', (_, ids: TrackID[], trackIndex: number) => {
+      onTrackInfo(ids, trackIndex)
+    })
+  )
+
+  let playlistInfo: PlaylistInfo | null = null
+  onDestroy(
+    ipcListen('context.playlist.edit', (_, id) => {
+      const list = $trackLists[id]
+      if (list.type !== 'special' && $modalCount === 0) {
+        playlistInfo = {
+          name: list.name,
+          description: list.description || '',
+          isFolder: list.type === 'folder',
+          id: list.id,
+          editMode: true,
+        }
+      }
+    })
+  )
+  onDestroy(
+    ipcListen('newPlaylist', (_, id, isFolder) => {
+      playlistInfo = {
+        name: '',
+        description: '',
+        isFolder: isFolder,
+        id: id,
+        editMode: false,
+      }
+    })
+  )
 </script>
 
 <svelte:window on:keydown={keydown} />
@@ -130,7 +169,7 @@
 <main on:dragenter|capture={dragEnterOrOver}>
   <div class="meat">
     <Sidebar />
-    <TrackList />
+    <TrackList {onTrackInfo} />
     {#if $queueVisible}
       <Queue />
     {/if}
@@ -165,9 +204,16 @@
     <div class="dropzone" on:dragleave={dragLeave} on:drop={drop} on:dragover={dragEnterOrOver} />
   {/if}
 </main>
-<TrackInfo />
-<PlaylistInfo />
+
+{#if trackInfoList}
+  <TrackInfo currentList={trackInfoList} cancel={() => (trackInfoList = null)} />
+{/if}
+{#if playlistInfo}
+  <PlaylistInfoModal info={playlistInfo} cancel={() => (playlistInfo = null)} />
+{/if}
+
 <DragGhost />
+
 {#if isMac}
   <div class="titlebar" on:mousedown|self|preventDefault />
 {/if}

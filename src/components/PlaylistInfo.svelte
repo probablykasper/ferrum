@@ -1,48 +1,11 @@
-<script lang="ts" context="module">
-  import { get, writable } from 'svelte/store'
-  import { checkShortcut, focus, focusLast } from '../lib/helpers'
-  import { visibleModalsCount } from '../lib/modals'
-  import { newPlaylist, PlaylistInfo, trackLists, updatePlaylist } from '../lib/data'
-
-  const editMode = writable(false)
-  const info = writable(null as PlaylistInfo | null)
-
-  export function edit(id: string, isFolder: boolean) {
-    if (visibleModalsCount.get() == 0) {
-      const list = get(trackLists)[id]
-      if (list.type !== 'special') {
-        editMode.set(true)
-        info.set({
-          name: list.name,
-          description: list.description || '',
-          isFolder: isFolder,
-          id,
-        })
-      }
-    }
-  }
-  export function openNew(parentId: string, isFolder: boolean) {
-    if (visibleModalsCount.get() == 0) {
-      editMode.set(false)
-      info.set({
-        name: '',
-        description: '',
-        isFolder: isFolder,
-        id: parentId,
-      })
-    }
-  }
-  function close() {
-    info.set(null)
-    focusLast()
-  }
-</script>
-
 <script lang="ts">
-  import { onDestroy } from 'svelte'
-  import { ipcRenderer } from '../lib/window'
+  import { checkShortcut } from '../lib/helpers'
+  import { newPlaylist, PlaylistInfo, updatePlaylist } from '../lib/data'
   import Modal from './Modal.svelte'
   import Button from './Button.svelte'
+
+  export let info: PlaylistInfo
+  export let cancel: () => void
 
   function rows(value: string) {
     const matches = value.match(/\n/g) || []
@@ -50,20 +13,18 @@
   }
 
   function save() {
-    if ($info) {
-      if ($editMode) {
-        updatePlaylist($info.id, $info.name, $info.description)
-      } else {
-        newPlaylist($info)
-      }
-      close()
+    if (info.editMode) {
+      updatePlaylist(info.id, info.name, info.description)
+    } else {
+      newPlaylist(info)
     }
+    cancel()
   }
 
   function keydown(e: KeyboardEvent) {
     if (checkShortcut(e, 'escape')) {
       if (document.activeElement instanceof HTMLElement) {
-        close()
+        cancel()
       }
     }
   }
@@ -72,44 +33,29 @@
       save()
     }
   }
-
-  function newPlaylistHandler() {
-    openNew('root', false)
-  }
-  function newPlaylistFolderHandler() {
-    openNew('root', true)
-  }
-  ipcRenderer.on('newPlaylist', newPlaylistHandler)
-  ipcRenderer.on('newPlaylistFolder', newPlaylistFolderHandler)
-  onDestroy(() => {
-    ipcRenderer.off('newPlaylist', newPlaylistHandler)
-    ipcRenderer.off('newPlaylistFolder', newPlaylistFolderHandler)
-  })
 </script>
 
 <svelte:window on:keydown={keydown} />
 
-{#if $info}
-  <Modal showIf={true} onClose={close}>
-    <form class="modal" on:submit|preventDefault={save} on:keydown={formKeydown}>
-      <h3>
-        {$editMode ? 'Edit' : 'New'} Playlist {#if $info.isFolder}Folder{/if}
-      </h3>
-      <div class="spacer" />
-      <input type="text" bind:value={$info.name} use:focus placeholder="Title" />
-      <textarea
-        rows={rows($info.description)}
-        bind:value={$info.description}
-        placeholder="Description"
-      />
-      <div class="spacer" />
-      <div class="bottom">
-        <Button secondary on:click={close}>Cancel</Button>
-        <Button type="submit">Save</Button>
-      </div>
-    </form>
-  </Modal>
-{/if}
+<Modal onCancel={cancel} let:focus>
+  <form class="modal" on:submit|preventDefault={save} on:keydown={formKeydown}>
+    <h3>
+      {info.editMode ? 'Edit' : 'New'} Playlist {#if info.isFolder}Folder{/if}
+    </h3>
+    <div class="spacer" />
+    <input type="text" bind:value={info.name} placeholder="Title" use:focus />
+    <textarea
+      rows={rows(info.description)}
+      bind:value={info.description}
+      placeholder="Description"
+    />
+    <div class="spacer" />
+    <div class="bottom">
+      <Button secondary on:click={cancel}>Cancel</Button>
+      <Button type="submit">Save</Button>
+    </div>
+  </form>
+</Modal>
 
 <style lang="sass">
   form

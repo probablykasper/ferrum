@@ -5,17 +5,12 @@ import {
   removeFromOpenPlaylist,
   trackLists as trackListsStore,
 } from '@/lib/data'
-import { open as openTrackInfo } from '@/components/TrackInfo.svelte'
 import { flattenChildLists } from '@/lib/helpers'
 import { ipcRenderer } from '@/lib/window'
 import type { Special, TrackID } from 'ferrum-addon'
 import { get } from 'svelte/store'
-import type { ShowTracklistMenuArgs, ShowTrackMenuArgs } from '@/electron/types'
 import { appendToUserQueue, prependToUserQueue } from './queue'
-import {
-  edit as openEditPlaylistModal,
-  openNew as openNewPlaylistModal,
-} from '@/components/PlaylistInfo.svelte'
+import type { ShowTrackMenuOptions } from '@/electron/typed_ipc'
 
 export async function showTrackMenu(
   allIds: string[],
@@ -25,7 +20,7 @@ export async function showTrackMenu(
 ) {
   const trackLists = get(trackListsStore)
   const flat = flattenChildLists(trackLists.root as Special, trackLists, '')
-  const args: ShowTrackMenuArgs = {
+  const args: ShowTrackMenuOptions = {
     allIds,
     selectedIndexes,
     playlist,
@@ -45,9 +40,6 @@ ipcRenderer.on('context.Add to Queue', (e, ids: TrackID[]) => {
 ipcRenderer.on('context.Add to Playlist', (e, id: TrackID, trackIds: TrackID[]) => {
   addTracksToPlaylist(id, trackIds)
 })
-ipcRenderer.on('context.Get Info', (e, ids: TrackID[], trackIndex: number) => {
-  openTrackInfo(ids, trackIndex)
-})
 ipcRenderer.on('context.revealTrackFile', (e, id: TrackID) => {
   const track = methods.getTrack(id)
   console.log('revealTrackFile', paths.tracksDir, track.file)
@@ -56,15 +48,4 @@ ipcRenderer.on('context.revealTrackFile', (e, id: TrackID) => {
 })
 ipcRenderer.on('context.Remove from Playlist', (e, indexes: number[]) => {
   removeFromOpenPlaylist(indexes)
-})
-
-export async function showTracklistMenu(args: ShowTracklistMenuArgs) {
-  await ipcRenderer.invoke('showTracklistMenu', args)
-}
-
-ipcRenderer.on('context.playlist.edit', (e, args: ShowTracklistMenuArgs) => {
-  openEditPlaylistModal(args.id, args.isFolder)
-})
-ipcRenderer.on('context.playlist.new', (e, args: ShowTracklistMenuArgs) => {
-  openNewPlaylistModal(args.id, args.isFolder)
 })

@@ -1,15 +1,12 @@
-import { ipcMain, dialog, Menu, shell, BrowserWindow } from 'electron'
+import { ipcMain as untypedIpcMain, dialog, Menu, shell, BrowserWindow } from 'electron'
+import type { IpcMain } from './typed_ipc'
+const ipcMain = untypedIpcMain as IpcMain
 import path from 'path'
 import is from './is'
-import type { ShowTracklistMenuArgs, ShowTrackMenuArgs } from './types'
 
-ipcMain.handle('showMessageBox', async (e, options) => {
-  return await dialog.showMessageBox(options)
-})
-
-ipcMain.handle('showMessageBoxAttached', async (e, options) => {
+ipcMain.handle('showMessageBox', async (e, attached, options) => {
   const window = BrowserWindow.fromWebContents(e.sender)
-  if (window) {
+  if (attached && window) {
     return await dialog.showMessageBox(window, options)
   } else {
     return await dialog.showMessageBox(options)
@@ -29,9 +26,9 @@ ipcMain.handle('revealTrackFile', async (e, ...paths) => {
   shell.showItemInFolder(path.join(...paths))
 })
 
-ipcMain.handle('showTrackMenu', (e, args: ShowTrackMenuArgs) => {
+ipcMain.handle('showTrackMenu', (e, options) => {
   let queueMenu: Electron.MenuItemConstructorOptions[] = []
-  if (args.queue) {
+  if (options.queue) {
     queueMenu = [
       {
         label: 'Remove from Queue',
@@ -42,7 +39,7 @@ ipcMain.handle('showTrackMenu', (e, args: ShowTrackMenuArgs) => {
       { type: 'separator' },
     ]
   }
-  const selectedIds = args.selectedIndexes.map((i) => args.allIds[i])
+  const selectedIds = options.selectedIndexes.map((i) => options.allIds[i])
   const menu = Menu.buildFromTemplate([
     ...queueMenu,
     {
@@ -59,7 +56,7 @@ ipcMain.handle('showTrackMenu', (e, args: ShowTrackMenuArgs) => {
     },
     {
       label: 'Add to Playlist',
-      submenu: args.lists.map((item) => {
+      submenu: options.lists.map((item) => {
         return {
           ...item,
           click: () => e.sender.send('context.Add to Playlist', item.id, selectedIds),
@@ -70,7 +67,7 @@ ipcMain.handle('showTrackMenu', (e, args: ShowTrackMenuArgs) => {
     {
       label: 'Get Info',
       click: () => {
-        e.sender.send('context.Get Info', args.allIds, args.selectedIndexes[0])
+        e.sender.send('context.Get Info', options.allIds, options.selectedIndexes[0])
       },
     },
     { type: 'separator' },
@@ -82,31 +79,31 @@ ipcMain.handle('showTrackMenu', (e, args: ShowTrackMenuArgs) => {
       })(),
       click: () => e.sender.send('context.revealTrackFile', selectedIds[0]),
     },
-    { type: 'separator', visible: args.playlist?.editable === true },
+    { type: 'separator', visible: options.playlist?.editable === true },
     {
       label: 'Remove from Playlist',
-      click: () => e.sender.send('context.Remove from Playlist', args.selectedIndexes),
-      visible: args.playlist?.editable === true,
+      click: () => e.sender.send('context.Remove from Playlist', options.selectedIndexes),
+      visible: options.playlist?.editable === true,
     },
   ])
   menu.popup()
 })
 
-ipcMain.handle('showTracklistMenu', (e, args: ShowTracklistMenuArgs) => {
+ipcMain.handle('showTracklistMenu', (e, args) => {
   const editMenu = [
     {
       label: 'Edit Details',
-      click: () => e.sender.send('context.playlist.edit', args),
+      click: () => e.sender.send('context.playlist.edit', args.id),
     },
   ]
   const newMenu = [
     {
       label: 'New Playlist',
-      click: () => e.sender.send('context.playlist.new', args),
+      click: () => e.sender.send('newPlaylist', args.id, false),
     },
     {
       label: 'New Folder',
-      click: () => e.sender.send('context.playlist.new', args),
+      click: () => e.sender.send('newPlaylist', args.id, true),
     },
   ]
   let menuItems: Electron.MenuItemConstructorOptions[] = editMenu

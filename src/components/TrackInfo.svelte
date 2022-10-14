@@ -1,61 +1,42 @@
 <script lang="ts" context="module">
-  import { writable } from 'svelte/store'
-  import type { Writable } from 'svelte/store'
-  import { methods } from '@/lib/data'
-  import type { Track, JsImage, TrackID } from 'ferrum-addon'
-  import { visibleModalsCount } from '@/lib/modals'
-
-  type CurrentList = {
+  export type TrackInfoList = {
     ids: TrackID[]
     index: number
-  }
-  let currentList: CurrentList | null = null
-
-  const id: Writable<TrackID | null> = writable(null)
-  const track: Writable<Track | null> = writable(null)
-  const image = writable(null as null | JsImage)
-
-  async function openIndex(index: number) {
-    if (currentList && index >= 0 && index < currentList.ids.length) {
-      currentList.index = index
-      id.set(currentList.ids[index])
-      track.set(methods.getTrack(currentList.ids[index]))
-      methods.loadTags(currentList.ids[index])
-      loadImage(0)
-    }
-  }
-  function close() {
-    id.set(null)
-    track.set(null)
-    image.set(null)
-    currentList = null
-  }
-
-  export function open(ids: string[], index: number) {
-    if (visibleModalsCount.get() == 0) {
-      currentList = { ids, index }
-      openIndex(index)
-    }
-  }
-
-  function openPrev() {
-    if (currentList) openIndex(currentList.index - 1)
-  }
-  function openNext() {
-    if (currentList) openIndex(currentList.index + 1)
-  }
-
-  async function loadImage(index: number) {
-    image.set(methods.getImage(index))
   }
 </script>
 
 <script lang="ts">
   import Modal from './Modal.svelte'
-  import { checkShortcut, focus, focusLast } from '@/lib/helpers'
+  import { checkShortcut } from '@/lib/helpers'
   import Button from './Button.svelte'
-  import { showOpenDialog } from '@/lib/window'
+  import { methods } from '@/lib/data'
+  import type { Track, JsImage, TrackID } from 'ferrum-addon'
+  import { ipcRenderer } from '@/lib/window'
   import { reload } from '@/lib/player'
+
+  export let currentList: TrackInfoList
+  export let cancel: () => void
+  let id: TrackID
+  let track: Track
+  let image: JsImage | null
+
+  $: openIndex(currentList)
+  function openIndex(list: TrackInfoList) {
+    id = list.ids[list.index]
+    track = methods.getTrack(list.ids[list.index])
+    methods.loadTags(list.ids[list.index])
+    loadImage(0)
+  }
+  async function loadImage(index: number) {
+    image = methods.getImage(index)
+  }
+
+  function openPrev() {
+    if (currentList) currentList.index -= 1
+  }
+  function openNext() {
+    if (currentList) currentList.index += 1
+  }
 
   function uintFilter(value: string) {
     return value.replace(/[^0-9]*/g, '')
@@ -105,40 +86,34 @@
     playCount = track.playCount || 0
     comments = toString(track.comments || '')
   }
-  $: if ($track) setInfo($track)
+  $: if (track) setInfo(track)
 
   function isEdited() {
-    if (!$track) {
-      return false
-    }
     const isUnedited =
       !imageEdited &&
-      name === $track.name &&
-      artist === $track.artist &&
-      albumName === ($track.albumName || '') &&
-      albumArtist === ($track.albumArtist || '') &&
-      composer === ($track.composer || '') &&
-      grouping === ($track.grouping || '') &&
-      genre === ($track.genre || '') &&
-      year === toString($track.year || '') &&
-      trackNum === toString($track.trackNum || '') &&
-      trackCount === toString($track.trackCount || '') &&
-      discNum === toString($track.discNum || '') &&
-      discCount === toString($track.discCount || '') &&
-      bpm === toString($track.bpm || '') &&
-      compilation === ($track.compilation || false) &&
-      rating === ($track.rating || 0) &&
-      liked === ($track.liked || false) &&
-      playCount === ($track.playCount || 0) &&
-      comments === toString($track.comments || '')
+      name === track.name &&
+      artist === track.artist &&
+      albumName === (track.albumName || '') &&
+      albumArtist === (track.albumArtist || '') &&
+      composer === (track.composer || '') &&
+      grouping === (track.grouping || '') &&
+      genre === (track.genre || '') &&
+      year === toString(track.year || '') &&
+      trackNum === toString(track.trackNum || '') &&
+      trackCount === toString(track.trackCount || '') &&
+      discNum === toString(track.discNum || '') &&
+      discCount === toString(track.discCount || '') &&
+      bpm === toString(track.bpm || '') &&
+      compilation === (track.compilation || false) &&
+      rating === (track.rating || 0) &&
+      liked === (track.liked || false) &&
+      playCount === (track.playCount || 0) &&
+      comments === toString(track.comments || '')
     return !isUnedited
   }
   function save(hideAfter = true) {
-    if ($id === null) {
-      return
-    }
     if (isEdited()) {
-      methods.updateTrackInfo($id, {
+      methods.updateTrackInfo(id, {
         name,
         artist,
         albumName,
@@ -161,16 +136,11 @@
       reload()
     }
     if (hideAfter) {
-      close()
-      focusLast()
+      cancel()
     }
   }
   function big(v: string) {
     return v.length >= 3
-  }
-  function cancel() {
-    close()
-    focusLast()
   }
   function keydown(e: KeyboardEvent) {
     if (checkShortcut(e, 'escape')) {
@@ -192,13 +162,13 @@
   }
 
   function prevImage() {
-    if ($image && $image.index >= 1) {
-      loadImage($image.index - 1)
+    if (image && image.index >= 1) {
+      loadImage(image.index - 1)
     }
   }
   function nextImage() {
-    if ($image && $image.index < $image.totalImages - 1) {
-      loadImage($image.index + 1)
+    if (image && image.index < image.totalImages - 1) {
+      loadImage(image.index + 1)
     }
   }
 
@@ -239,19 +209,19 @@
     droppable = false
     const path = getFilePath(e)
     if (path !== null) {
-      methods.setImage($image?.index || 0, path)
+      methods.setImage(image?.index || 0, path)
       imageEdited = true
-      loadImage($image?.index || 0)
+      loadImage(image?.index || 0)
     }
   }
   function coverKeydown(e: KeyboardEvent) {
-    if (checkShortcut(e, 'Backspace') && $image) {
-      methods.removeImage($image.index)
+    if (checkShortcut(e, 'Backspace') && image) {
+      methods.removeImage(image.index)
       imageEdited = true
-      if ($image.index < $image.totalImages - 1) {
-        loadImage($image.index)
+      if (image.index < image.totalImages - 1) {
+        loadImage(image.index)
       } else {
-        loadImage(Math.max(0, $image.index - 1))
+        loadImage(Math.max(0, image.index - 1))
       }
     } else if (checkShortcut(e, ' ')) {
       pickCover()
@@ -264,7 +234,7 @@
     }
   }
   async function pickCover() {
-    let result = await showOpenDialog(false, {
+    let result = await ipcRenderer.invoke('showOpenDialog', false, {
       properties: ['openFile'],
       filters: [{ name: 'Images', extensions: ['jpg', 'jpeg', 'png'] }],
     })
@@ -273,14 +243,14 @@
     }
   }
   function replaceCover(filePath: string) {
-    methods.setImage($image?.index || 0, filePath)
+    methods.setImage(image?.index || 0, filePath)
     imageEdited = true
-    loadImage($image?.index || 0)
+    loadImage(image?.index || 0)
   }
   function replaceCoverData(data: ArrayBuffer, mimeType: string) {
-    methods.setImageData($image?.index || 0, data, mimeType)
+    methods.setImageData(image?.index || 0, data, mimeType)
     imageEdited = true
-    loadImage($image?.index || 0)
+    loadImage(image?.index || 0)
   }
   function coverPaste(e: ClipboardEvent) {
     if (e.clipboardData && e.clipboardData.files.length === 1) {
@@ -302,9 +272,9 @@
 
 <svelte:window on:keydown={keydown} />
 <svelte:body on:keydown|self={keydownNoneSelected} on:paste={coverPaste} />
-<Modal showIf={$id !== null} onClose={cancel}>
+<Modal onCancel={cancel} let:focus>
   <form class="modal" on:submit|preventDefault={() => save()}>
-    <div class="header" class:has-subtitle={$image !== null && $image.totalImages >= 2}>
+    <div class="header" class:has-subtitle={image !== null && image.totalImages >= 2}>
       <div class="cover-area" class:droppable tabindex="0" on:keydown={coverKeydown}>
         <div
           class="cover"
@@ -314,7 +284,7 @@
           on:drop={drop}
           on:dblclick={pickCover}
         >
-          {#if $image === null}
+          {#if image === null}
             <svg
               class="cover-svg outline-element"
               xmlns="http://www.w3.org/2000/svg"
@@ -330,12 +300,12 @@
             <img
               class="outline-element"
               alt=""
-              src={'data:' + $image.mimeType + ';base64,' + $image.data}
+              src={'data:' + image.mimeType + ';base64,' + image.data}
             />
           {/if}
         </div>
-        {#if $image !== null && $image.totalImages >= 2}
-          {@const imageIndex = $image.index}
+        {#if image !== null && image.totalImages >= 2}
+          {@const imageIndex = image.index}
           <div class="cover-subtitle">
             <div class="arrow" class:unclickable={imageIndex <= 0}>
               <svg
@@ -355,9 +325,9 @@
               >
             </div>
             <div class="subtitle-text">
-              {$image.index + 1} / {$image.totalImages}
+              {image.index + 1} / {image.totalImages}
             </div>
-            <div class="arrow" class:unclickable={imageIndex >= $image.totalImages - 1}>
+            <div class="arrow" class:unclickable={imageIndex >= image.totalImages - 1}>
               <svg
                 on:click={nextImage}
                 clip-rule="evenodd"
