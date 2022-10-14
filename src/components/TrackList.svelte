@@ -9,7 +9,13 @@
     paths,
   } from '../lib/data'
   import { newPlaybackInstance, playingId } from '../lib/player'
-  import { getDuration, formatDate, checkMouseShortcut, checkShortcut } from '../lib/helpers'
+  import {
+    getDuration,
+    formatDate,
+    checkMouseShortcut,
+    checkShortcut,
+    assertUnreachable,
+  } from '../lib/helpers'
   import { newSelection } from '../lib/selection'
   import { appendToUserQueue, prependToUserQueue } from '../lib/queue'
   import { ipcListen, ipcRenderer } from '../lib/window'
@@ -19,46 +25,35 @@
   import { showTrackMenu } from '@/lib/menus'
   import type { TrackID } from 'ferrum-addon'
 
-  function playNext() {
-    const indexes = selection.getSelectedIndexes()
-    const ids = indexes.map((i) => page.getTrackId(i))
-    prependToUserQueue(ids)
-  }
-  function addToQueue() {
-    const indexes = selection.getSelectedIndexes()
-    const ids = indexes.map((i) => page.getTrackId(i))
-    appendToUserQueue(ids)
-  }
   export let onTrackInfo: (allIds: TrackID[], index: number) => void
-  function getInfo() {
-    const index = selection.findFirst($selection.list)
-    if (index !== null) {
-      onTrackInfo(page.getTrackIds(), index)
+
+  let tracklistElement: HTMLDivElement
+
+  const trackActionUnlisten = ipcListen('selectedTracksAction', (_, action) => {
+    let firstIndex = selection.findFirst()
+    if (firstIndex === null || !tracklistElement.contains(document.activeElement)) {
+      return
     }
-  }
-  function revealTrackFile() {
-    const index = selection.findFirst($selection.list)
-    if (index !== null) {
-      const track = page.getTrack(index)
+    if (action === 'Play Next') {
+      const ids = indexes.map((i) => page.getTrackId(i))
+      prependToUserQueue(ids)
+    } else if (action === 'Add to Queue') {
+      const ids = indexes.map((i) => page.getTrackId(i))
+      appendToUserQueue(ids)
+    } else if (action === 'Get Info') {
+      onTrackInfo(page.getTrackIds(), firstIndex)
+    } else if (action === 'revealTrackFile') {
+      const track = page.getTrack(firstIndex)
       ipcRenderer.invoke('revealTrackFile', paths.tracksDir, track.file)
-    }
-  }
-  function removeFromPlaylist() {
-    if ($page.tracklist.type === 'playlist') {
-      const indexes = selection.getSelectedIndexes()
+    } else if (action === 'Remove from Playlist') {
       removeFromOpenPlaylist(indexes)
+    } else if (action === 'Delete from Library') {
+      deleteTracksInOpen(indexes)
+    } else {
+      assertUnreachable(action)
     }
-  }
-  function deleteFromLibrary() {
-    const indexes = selection.getSelectedIndexes()
-    deleteTracksInOpen(indexes)
-  }
-  onDestroy(ipcListen('Play Next', playNext))
-  onDestroy(ipcListen('Add to Queue', addToQueue))
-  onDestroy(ipcListen('Get Info', getInfo))
-  onDestroy(ipcListen('revealTrackFile', revealTrackFile))
-  onDestroy(ipcListen('Remove from Playlist', removeFromPlaylist))
-  onDestroy(ipcListen('Delete from Library', deleteFromLibrary))
+  })
+  onDestroy(trackActionUnlisten)
 
   const sortBy = page.sortBy
   $: sortKey = $page.sortKey
@@ -80,7 +75,7 @@
   }
   async function keydown(e: KeyboardEvent) {
     if (checkShortcut(e, 'Enter')) {
-      let firstIndex = selection.findFirst($selection.list)
+      let firstIndex = selection.findFirst()
       if (firstIndex !== null) {
         playRow(firstIndex)
       } else if (!$playingId) {
@@ -227,6 +222,7 @@
 </script>
 
 <div
+  bind:this={tracklistElement}
   class="tracklist"
   on:dragleave={() => (dragToIndex = null)}
   class:no-selection={$selection.count === 0}

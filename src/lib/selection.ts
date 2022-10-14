@@ -56,13 +56,6 @@ function removeRange(selection: Selection, from: number, to: number) {
   }
 }
 
-/** Get first selected index */
-function findFirst(list: boolean[]) {
-  for (let i = 0; i < list.length; i++) {
-    if (list[i] === true) return i
-  }
-  return null
-}
 function getShiftAnchor(selection: Selection) {
   if (selection.shiftAnchor !== null) return selection.shiftAnchor
   else return selection.lastAdded
@@ -125,7 +118,14 @@ export function newSelection(options: SelectOptions) {
 
   const selection = {
     subscribe: store.subscribe,
-    findFirst: findFirst,
+    /** Get first selected index */
+    findFirst() {
+      const selection = store.get()
+      for (let i = 0; i < selection.list.length; i++) {
+        if (selection.list[i] === true) return i
+      }
+      return null
+    },
     getSelectedIndexes(): number[] {
       const selection = store.get()
       const indexes = []

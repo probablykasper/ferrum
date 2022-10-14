@@ -120,3 +120,7 @@ export function getterWritable<T>(value: T): GetterWritable<T> {
     get: () => value,
   }
 }
+
+export function assertUnreachable(x: never) {
+  console.error('Unreachable reached', x)
+}

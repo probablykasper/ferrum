@@ -96,14 +96,17 @@ type Events = {
   playPause: () => void
   volumeUp: () => void
   volumeDown: () => void
-
-  'Play Next': () => void
-  'Add to Queue': () => void
-  'Get Info': () => void
-  revealTrackFile: () => void
-  'Remove from Playlist': () => void
-  'Delete from Library': () => void
   'Toggle Queue': () => void
+
+  selectedTracksAction: (
+    action:
+      | 'Play Next'
+      | 'Add to Queue'
+      | 'Get Info'
+      | 'revealTrackFile'
+      | 'Remove from Playlist'
+      | 'Delete from Library'
+  ) => void
 
   'context.playlist.edit': (id: TrackID) => void
   'context.Remove from Queue': () => void

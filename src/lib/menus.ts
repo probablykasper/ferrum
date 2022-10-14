@@ -42,8 +42,6 @@ ipcRenderer.on('context.Add to Playlist', (e, id: TrackID, trackIds: TrackID[]) 
 })
 ipcRenderer.on('context.revealTrackFile', (e, id: TrackID) => {
   const track = methods.getTrack(id)
-  console.log('revealTrackFile', paths.tracksDir, track.file)
-
   ipcRenderer.invoke('revealTrackFile', paths.tracksDir, track.file)
 })
 ipcRenderer.on('context.Remove from Playlist', (e, indexes: number[]) => {

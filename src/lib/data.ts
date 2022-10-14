@@ -123,7 +123,6 @@ export function movePlaylist(id: TrackListID, fromParent: TrackListID, toParent:
 }
 
 export const paths = call((addon) => addon.get_paths())
-console.log(paths)
 
 export async function importTracks(paths: string[]) {
   let errState = null

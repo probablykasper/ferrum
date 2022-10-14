@@ -91,14 +91,14 @@ export function initMenuBar(app: App, mainWindow: BrowserWindow) {
           label: 'Play Next',
           accelerator: '',
           click: () => {
-            webContents.send('Play Next')
+            webContents.send('selectedTracksAction', 'Play Next')
           },
         },
         {
           label: 'Add to Queue',
           accelerator: '',
           click: () => {
-            webContents.send('Add to Queue')
+            webContents.send('selectedTracksAction', 'Add to Queue')
           },
         },
         { type: 'separator' },
@@ -106,7 +106,7 @@ export function initMenuBar(app: App, mainWindow: BrowserWindow) {
           label: 'Get Info',
           accelerator: 'CmdOrCtrl+I',
           click: () => {
-            webContents.send('Get Info')
+            webContents.send('selectedTracksAction', 'Get Info')
           },
         },
         { type: 'separator' },
@@ -118,7 +118,7 @@ export function initMenuBar(app: App, mainWindow: BrowserWindow) {
           })(),
           accelerator: 'Alt+CmdOrCtrl+R',
           click: () => {
-            webContents.send('revealTrackFile')
+            webContents.send('selectedTracksAction', 'revealTrackFile')
           },
         },
         { type: 'separator' },
@@ -126,14 +126,14 @@ export function initMenuBar(app: App, mainWindow: BrowserWindow) {
           label: 'Remove from Playlist',
           accelerator: '',
           click: () => {
-            webContents.send('Remove from Playlist')
+            webContents.send('selectedTracksAction', 'Remove from Playlist')
           },
         },
         {
           label: 'Delete from Library',
           accelerator: 'CmdOrCtrl+Backspace',
           click: () => {
-            webContents.send('Delete from Library')
+            webContents.send('selectedTracksAction', 'Delete from Library')
           },
         },
       ],
