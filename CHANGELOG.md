@@ -8,6 +8,7 @@
 - Reload file when updating the currently playing song's info
 - Require focus when using Song menubar
 - Fix incorrect handling of macOS `Ctrl+click` context menu
+- Fix sidebar icons showing over dialogs
 
 ## 0.15.0 - 2022 Sep 22
 - Support pasting track artworks

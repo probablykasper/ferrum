@@ -82,9 +82,9 @@
   .backdrop
     background-color: rgba(#000000, 0.5)
     outline: none
-    z-index: -1
   .backdrop, .container
     position: fixed
+    z-index: 90
     width: 100%
     height: 100%
     top: 0
@@ -104,4 +104,5 @@
     border-radius: 7px
     box-shadow: 0px 0px 30px 0px rgba(#000000, 0.5)
     overflow: auto
+    z-index: 100
 </style>
