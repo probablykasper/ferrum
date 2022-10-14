@@ -4,7 +4,7 @@
   import { isMac, trackLists, page, movePlaylist } from '../lib/data'
   import { ipcRenderer } from '../lib/window'
   import { writable } from 'svelte/store'
-  import { setContext } from 'svelte'
+  import { setContext, tick } from 'svelte'
   import { dragged } from '../lib/drag-drop'
 
   const special = {
@@ -66,13 +66,33 @@
       rootDroppable = false
     }
   }
+
+  let contentElement: HTMLDivElement
+
+  $: pageId = $page.id
+  $: pageId, scrollToActive()
+  async function scrollToActive() {
+    await tick()
+    const active = contentElement?.querySelector('.active')
+    if (active instanceof HTMLElement) {
+      const top = active.offsetTop
+      if (contentElement.scrollTop > top) {
+        contentElement.scrollTop = top
+      } else if (
+        contentElement.scrollTop + contentElement.clientHeight <
+        top + active.clientHeight
+      ) {
+        contentElement.scrollTop = top + active.clientHeight - contentElement.clientHeight
+      }
+    }
+  }
 </script>
 
-<div class="sidebar" on:mousedown|self|preventDefault>
+<aside on:mousedown|self|preventDefault>
   {#if isMac}
     <div class="titlebar-spacer" />
   {/if}
-  <div class="content">
+  <div class="content" bind:this={contentElement}>
     <Filter />
     <div
       class="items"
@@ -114,10 +134,10 @@
       />
     </div>
   </div>
-</div>
+</aside>
 
 <style lang="sass">
-  .sidebar
+  aside
     width: 230px
     min-width: 230px
     display: flex
@@ -134,6 +154,7 @@
     flex-direction: column
     flex-grow: 1
     background-color: rgba(0, 0, 0, 0.01) // for scrollbar color
+    position: relative // for SidebarItems scrollToIndex
   .spacer
     height: 10px
     flex-shrink: 0
