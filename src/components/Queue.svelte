@@ -238,6 +238,7 @@
           on:dragstart={onDragStart}
           on:dragover={(e) => onDragOver(e, index)}
           on:drop={dropHandler}
+          on:dragleave={dragEndHandler}
           on:dragend={dragEndHandler}
         >
           <QueueItemComponent id={getByQueueIndex(item).id} />
