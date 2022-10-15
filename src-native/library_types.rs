@@ -197,8 +197,9 @@ pub struct Track {
   pub skips: Option<Vec<MsSinceUnixEpoch>>,
   #[serde(default, skip_serializing_if = "Option::is_none")]
   pub skipsImported: Option<Vec<CountObject>>,
+  /// -100 to 100
   #[serde(default, skip_serializing_if = "Option::is_none")]
-  pub volume: Option<PercentInteger>,
+  pub volume: Option<i8>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]

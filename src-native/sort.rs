@@ -61,10 +61,16 @@ fn get_field_u32(track: &Track, sort_key: &str) -> Option<u32> {
   }
 }
 
+fn get_field_i8(track: &Track, sort_key: &str) -> Option<i8> {
+  match sort_key {
+    "volume" => track.volume,
+    _ => panic!("Field type not found for {}", sort_key),
+  }
+}
+
 fn get_field_u8(track: &Track, sort_key: &str) -> Option<u8> {
   match sort_key {
     "rating" => track.rating,
-    "volume" => track.volume,
     _ => panic!("Field type not found for {}", sort_key),
   }
 }
@@ -141,6 +147,11 @@ pub fn sort(data: &mut Data, sort_key: &str, desc: bool) -> UniResult<()> {
       Some(TrackField::U32) => {
         let num_a = get_field_u32(track_a, sort_key).unwrap_or(0);
         let num_b = get_field_u32(track_b, sort_key).unwrap_or(0);
+        return num_a.cmp(&num_b);
+      }
+      Some(TrackField::I8) => {
+        let num_a = get_field_i8(track_a, sort_key).unwrap_or(0);
+        let num_b = get_field_i8(track_b, sort_key).unwrap_or(0);
         return num_a.cmp(&num_b);
       }
       Some(TrackField::U8) => {

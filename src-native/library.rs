@@ -61,6 +61,7 @@ pub enum TrackField {
   F64,
   I64,
   U32,
+  I8,
   U8,
   Bool,
 }
@@ -103,7 +104,7 @@ pub fn get_track_field_type(field: &str) -> Option<TrackField> {
     "dateImported" => TrackField::I64,
     "playCount" => TrackField::U32,
     "skipCount" => TrackField::U32,
-    "volume" => TrackField::U8,
+    "volume" => TrackField::I8,
     _ => return None,
   };
   return Some(field);
