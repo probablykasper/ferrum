@@ -10,6 +10,7 @@
 - Require focus when using Song menubar
 - Fix incorrect handling of macOS `Ctrl+click` context menu
 - Fix sidebar icons showing over dialogs
+- Fix playlist liked/disliked types
 
 ## 0.15.0 - 2022 Sep 22
 - Support pasting track artworks

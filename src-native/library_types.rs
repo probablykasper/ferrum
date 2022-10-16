@@ -51,8 +51,8 @@ impl Library {
       id: self.generate_id(),
       name,
       description,
-      liked: None,
-      disliked: None,
+      liked: false,
+      disliked: false,
       importedFrom: None,
       originalId: None,
       dateImported: None,
@@ -65,8 +65,8 @@ impl Library {
       id: self.generate_id(),
       name,
       description,
-      liked: None,
-      disliked: None,
+      liked: false,
+      disliked: false,
       importedFrom: None,
       originalId: None,
       dateImported: None,
@@ -231,6 +231,10 @@ impl TrackList {
   }
 }
 
+fn is_false(value: &bool) -> bool {
+  *value == true
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[napi(object)]
 pub struct Playlist {
@@ -238,10 +242,10 @@ pub struct Playlist {
   pub name: String,
   #[serde(default, skip_serializing_if = "Option::is_none")]
   pub description: Option<String>,
-  #[serde(default, skip_serializing_if = "Option::is_none")]
-  pub liked: Option<String>,
-  #[serde(default, skip_serializing_if = "Option::is_none")]
-  pub disliked: Option<String>,
+  #[serde(default, skip_serializing_if = "is_false")]
+  pub liked: bool,
+  #[serde(default, skip_serializing_if = "is_false")]
+  pub disliked: bool,
   #[serde(default, skip_serializing_if = "Option::is_none")]
   pub importedFrom: Option<String>,
   #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -260,10 +264,10 @@ pub struct Folder {
   pub name: String,
   #[serde(default, skip_serializing_if = "Option::is_none")]
   pub description: Option<String>,
-  #[serde(default, skip_serializing_if = "Option::is_none")]
-  pub liked: Option<String>,
-  #[serde(default, skip_serializing_if = "Option::is_none")]
-  pub disliked: Option<String>,
+  #[serde(default, skip_serializing_if = "is_false")]
+  pub liked: bool,
+  #[serde(default, skip_serializing_if = "is_false")]
+  pub disliked: bool,
   /// For example "itunes"
   #[serde(default, skip_serializing_if = "Option::is_none")]
   pub importedFrom: Option<String>,
