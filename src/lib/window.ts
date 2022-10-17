@@ -18,14 +18,7 @@ declare global {
     isMac: boolean
     isWindows: boolean
     joinPaths: (...args: string[]) => string
-    iTunesImport: (
-      paths: { library_dir: string; tracks_dir: string; library_json: string },
-      statusHandler: (status: string) => void,
-      warningHandler: (status: string) => void
-    ) => Promise<{ err?: Error; cancelled: boolean }>
   }
 }
 
-export const addon = window.addon
-export const iTunesImport = window.iTunesImport
 export const joinPaths = window.joinPaths

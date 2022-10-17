@@ -90,7 +90,6 @@ interface TypedIpcRenderer<IpcEvents extends InputMap, IpcCommands extends Input
 type Events = {
   newPlaylist: (id: string, isFolder: boolean) => void
   itunesImport: () => void
-  itunesImportNew: () => void
   import: () => void
   filter: () => void
 

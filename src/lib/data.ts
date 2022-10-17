@@ -1,10 +1,11 @@
 import { writable } from 'svelte/store'
-import { addon as innerAddon, ipcRenderer } from '@/lib/window'
+import { ipcRenderer } from '@/lib/window'
 import type { MsSinceUnixEpoch, TrackID, TrackListID, TrackMd } from 'ferrum-addon'
 
 export const isDev = window.isDev
 export const isMac = window.isMac
 export const isWindows = window.isWindows
+const innerAddon = window.addon
 
 call((addon) => addon.load_data(isDev))
 
@@ -120,6 +121,9 @@ export function movePlaylist(id: TrackListID, fromParent: TrackListID, toParent:
   call((addon) => addon.move_playlist(id, fromParent, toParent))
   methods.save()
   trackLists.refreshTrackIdList()
+}
+export function importItunes(path: string) {
+  return call((addon) => addon.import_itunes(path, paths.tracksDir))
 }
 
 export const paths = call((addon) => addon.get_paths())

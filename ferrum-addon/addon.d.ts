@@ -13,9 +13,14 @@ export interface PathsJs {
 export function get_paths(): PathsJs
 export function save(): void
 export function filter_open_playlist(query: string): void
+export interface ImportStatus {
+  errors: Array<string>
+  tracksCount: number
+  playlistsCount: number
+}
+export function import_itunes(path: string, tracksDir: string): Promise<ImportStatus>
 export function copyFile(from: string, to: string): void
 export function atomicFileSave(filePath: string, content: string): void
-export function import_itunes(path: string): Promise<void>
 export interface Track {
   size: number
   duration: number
@@ -58,7 +63,8 @@ export interface Track {
   skipCount?: number
   skips?: Array<MsSinceUnixEpoch>
   skipsImported?: Array<CountObject>
-  volume?: PercentInteger
+  /** -100 to 100 */
+  volume?: number
 }
 export interface CountObject {
   count: number
@@ -69,8 +75,8 @@ export interface Playlist {
   id: TrackListID
   name: string
   description?: string
-  liked?: string
-  disliked?: string
+  liked: boolean
+  disliked: boolean
   importedFrom?: string
   originalId?: string
   dateImported?: MsSinceUnixEpoch
@@ -81,8 +87,8 @@ export interface Folder {
   id: TrackListID
   name: string
   description?: string
-  liked?: string
-  disliked?: string
+  liked: boolean
+  disliked: boolean
   /** For example "itunes" */
   importedFrom?: string
   /** For example iTunes Persistent ID */

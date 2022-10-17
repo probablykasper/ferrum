@@ -8,40 +8,13 @@
   import TrackInfo, { TrackInfoList } from './components/TrackInfo.svelte'
   import PlaylistInfoModal from './components/PlaylistInfo.svelte'
   import { queueVisible } from './lib/queue'
-  import { ipcListen, iTunesImport, ipcRenderer } from '@/lib/window'
-  import { isMac, paths, importTracks, PlaylistInfo, trackLists } from './lib/data'
+  import { ipcListen, ipcRenderer } from '@/lib/window'
+  import { isMac, importTracks, PlaylistInfo, trackLists } from './lib/data'
   import { playPause } from './lib/player'
   import DragGhost from './components/DragGhost.svelte'
   import ItunesImport from './components/ItunesImport.svelte'
   import type { TrackID } from 'ferrum-addon/addon'
   import { modalCount } from './components/Modal.svelte'
-
-  let pageStatus = ''
-  let pageStatusWarnings = ''
-  let pageStatusErr = ''
-  async function itunesImport() {
-    const result = await iTunesImport(
-      {
-        library_dir: paths.libraryDir,
-        library_json: paths.libraryJson,
-        tracks_dir: paths.tracksDir,
-      },
-      (status: string) => {
-        pageStatus = status
-      },
-      (warning: string) => {
-        console.warn(warning)
-        pageStatusWarnings += warning + '\n'
-      }
-    )
-    if (result.err) pageStatusErr = String(result.err.stack)
-    else if (result.cancelled) pageStatus = ''
-    else pageStatus = 'Done. Restart Ferrum'
-  }
-  ipcRenderer.on('itunesImport', itunesImport)
-  onDestroy(() => {
-    ipcRenderer.removeListener('itunesImport', itunesImport)
-  })
 
   ipcRenderer.emit('appLoaded')
 
@@ -124,7 +97,7 @@
 
   let showItunesImport = true
   onDestroy(
-    ipcListen('itunesImportNew', () => {
+    ipcListen('itunesImport', () => {
       if ($modalCount === 0) {
         showItunesImport = true
       }
@@ -185,27 +158,6 @@
     {/if}
   </div>
   <Player />
-  {#if pageStatus || pageStatusWarnings || pageStatusErr}
-    <div class="page-status-bg">
-      <div class="page-status">
-        {#if pageStatus}
-          <div class="page-status-item">{pageStatus}</div>
-        {/if}
-        {#if pageStatusWarnings}
-          <div class="page-status-item">
-            <b>Warnings:</b>
-            <pre>{pageStatusWarnings}</pre>
-          </div>
-        {/if}
-        {#if pageStatusErr}
-          <div class="page-status-item">
-            <b>Error:</b>
-            <pre>{pageStatusErr}</pre>
-          </div>
-        {/if}
-      </div>
-    </div>
-  {/if}
   {#if droppable}
     <!-- if the overlay is always visible, it's not possible to scroll while dragging tracks -->
     <div class="drag-overlay" transition:fade={{ duration: 100 }}>
@@ -284,31 +236,6 @@
     display: flex
     flex-direction: row
     flex-grow: 1
-  .page-status-bg
-    position: absolute
-    top: 0px
-    left: 0px
-    width: 100%
-    height: 100%
-    background-color: rgba(#1a1a1a, 0.3)
-    display: flex
-    justify-content: center
-    align-items: center
-    .page-status
-      background-color: #3b3b3b
-      min-width: 300px
-      max-width: 800px
-      min-height: 100px
-      max-height: calc(100% - 100px)
-      overflow-y: scroll
-      padding: 10px 20px
-      user-select: text
-      .page-status-item
-        margin: 6px 0px
-      pre
-        white-space: pre-wrap
-        overflow: hidden
-        overflow-wrap: anywhere
   .titlebar
     height: var(--titlebar-height)
     width: 100%
@@ -316,4 +243,5 @@
     left: 0px
     position: absolute
     -webkit-app-region: drag
+    z-index: 500
 </style>

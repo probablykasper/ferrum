@@ -5,7 +5,6 @@ use crate::tracks::import::{read_file_metadata, FileType};
 use lofty::AudioFile;
 use napi::Result;
 use serde::{Deserialize, Serialize};
-use std::collections::hash_map::Entry;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use time::serde::iso8601;
@@ -39,12 +38,54 @@ struct XmlLibrary {
   library_persistent_id: String,
 
   #[serde(rename = "Tracks")]
-  tracks: HashMap<String, XmlTrack>,
+  tracks: HashMap<String, plist::Value>,
 
   #[serde(rename = "Playlists")]
-  playlists: Vec<XmlPlaylist>,
+  playlists: Vec<plist::Value>,
 }
 impl XmlLibrary {
+  fn deserialize_props(self) -> Result<XmlLibraryProps> {
+    let mut tracks = HashMap::new();
+    for (key, value) in self.tracks {
+      let podcast = value
+        .as_dictionary()
+        .and_then(|d| d.get("Podcast"))
+        .and_then(|v| v.as_boolean())
+        .unwrap_or(false);
+      if podcast {
+        continue;
+      }
+
+      let track: XmlTrack = match plist::from_value(value) {
+        Ok(track) => track,
+        Err(e) => throw!("Could not read track with id \"{key}\": {e}"),
+      };
+      tracks.insert(key, track);
+    }
+    let mut playlists = Vec::new();
+    for value in self.playlists {
+      let name = value
+        .as_dictionary()
+        .and_then(|dict| dict.get("Name"))
+        .and_then(|v| v.as_string())
+        .unwrap_or_default()
+        .to_string();
+      let playlist: XmlPlaylist = match plist::from_value(value) {
+        Ok(playlist) => playlist,
+        Err(e) => throw!("Could not read playlist \"{name}\": {e}"),
+      };
+      playlists.push(playlist);
+    }
+    Ok(XmlLibraryProps { tracks, playlists })
+  }
+}
+
+struct XmlLibraryProps {
+  tracks: HashMap<String, XmlTrack>,
+  playlists: Vec<XmlPlaylist>,
+}
+
+impl XmlLibraryProps {
   fn get_music_playlist(playlists: &Vec<XmlPlaylist>) -> Result<&XmlPlaylist> {
     let mut xml_music_playlist = None;
     for xml_playlist in playlists {
@@ -60,9 +101,9 @@ impl XmlLibrary {
   }
   fn take_importable_playlists(&mut self) -> Vec<XmlPlaylist> {
     let playlists = std::mem::take(&mut self.playlists);
-    let (importable, remaining) = playlists
-      .into_iter()
-      .partition(|xml_playlist| xml_playlist.is_importable_playlist());
+    let (importable, remaining) = playlists.into_iter().partition(|xml_playlist| {
+      return xml_playlist.is_importable_playlist();
+    });
     self.playlists = remaining;
     importable
   }
@@ -431,7 +472,7 @@ struct XmlPlaylist {
   folder: Option<bool>,
 
   #[serde(rename = "Playlist Items")]
-  playlist_items: Vec<XmlPlaylistItem>,
+  playlist_items: Option<Vec<XmlPlaylistItem>>,
 }
 impl XmlPlaylist {
   fn is_importable_playlist(&self) -> bool {
@@ -456,21 +497,27 @@ struct XmlPlaylistItem {
   track_id: u64,
 }
 
-struct MappedXmlPlaylist {
+struct XmlPlaylistInfo {
   xml_playlist: XmlPlaylist,
-  children: Vec<String>,
+  child_indexes: Vec<usize>,
 }
 
-fn parse_playlist(
-  xml_playlist: &XmlPlaylist,
-  id: String,
+/// Returns id of the imported playlist
+fn import_playlist(
+  infos: &Vec<XmlPlaylistInfo>,
+  i: usize,
+  library: &mut Library,
   start_time: i64,
   errors: &mut Vec<String>,
   xml_track_id_map: &HashMap<String, String>,
-) -> TrackList {
+) -> String {
+  let tracklist;
+  let xml_playlist = &infos[i].xml_playlist;
+  let id = library.generate_id();
+
   if xml_playlist.folder == Some(true) {
-    return TrackList::Folder(Folder {
-      id,
+    let folder = TrackList::Folder(Folder {
+      id: id.clone(),
       name: xml_playlist.name.clone(),
       description: xml_playlist.description.clone(),
       liked: xml_playlist.loved.unwrap_or_default(),
@@ -479,11 +526,26 @@ fn parse_playlist(
       originalId: Some(xml_playlist.playlist_persistent_id.clone()),
       dateImported: Some(start_time),
       dateCreated: None,
-      children: vec![],
+      children: infos[i]
+        .child_indexes
+        .iter()
+        .map(|child_i| {
+          return import_playlist(
+            &infos,
+            *child_i,
+            library,
+            start_time,
+            errors,
+            xml_track_id_map,
+          );
+        })
+        .collect(),
     });
+    // immediately insert into library so new generated ids are unique
+    library.trackLists.insert(id.clone(), folder);
   } else {
     let mut track_ids = Vec::new();
-    for playlist_item in &xml_playlist.playlist_items {
+    for playlist_item in xml_playlist.playlist_items.as_ref().unwrap() {
       let track_id = xml_track_id_map.get(&playlist_item.track_id.to_string());
       match track_id {
         Some(track_id) => track_ids.push(track_id.clone()),
@@ -493,8 +555,9 @@ fn parse_playlist(
         )),
       }
     }
-    return TrackList::Playlist(Playlist {
-      id,
+
+    tracklist = TrackList::Playlist(Playlist {
+      id: id.clone(),
       name: xml_playlist.name.clone(),
       description: xml_playlist.description.clone(),
       liked: xml_playlist.loved.unwrap_or_default(),
@@ -505,14 +568,24 @@ fn parse_playlist(
       dateCreated: None,
       tracks: track_ids,
     });
+    // immediately insert into library so new generated ids are unique
+    library.trackLists.insert(id.clone(), tracklist);
   }
+  id
+}
+
+#[napi(object)]
+pub struct ImportStatus {
+  pub errors: Vec<String>,
+  pub tracks_count: u32,
+  pub playlists_count: u32,
 }
 
 #[napi(js_name = "import_itunes")]
 #[allow(dead_code)]
-pub async fn import_itunes(path: String, tracks_dir: String) -> Result<()> {
+pub async fn import_itunes(path: String, tracks_dir: String) -> Result<ImportStatus> {
   let mut library = Library::new();
-  let mut xml: XmlLibrary = match plist::from_file(path) {
+  let xml_lib: XmlLibrary = match plist::from_file(path) {
     Ok(book) => book,
     Err(e) => throw!("Unable to parse: {e}"),
   };
@@ -520,19 +593,23 @@ pub async fn import_itunes(path: String, tracks_dir: String) -> Result<()> {
   let start_time = get_now_timestamp();
 
   // Library.xml version check
-  let version = xml.major_version.to_string() + "." + xml.minor_version.to_string().as_str();
-  if (xml.major_version, xml.minor_version) != (1, 1) {
+  let version =
+    xml_lib.major_version.to_string() + "." + xml_lib.minor_version.to_string().as_str();
+  if (xml_lib.major_version, xml_lib.minor_version) != (1, 1) {
     errors.push(format!("Unsupported Library.xml version {version}"));
   }
+
+  let mut xml = xml_lib.deserialize_props()?;
 
   // iTunes ID -> Ferrum ID
   let mut xml_track_id_map = HashMap::<String, String>::new();
 
   // We import the tracks that are in the "Music" playlist since xml.tracks
   // contains podcasts, etc.
-  let xml_music_playlist = XmlLibrary::get_music_playlist(&xml.playlists)?;
-  let track_count = xml_music_playlist.playlist_items.len();
-  for (i, playlist_item) in xml_music_playlist.playlist_items.iter().enumerate() {
+  let xml_music_playlist = XmlLibraryProps::get_music_playlist(&xml.playlists)?;
+  let playlist_items = &xml_music_playlist.playlist_items.as_ref().unwrap();
+  let track_count = playlist_items.len();
+  for (i, playlist_item) in playlist_items.iter().enumerate() {
     let xml_id = playlist_item.track_id.to_string();
     println!("Parsing tracks {}/{}", i + 1, track_count);
     let xml_track = xml
@@ -564,80 +641,82 @@ pub async fn import_itunes(path: String, tracks_dir: String) -> Result<()> {
     };
   }
 
-  let importable_xml_playlists = xml.take_importable_playlists();
-  let mut xml_playlists_map = HashMap::new();
-  let xml_playlist_ids: Vec<String> = importable_xml_playlists
-    .iter()
-    .map(|p| p.playlist_persistent_id.clone())
-    .collect();
-  // build hashmap
-  for xml_playlist in importable_xml_playlists {
-    match xml_playlists_map.entry(xml_playlist.playlist_persistent_id.clone()) {
-      Entry::Occupied(_) => {
+  let importable_xml_playlists = {
+    let mut list = xml.take_importable_playlists();
+    for xml_playlist in &mut list {
+      if xml_playlist.playlist_items.is_none() {
         errors.push(format!(
-          "Duplicate playlist id {}",
-          xml_playlist.playlist_persistent_id
+          "No playlist items list in playlist {}",
+          xml_playlist.name
         ));
+        xml_playlist.playlist_items = Some(Vec::new());
       }
-      Entry::Vacant(entry) => {
-        entry.insert(MappedXmlPlaylist {
-          xml_playlist,
-          children: Vec::new(),
-        });
-      }
-    };
-  }
-  let mut root_children = Vec::new();
-  for xml_playlist_id in xml_playlist_ids {
-    let xml_parent_id;
-    let xml_parent_name;
-    {
-      let xml_playlist = &xml_playlists_map
-        .get(&xml_playlist_id)
-        .unwrap()
-        .xml_playlist;
-      xml_parent_id = xml_playlist.parent_persistent_id.clone();
-      xml_parent_name = xml_playlist.name.clone();
     }
-    match xml_parent_id {
-      None => {
-        root_children.push(xml_playlist_id);
-      }
-      Some(xml_parent_id) => match xml_playlists_map.get_mut(&xml_parent_id) {
-        Some(parent) => {
-          parent.children.push(xml_playlist_id.to_string());
-        }
-        None => {
-          errors.push(format!(
-            "Playlist \"{}\" has non-existent parent id {}",
-            xml_parent_name, xml_parent_id
-          ));
-          continue;
-        }
-      },
+    list
+  };
+
+  let xml_playlist_id_map = {
+    let mut map = HashMap::<String, usize>::new();
+    for (i, playlist) in importable_xml_playlists.iter().enumerate() {
+      map.insert(playlist.playlist_persistent_id.clone(), i);
     }
-  }
+    map
+  };
 
-  for xml_playlist_id in root_children {
-    let mapped_xml_playlist = mapped_xml_playlists.get(&xml_playlist_id).unwrap();
-    mapped_xml_playlist.children
-  }
+  let (xml_playlist_infos, root_child_indexes) = {
+    // create infos
+    let mut xml_playlist_infos: Vec<_> = importable_xml_playlists
+      .iter()
+      .map(|p| {
+        return XmlPlaylistInfo {
+          xml_playlist: p.clone(),
+          child_indexes: Vec::new(),
+        };
+      })
+      .collect();
 
-  for (_, mapped_xml_playlist) in mapped_xml_playlists {
-    let tracklist = parse_playlist(
-      &mapped_xml_playlist.xml_playlist,
-      library.generate_id(),
+    let mut root_child_indexes = Vec::new();
+
+    // add children to infos
+    for (i, xml_playlist) in importable_xml_playlists.iter().enumerate() {
+      if let Some(parent_id) = &xml_playlist.parent_persistent_id {
+        let parent_index = match xml_playlist_id_map.get(parent_id) {
+          Some(index) => index,
+          None => {
+            errors.push(format!(
+              "Playlist \"{}\" has non-existent parent id {}",
+              xml_playlist.name, parent_id
+            ));
+            continue;
+          }
+        };
+        let parent = &mut xml_playlist_infos[*parent_index];
+        parent.child_indexes.push(i);
+      } else {
+        root_child_indexes.push(i);
+      }
+    }
+
+    (xml_playlist_infos, root_child_indexes)
+  };
+
+  // recursively import playlists
+  for i in root_child_indexes {
+    import_playlist(
+      &xml_playlist_infos,
+      i,
+      &mut library,
       start_time,
       &mut errors,
       &xml_track_id_map,
     );
-    // immediately insert into library so new generated ids are unique
-    library
-      .trackLists
-      .insert(tracklist.id().to_string(), tracklist);
   }
 
-  Ok(())
+  Ok(ImportStatus {
+    errors,
+    tracks_count: library.tracks.len() as u32,
+    playlists_count: library.trackLists.len() as u32,
+  })
 }
 
 #[tokio::test]

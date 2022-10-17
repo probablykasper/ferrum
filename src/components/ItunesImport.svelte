@@ -1,11 +1,14 @@
 <script lang="ts">
-  import { addon, ipcRenderer } from '@/lib/window'
+  import { importItunes } from '@/lib/data'
+  import { ipcRenderer } from '@/lib/window'
+  import type { ImportStatus } from 'ferrum-addon/addon'
   import Button from './Button.svelte'
   import Modal from './Modal.svelte'
 
   export let cancel: () => void
   let filePath = ''
   let locked = false
+  let status: ImportStatus | null = null
 
   function cancelHandler() {
     if (!locked) {
@@ -22,7 +25,7 @@
     if (!open.canceled && open.filePaths[0]) {
       filePath = open.filePaths[0]
       try {
-        addon.import_itunes(filePath)
+        status = await importItunes(filePath)
       } catch (e) {
         console.error(e)
       }
@@ -59,8 +62,19 @@
         <Button secondary on:click={cancelHandler}>Cancel</Button>
         <Button type="submit">Select File</Button>
       </div>
-    {:else}
+    {:else if status}
+      <div class="error-box">
+        <h4>Errors</h4>
+        {#each status.errors as error}
+          <p>{error}</p>
+        {/each}
+      </div>
+      <p>Playlists: {status.playlistsCount}</p>
+      <p>Tracks: {status.tracksCount}</p>
+    {:else if locked}
       Scanning...
+    {:else}
+      Done
     {/if}
   </main>
 </Modal>
@@ -76,6 +90,11 @@
     border: 1px solid hsl(0, 0%, 100%, 0.05)
     padding: 0.05em 0.25em
     border-radius: 3px
+  .error-box
+    background-color: hsla(0, 100%, 49%, 0.2)
+    border: 1px solid hsl(0, 100%, 49%)
+    border-radius: 5px
+    padding: 0px 10px
   .buttons
     display: flex
     justify-content: flex-end
