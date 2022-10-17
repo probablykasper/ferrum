@@ -1,7 +1,7 @@
 <script lang="ts">
   export let secondary = false
   export let danger = false
-  export let type = 'button'
+  export let type: 'button' | 'submit' | 'reset' = 'button'
   let normal = !danger && !secondary
   $: normal = !danger && !secondary
 </script>

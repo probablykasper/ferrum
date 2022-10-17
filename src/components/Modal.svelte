@@ -9,6 +9,9 @@
   import { checkShortcut } from '../lib/helpers'
 
   export let onCancel: () => void
+  export let cancelOnEscape = false
+  export let form: (() => void) | undefined = undefined
+  $: tag = form === undefined ? 'div' : 'form'
 
   $modalCount += 1
   onDestroy(() => {
@@ -25,12 +28,15 @@
   }
 
   function focusTrap(el: HTMLElement) {
-    let lastActiveElementFallback = document.activeElement || document.body
-
     function getFocusElements() {
       return el.querySelectorAll(
         'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
       )
+    }
+
+    if (lastActiveElement === null) {
+      lastActiveElement = document.activeElement || document.body
+      el.focus()
     }
 
     function handleKeydown(e: KeyboardEvent) {
@@ -55,6 +61,8 @@
           focusElements[0].focus()
           e.preventDefault()
         }
+      } else if (checkShortcut(e, 'Escape') && cancelOnEscape) {
+        onCancel()
       }
     }
     el.addEventListener('keydown', handleKeydown)
@@ -63,19 +71,36 @@
         el.removeEventListener('keydown', handleKeydown)
         if (lastActiveElement instanceof HTMLElement) {
           lastActiveElement.focus()
-        } else if (lastActiveElementFallback instanceof HTMLElement) {
-          lastActiveElementFallback.focus()
         }
       },
     }
   }
+
+  function boxKeydown(e: KeyboardEvent) {
+    if (form && checkShortcut(e, 'Enter')) {
+      form()
+      e.preventDefault()
+    }
+  }
 </script>
 
-<div class="container" use:focusTrap>
-  <div class="backdrop" on:click|self={onCancel} />
-  <div class="box">
+<div class="container" on:keydown>
+  <div class="backdrop" on:click={onCancel} on:mousedown|preventDefault />
+  <svelte:element
+    this={tag}
+    class="box"
+    on:submit|preventDefault={form}
+    use:focusTrap
+    tabindex="-1"
+    on:keydown|self={boxKeydown}
+  >
     <slot {focus} />
-  </div>
+    {#if $$slots.buttons}
+      <div class="buttons">
+        <slot name="buttons" />
+      </div>
+    {/if}
+  </svelte:element>
 </div>
 
 <style lang="sass">
@@ -84,6 +109,7 @@
     outline: none
   .backdrop, .container
     position: fixed
+    user-select: text
     z-index: 90
     width: 100%
     height: 100%
@@ -105,4 +131,8 @@
     box-shadow: 0px 0px 30px 0px rgba(#000000, 0.5)
     overflow: auto
     z-index: 100
+    outline: none
+  .buttons
+    display: flex
+    justify-content: flex-end
 </style>

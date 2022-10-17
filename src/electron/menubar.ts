@@ -52,6 +52,12 @@ export function initMenuBar(app: App, mainWindow: BrowserWindow) {
             webContents.send('itunesImport')
           },
         },
+        {
+          label: 'Import iTunes Library... (New)',
+          click: () => {
+            webContents.send('itunesImportNew')
+          },
+        },
         { type: 'separator' },
         is.mac ? { role: 'close' } : { role: 'quit' },
       ],

@@ -7,7 +7,7 @@ use napi::{Env, JsArrayBuffer, JsObject, Result, Task};
 use std::fs;
 use std::path::{Path, PathBuf};
 
-mod import;
+pub mod import;
 mod md;
 mod tag;
 
@@ -144,15 +144,8 @@ pub fn generate_filename(dest_dir: &Path, artist: &str, title: &str, ext: &str) 
 #[allow(dead_code)]
 pub fn import_file(path: String, now: MsSinceUnixEpoch, env: Env) -> Result<()> {
   let data: &mut Data = get_data(&env)?;
-  let path = Path::new(&path);
-  let ext = path.extension().unwrap_or_default().to_string_lossy();
-  let track = match ext.as_ref() {
-    "mp3" => import::import_mp3(&data, &path, now)?,
-    "m4a" => import::import_m4a(&data, &path, now)?,
-    "opus" => import::import_opus(&data, &path, now)?,
-    _ => panic!("Unsupported file extension: {}", ext),
-  };
   let id = data.library.generate_id();
+  let track = import::import_auto(&data, Path::new(&path), now)?;
   data.library.tracks.insert(id, track);
   Ok(())
 }

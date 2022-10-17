@@ -213,7 +213,7 @@ enum Info {
 }
 
 async function parseTrack(
-  xmlTrack: XmlTrack,
+  xml_track: XmlTrack,
   warn: (msg: string) => void,
   startTime: number,
   dryRun: boolean,
@@ -223,7 +223,7 @@ async function parseTrack(
     importedFrom: 'itunes',
     dateImported: startTime,
   }
-  const logPrefix = '[' + xmlTrack['Artist'] + ' - ' + xmlTrack['Name'] + ']'
+  const logPrefix = '[' + xml_track['Artist'] + ' - ' + xml_track['Name'] + ']'
   function addIfTruthy(prop: string, value: string | Date | undefined, info?: Info) {
     if (value instanceof Date) {
       track[prop] = value.getTime()
@@ -235,46 +235,46 @@ async function parseTrack(
       warn(logPrefix + ` Missing recommended field "${prop}"`)
     }
   }
-  addIfTruthy('name', xmlTrack['Name'], Info.Recommended)
-  addIfTruthy('originalId', xmlTrack['Persistent ID'])
-  addIfTruthy('artist', xmlTrack['Artist'], Info.Recommended)
-  addIfTruthy('composer', xmlTrack['Composer'])
-  addIfTruthy('sortName', xmlTrack['Sort Name'])
-  addIfTruthy('sortArtist', xmlTrack['Sort Artist'])
-  addIfTruthy('sortComposer', xmlTrack['Sort Composer'])
-  addIfTruthy('genre', xmlTrack['Genre'])
-  addIfTruthy('rating', xmlTrack['Rating'])
-  addIfTruthy('year', xmlTrack['Year'])
-  addIfTruthy('bpm', xmlTrack['BPM'])
-  addIfTruthy('dateModified', xmlTrack['Date Modified'], Info.Required)
-  addIfTruthy('dateAdded', xmlTrack['Date Added'], Info.Required)
-  addIfTruthy('comments', xmlTrack['Comments'])
-  addIfTruthy('grouping', xmlTrack['Grouping'])
-  if (xmlTrack['Play Count'] && xmlTrack['Play Count'] >= 1) {
-    track['playCount'] = xmlTrack['Play Count']
+  addIfTruthy('name', xml_track['Name'], Info.Recommended)
+  addIfTruthy('originalId', xml_track['Persistent ID'])
+  addIfTruthy('artist', xml_track['Artist'], Info.Recommended)
+  addIfTruthy('composer', xml_track['Composer'])
+  addIfTruthy('sortName', xml_track['Sort Name'])
+  addIfTruthy('sortArtist', xml_track['Sort Artist'])
+  addIfTruthy('sortComposer', xml_track['Sort Composer'])
+  addIfTruthy('genre', xml_track['Genre'])
+  addIfTruthy('rating', xml_track['Rating'])
+  addIfTruthy('year', xml_track['Year'])
+  addIfTruthy('bpm', xml_track['BPM'])
+  addIfTruthy('dateModified', xml_track['Date Modified'], Info.Required)
+  addIfTruthy('dateAdded', xml_track['Date Added'], Info.Required)
+  addIfTruthy('comments', xml_track['Comments'])
+  addIfTruthy('grouping', xml_track['Grouping'])
+  if (xml_track['Play Count'] && xml_track['Play Count'] >= 1) {
+    track['playCount'] = xml_track['Play Count']
     // Unlike "Skip Date" etc, "Play Date" is a non-UTC Mac HFS+ timestamp, but
     // luckily "Play Date UTC" is a normal date.
-    const playDate = xmlTrack['Play Date UTC']
-    let importedPlayCount = xmlTrack['Play Count']
+    const playDate = xml_track['Play Date UTC']
+    let imported_play_count = xml_track['Play Count']
     if (playDate !== undefined) {
       // if we have a playDate, add a play for it
       track['plays'] = [playDate.getTime()]
-      importedPlayCount--
+      imported_play_count--
     }
-    if (importedPlayCount >= 1) {
+    if (imported_play_count >= 1) {
       track['playsImported'] = [
         {
-          count: importedPlayCount,
-          fromDate: xmlTrack['Date Added'].getTime(),
+          count: imported_play_count,
+          fromDate: xml_track['Date Added'].getTime(),
           toDate: playDate === undefined ? startTime : playDate.getTime(),
         },
       ]
     }
   }
-  if (xmlTrack['Skip Count'] && xmlTrack['Skip Count'] >= 1) {
-    track['skipCount'] = xmlTrack['Skip Count']
-    const skipDate = xmlTrack['Skip Date']
-    let importedSkipCount = xmlTrack['Skip Count']
+  if (xml_track['Skip Count'] && xml_track['Skip Count'] >= 1) {
+    track['skipCount'] = xml_track['Skip Count']
+    const skipDate = xml_track['Skip Date']
+    let importedSkipCount = xml_track['Skip Count']
     if (skipDate !== undefined) {
       // if we have a skipDate, add a skip for it
       track['skips'] = [skipDate.getTime()]
@@ -284,7 +284,7 @@ async function parseTrack(
       track['skipsImported'] = [
         {
           count: importedSkipCount,
-          fromDate: xmlTrack['Date Added'].getTime(),
+          fromDate: xml_track['Date Added'].getTime(),
           toDate: skipDate === undefined ? startTime : skipDate.getTime(),
         },
       ]
@@ -293,41 +293,41 @@ async function parseTrack(
   // Play Time?
   //    Probably don't calculate play time from imported plays
   // Location (use to get file and extract cover)
-  if (xmlTrack['Volume Adjustment']) {
+  if (xml_track['Volume Adjustment']) {
     // In iTunes, you can choose volume adjustment at 10% increments. The XML
     // value Seems like it should go from -255 to 255. However, when set to
     // 100%, I got 255 on one track, but 254 on another. We'll just
     // convert it to a -100 to 100 range and round off decimals.
-    const vol = Math.round(xmlTrack['Volume Adjustment'] / 2.55)
+    const vol = Math.round(xml_track['Volume Adjustment'] / 2.55)
     if (vol && vol >= -100 && vol <= 100) {
       track['volume'] = vol
     } else {
       warn(logPrefix + ` Unable to import Volume Adjustment of value "${vol}"`)
     }
   }
-  addIfTruthy('liked', xmlTrack['Loved'])
-  addIfTruthy('disliked', xmlTrack['Disliked'])
-  addIfTruthy('disabled', xmlTrack['Disabled'])
+  addIfTruthy('liked', xml_track['Loved'])
+  addIfTruthy('disliked', xml_track['Disliked'])
+  addIfTruthy('disabled', xml_track['Disabled'])
 
-  if (xmlTrack['Compilation']) track.compilation = true
-  if (xmlTrack['Album']) track.albumName = xmlTrack['Album']
-  if (xmlTrack['Album Artist']) track.albumArtist = xmlTrack['Album Artist']
-  if (xmlTrack['Sort Album']) track.sortAlbumName = xmlTrack['Sort Album']
-  if (xmlTrack['Sort Album Artist']) track.sortAlbumArtist = xmlTrack['Sort Album Artist']
+  if (xml_track['Compilation']) track.compilation = true
+  if (xml_track['Album']) track.albumName = xml_track['Album']
+  if (xml_track['Album Artist']) track.albumArtist = xml_track['Album Artist']
+  if (xml_track['Sort Album']) track.sortAlbumName = xml_track['Sort Album']
+  if (xml_track['Sort Album Artist']) track.sortAlbumArtist = xml_track['Sort Album Artist']
 
-  if (xmlTrack['Track Number']) track.trackNum = xmlTrack['Track Number']
-  if (xmlTrack['Track Count']) track.trackCount = xmlTrack['Track Count']
-  if (xmlTrack['Disc Number']) track.discNum = xmlTrack['Disc Number']
-  if (xmlTrack['Disc Count']) track.discCount = xmlTrack['Disc Count']
+  if (xml_track['Track Number']) track.trackNum = xml_track['Track Number']
+  if (xml_track['Track Count']) track.trackCount = xml_track['Track Count']
+  if (xml_track['Disc Number']) track.discNum = xml_track['Disc Number']
+  if (xml_track['Disc Count']) track.discCount = xml_track['Disc Count']
 
-  if (xmlTrack['Track Type'] !== 'File') {
-    const trackType = xmlTrack['Track Type']
+  if (xml_track['Track Type'] !== 'File') {
+    const trackType = xml_track['Track Type']
     throw new Error(logPrefix + ` Expected track type "File", was "${trackType}"`)
   }
-  if (!xmlTrack['Location']) {
+  if (!xml_track['Location']) {
     throw new Error(logPrefix + ' Missing required field "Location"')
   }
-  const xmlTrackPath = url.fileURLToPath(xmlTrack['Location'])
+  const xmlTrackPath = url.fileURLToPath(xml_track['Location'])
   if (!fs.existsSync(xmlTrackPath)) {
     throw new Error(logPrefix + ' File does not exist')
   }
@@ -402,11 +402,11 @@ async function parseTrack(
   }
 
   if (
-    xmlTrack['Persistent ID'] === 'A7F64F85A799AA1C' || // init.seq
-    xmlTrack['Persistent ID'] === '033D11C37D8F07CA' || // test track
-    xmlTrack['Persistent ID'] === '7B468E51DD4EC3DB' // test track2
+    xml_track['Persistent ID'] === 'A7F64F85A799AA1C' || // init.seq
+    xml_track['Persistent ID'] === '033D11C37D8F07CA' || // test track
+    xml_track['Persistent ID'] === '7B468E51DD4EC3DB' // test track2
   ) {
-    console.log(xmlTrack['Name'], { track, xmlTrack })
+    console.log(xml_track['Name'], { track, xmlTrack: xml_track })
   }
 
   return track
@@ -461,35 +461,35 @@ async function start(
   console.log('music folder:', xml['Music Folder'])
 
   status('Parsing tracks...')
-  const xmlPlaylists = []
-  let xmlMusicPlaylist
+  const xml_playlists = []
+  let xml_music_playlist
   for (const key of Object.keys(xml.Playlists)) {
-    const xmlPlaylist = xml.Playlists[key]
+    const xml_playlist = xml.Playlists[key]
     // skip invisible playlists (should just be the "Library" playlist)
-    if (xmlPlaylist['Visible'] === false) continue
+    if (xml_playlist['Visible'] === false) continue
     // skip smart playlists
-    if (xmlPlaylist['Smart Info']) continue
-    if (xmlPlaylist['Distinguished Kind'] && xmlPlaylist['Distinguished Kind'] !== 1) {
+    if (xml_playlist['Smart Info']) continue
+    if (xml_playlist['Distinguished Kind'] && xml_playlist['Distinguished Kind'] !== 1) {
       // ignore iTunes-generated playlists
-      if (xmlPlaylist['Distinguished Kind'] === 4) {
+      if (xml_playlist['Distinguished Kind'] === 4) {
         // but keep the Music playlist
-        if (xmlMusicPlaylist) throw new Error('Found two iTunes-generated "Music" playlists')
-        xmlMusicPlaylist = xmlPlaylist
+        if (xml_music_playlist) throw new Error('Found two iTunes-generated "Music" playlists')
+        xml_music_playlist = xml_playlist
       }
     } else {
-      xmlPlaylists.push(xmlPlaylist)
+      xml_playlists.push(xml_playlist)
     }
   }
   // We import the tracks that are in the "Music" playlist since xml.Tracks
   // contains podcasts, etc.
-  const xmlMusicPlaylistItems = xmlMusicPlaylist['Playlist Items']
+  const xml_music_playlist_items = xml_music_playlist['Playlist Items']
   const startTime = new Date().getTime()
   const parsedTracks: Record<string, Track> = {}
   /** iTunes ID -> Ferrum ID */
   const trackIdMap: Record<string, string> = {}
-  for (let i = 0; i < xmlMusicPlaylistItems.length; i++) {
-    status(`Parsing tracks... (${i + 1}/${xmlMusicPlaylistItems.length})`)
-    const xmlPlaylistItem = xmlMusicPlaylistItems[i]
+  for (let i = 0; i < xml_music_playlist_items.length; i++) {
+    status(`Parsing tracks... (${i + 1}/${xml_music_playlist_items.length})`)
+    const xmlPlaylistItem = xml_music_playlist_items[i]
     const iTunesId = xmlPlaylistItem['Track ID']
     const xmlTrack = xml.Tracks[iTunesId]
     const track = await parseTrack(xmlTrack, warn, startTime, dryRun, paths)
@@ -514,10 +514,10 @@ async function start(
     },
   }
   const folderIdMap = {}
-  for (const xmlPlaylist of xmlPlaylists) {
-    if (xmlPlaylist['Folder'] !== true) continue
+  for (const xml_playlist of xml_playlists) {
+    if (xml_playlist['Folder'] !== true) continue
     const playlist: Folder = { type: 'folder', children: [] }
-    addCommonPlaylistFields(playlist, xmlPlaylist, startTime)
+    addCommonPlaylistFields(playlist, xml_playlist, startTime)
     let id
     do {
       // prevent duplicate IDs
@@ -527,12 +527,12 @@ async function start(
     const itunesId = playlist.originalId
     folderIdMap[itunesId] = id
   }
-  for (const xmlPlaylist of xmlPlaylists) {
-    if (xmlPlaylist['Folder'] !== true) continue
-    const itunesId = xmlPlaylist['Playlist Persistent ID']
+  for (const xml_playlist of xml_playlists) {
+    if (xml_playlist['Folder'] !== true) continue
+    const itunesId = xml_playlist['Playlist Persistent ID']
     const id = folderIdMap[itunesId]
     const playlist = parsedPlaylists[id]
-    const parentItunesId = xmlPlaylist['Parent Persistent ID']
+    const parentItunesId = xml_playlist['Parent Persistent ID']
     const parentId = folderIdMap[parentItunesId]
     if (parentId) {
       const parent = parsedPlaylists[parentId]
@@ -546,7 +546,7 @@ async function start(
   }
 
   status('Parsing playlists...')
-  for (const xmlPlaylist of xmlPlaylists) {
+  for (const xmlPlaylist of xml_playlists) {
     if (xmlPlaylist['Folder'] === true) continue
     const playlist = { type: 'playlist', tracks: [] }
     addCommonPlaylistFields(playlist, xmlPlaylist, startTime)

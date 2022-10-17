@@ -12,6 +12,7 @@
   import { isMac, paths, importTracks, PlaylistInfo, trackLists } from './lib/data'
   import { playPause } from './lib/player'
   import DragGhost from './components/DragGhost.svelte'
+  import ItunesImport from './components/ItunesImport.svelte'
   import type { TrackID } from 'ferrum-addon/addon'
   import { modalCount } from './components/Modal.svelte'
 
@@ -121,6 +122,15 @@
     }
   }
 
+  let showItunesImport = true
+  onDestroy(
+    ipcListen('itunesImportNew', () => {
+      if ($modalCount === 0) {
+        showItunesImport = true
+      }
+    })
+  )
+
   let trackInfoList: TrackInfoList | null = null
   function onTrackInfo(ids: TrackID[], trackIndex: number) {
     if ($modalCount === 0) {
@@ -210,6 +220,9 @@
 {/if}
 {#if playlistInfo}
   <PlaylistInfoModal info={playlistInfo} cancel={() => (playlistInfo = null)} />
+{/if}
+{#if showItunesImport}
+  <ItunesImport cancel={() => (showItunesImport = false)} />
 {/if}
 
 <DragGhost />

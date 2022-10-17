@@ -9,6 +9,52 @@ use mp3_metadata;
 use std::fs::{self, File};
 use std::path::Path;
 
+#[derive(PartialEq)]
+pub enum FileType {
+  Mp3,
+  M4a,
+  Opus,
+}
+impl FileType {
+  pub fn from_path(path: &Path) -> UniResult<Self> {
+    let ext = path.extension().unwrap_or_default().to_string_lossy();
+    match ext.as_ref() {
+      "mp3" => Ok(FileType::Mp3),
+      "m4a" => Ok(FileType::M4a),
+      "opus" => Ok(FileType::Opus),
+      _ => throw!("Unsupported file extension {}", ext),
+    }
+  }
+  pub fn from_lofty_file_type(lofty_type: lofty::FileType) -> UniResult<Self> {
+    match lofty_type {
+      lofty::FileType::MP3 => Ok(FileType::Mp3),
+      lofty::FileType::MP4 => Ok(FileType::M4a),
+      lofty::FileType::Opus => Ok(FileType::Opus),
+      _ => throw!("Unsupported file type {:?}", lofty_type),
+    }
+  }
+  pub fn file_extension(&self) -> &'static str {
+    match self {
+      FileType::Mp3 => "mp3",
+      FileType::M4a => "m4a",
+      FileType::Opus => "opus",
+    }
+  }
+}
+impl std::fmt::Display for FileType {
+  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    write!(f, "{}", self.file_extension())
+  }
+}
+pub fn import_auto(data: &Data, path: &Path, now: i64) -> UniResult<Track> {
+  let track = match FileType::from_path(path)? {
+    FileType::Mp3 => import_mp3(&data, &path, now)?,
+    FileType::M4a => import_m4a(&data, &path, now)?,
+    FileType::Opus => import_opus(&data, &path, now)?,
+  };
+  Ok(track)
+}
+
 fn get_and_fix_id3_year(tag: &mut id3::Tag) -> Option<i64> {
   match tag.date_recorded() {
     Some(tdrc) => Some(i64::from(tdrc.year)),
@@ -42,10 +88,13 @@ fn get_first_text_m4a(tag: &mp4ameta::Tag, id: [u8; 4]) -> Option<String> {
   }
 }
 
-fn read_file_metadata(path: &Path) -> UniResult<fs::Metadata> {
-  match fs::metadata(&path) {
-    Ok(md) => Ok(md),
-    Err(e) => throw!("Unable to read file metadata: {}", e),
+pub fn read_file_metadata(path: &Path) -> UniResult<fs::Metadata> {
+  match std::fs::metadata(path) {
+    Ok(file_md) => Ok(file_md),
+    Err(err) => match err.kind() {
+      std::io::ErrorKind::NotFound => throw!("File does not exist"),
+      _ => throw!("Unable to access file: {}", err),
+    },
   }
 }
 
@@ -362,7 +411,7 @@ pub fn import_mp3(data: &Data, track_path: &Path, now: i64) -> UniResult<Track> 
     sortComposer: get_first_text_id3(&tag, "TSOC"),
     genre: tag.genre().map(|s| s.to_owned()),
     rating: None,
-    year: year,
+    year,
     bpm: match get_first_text_id3(&tag, "TBPM") {
       Some(n) => n.parse().ok(),
       None => None,

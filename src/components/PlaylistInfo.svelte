@@ -37,8 +37,8 @@
 
 <svelte:window on:keydown={keydown} />
 
-<Modal onCancel={cancel} let:focus>
-  <form class="modal" on:submit|preventDefault={save} on:keydown={formKeydown}>
+<Modal onCancel={cancel} let:focus form={save} on:keydown={formKeydown}>
+  <main>
     <h3>
       {info.editMode ? 'Edit' : 'New'} Playlist {#if info.isFolder}Folder{/if}
     </h3>
@@ -50,23 +50,20 @@
       placeholder="Description"
     />
     <div class="spacer" />
-    <div class="bottom">
-      <Button secondary on:click={cancel}>Cancel</Button>
-      <Button type="submit">Save</Button>
-    </div>
-  </form>
+  </main>
+  <svelte:fragment slot="buttons">
+    <Button secondary on:click={cancel}>Cancel</Button>
+    <Button on:click={save}>Save</Button>
+  </svelte:fragment>
 </Modal>
 
 <style lang="sass">
-  form
+  main
     display: flex
     flex-direction: column
     background-color: inherit
   .spacer
     height: 15px
-  .bottom
-    display: flex
-    justify-content: flex-end
   input, textarea
     resize: none
     width: 300px

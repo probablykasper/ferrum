@@ -418,10 +418,11 @@
       <input type="text" bind:value={comments} />
     </div>
     <div class="spacer" />
-    <div class="bottom">
-      <Button secondary on:click={cancel}>Cancel</Button><Button type="submit">Save</Button>
-    </div>
   </form>
+  <svelte:fragment slot="buttons">
+    <Button secondary on:click={cancel}>Cancel</Button>
+    <Button on:click={() => save()}>Save</Button>
+  </svelte:fragment>
 </Modal>
 
 <style lang="sass">
@@ -541,7 +542,4 @@
     display: inline-block
     width: 20px
     text-align: center
-  .bottom
-    display: flex
-    justify-content: flex-end
 </style>
