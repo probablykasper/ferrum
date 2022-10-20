@@ -60,7 +60,7 @@ export function getPrevious() {
 }
 export function getNext() {
   const { userQueue, autoQueue } = queue.get()
-  return (userQueue as Partial<QueueItem[]>)[0] || autoQueue[0] || null
+  return (userQueue as Partial<QueueItem[]>)[0] || (autoQueue as Partial<QueueItem[]>)[0] || null
 }
 export function getQueueLength() {
   const { userQueue, autoQueue } = queue.get()

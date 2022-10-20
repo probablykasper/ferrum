@@ -204,7 +204,7 @@ quit.setHandler('player', () => {
 })
 
 audio.onended = () => {
-  const nextId = queue.getNext().id
+  const nextId = queue.getNext()?.id
   const currentId = queue.getCurrent()?.id
   if (nextId && currentId) {
     savePlayTime()
@@ -217,7 +217,7 @@ audio.onended = () => {
 }
 
 export function next() {
-  const nextId = queue.getNext().id
+  const nextId = queue.getNext()?.id
   const currentId = queue.getCurrent()?.id
   if (nextId && currentId) {
     savePlayTime()
