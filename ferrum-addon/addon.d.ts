@@ -162,6 +162,7 @@ export interface TrackMd {
   comments: string
 }
 export function get_track(id: string): Track
+export function track_exists(id: string): boolean
 export function add_play(trackId: string): void
 export function add_skip(trackId: string): void
 export function add_play_time(id: TrackID, start: MsSinceUnixEpoch, durMs: number): void

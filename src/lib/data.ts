@@ -2,6 +2,7 @@ import { writable } from 'svelte/store'
 import { ipcRenderer } from '@/lib/window'
 import type { MsSinceUnixEpoch, TrackID, TrackListID, TrackMd } from 'ferrum-addon'
 import { selection as pageSelection } from './page'
+import { queue } from './queue'
 
 export const isDev = window.isDev
 export const isMac = window.isMac
@@ -112,6 +113,7 @@ export function deleteTracksInOpen(indexes: number[]) {
   call((addon) => addon.delete_tracks_in_open(indexes))
   page.refreshIdsAndKeepSelection()
   pageSelection.clear()
+  queue.removeDeleted()
   methods.save()
 }
 export type PlaylistInfo = {
@@ -171,6 +173,9 @@ export const methods = {
   },
   getTrack: (id: TrackID) => {
     return call((data) => data.get_track(id))
+  },
+  trackExists: (id: TrackID) => {
+    return call((data) => data.track_exists(id))
   },
   getTrackList: (id: TrackListID) => {
     return call((data) => data.get_track_list(id))

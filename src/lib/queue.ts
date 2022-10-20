@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import type { TrackID } from 'ferrum-addon'
 import { writable } from 'svelte/store'
+import { methods } from './data'
 import { getterWritable } from './helpers'
 
 export const queueVisible = writable(false)
@@ -45,6 +46,7 @@ export const queue = (() => {
     prependToUserQueue,
     appendToUserQueue,
     removeIndexes,
+    removeDeleted,
   }
 })()
 
@@ -142,6 +144,19 @@ export function removeIndexes(indexes: number[]) {
     return q
   })
 }
+export function removeDeleted() {
+  const q = queue.get()
+  const past = q.past.filter((qi) => methods.trackExists(qi.id))
+  const userQueue = q.userQueue.filter((qi) => methods.trackExists(qi.id))
+  const autoQueue = q.autoQueue.filter((qi) => methods.trackExists(qi.id))
+  if (
+    past.length !== q.past.length ||
+    userQueue.length !== q.userQueue.length ||
+    autoQueue.length !== q.autoQueue.length
+  ) {
+    queue.set({ userQueue, autoQueue, past })
+  }
+}
 
 export function next() {
   const q = queue.get()
@@ -167,8 +182,9 @@ export function prev() {
 export function setNewQueue(newIds: TrackID[], newCurrentIndex: number) {
   const autoQueue = newIds.splice(newCurrentIndex + 1)
   queue.set({
-    userQueue: [],
+    userQueue: [{ qId: 23818328, id: 'dss' }],
     autoQueue: autoQueue.map(newQueueItem),
     past: newIds.map(newQueueItem),
   })
+  queue.removeDeleted()
 }

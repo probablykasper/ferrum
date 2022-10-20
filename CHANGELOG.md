@@ -15,6 +15,7 @@
 - Fix sidebar icons showing over dialogs
 - Fix playlist liked/disliked types
 - Fix page playlist info not refreshing when edited
+- Fix tracks staying in queue after being deleted from library
 
 ## 0.15.0 - 2022 Sep 22
 - Support pasting track artworks

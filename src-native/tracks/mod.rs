@@ -29,6 +29,14 @@ pub fn get_track(id: String, env: Env) -> Result<Track> {
   Ok(track.clone())
 }
 
+#[napi(js_name = "track_exists")]
+#[allow(dead_code)]
+pub fn track_exists(id: String, env: Env) -> Result<bool> {
+  let data: &mut Data = get_data(&env)?;
+  let tracks = &data.library.tracks;
+  Ok(tracks.contains_key(&id))
+}
+
 #[napi(js_name = "add_play")]
 #[allow(dead_code)]
 pub fn add_play(track_id: String, env: Env) -> Result<()> {
