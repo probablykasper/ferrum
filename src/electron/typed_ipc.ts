@@ -100,6 +100,7 @@ type Events = {
   Next: () => void
   Previous: () => void
   Shuffle: () => void
+  Repeat: () => void
   volumeUp: () => void
   volumeDown: () => void
   'Toggle Queue': () => void

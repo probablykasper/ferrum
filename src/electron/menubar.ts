@@ -149,8 +149,8 @@ export function initMenuBar(app: App, mainWindow: BrowserWindow) {
           },
         },
         { type: 'separator' },
-        { role: 'reload' },
-        { role: 'forceReload' },
+        { role: 'reload', accelerator: 'CmdOrCtrl+Shift+R' },
+        { role: 'forceReload', accelerator: 'CmdOrCtrl+Alt+R' },
         { role: 'toggleDevTools' },
         { type: 'separator' },
         { role: 'resetZoom' },
@@ -190,6 +190,13 @@ export function initMenuBar(app: App, mainWindow: BrowserWindow) {
           accelerator: 'CmdOrCtrl+S',
           click: () => {
             webContents.send('Shuffle')
+          },
+        },
+        {
+          label: 'Repeat',
+          accelerator: 'CmdOrCtrl+R',
+          click: () => {
+            webContents.send('Repeat')
           },
         },
         { type: 'separator' },

@@ -106,16 +106,16 @@ export function flattenChildLists(
 
 type GetterWritable<T> = Writable<T> & { get(): T }
 export function getterWritable<T>(value: T): GetterWritable<T> {
-  const store = writable(value)
+  const { subscribe, set } = writable(value)
   return {
-    subscribe: store.subscribe,
+    subscribe: subscribe,
     set(newValue: T) {
       value = newValue
-      store.set(newValue)
+      set(newValue)
     },
     update(updater: Updater<T>) {
       value = updater(value)
-      store.set(value)
+      set(value)
     },
     get: () => value,
   }

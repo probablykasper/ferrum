@@ -99,6 +99,11 @@ ipcRenderer.on('Shuffle', () => {
   shuffle.update((value) => !value)
 })
 
+export const repeat = getterWritable(false)
+ipcRenderer.on('Repeat', () => {
+  repeat.update((value) => !value)
+})
+
 export function getCurrent() {
   const { past } = queue.get()
   return (past as Partial<QueueItem[]>)[past.length - 1] || null
@@ -213,7 +218,11 @@ export function next() {
     q.past.push(q.userQueue.shift()!)
     queue.set(q)
   } else if (q.autoQueue.length) {
-    q.past.push(q.autoQueue.shift()!)
+    const item = q.autoQueue.shift()!
+    q.past.push(item)
+    if (repeat.get()) {
+      q.autoQueue.push(newQueueItem(item.id))
+    }
     queue.set(q)
   }
 }
