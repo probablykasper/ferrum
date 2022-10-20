@@ -17,19 +17,6 @@ Ferrum is in development and might get updates that no longer work with your lib
 
 ## Dev instructions
 
-### ToDo
-
-- Playlist covers
-- Move playlists
-- Edit playlists
-- Allow removing tracks from playlists when filter or sorting is used
-- Move iTunes Import to Rust
-- iTunes Import overwrites library, but old track files are still kept
-- Databases
-  - https://github.com/TheNeikos/rustbreak
-  - https://github.com/spacejam/sled
-  - https://github.com/Owez/tinydb
-
 ### Get started
 
 1. Install Node.js

@@ -6,6 +6,7 @@
   import { writable } from 'svelte/store'
   import { setContext, tick } from 'svelte'
   import { dragged } from '../lib/drag-drop'
+  import { checkShortcut } from '@/lib/helpers'
 
   const special = {
     children: ['root'],
@@ -24,13 +25,13 @@
       viewport.scrollTop -= viewport.clientHeight
     } else if (e.key == 'PageDown') {
       viewport.scrollTop += viewport.clientHeight
-    } else if (e.key == 'ArrowLeft' && selectedList.kind === 'folder') {
+    } else if (checkShortcut(e, 'ArrowLeft') && selectedList.kind === 'folder') {
       hideFolder(selectedList.id)
-    } else if (e.key == 'ArrowRight' && selectedList.kind === 'folder') {
+    } else if (checkShortcut(e, 'ArrowRight') && selectedList.kind === 'folder') {
       showFolder(selectedList.id)
-    } else if (e.key == 'ArrowUp') {
+    } else if (checkShortcut(e, 'ArrowUp')) {
       $itemHandle?.arrowUpDown('ArrowUp')
-    } else if (e.key == 'ArrowDown') {
+    } else if (checkShortcut(e, 'ArrowDown')) {
       $itemHandle?.arrowUpDown('ArrowDown')
     } else {
       prevent = false
