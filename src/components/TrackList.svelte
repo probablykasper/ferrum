@@ -24,6 +24,7 @@
   import * as dragGhost from './DragGhost.svelte'
   import { showTrackMenu } from '@/lib/menus'
   import type { TrackID } from 'ferrum-addon'
+  import { modalCount } from './Modal.svelte'
 
   export let onTrackInfo: (allIds: TrackID[], index: number) => void
 
@@ -219,6 +220,21 @@
   $: if ($softRefreshPage && virtualList) {
     virtualList.refresh()
   }
+
+  function electronDragRegion(el: HTMLElement) {
+    const unsubscribe = modalCount.subscribe((count) => {
+      if (count === 0) {
+        el.style.setProperty('-webkit-app-region', 'drag')
+      } else {
+        el.style.setProperty('-webkit-app-region', 'no-drag')
+      }
+    })
+    return {
+      destroy() {
+        unsubscribe()
+      },
+    }
+  }
 </script>
 
 <div
@@ -228,7 +244,7 @@
   class:no-selection={$selection.count === 0}
 >
   <div class="header">
-    <div class="dragbar" />
+    <div class="dragbar" use:electronDragRegion />
     <h3 class="title">
       {#if $page.tracklist.id === 'root'}
         Songs

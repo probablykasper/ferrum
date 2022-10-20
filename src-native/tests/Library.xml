@@ -1,214 +1,333 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
-<dict>
-	<key>Major Version</key><integer>1</integer>
-	<key>Minor Version</key><integer>1</integer>
-	<key>Date</key><date>2022-10-15T10:56:55Z</date>
-	<key>Application Version</key><string>1.0.6.10</string>
-	<key>Features</key><integer>5</integer>
-	<key>Show Content Ratings</key><true/>
-	<key>Music Folder</key><string>file:///Users/k/Music/Music/Media.localized/</string>
-	<key>Library Persistent ID</key><string>9003D1E43533D0C6</string>
-	<key>Tracks</key>
 	<dict>
-		<key>144</key>
+		<key>Major Version</key>
+		<integer>1</integer>
+		<key>Minor Version</key>
+		<integer>1</integer>
+		<key>Date</key>
+		<date>2022-10-15T10:56:55Z</date>
+		<key>Application Version</key>
+		<string>1.0.6.10</string>
+		<key>Features</key>
+		<integer>5</integer>
+		<key>Show Content Ratings</key>
+		<true/>
+		<key>Music Folder</key>
+		<string>file:///Users/k/Music/Music/Media.localized/</string>
+		<key>Library Persistent ID</key>
+		<string>9003D1E43533D0C6</string>
+		<key>Tracks</key>
 		<dict>
-			<key>Track ID</key><integer>144</integer>
-			<key>Name</key><string>Crescendo (feat. MYLK)</string>
-			<key>Artist</key><string>Muzzy</string>
-			<key>Album Artist</key><string>MuzzyAlb</string>
-			<key>Composer</key><string>MrMuzzMan</string>
-			<key>Album</key><string>Some album</string>
-			<key>Grouping</key><string>MonstercatGroup</string>
-			<key>Genre</key><string>Drum &#38; Bass</string>
-			<key>Kind</key><string>Matched AAC audio file</string>
-			<key>Size</key><integer>10573312</integer>
-			<key>Total Time</key><integer>298600</integer>
-			<key>Start Time</key><integer>1000</integer>
-			<key>Stop Time</key><integer>20000</integer>
-			<key>Disc Number</key><integer>2</integer>
-			<key>Disc Count</key><integer>3</integer>
-			<key>Track Number</key><integer>1</integer>
-			<key>Track Count</key><integer>10</integer>
-			<key>Year</key><integer>2016</integer>
-			<key>BPM</key><integer>126</integer>
-			<key>Date Modified</key><date>2022-10-14T07:36:08Z</date>
-			<key>Date Added</key><date>2022-07-25T17:03:37Z</date>
-			<key>Bit Rate</key><integer>256</integer>
-			<key>Sample Rate</key><integer>44100</integer>
-			<key>Volume Adjustment</key><integer>255</integer>
-			<key>Equalizer</key><string>Electronic</string>
-			<key>Comments</key><string>Monstercat</string>
-			<key>Play Count</key><integer>1</integer>
-			<key>Play Date</key><integer>3748677813</integer>
-			<key>Play Date UTC</key><date>2022-10-15T09:23:33Z</date>
-			<key>Skip Count</key><integer>5</integer>
-			<key>Skip Date</key><date>2022-10-11T10:16:59Z</date>
-			<key>Rating</key><integer>60</integer>
-			<key>Album Rating</key><integer>60</integer>
-			<key>Album Rating Computed</key><true/>
-			<key>Loved</key><true/>
-			<key>Normalization</key><integer>11079</integer>
-			<key>Artwork Count</key><integer>1</integer>
-			<key>Sort Album</key><string>B</string>
-			<key>Sort Album Artist</key><string>C</string>
-			<key>Sort Artist</key><string>D</string>
-			<key>Sort Composer</key><string>E</string>
-			<key>Sort Name</key><string>A</string>
-			<key>Persistent ID</key><string>5F7ACC3AEC98302A</string>
-			<key>Track Type</key><string>File</string>
-			<key>Matched</key><true/>
-			<key>Location</key><string>file:///Users/k/Music/Music/Media.localized/MuzzyAlb/Some%20album/2-01%20Crescendo%20(feat.%20MYLK).m4a</string>
-			<key>File Folder Count</key><integer>4</integer>
-			<key>Library Folder Count</key><integer>1</integer>
+			<key>144</key>
+			<dict>
+				<key>Track ID</key>
+				<integer>144</integer>
+				<key>Name</key>
+				<string>Crescendo (feat. MYLK)</string>
+				<key>Artist</key>
+				<string>Muzzy</string>
+				<key>Album Artist</key>
+				<string>MuzzyAlb</string>
+				<key>Composer</key>
+				<string>MrMuzzMan</string>
+				<key>Album</key>
+				<string>Some album</string>
+				<key>Grouping</key>
+				<string>MonstercatGroup</string>
+				<key>Genre</key>
+				<string>Drum &#38; Bass</string>
+				<key>Kind</key>
+				<string>Matched AAC audio file</string>
+				<key>Size</key>
+				<integer>10573312</integer>
+				<key>Total Time</key>
+				<integer>298600</integer>
+				<key>Start Time</key>
+				<integer>1000</integer>
+				<key>Stop Time</key>
+				<integer>20000</integer>
+				<key>Disc Number</key>
+				<integer>2</integer>
+				<key>Disc Count</key>
+				<integer>3</integer>
+				<key>Track Number</key>
+				<integer>1</integer>
+				<key>Track Count</key>
+				<integer>10</integer>
+				<key>Year</key>
+				<integer>2016</integer>
+				<key>BPM</key>
+				<integer>126</integer>
+				<key>Date Modified</key>
+				<date>2022-10-14T07:36:08Z</date>
+				<key>Date Added</key>
+				<date>2022-07-25T17:03:37Z</date>
+				<key>Bit Rate</key>
+				<integer>256</integer>
+				<key>Sample Rate</key>
+				<integer>44100</integer>
+				<key>Volume Adjustment</key>
+				<integer>255</integer>
+				<key>Equalizer</key>
+				<string>Electronic</string>
+				<key>Comments</key>
+				<string>Monstercat</string>
+				<key>Play Count</key>
+				<integer>1</integer>
+				<key>Play Date</key>
+				<integer>3748677813</integer>
+				<key>Play Date UTC</key>
+				<date>2022-10-15T09:23:33Z</date>
+				<key>Skip Count</key>
+				<integer>5</integer>
+				<key>Skip Date</key>
+				<date>2022-10-11T10:16:59Z</date>
+				<key>Rating</key>
+				<integer>60</integer>
+				<key>Album Rating</key>
+				<integer>60</integer>
+				<key>Album Rating Computed</key>
+				<true/>
+				<key>Loved</key>
+				<true/>
+				<key>Normalization</key>
+				<integer>11079</integer>
+				<key>Artwork Count</key>
+				<integer>1</integer>
+				<key>Sort Album</key>
+				<string>B</string>
+				<key>Sort Album Artist</key>
+				<string>C</string>
+				<key>Sort Artist</key>
+				<string>D</string>
+				<key>Sort Composer</key>
+				<string>E</string>
+				<key>Sort Name</key>
+				<string>A</string>
+				<key>Persistent ID</key>
+				<string>5F7ACC3AEC98302A</string>
+				<key>Track Type</key>
+				<string>File</string>
+				<key>Matched</key>
+				<true/>
+				<key>Location</key>
+				<string>file:///Users/k/Music/Music/Media.localized/MuzzyAlb/Some%20album/2-01%20Crescendo%20(feat.%20MYLK).m4a</string>
+				<key>File Folder Count</key>
+				<integer>4</integer>
+				<key>Library Folder Count</key>
+				<integer>1</integer>
+			</dict>
+			<key>350</key>
+			<dict>
+				<key>Track ID</key>
+				<integer>350</integer>
+				<key>Name</key>
+				<string>inhuman</string>
+				<key>Artist</key>
+				<string>ISOxo</string>
+				<key>Kind</key>
+				<string>MPEG audio file</string>
+				<key>Size</key>
+				<integer>8424597</integer>
+				<key>Total Time</key>
+				<integer>197712</integer>
+				<key>Date Modified</key>
+				<date>2022-10-15T10:54:46Z</date>
+				<key>Date Added</key>
+				<date>2022-10-15T10:54:00Z</date>
+				<key>Bit Rate</key>
+				<integer>320</integer>
+				<key>Sample Rate</key>
+				<integer>48000</integer>
+				<key>Volume Adjustment</key>
+				<integer>-255</integer>
+				<key>Artwork Count</key>
+				<integer>1</integer>
+				<key>Persistent ID</key>
+				<string>728BFAEAF7C0C8D7</string>
+				<key>Track Type</key>
+				<string>File</string>
+				<key>Location</key>
+				<string>file:///Users/k/Music/Music/Media.localized/ISOxo/Unknown%20Album/inhuman.mp3</string>
+				<key>File Folder Count</key>
+				<integer>4</integer>
+				<key>Library Folder Count</key>
+				<integer>1</integer>
+			</dict>
 		</dict>
-		<key>350</key>
-		<dict>
-			<key>Track ID</key><integer>350</integer>
-			<key>Name</key><string>inhuman</string>
-			<key>Artist</key><string>ISOxo</string>
-			<key>Kind</key><string>MPEG audio file</string>
-			<key>Size</key><integer>8424597</integer>
-			<key>Total Time</key><integer>197712</integer>
-			<key>Date Modified</key><date>2022-10-15T10:54:46Z</date>
-			<key>Date Added</key><date>2022-10-15T10:54:00Z</date>
-			<key>Bit Rate</key><integer>320</integer>
-			<key>Sample Rate</key><integer>48000</integer>
-			<key>Volume Adjustment</key><integer>-255</integer>
-			<key>Artwork Count</key><integer>1</integer>
-			<key>Persistent ID</key><string>728BFAEAF7C0C8D7</string>
-			<key>Track Type</key><string>File</string>
-			<key>Location</key><string>file:///Users/k/Music/Music/Media.localized/ISOxo/Unknown%20Album/inhuman.mp3</string>
-			<key>File Folder Count</key><integer>4</integer>
-			<key>Library Folder Count</key><integer>1</integer>
-		</dict>
+		<key>Playlists</key>
+		<array>
+			<dict>
+				<key>Name</key>
+				<string>Library</string>
+				<key>Description</key>
+				<string></string>
+				<key>Master</key>
+				<true/>
+				<key>Playlist ID</key>
+				<integer>64</integer>
+				<key>Playlist Persistent ID</key>
+				<string>0000000000000005</string>
+				<key>Visible</key>
+				<false/>
+				<key>All Items</key>
+				<true/>
+				<key>Playlist Items</key>
+				<array>
+					<dict>
+						<key>Track ID</key>
+						<integer>144</integer>
+					</dict>
+					<dict>
+						<key>Track ID</key>
+						<integer>350</integer>
+					</dict>
+				</array>
+			</dict>
+			<dict>
+				<key>Name</key>
+				<string>Downloaded</string>
+				<key>Description</key>
+				<string></string>
+				<key>Playlist ID</key>
+				<integer>147</integer>
+				<key>Playlist Persistent ID</key>
+				<string>533817C18A096868</string>
+				<key>Distinguished Kind</key>
+				<integer>65</integer>
+				<key>All Items</key>
+				<true/>
+				<key>Playlist Items</key>
+				<array>
+					<dict>
+						<key>Track ID</key>
+						<integer>144</integer>
+					</dict>
+					<dict>
+						<key>Track ID</key>
+						<integer>350</integer>
+					</dict>
+				</array>
+			</dict>
+			<dict>
+				<key>Name</key>
+				<string>Music</string>
+				<key>Description</key>
+				<string></string>
+				<key>Playlist ID</key>
+				<integer>151</integer>
+				<key>Playlist Persistent ID</key>
+				<string>D613EC438867A085</string>
+				<key>Distinguished Kind</key>
+				<integer>4</integer>
+				<key>Music</key>
+				<true/>
+				<key>All Items</key>
+				<true/>
+				<key>Playlist Items</key>
+				<array>
+					<dict>
+						<key>Track ID</key>
+						<integer>144</integer>
+					</dict>
+					<dict>
+						<key>Track ID</key>
+						<integer>350</integer>
+					</dict>
+				</array>
+			</dict>
+			<dict>
+				<key>Name</key>
+				<string>cool</string>
+				<key>Description</key>
+				<string></string>
+				<key>Playlist ID</key>
+				<integer>161</integer>
+				<key>Playlist Persistent ID</key>
+				<string>1176ABF0C527C1D4</string>
+				<key>All Items</key>
+				<true/>
+				<key>Folder</key>
+				<true/>
+				<key>Playlist Items</key>
+				<array>
+					<dict>
+						<key>Track ID</key>
+						<integer>144</integer>
+					</dict>
+				</array>
+			</dict>
+			<dict>
+				<key>Name</key>
+				<string>k</string>
+				<key>Description</key>
+				<string>sample text</string>
+				<key>Playlist ID</key>
+				<integer>165</integer>
+				<key>Playlist Persistent ID</key>
+				<string>BC4E3B8BEF50A180</string>
+				<key>Parent Persistent ID</key>
+				<string>1176ABF0C527C1D4</string>
+				<key>All Items</key>
+				<true/>
+				<key>Playlist Items</key>
+				<array>
+					<dict>
+						<key>Track ID</key>
+						<integer>144</integer>
+					</dict>
+				</array>
+			</dict>
+			<dict>
+				<key>Name</key>
+				<string>MySmartPlaylist</string>
+				<key>Description</key>
+				<string></string>
+				<key>Playlist ID</key>
+				<integer>169</integer>
+				<key>Playlist Persistent ID</key>
+				<string>C7121C245F83DF41</string>
+				<key>All Items</key>
+				<true/>
+				<key>Smart Info</key>
+				<data> AQEBAwAAAAIAAAAZAAAAAAAAAAcAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA AAAAAA==
+				</data>
+				<key>Smart Criteria</key>
+				<data> U0xzdAABAAEAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQBAAACAAAAAAAAAAAAAAAAAAAAAAAA AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAE0=
+				</data>
+				<key>Playlist Items</key>
+				<array>
+					<dict>
+						<key>Track ID</key>
+						<integer>144</integer>
+					</dict>
+				</array>
+			</dict>
+			<dict>
+				<key>Name</key>
+				<string>xplaylist</string>
+				<key>Description</key>
+				<string></string>
+				<key>Playlist ID</key>
+				<integer>173</integer>
+				<key>Playlist Persistent ID</key>
+				<string>E718DE8281D556DC</string>
+				<key>All Items</key>
+				<true/>
+				<key>Playlist Items</key>
+				<array>
+					<dict>
+						<key>Track ID</key>
+						<integer>144</integer>
+					</dict>
+					<dict>
+						<key>Track ID</key>
+						<integer>144</integer>
+					</dict>
+				</array>
+			</dict>
+		</array>
 	</dict>
-	<key>Playlists</key>
-	<array>
-		<dict>
-			<key>Name</key><string>Library</string>
-			<key>Description</key><string></string>
-			<key>Master</key><true/>
-			<key>Playlist ID</key><integer>64</integer>
-			<key>Playlist Persistent ID</key><string>0000000000000005</string>
-			<key>Visible</key><false/>
-			<key>All Items</key><true/>
-			<key>Playlist Items</key>
-			<array>
-				<dict>
-					<key>Track ID</key><integer>144</integer>
-				</dict>
-				<dict>
-					<key>Track ID</key><integer>350</integer>
-				</dict>
-			</array>
-		</dict>
-		<dict>
-			<key>Name</key><string>Downloaded</string>
-			<key>Description</key><string></string>
-			<key>Playlist ID</key><integer>147</integer>
-			<key>Playlist Persistent ID</key><string>533817C18A096868</string>
-			<key>Distinguished Kind</key><integer>65</integer>
-			<key>All Items</key><true/>
-			<key>Playlist Items</key>
-			<array>
-				<dict>
-					<key>Track ID</key><integer>144</integer>
-				</dict>
-				<dict>
-					<key>Track ID</key><integer>350</integer>
-				</dict>
-			</array>
-		</dict>
-		<dict>
-			<key>Name</key><string>Music</string>
-			<key>Description</key><string></string>
-			<key>Playlist ID</key><integer>151</integer>
-			<key>Playlist Persistent ID</key><string>D613EC438867A085</string>
-			<key>Distinguished Kind</key><integer>4</integer>
-			<key>Music</key><true/>
-			<key>All Items</key><true/>
-			<key>Playlist Items</key>
-			<array>
-				<dict>
-					<key>Track ID</key><integer>144</integer>
-				</dict>
-				<dict>
-					<key>Track ID</key><integer>350</integer>
-				</dict>
-			</array>
-		</dict>
-		<dict>
-			<key>Name</key><string>cool</string>
-			<key>Description</key><string></string>
-			<key>Playlist ID</key><integer>161</integer>
-			<key>Playlist Persistent ID</key><string>1176ABF0C527C1D4</string>
-			<key>All Items</key><true/>
-			<key>Folder</key><true/>
-			<key>Playlist Items</key>
-			<array>
-				<dict>
-					<key>Track ID</key><integer>144</integer>
-				</dict>
-			</array>
-		</dict>
-		<dict>
-			<key>Name</key><string>k</string>
-			<key>Description</key><string>sample text</string>
-			<key>Playlist ID</key><integer>165</integer>
-			<key>Playlist Persistent ID</key><string>BC4E3B8BEF50A180</string>
-			<key>Parent Persistent ID</key><string>1176ABF0C527C1D4</string>
-			<key>All Items</key><true/>
-			<key>Playlist Items</key>
-			<array>
-				<dict>
-					<key>Track ID</key><integer>144</integer>
-				</dict>
-			</array>
-		</dict>
-		<dict>
-			<key>Name</key><string>MySmartPlaylist</string>
-			<key>Description</key><string></string>
-			<key>Playlist ID</key><integer>169</integer>
-			<key>Playlist Persistent ID</key><string>C7121C245F83DF41</string>
-			<key>All Items</key><true/>
-			<key>Smart Info</key>
-			<data>
-			AQEBAwAAAAIAAAAZAAAAAAAAAAcAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-			AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-			AAAAAA==
-			</data>
-			<key>Smart Criteria</key>
-			<data>
-			U0xzdAABAAEAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-			AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-			AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQBAAACAAAAAAAAAAAAAAAAAAAAAAAA
-			AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAE0=
-			</data>
-			<key>Playlist Items</key>
-			<array>
-				<dict>
-					<key>Track ID</key><integer>144</integer>
-				</dict>
-			</array>
-		</dict>
-		<dict>
-			<key>Name</key><string>x</string>
-			<key>Description</key><string></string>
-			<key>Playlist ID</key><integer>173</integer>
-			<key>Playlist Persistent ID</key><string>E718DE8281D556DC</string>
-			<key>All Items</key><true/>
-			<key>Playlist Items</key>
-			<array>
-				<dict>
-					<key>Track ID</key><integer>144</integer>
-				</dict>
-				<dict>
-					<key>Track ID</key><integer>144</integer>
-				</dict>
-			</array>
-		</dict>
-	</array>
-</dict>
 </plist>

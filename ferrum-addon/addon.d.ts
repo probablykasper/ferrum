@@ -18,9 +18,11 @@ export interface ImportStatus {
   tracksCount: number
   playlistsCount: number
 }
-export function import_itunes(path: string, tracksDir: string): Promise<ImportStatus>
 export function copyFile(from: string, to: string): void
 export function atomicFileSave(filePath: string, content: string): void
+export const enum Version {
+  V1 = 1
+}
 export interface Track {
   size: number
   duration: number
@@ -169,3 +171,8 @@ export function set_image(index: number, pathStr: string): void
 export function set_image_data(index: number, bytes: JsArrayBuffer, mimeType: string): void
 export function remove_image(index: number): void
 export function update_track_info(trackId: string, info: TrackMd): void
+export class ItunesImport {
+  static new(): ItunesImport
+  start(path: string, tracksDir: string): Promise<ImportStatus>
+  finish(): void
+}

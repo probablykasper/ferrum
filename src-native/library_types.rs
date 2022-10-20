@@ -7,7 +7,7 @@ use napi::bindgen_prelude::ToNapiValue;
 use serde::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(deny_unknown_fields)]
 pub struct Library {
   pub version: Version,
@@ -88,6 +88,15 @@ impl Library {
     let tracklist = self.trackLists.get_mut(id);
     Ok(tracklist.ok_or("Playlist ID not found")?)
   }
+  pub fn get_root_tracklist_mut(&mut self) -> UniResult<&mut Special> {
+    let tracklist = self.trackLists.get_mut("root");
+    match tracklist {
+      Some(TrackList::Special(special)) => match special.name {
+        SpecialTrackListName::Root => Ok(special),
+      },
+      _ => throw!("Root playlist not found"),
+    }
+  }
   // pub fn get_parent_id(&self, id: &str) -> Option<String> {
   //   for (parent_id, tracklist) in &self.trackLists {
   //     let children = match tracklist {
@@ -114,6 +123,7 @@ pub type TrackLists = LinkedHashMap<TrackListID, TrackList>;
 
 #[derive(Serialize_repr, Deserialize_repr, Debug)]
 #[repr(u8)]
+#[napi]
 pub enum Version {
   V1 = 1,
 }

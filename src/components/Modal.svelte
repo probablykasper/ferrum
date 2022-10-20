@@ -12,6 +12,7 @@
   export let cancelOnEscape = false
   export let form: (() => void) | undefined = undefined
   $: tag = form === undefined ? 'div' : 'form'
+  export let title: string | null = null
 
   $modalCount += 1
   onDestroy(() => {
@@ -94,6 +95,9 @@
     tabindex="-1"
     on:keydown|self={boxKeydown}
   >
+    {#if title !== null}
+      <h3>{title}</h3>
+    {/if}
     <slot {focus} />
     {#if $$slots.buttons}
       <div class="buttons">
@@ -107,6 +111,8 @@
   .backdrop
     background-color: rgba(#000000, 0.5)
     outline: none
+  h3
+    margin-bottom: 15px
   .backdrop, .container
     position: fixed
     user-select: text

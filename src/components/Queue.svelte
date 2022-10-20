@@ -280,10 +280,8 @@
     align-items: center
     padding: 0px 10px
     box-sizing: border-box
-  h4.row
-    font-weight: 600
+  h4
     padding-left: 18px
-    margin: 0px
   .drag-line
     position: absolute
     width: 100%

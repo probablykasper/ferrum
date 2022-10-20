@@ -1,11 +1,13 @@
+use crate::data_js::get_data;
 use crate::get_now_timestamp;
 use crate::library_types::{CountObject, Folder, Library, Playlist, Track, TrackList};
 use crate::tracks::generate_filename;
 use crate::tracks::import::{read_file_metadata, FileType};
 use lofty::AudioFile;
-use napi::Result;
+use napi::{Env, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::fs;
 use std::path::{Path, PathBuf};
 use time::serde::iso8601;
 use time::serde::iso8601::option as iso8601_opt;
@@ -320,7 +322,11 @@ fn parse_file_url(value: &str) -> Result<PathBuf> {
 }
 
 /// Parses track but does not move it to `tracks_dir`
-fn parse_track(xml_track: XmlTrack, start_time: i64, tracks_dir: &Path) -> Result<Track> {
+fn parse_track(
+  xml_track: XmlTrack,
+  start_time: i64,
+  tracks_dir: &Path,
+) -> Result<(PathBuf, Track)> {
   let xml_location = match xml_track.location {
     Some(ref location) => location,
     None => throw!("Missing track location"),
@@ -434,7 +440,7 @@ fn parse_track(xml_track: XmlTrack, start_time: i64, tracks_dir: &Path) -> Resul
     },
   };
 
-  Ok(track)
+  Ok((xml_track_path, track))
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -577,14 +583,54 @@ fn import_playlist(
 #[napi(object)]
 pub struct ImportStatus {
   pub errors: Vec<String>,
-  pub tracks_count: u32,
-  pub playlists_count: u32,
+  pub tracks_count: i64,
+  pub playlists_count: i64,
 }
 
-#[napi(js_name = "import_itunes")]
-#[allow(dead_code)]
-pub async fn import_itunes(path: String, tracks_dir: String) -> Result<ImportStatus> {
-  let mut library = Library::new();
+#[napi]
+pub struct ItunesImport {
+  new_library: Option<Library>,
+  /// iTunes path -> Ferrum file
+  itunes_track_paths: HashMap<PathBuf, String>,
+}
+#[napi]
+impl ItunesImport {
+  #[napi(factory)]
+  pub fn new(env: Env) -> Result<Self> {
+    let data = get_data(&env)?;
+    Ok(Self {
+      new_library: Some(data.library.clone()),
+      itunes_track_paths: HashMap::new(),
+    })
+  }
+  #[napi]
+  pub async fn start(&mut self, path: String, tracks_dir: String) -> Result<ImportStatus> {
+    import_itunes(self, path, tracks_dir).await
+  }
+  #[napi]
+  pub fn finish(&mut self, env: Env) -> Result<()> {
+    let mut data = get_data(&env)?;
+    for (itunes_path, ferrum_file) in &self.itunes_track_paths {
+      let new_path = data.paths.tracks_dir.join(ferrum_file);
+      fs::copy(itunes_path, new_path).or(Err(nerr!("Error copying file")))?;
+    }
+    data.library = self.new_library.take().ok_or(nerr!("Not initialized"))?;
+    Ok(())
+  }
+}
+
+pub async fn import_itunes(
+  itunes_import: &mut ItunesImport,
+  path: String,
+  tracks_dir: String,
+) -> Result<ImportStatus> {
+  let mut library = match &mut itunes_import.new_library {
+    Some(library) => library,
+    None => throw!("Not initialized"),
+  };
+  let itunes_track_paths = &mut itunes_import.itunes_track_paths;
+  let original_tracks_count = library.tracks.len();
+  let original_tracklists_count = library.trackLists.len();
   let xml_lib: XmlLibrary = match plist::from_file(path) {
     Ok(book) => book,
     Err(e) => throw!("Unable to parse: {e}"),
@@ -626,9 +672,10 @@ pub async fn import_itunes(path: String, tracks_dir: String) -> Result<ImportSta
     }
 
     match parse_track(xml_track, start_time, Path::new(&tracks_dir)) {
-      Ok(track) => {
+      Ok((xml_track_path, track)) => {
         let generated_id = library.generate_id();
         // immediately insert into library so new generated ids are unique
+        itunes_track_paths.insert(xml_track_path, track.file.clone());
         library.tracks.insert(generated_id.clone(), track);
         if xml_track_id_map.contains_key(&xml_id) {
           errors.push(format!("[{artist_title}] Duplicate track ids {}", xml_id));
@@ -702,7 +749,7 @@ pub async fn import_itunes(path: String, tracks_dir: String) -> Result<ImportSta
 
   // recursively import playlists
   for i in root_child_indexes {
-    import_playlist(
+    let playlist_id = import_playlist(
       &xml_playlist_infos,
       i,
       &mut library,
@@ -710,12 +757,14 @@ pub async fn import_itunes(path: String, tracks_dir: String) -> Result<ImportSta
       &mut errors,
       &xml_track_id_map,
     );
+    let root = library.get_root_tracklist_mut()?;
+    root.children.push(playlist_id);
   }
 
   Ok(ImportStatus {
     errors,
-    tracks_count: library.tracks.len() as u32,
-    playlists_count: library.trackLists.len() as u32,
+    tracks_count: (library.tracks.len() - original_tracks_count) as i64,
+    playlists_count: (library.trackLists.len() - original_tracklists_count) as i64,
   })
 }
 

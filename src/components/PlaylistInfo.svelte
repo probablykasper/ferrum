@@ -37,19 +37,20 @@
 
 <svelte:window on:keydown={keydown} />
 
-<Modal onCancel={cancel} let:focus form={save} on:keydown={formKeydown}>
+<Modal
+  onCancel={cancel}
+  let:focus
+  form={save}
+  on:keydown={formKeydown}
+  title={(info.editMode ? 'Edit' : 'New') + ' Playlist' + (info.isFolder ? ' Folder' : '')}
+>
   <main>
-    <h3>
-      {info.editMode ? 'Edit' : 'New'} Playlist {#if info.isFolder}Folder{/if}
-    </h3>
-    <div class="spacer" />
     <input type="text" bind:value={info.name} placeholder="Title" use:focus />
     <textarea
       rows={rows(info.description)}
       bind:value={info.description}
       placeholder="Description"
     />
-    <div class="spacer" />
   </main>
   <svelte:fragment slot="buttons">
     <Button secondary on:click={cancel}>Cancel</Button>
@@ -62,8 +63,7 @@
     display: flex
     flex-direction: column
     background-color: inherit
-  .spacer
-    height: 15px
+    margin-bottom: 15px
   input, textarea
     resize: none
     width: 300px

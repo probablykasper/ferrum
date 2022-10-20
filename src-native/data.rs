@@ -61,7 +61,10 @@ impl Data {
   }
   pub fn load(is_dev: bool) -> UniResult<Data> {
     let paths = if is_dev {
-      let appdata_dir = env::current_dir().unwrap().join("appdata");
+      let appdata_dir = env::current_dir()
+        .unwrap()
+        .join("src-native")
+        .join("appdata");
       let library_dir = appdata_dir.join("Library");
       Paths {
         library_dir: library_dir.clone(),

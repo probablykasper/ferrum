@@ -23,6 +23,7 @@
     position: relative
     outline: none
     z-index: 1
+    user-select: none
     &::before
       content: ''
       position: absolute

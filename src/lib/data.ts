@@ -6,6 +6,7 @@ export const isDev = window.isDev
 export const isMac = window.isMac
 export const isWindows = window.isWindows
 const innerAddon = window.addon
+export const ItunesImport = innerAddon.ItunesImport
 
 call((addon) => addon.load_data(isDev))
 
@@ -29,16 +30,27 @@ function getErrorStack(err: unknown): string {
   }
   return ''
 }
+function errorPopup(err: unknown) {
+  ipcRenderer.invoke('showMessageBox', false, {
+    type: 'error',
+    message: getErrorMessage(err),
+    detail: getErrorStack(err),
+  })
+}
 
-export function call<T>(cb: (addon: typeof innerAddon) => T): T {
+export function call<T, P extends T | Promise<T>>(cb: (addon: typeof innerAddon) => P): P {
   try {
-    return cb(innerAddon)
+    const result = cb(innerAddon)
+    if (result instanceof Promise) {
+      return result.catch((err) => {
+        errorPopup(err)
+        throw err
+      }) as P
+    } else {
+      return result
+    }
   } catch (err) {
-    ipcRenderer.invoke('showMessageBox', false, {
-      type: 'error',
-      message: getErrorMessage(err),
-      detail: getErrorStack(err),
-    })
+    errorPopup(err)
     throw err
   }
 }
@@ -121,9 +133,6 @@ export function movePlaylist(id: TrackListID, fromParent: TrackListID, toParent:
   call((addon) => addon.move_playlist(id, fromParent, toParent))
   methods.save()
   trackLists.refreshTrackIdList()
-}
-export function importItunes(path: string) {
-  return call((addon) => addon.import_itunes(path, paths.tracksDir))
 }
 
 export const paths = call((addon) => addon.get_paths())

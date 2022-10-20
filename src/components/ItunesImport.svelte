@@ -1,43 +1,57 @@
 <script lang="ts">
-  import { importItunes } from '@/lib/data'
+  import { ItunesImport, paths, call, methods, page, trackLists } from '@/lib/data'
   import { ipcRenderer } from '@/lib/window'
   import type { ImportStatus } from 'ferrum-addon/addon'
   import Button from './Button.svelte'
   import Modal from './Modal.svelte'
 
   export let cancel: () => void
-  let filePath = ''
-  let locked = false
-  let status: ImportStatus | null = null
+  let itunesImport = ItunesImport.new()
+
+  type Stage = 'select' | 'fileSelect' | 'scanning' | ImportStatus
+  let stage: Stage = 'select'
 
   function cancelHandler() {
-    if (!locked) {
-      cancel()
+    if (stage === 'fileSelect' || stage === 'scanning') {
+      return
     }
+    cancel()
   }
 
   async function selectFile() {
-    locked = true
+    stage = 'fileSelect'
     const open = await ipcRenderer.invoke('showOpenDialog', true, {
       properties: ['openFile'],
-      // filters: [{ name: 'Audio', extensions: ['mp3', 'm4a', 'opus'] }],
+      filters: [{ name: 'iTunes Library File', extensions: ['xml'] }],
     })
     if (!open.canceled && open.filePaths[0]) {
-      filePath = open.filePaths[0]
-      try {
-        status = await importItunes(filePath)
-      } catch (e) {
-        console.error(e)
-      }
+      stage = 'scanning'
+      const filePath = open.filePaths[0]
+      stage = await call(() => itunesImport.start(filePath, paths.tracksDir))
+      console.log(stage)
+    } else {
+      stage = 'select'
     }
-    locked = false
+  }
+  async function finish() {
+    itunesImport.finish()
+    methods.save()
+    page.refresh()
+    trackLists.refreshTrackIdList()
+    cancel()
+  }
+  async function submit() {
+    if (stage === 'select') {
+      selectFile()
+    } else if (typeof stage === 'object' && 'tracksCount' in stage) {
+      finish()
+    }
   }
 </script>
 
-<Modal onCancel={cancelHandler} cancelOnEscape form={selectFile}>
+<Modal onCancel={cancelHandler} cancelOnEscape form={submit} title="Import iTunes Library">
   <main>
-    {#if filePath === ''}
-      <h3>Import iTunes Library</h3>
+    {#if stage === 'select' || stage === 'fileSelect'}
       <p>
         Select an iTunes <strong>Library.xml</strong> file. To get that file, open iTunes and click
         on
@@ -62,28 +76,43 @@
         <Button secondary on:click={cancelHandler}>Cancel</Button>
         <Button type="submit">Select File</Button>
       </div>
-    {:else if status}
-      <div class="error-box">
-        <h4>Errors</h4>
-        {#each status.errors as error}
-          <p>{error}</p>
-        {/each}
-      </div>
-      <p>Playlists: {status.playlistsCount}</p>
-      <p>Tracks: {status.tracksCount}</p>
-    {:else if locked}
+    {:else if stage === 'scanning'}
       Scanning...
-    {:else}
-      Done
+    {:else if 'tracksCount' in stage}
+      {#if stage.errors.length > 0}
+        <div class="error-box">
+          <h4>{stage.errors.length} Errors</h4>
+          {#each stage.errors as error}
+            <p>{error}</p>
+          {/each}
+        </div>
+        <p>The following will be imported:</p>
+      {:else}
+        <p>Success, no errors! The following will be imported:</p>
+      {/if}
+      <ul>
+        <li>Playlists: {stage.playlistsCount}</li>
+        <li>Tracks: {stage.tracksCount}</li>
+      </ul>
+      <div class="buttons">
+        <Button secondary on:click={cancelHandler}>Cancel</Button>
+        <Button type="submit">Continue</Button>
+      </div>
     {/if}
   </main>
 </Modal>
 
 <style lang="sass">
   main
-    font-size: 0.95rem
     width: 530px
     line-height: 1.5
+    display: flex
+    flex-direction: column
+  p, ul
+    font-size: 0.95rem
+    margin-top: 0px
+  h4
+    margin-block: 1em
   strong
     font-weight: normal
     background-color: hsl(0, 0%, 100%, 0.1)
@@ -95,6 +124,15 @@
     border: 1px solid hsl(0, 100%, 49%)
     border-radius: 5px
     padding: 0px 10px
+    max-height: 500px
+    overflow-y: scroll
+    margin-bottom: 15px
+  @media screen and (max-height: 800px)
+    .error-box
+      max-height: calc(100vh - 280px)
+  @media screen and (max-height: 400px)
+    .error-box
+      max-height: 150px
   .buttons
     display: flex
     justify-content: flex-end

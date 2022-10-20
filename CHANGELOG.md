@@ -3,6 +3,8 @@
 ## Next
 - Add drag-and-drop, selection and context menus in queue panel
 - Add warning when adding duplicate songs to a playlist
+- Rewritten iTunes import, should be much more reliabile
+- iTunes import no longer overwrites the existing library
 - Scroll sidebar to opened playlist
 - Improve queue panel performance
 - Don't clear selection unnecessarily

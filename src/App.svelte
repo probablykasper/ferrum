@@ -95,7 +95,7 @@
     }
   }
 
-  let showItunesImport = true
+  let showItunesImport = false
   onDestroy(
     ipcListen('itunesImport', () => {
       if ($modalCount === 0) {
@@ -212,6 +212,9 @@
     user-select: none
   :global(h1), :global(h2), :global(h3)
     font-weight: 400
+    margin: 0px
+  :global(h4), :global(h5), :global(h6)
+    font-weight: 600
     margin: 0px
   .dropzone, .drag-overlay
     position: fixed
