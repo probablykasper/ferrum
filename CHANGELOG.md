@@ -13,6 +13,7 @@
 - Don't clear selection unnecessarily
 - Reload file when updating the currently playing song's info
 - Require focus when using Song menubar
+- Fix `Song > Delete from Library` menu
 - Fix incorrect handling of macOS `Ctrl+click` context menu
 - Fix sidebar icons showing over dialogs
 - Fix playlist liked/disliked types

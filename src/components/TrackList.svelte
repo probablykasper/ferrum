@@ -28,10 +28,10 @@
       return
     }
     if (action === 'Play Next') {
-      const ids = indexes.map((i) => page.getTrackId(i))
+      const ids = selection.getSelectedIndexes().map((i) => page.getTrackId(i))
       prependToUserQueue(ids)
     } else if (action === 'Add to Queue') {
-      const ids = indexes.map((i) => page.getTrackId(i))
+      const ids = selection.getSelectedIndexes().map((i) => page.getTrackId(i))
       appendToUserQueue(ids)
     } else if (action === 'Get Info') {
       onTrackInfo(page.getTrackIds(), firstIndex)
@@ -39,9 +39,9 @@
       const track = page.getTrack(firstIndex)
       ipcRenderer.invoke('revealTrackFile', paths.tracksDir, track.file)
     } else if (action === 'Remove from Playlist') {
-      removeFromOpenPlaylist(indexes)
+      removeFromOpenPlaylist(selection.getSelectedIndexes())
     } else if (action === 'Delete from Library') {
-      deleteTracksInOpen(indexes)
+      deleteIndexes(selection.getSelectedIndexes())
     } else {
       assertUnreachable(action)
     }
@@ -58,6 +58,18 @@
   function doubleClick(e: MouseEvent, index: number) {
     if (e.button === 0 && checkMouseShortcut(e)) {
       playRow(index)
+    }
+  }
+  async function deleteIndexes(indexes: number[]) {
+    const s = $selection.count > 1 ? 's' : ''
+    const result = await ipcRenderer.invoke('showMessageBox', false, {
+      type: 'info',
+      message: `Delete ${$selection.count} song${s} from library?`,
+      buttons: [`Delete Song${s}`, 'Cancel'],
+      defaultId: 0,
+    })
+    if (result.response === 0) {
+      deleteTracksInOpen(indexes)
     }
   }
   async function keydown(e: KeyboardEvent) {
@@ -82,33 +94,13 @@
         buttons: ['Remove Song' + s, 'Cancel'],
         defaultId: 0,
       })
-      const indexes = []
-      for (let i = 0; i < $selection.list.length; i++) {
-        if ($selection.list[i]) {
-          indexes.push(i)
-        }
-      }
+      const indexes = selection.getSelectedIndexes()
       if ((await result).response === 0) {
         removeFromOpenPlaylist(indexes)
       }
     } else if (checkShortcut(e, 'Backspace', { cmdOrCtrl: true }) && $selection.count > 0) {
       e.preventDefault()
-      const s = $selection.count > 1 ? 's' : ''
-      const result = ipcRenderer.invoke('showMessageBox', false, {
-        type: 'info',
-        message: `Delete ${$selection.count} song${s} from library?`,
-        buttons: [`Delete Song${s}`, 'Cancel'],
-        defaultId: 0,
-      })
-      const indexes = []
-      for (let i = 0; i < $selection.list.length; i++) {
-        if ($selection.list[i]) {
-          indexes.push(i)
-        }
-      }
-      if ((await result).response === 0) {
-        deleteTracksInOpen(indexes)
-      }
+      deleteIndexes(selection.getSelectedIndexes())
     } else {
       selection.handleKeyDown(e)
       return
@@ -121,25 +113,25 @@
   }
 
   let dragLine: HTMLElement
-  let indexes: number[] = []
+  let dragIndexes: number[] = []
   function onDragStart(e: DragEvent) {
     if (e.dataTransfer) {
-      indexes = []
+      dragIndexes = []
       for (let i = 0; i < $selection.list.length; i++) {
         if ($selection.list[i]) {
-          indexes.push(i)
+          dragIndexes.push(i)
         }
       }
       e.dataTransfer.effectAllowed = 'move'
-      if (indexes.length === 1) {
-        const track = page.getTrack(indexes[0])
+      if (dragIndexes.length === 1) {
+        const track = page.getTrack(dragIndexes[0])
         dragGhost.setInnerText(track.artist + ' - ' + track.name)
       } else {
-        dragGhost.setInnerText(indexes.length + ' items')
+        dragGhost.setInnerText(dragIndexes.length + ' items')
       }
       dragged.tracks = {
-        ids: indexes.map((i) => page.getTrackId(i)),
-        playlistIndexes: indexes,
+        ids: dragIndexes.map((i) => page.getTrackId(i)),
+        playlistIndexes: dragIndexes,
       }
       e.dataTransfer.setDragImage(dragGhost.dragEl, 0, 0)
       e.dataTransfer.setData('ferrum.tracks', '')
@@ -174,7 +166,7 @@
   }
   async function dropHandler() {
     if (dragToIndex !== null) {
-      page.moveTracks(indexes, dragToIndex)
+      page.moveTracks(dragIndexes, dragToIndex)
       dragToIndex = null
     }
   }

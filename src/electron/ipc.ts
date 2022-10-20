@@ -94,6 +94,10 @@ ipcMain.handle('showTracklistMenu', (e, args) => {
       label: 'Edit Details',
       click: () => e.sender.send('context.playlist.edit', args.id),
     },
+    {
+      label: args.isFolder ? 'Delete Folder' : 'Delete Playlist',
+      click: () => e.sender.send('context.playlist.delete', args.id),
+    },
   ]
   const newMenu = [
     {
