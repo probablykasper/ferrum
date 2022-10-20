@@ -19,7 +19,7 @@
   import { newSelection } from '../lib/selection'
   import { appendToUserQueue, prependToUserQueue } from '../lib/queue'
   import { ipcListen, ipcRenderer } from '../lib/window'
-  import { onDestroy } from 'svelte'
+  import { onDestroy, tick } from 'svelte'
   import { dragged } from '../lib/drag-drop'
   import * as dragGhost from './DragGhost.svelte'
   import { showTrackMenu } from '@/lib/menus'
@@ -186,9 +186,10 @@
       }
     }
   }
-  function dropHandler() {
+  async function dropHandler() {
     if (dragToIndex !== null) {
       const newSelection = page.moveTracks(indexes, dragToIndex)
+      await tick()
       for (let i = newSelection.from; i <= newSelection.to; i++) {
         selection.add(i)
       }
