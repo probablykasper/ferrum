@@ -306,3 +306,10 @@ pub struct Special {
 pub enum SpecialTrackListName {
   Root,
 }
+impl ToString for SpecialTrackListName {
+  fn to_string(&self) -> String {
+    match self {
+      SpecialTrackListName::Root => "Root".to_owned(),
+    }
+  }
+}

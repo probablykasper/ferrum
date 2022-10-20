@@ -1,9 +1,10 @@
 <script lang="ts">
-  import { ItunesImport, paths, call, methods, page, trackLists } from '@/lib/data'
+  import { ItunesImport, paths, call, methods, page, trackListsDetailsMap } from '@/lib/data'
   import { ipcRenderer } from '@/lib/window'
   import type { ImportStatus } from 'ferrum-addon/addon'
   import Button from './Button.svelte'
   import Modal from './Modal.svelte'
+  import { selection as pageSelection } from '@/lib/page'
 
   export let cancel: () => void
   let itunesImport = ItunesImport.new()
@@ -28,7 +29,6 @@
       stage = 'scanning'
       const filePath = open.filePaths[0]
       stage = await call(() => itunesImport.start(filePath, paths.tracksDir))
-      console.log(stage)
     } else {
       stage = 'select'
     }
@@ -36,8 +36,9 @@
   async function finish() {
     itunesImport.finish()
     methods.save()
-    page.refresh()
-    trackLists.refreshTrackIdList()
+    page.refreshIdsAndKeepSelection()
+    pageSelection.clear()
+    trackListsDetailsMap.refresh()
     cancel()
   }
   async function submit() {

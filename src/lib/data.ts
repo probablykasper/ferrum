@@ -1,6 +1,7 @@
 import { writable } from 'svelte/store'
 import { ipcRenderer } from '@/lib/window'
 import type { MsSinceUnixEpoch, TrackID, TrackListID, TrackMd } from 'ferrum-addon'
+import { selection as pageSelection } from './page'
 
 export const isDev = window.isDev
 export const isMac = window.isMac
@@ -55,13 +56,14 @@ export function call<T, P extends T | Promise<T>>(cb: (addon: typeof innerAddon)
   }
 }
 
-export const trackLists = (() => {
-  const initial = call((addon) => addon.get_track_lists())
+export const trackListsDetailsMap = (() => {
+  const initial = call((addon) => addon.get_track_lists_details())
+
   const { subscribe, set } = writable(initial)
   return {
     subscribe,
-    refreshTrackIdList() {
-      set(call((addon) => addon.get_track_lists()))
+    refresh() {
+      set(call((addon) => addon.get_track_lists_details()))
     },
   }
 })()
@@ -95,19 +97,21 @@ export async function addTracksToPlaylist(
   if (trackIds.length >= 1) {
     call((addon) => addon.add_tracks_to_playlist(playlistId, trackIds))
     if (page.get().tracklist.id === playlistId) {
-      page.refresh()
+      page.refreshIdsAndKeepSelection()
     }
     methods.save()
   }
 }
 export function removeFromOpenPlaylist(indexes: number[]) {
   call((addon) => addon.remove_from_open_playlist(indexes))
-  page.refresh()
+  page.refreshIdsAndKeepSelection()
+  pageSelection.clear()
   methods.save()
 }
 export function deleteTracksInOpen(indexes: number[]) {
   call((addon) => addon.delete_tracks_in_open(indexes))
-  page.refresh()
+  page.refreshIdsAndKeepSelection()
+  pageSelection.clear()
   methods.save()
 }
 export type PlaylistInfo = {
@@ -121,18 +125,18 @@ export type PlaylistInfo = {
 export function newPlaylist(info: PlaylistInfo) {
   call((addon) => addon.new_playlist(info.name, info.description, info.isFolder, info.id))
   methods.save()
-  trackLists.refreshTrackIdList()
+  trackListsDetailsMap.refresh()
 }
 export function updatePlaylist(id: string, name: string, description: string) {
   call((addon) => addon.update_playlist(id, name, description))
   methods.save()
-  trackLists.refreshTrackIdList()
-  softRefreshPage.refresh()
+  trackListsDetailsMap.refresh()
+  page.refreshIdsAndKeepSelection()
 }
 export function movePlaylist(id: TrackListID, fromParent: TrackListID, toParent: TrackListID) {
   call((addon) => addon.move_playlist(id, fromParent, toParent))
   methods.save()
-  trackLists.refreshTrackIdList()
+  trackListsDetailsMap.refresh()
 }
 
 export const paths = call((addon) => addon.get_paths())
@@ -157,7 +161,8 @@ export async function importTracks(paths: string[]) {
     }
   }
   methods.save()
-  page.refresh()
+  page.refreshIdsAndKeepSelection()
+  pageSelection.clear()
 }
 
 export const methods = {
@@ -167,30 +172,33 @@ export const methods = {
   getTrack: (id: TrackID) => {
     return call((data) => data.get_track(id))
   },
+  getTrackList: (id: TrackListID) => {
+    return call((data) => data.get_track_list(id))
+  },
   save: () => {
     return call((addon) => addon.save())
   },
   addPlay: (id: TrackID) => {
     call((data) => data.add_play(id))
     methods.save()
-    softRefreshPage.refresh()
+    page.refreshIdsAndKeepSelection()
   },
   addSkip: (id: TrackID) => {
     call((data) => data.add_skip(id))
     methods.save()
-    softRefreshPage.refresh()
+    page.refreshIdsAndKeepSelection()
   },
   addPlayTime: (id: TrackID, startTime: MsSinceUnixEpoch, durationMs: number) => {
     call((data) => data.add_play_time(id, startTime, durationMs))
     methods.save()
-    softRefreshPage.refresh()
+    page.refreshIdsAndKeepSelection()
   },
   readCoverAsync: (id: TrackID) => innerAddon.read_cover_async(id),
   updateTrackInfo: (id: TrackID, md: TrackMd) => {
     call((data) => data.update_track_info(id, md))
     methods.save()
-    softRefreshPage.refresh()
-    refreshTrackInfo.refresh()
+    trackMetadataUpdated.emit()
+    page.refreshIdsAndKeepSelection()
   },
   loadTags: (id: TrackID) => {
     call((data) => data.load_tags(id))
@@ -216,56 +224,56 @@ export const methods = {
 }
 
 export const filter = (() => {
-  const store = writable('')
+  const { subscribe, set } = writable('')
   return {
-    subscribe: store.subscribe,
+    subscribe: subscribe,
     set: (query: string) => {
       call((data) => data.filter_open_playlist(query))
-      store.set(query)
-      page.setGet()
+      page.set(page.get())
+      pageSelection.clear()
+      set(query)
     },
   }
 })()
+
 function createRefreshStore() {
   const store = writable(0)
   return {
     subscribe: store.subscribe,
-    refresh() {
+    emit() {
       store.update((n) => n + 1)
     },
   }
 }
-export const softRefreshPage = createRefreshStore()
-export const refreshTrackInfo = createRefreshStore()
+export const trackMetadataUpdated = createRefreshStore()
+
 export const page = (() => {
   function get() {
     const info = call((addon) => addon.get_page_info())
     return info
   }
+  function refreshIdsAndKeepSelection() {
+    call((addon) => addon.refresh_page())
+    set(get())
+  }
 
-  const { subscribe, set } = writable(get())
+  const { subscribe, set, update } = writable(get())
   return {
     subscribe,
     get,
-    refresh: () => {
-      call((addon) => addon.refresh_page())
-      set(get())
-    },
-    setGet: () => {
-      set(get())
-    },
+    set,
+    update,
+    refreshIdsAndKeepSelection,
     openPlaylist: (id: string) => {
       call((data) => data.open_playlist(id))
-      set(get())
+      refreshIdsAndKeepSelection()
+      pageSelection.clear()
       filter.set('')
     },
     sortBy: (key: string) => {
       call((addon) => addon.sort(key, true))
-      set(get())
-    },
-    filter: (query: string) => {
-      call((data) => data.filter_open_playlist(query))
-      set(get())
+      refreshIdsAndKeepSelection()
+      pageSelection.clear()
     },
     getTrack: (index: number) => {
       return call((addon) => addon.get_page_track(index))
@@ -279,9 +287,12 @@ export const page = (() => {
     moveTracks: (indexes: number[], toIndex: number) => {
       const newSelection = call((data) => data.move_tracks(indexes, toIndex))
       call((data) => data.refresh_page())
-      set(get())
+      refreshIdsAndKeepSelection()
+      pageSelection.clear()
+      for (let i = newSelection.from; i <= newSelection.to; i++) {
+        pageSelection.add(i)
+      }
       methods.save()
-      return newSelection
     },
   }
 })()

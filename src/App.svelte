@@ -9,7 +9,7 @@
   import PlaylistInfoModal from './components/PlaylistInfo.svelte'
   import { queueVisible } from './lib/queue'
   import { ipcListen, ipcRenderer } from '@/lib/window'
-  import { isMac, importTracks, PlaylistInfo, trackLists } from './lib/data'
+  import { isMac, importTracks, PlaylistInfo, methods } from './lib/data'
   import { playPause } from './lib/player'
   import DragGhost from './components/DragGhost.svelte'
   import ItunesImport from './components/ItunesImport.svelte'
@@ -119,8 +119,8 @@
   let playlistInfo: PlaylistInfo | null = null
   onDestroy(
     ipcListen('context.playlist.edit', (_, id) => {
-      const list = $trackLists[id]
-      if (list.type !== 'special' && $modalCount === 0) {
+      const list = methods.getTrackList(id)
+      if (list.kind !== 'special' && $modalCount === 0) {
         playlistInfo = {
           name: list.name,
           description: list.description || '',

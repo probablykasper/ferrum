@@ -3,11 +3,11 @@ import {
   methods,
   paths,
   removeFromOpenPlaylist,
-  trackLists as trackListsStore,
+  trackListsDetailsMap,
 } from '@/lib/data'
 import { flattenChildLists } from '@/lib/helpers'
 import { ipcRenderer } from '@/lib/window'
-import type { Special, TrackID } from 'ferrum-addon'
+import type { TrackID } from 'ferrum-addon'
 import { get } from 'svelte/store'
 import { appendToUserQueue, prependToUserQueue } from './queue'
 import type { ShowTrackMenuOptions } from '@/electron/typed_ipc'
@@ -18,8 +18,8 @@ export async function showTrackMenu(
   playlist?: { editable: boolean },
   queue = false
 ) {
-  const trackLists = get(trackListsStore)
-  const flat = flattenChildLists(trackLists.root as Special, trackLists, '')
+  const trackLists = get(trackListsDetailsMap)
+  const flat = flattenChildLists(trackLists.root, trackLists, '')
   const args: ShowTrackMenuOptions = {
     allIds,
     selectedIndexes,

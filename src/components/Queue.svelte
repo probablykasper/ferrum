@@ -82,7 +82,6 @@
       await showTrackMenu(allIds, indexes, undefined, true)
     },
   })
-  $: console.log($selection.list)
 
   function removeFromQueue() {
     if ($selection.count >= 1) {
@@ -96,8 +95,6 @@
 
   const trackActionUnlisten = ipcListen('selectedTracksAction', (_, action) => {
     let firstIndex = selection.findFirst()
-    console.log($selection.list)
-    console.log(firstIndex)
 
     if (firstIndex === null || !queueElement.contains(document.activeElement)) {
       return

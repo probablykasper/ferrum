@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { methods, refreshTrackInfo } from '@/lib/data'
+  import { methods, trackMetadataUpdated } from '@/lib/data'
   import { fade } from 'svelte/transition'
   import { onDestroy } from 'svelte'
   import type { Track } from 'ferrum-addon'
@@ -7,12 +7,12 @@
   export let id: string
 
   let track: Track
-  $: $refreshTrackInfo, (track = methods.getTrack(id))
+  $: $trackMetadataUpdated, (track = methods.getTrack(id))
 
   let objectUrl: string | undefined
 
   let promise: Promise<string>
-  $: $refreshTrackInfo, (promise = loadCover(id))
+  $: $trackMetadataUpdated, (promise = loadCover(id))
 
   async function loadCover(id: string) {
     if (objectUrl) {

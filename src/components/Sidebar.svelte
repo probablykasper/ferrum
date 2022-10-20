@@ -1,7 +1,7 @@
 <script lang="ts">
   import SidebarItems, { hideFolder, showFolder, SidebarItemHandle } from './SidebarItems.svelte'
   import Filter from './Filter.svelte'
-  import { isMac, trackLists, page, movePlaylist } from '../lib/data'
+  import { isMac, trackListsDetailsMap, page, movePlaylist } from '../lib/data'
   import { ipcRenderer } from '../lib/window'
   import { writable } from 'svelte/store'
   import { setContext, tick } from 'svelte'
@@ -14,7 +14,7 @@
   const itemHandle = setContext('itemHandle', writable(null as SidebarItemHandle | null))
 
   function handleKeydown(e: KeyboardEvent) {
-    const selectedList = $trackLists[$page.tracklist.id]
+    const selectedList = $trackListsDetailsMap[$page.tracklist.id]
     let prevent = true
     if (e.key == 'Home') {
       viewport.scrollTop = 0
@@ -24,9 +24,9 @@
       viewport.scrollTop -= viewport.clientHeight
     } else if (e.key == 'PageDown') {
       viewport.scrollTop += viewport.clientHeight
-    } else if (e.key == 'ArrowLeft' && selectedList.type === 'folder') {
+    } else if (e.key == 'ArrowLeft' && selectedList.kind === 'folder') {
       hideFolder(selectedList.id)
-    } else if (e.key == 'ArrowRight' && selectedList.type === 'folder') {
+    } else if (e.key == 'ArrowRight' && selectedList.kind === 'folder') {
       showFolder(selectedList.id)
     } else if (e.key == 'ArrowUp') {
       $itemHandle?.arrowUpDown('ArrowUp')
@@ -105,8 +105,8 @@
       <SidebarItems
         trackList={special}
         on:selectDown={() => {
-          if ($trackLists.root.children[0]) {
-            open($trackLists.root.children[0])
+          if ($trackListsDetailsMap.root.children && $trackListsDetailsMap.root.children[0]) {
+            open($trackListsDetailsMap.root.children[0])
           }
         }}
         parentId={null}
@@ -119,11 +119,11 @@
         on:drop={drop}
       />
       <SidebarItems
-        trackList={$trackLists.root}
+        trackList={{ children: $trackListsDetailsMap['root'].children || [] }}
         on:selectUp={() => {
           open(special.children[special.children.length - 1])
         }}
-        parentId={$trackLists.root.id}
+        parentId={$trackListsDetailsMap['root'].id}
       />
       <div
         class="bottom-space spacer"

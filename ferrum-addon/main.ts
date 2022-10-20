@@ -18,9 +18,4 @@ declare module 'ferrum-addon/addon' {
   }
 
   export type TrackList = Playlist | Folder | Special
-
-  export type TrackListsHashMap = {
-    root: Special
-    [TrackListID: string]: TrackList
-  }
 }

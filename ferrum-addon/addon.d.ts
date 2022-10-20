@@ -127,7 +127,15 @@ export interface SelectionInfo {
   to: number
 }
 export function move_tracks(indexesToMove: Array<number>, toIndex: number): SelectionInfo
-export function get_track_lists(): TrackListsHashMap
+export interface TrackListDetails {
+  id: string
+  name: string
+  kind: string
+  /** Folders only */
+  children?: Array<string>
+}
+export function get_track_lists_details(): Record<string, TrackListDetails>
+export function get_track_list(id: string): TrackListsHashMap
 export function add_tracks_to_playlist(playlistId: string, trackIds: Array<string>): void
 export function playlist_filter_duplicates(playlistId: string, ids: Array<string>): Array<TrackID>
 export function remove_from_open_playlist(indexesToRemove: Array<number>): void

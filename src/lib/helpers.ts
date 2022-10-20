@@ -1,5 +1,5 @@
 import { Updater, Writable, writable } from 'svelte/store'
-import type { Folder, Special, TrackListsHashMap } from 'ferrum-addon'
+import type { TrackListDetails } from 'ferrum-addon'
 
 export function getDuration(dur: number) {
   dur = Math.round(dur)
@@ -78,14 +78,14 @@ export function clamp(min: number, max: number, value: number) {
 
 type FlattenedListMenuItem = { label: string; enabled: boolean; id: string }
 export function flattenChildLists(
-  trackList: Folder | Special,
-  trackLists: TrackListsHashMap,
+  trackList: TrackListDetails,
+  trackLists: Record<string, TrackListDetails>,
   indentPrefix: string
 ) {
   let flat: FlattenedListMenuItem[] = []
-  for (const childListId of trackList.children) {
+  for (const childListId of trackList.children || []) {
     const childList = trackLists[childListId]
-    if (childList.type === 'folder') {
+    if (childList.kind === 'folder') {
       const childFlat = flattenChildLists(childList, trackLists, indentPrefix + '   ')
       flat.push({
         label: indentPrefix + childList.name,
@@ -93,7 +93,7 @@ export function flattenChildLists(
         id: childList.id,
       })
       flat = flat.concat(childFlat)
-    } else if (childList.type === 'playlist') {
+    } else if (childList.kind === 'playlist') {
       flat.push({
         label: indentPrefix + childList.name,
         enabled: true,

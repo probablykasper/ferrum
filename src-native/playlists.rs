@@ -3,19 +3,63 @@ use crate::data_js::get_data;
 use crate::library_types::{Library, SpecialTrackListName, TrackID, TrackList};
 use crate::{str_to_option, UniResult};
 use napi::{Env, JsUnknown, Result};
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::path::PathBuf;
 
 #[cfg(target_os = "macos")]
 use trash::macos::TrashContextExtMacos;
 
-#[napi(js_name = "get_track_lists", ts_return_type = "TrackListsHashMap")]
+#[napi(object)]
+pub struct TrackListDetails {
+  pub id: String,
+  pub name: String,
+  pub kind: String,
+  /// Folders only
+  pub children: Option<Vec<String>>,
+}
+
+#[napi(js_name = "get_track_lists_details")]
 #[allow(dead_code)]
-pub fn get_track_lists(env: Env) -> Result<JsUnknown> {
+pub fn get_track_lists_details(env: Env) -> Result<HashMap<String, TrackListDetails>> {
+  let data: &Data = get_data(&env)?;
+  Ok(
+    data
+      .library
+      .trackLists
+      .iter()
+      .map(|(id, tracklist)| {
+        return (
+          id.clone(),
+          TrackListDetails {
+            id: id.clone(),
+            kind: match tracklist {
+              TrackList::Special(_) => "special".to_string(),
+              TrackList::Folder(_) => "folder".to_string(),
+              TrackList::Playlist(_) => "playlist".to_string(),
+            },
+            name: match tracklist {
+              TrackList::Special(tracklist) => tracklist.name.to_string(),
+              TrackList::Folder(tracklist) => tracklist.name.clone(),
+              TrackList::Playlist(tracklist) => tracklist.name.clone(),
+            },
+            children: match tracklist {
+              TrackList::Special(tracklist) => Some(tracklist.children.clone()),
+              TrackList::Folder(tracklist) => Some(tracklist.children.clone()),
+              _ => None,
+            },
+          },
+        );
+      })
+      .collect(),
+  )
+}
+
+#[napi(js_name = "get_track_list", ts_return_type = "TrackListsHashMap")]
+#[allow(dead_code)]
+pub fn get_track_list(id: String, env: Env) -> Result<JsUnknown> {
   let data: &mut Data = get_data(&env)?;
-  let track_lists = &data.library.trackLists;
-  let js = env.to_js_value(&track_lists)?;
-  return Ok(js);
+  let tracklist = data.library.get_tracklist(&id)?;
+  env.to_js_value(&tracklist)
 }
 
 #[napi(js_name = "add_tracks_to_playlist")]

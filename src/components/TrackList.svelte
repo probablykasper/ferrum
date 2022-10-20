@@ -1,13 +1,6 @@
 <script lang="ts">
+  import { page, removeFromOpenPlaylist, filter, deleteTracksInOpen, paths } from '../lib/data'
   import VirtualList from './VirtualList.svelte'
-  import {
-    page,
-    softRefreshPage,
-    removeFromOpenPlaylist,
-    filter,
-    deleteTracksInOpen,
-    paths,
-  } from '../lib/data'
   import { newPlaybackInstance, playingId } from '../lib/player'
   import {
     getDuration,
@@ -16,13 +9,12 @@
     checkShortcut,
     assertUnreachable,
   } from '../lib/helpers'
-  import { newSelection } from '../lib/selection'
   import { appendToUserQueue, prependToUserQueue } from '../lib/queue'
+  import { selection, scrollToIndex } from '../lib/page'
   import { ipcListen, ipcRenderer } from '../lib/window'
-  import { onDestroy, tick } from 'svelte'
+  import { onDestroy } from 'svelte'
   import { dragged } from '../lib/drag-drop'
   import * as dragGhost from './DragGhost.svelte'
-  import { showTrackMenu } from '@/lib/menus'
   import type { TrackID } from 'ferrum-addon'
   import { modalCount } from './Modal.svelte'
 
@@ -59,15 +51,9 @@
   const sortBy = page.sortBy
   $: sortKey = $page.sortKey
 
-  const selection = newSelection({
-    getItemCount: () => $page.length,
-    scrollToItem: (i) => virtualList.scrollToItem(i),
-    onContextMenu: async () => {
-      const indexes = selection.getSelectedIndexes()
-      const ids = page.getTrackIds()
-      await showTrackMenu(ids, indexes, { editable: $page.tracklist.type === 'playlist' })
-    },
-  })
+  $: if ($scrollToIndex !== null) {
+    virtualList.scrollToItem($scrollToIndex)
+  }
 
   function doubleClick(e: MouseEvent, index: number) {
     if (e.button === 0 && checkMouseShortcut(e)) {
@@ -188,11 +174,7 @@
   }
   async function dropHandler() {
     if (dragToIndex !== null) {
-      const newSelection = page.moveTracks(indexes, dragToIndex)
-      await tick()
-      for (let i = newSelection.from; i <= newSelection.to; i++) {
-        selection.add(i)
-      }
+      page.moveTracks(indexes, dragToIndex)
       dragToIndex = null
     }
   }
@@ -211,14 +193,7 @@
 
   let virtualList: VirtualList<ReturnType<typeof getItem>>
 
-  let itemCount = 0
-  $: if ($page) {
-    itemCount = $page.length
-    if (virtualList) virtualList.refresh()
-    selection.clear()
-  }
-
-  $: if ($softRefreshPage && virtualList) {
+  $: if ($page && virtualList) {
     virtualList.refresh()
   }
 
@@ -254,7 +229,7 @@
       {/if}
     </h3>
     <div class="info">{$page.length} songs</div>
-    {#if 'description' in $page.tracklist}
+    {#if 'description' in $page.tracklist && $page.tracklist.description !== ''}
       <div class="description">{$page.tracklist.description}</div>
     {/if}
   </div>
@@ -305,7 +280,7 @@
   <VirtualList
     {getItem}
     itemHeight={24}
-    {itemCount}
+    itemCount={$page.length}
     bind:this={virtualList}
     on:keydown={keydown}
     on:mousedown-self={selection.clear}

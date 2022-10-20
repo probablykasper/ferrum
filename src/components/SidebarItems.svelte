@@ -1,5 +1,11 @@
 <script lang="ts" context="module">
-  import { trackLists, page, methods, addTracksToPlaylist, movePlaylist } from '../lib/data'
+  import {
+    trackListsDetailsMap,
+    page,
+    methods,
+    addTracksToPlaylist,
+    movePlaylist,
+  } from '../lib/data'
 
   export type SidebarItemHandle = {
     arrowUpDown(key: 'ArrowUp' | 'ArrowDown'): void
@@ -23,7 +29,7 @@
 </script>
 
 <script lang="ts">
-  import type { TrackList } from 'ferrum-addon'
+  import type { TrackListDetails } from 'ferrum-addon'
   import { Writable, writable } from 'svelte/store'
   import { createEventDispatcher, SvelteComponent } from 'svelte'
   import { getContext } from 'svelte'
@@ -35,15 +41,9 @@
   export let show = true
   export let trackList: { children: string[] }
   export let level = 0
-  let childLists: TrackList[] = []
-  $: {
-    childLists = []
-    for (const id of trackList.children) {
-      const tl = $trackLists[id]
-      tl.id = id
-      childLists.push(tl)
-    }
-  }
+  $: childLists = trackList.children.map((childId) => {
+    return $trackListsDetailsMap[childId]
+  })
   function open(id: string) {
     if ($page.id !== id) page.openPlaylist(id)
   }
@@ -52,8 +52,8 @@
   }
 
   function hasShowingChildren(id: string) {
-    const list = $trackLists[id]
-    return list.type === 'folder' && $shownFolders.has(id) && list.children.length >= 1
+    const list = $trackListsDetailsMap[id]
+    return list.children && list.children.length > 0 && $shownFolders.has(id)
   }
 
   let itemChildren: SvelteComponent[] = []
@@ -108,8 +108,8 @@
   let dragPlaylistOntoIndex = null as number | null
 
   let dragPlaylistId: string | null = null
-  function onDragStart(e: DragEvent, tracklist: TrackList) {
-    if (e.dataTransfer && tracklist.type !== 'special' && parentId) {
+  function onDragStart(e: DragEvent, tracklist: TrackListDetails) {
+    if (e.dataTransfer && tracklist.kind !== 'special' && parentId) {
       e.dataTransfer.effectAllowed = 'move'
       dragPlaylistId = tracklist.id
       dragGhost.setInnerText(tracklist.name)
@@ -126,7 +126,7 @@
 
 <div class="sub" class:show>
   {#each childLists as childList, i}
-    {#if childList.type === 'folder'}
+    {#if childList.kind === 'folder'}
       <div
         class="item"
         style:padding-left={14 * level + 'px'}
@@ -205,7 +205,7 @@
           }
         }}
       />
-    {:else if childList.type === 'playlist'}
+    {:else if childList.kind === 'playlist'}
       <div
         class="item"
         style:padding-left={14 * level + 'px'}
