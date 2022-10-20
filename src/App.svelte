@@ -121,7 +121,7 @@
   onDestroy(
     ipcListen('context.playlist.edit', (_, id) => {
       const list = methods.getTrackList(id)
-      if (list.kind !== 'special' && $modalCount === 0) {
+      if (list.type !== 'special' && $modalCount === 0) {
         playlistInfo = {
           name: list.name,
           description: list.description || '',
@@ -129,6 +129,21 @@
           id: list.id,
           editMode: true,
         }
+      }
+    })
+  )
+  onDestroy(
+    ipcListen('context.playlist.delete', async (_, id) => {
+      const list = methods.getTrackList(id)
+      const result = await ipcRenderer.invoke('showMessageBox', false, {
+        type: 'info',
+        message: `Delete the ${list.type} "${list.name}"?`,
+        detail: list.type === 'folder' ? 'This will also delete all playlists inside.' : '',
+        buttons: [`Delete`, 'Cancel'],
+        defaultId: 0,
+      })
+      if (result.response === 0) {
+        methods.deleteTrackList(id)
       }
     })
   )

@@ -1,13 +1,15 @@
 use crate::library::{load_library, Paths};
-use crate::library_types::{Library, TrackID, TrackListID};
+use crate::library_types::{Library, TrackID, TrackList, TrackListID};
+use crate::page::get_track_ids;
 use crate::sidebar_view::SidebarView;
 use crate::sort::sort;
 use crate::tracks::Tag;
 use crate::{page, UniResult};
 use atomicwrites::{AllowOverwrite, AtomicFile};
+use napi::Result;
 use serde::Serialize;
 use std::env;
-use std::io::{Error, ErrorKind, Write};
+use std::io::Write;
 use std::time::Instant;
 
 pub struct Data {
@@ -28,7 +30,7 @@ pub struct Data {
 }
 
 impl Data {
-  pub fn save(&mut self) -> Result<(), Error> {
+  pub fn save(&mut self) -> Result<()> {
     let mut now = Instant::now();
     let formatter = serde_json::ser::PrettyFormatter::with_indent(b"	"); // tab
 
@@ -43,12 +45,7 @@ impl Data {
     let result = af.write(|f| f.write_all(&json));
     match result {
       Ok(_) => {}
-      Err(err) => {
-        return Err(Error::new(
-          ErrorKind::Other,
-          format!("Error saving: {}", err),
-        ))
-      }
+      Err(err) => throw!("Error saving: {err}"),
     }
     println!("Write: {}ms", now.elapsed().as_millis());
     Ok(())
@@ -106,5 +103,20 @@ impl Data {
     data.open_playlist_track_ids = page::get_track_ids(&data)?;
     sort(&mut data, "dateAdded", true)?;
     return Ok(data);
+  }
+  pub fn open_playlist(&mut self, playlist_id: TrackID) -> Result<()> {
+    self.open_playlist_id = playlist_id;
+    self.open_playlist_track_ids = get_track_ids(&self)?;
+    self.page_track_ids = None;
+    match self.library.get_tracklist(&self.open_playlist_id)? {
+      TrackList::Special(_) => {
+        sort(self, "dateAdded", true)?;
+      }
+      _ => {
+        self.sort_key = "index".to_string();
+        self.sort_desc = true;
+      }
+    };
+    Ok(())
   }
 }

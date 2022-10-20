@@ -97,21 +97,21 @@ impl Library {
       _ => throw!("Root playlist not found"),
     }
   }
-  // pub fn get_parent_id(&self, id: &str) -> Option<String> {
-  //   for (parent_id, tracklist) in &self.trackLists {
-  //     let children = match tracklist {
-  //       TrackList::Playlist(_) => continue,
-  //       TrackList::Folder(list) => &list.children,
-  //       TrackList::Special(list) => &list.children,
-  //     };
-  //     for child_id in children {
-  //       if child_id == id {
-  //         return Some(parent_id.to_string());
-  //       }
-  //     }
-  //   }
-  //   None
-  // }
+  pub fn get_parent_id(&self, id: &str) -> Option<String> {
+    for (parent_id, tracklist) in &self.trackLists {
+      let children = match tracklist {
+        TrackList::Playlist(_) => continue,
+        TrackList::Folder(list) => &list.children,
+        TrackList::Special(list) => &list.children,
+      };
+      for child_id in children {
+        if child_id == id {
+          return Some(parent_id.to_string());
+        }
+      }
+    }
+    None
+  }
 }
 
 pub type TrackID = String;

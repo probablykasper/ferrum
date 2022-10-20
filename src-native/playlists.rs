@@ -54,12 +54,98 @@ pub fn get_track_lists_details(env: Env) -> Result<HashMap<String, TrackListDeta
   )
 }
 
-#[napi(js_name = "get_track_list", ts_return_type = "TrackListsHashMap")]
+#[napi(js_name = "get_track_list", ts_return_type = "TrackList")]
 #[allow(dead_code)]
 pub fn get_track_list(id: String, env: Env) -> Result<JsUnknown> {
   let data: &mut Data = get_data(&env)?;
   let tracklist = data.library.get_tracklist(&id)?;
   env.to_js_value(&tracklist)
+}
+
+fn get_child_ids_recursive(
+  library: &Library,
+  id: &String,
+  ids: &mut HashSet<String>,
+) -> Result<()> {
+  let folder_children = match library.trackLists.get(&*id) {
+    Some(TrackList::Playlist(_)) => return Ok(()),
+    Some(TrackList::Folder(folder)) => folder.children.clone(),
+    Some(TrackList::Special(_)) => throw!("Cannot delete special track list"),
+    None => throw!("No track list with id {}", id),
+  };
+  for child_id in &folder_children {
+    get_child_ids_recursive(library, &child_id, ids)?;
+  }
+  for new_id in folder_children {
+    let was_new = ids.insert(new_id.clone());
+    if !was_new {
+      throw!("Duplicate track list id {new_id}");
+    }
+  }
+  Ok(())
+}
+
+fn remove_child_id(library: &mut Library, parent_id: &String, child_id: &String) -> Result<()> {
+  let parent = match library.trackLists.get_mut(parent_id) {
+    Some(tracklist) => tracklist,
+    None => throw!("Parent id {parent_id} not found"),
+  };
+  let children = match parent {
+    TrackList::Playlist(_) => throw!("Parent id {parent_id} not found"),
+    TrackList::Folder(folder) => folder.children.clone(),
+    TrackList::Special(special) => match special.name {
+      SpecialTrackListName::Root => special.children.clone(),
+    },
+  };
+  let new_children: Vec<String> = children
+    .clone()
+    .into_iter()
+    .filter(|id| id != child_id)
+    .collect();
+  match children.len() - new_children.len() {
+    0 => throw!("Parent id {child_id} does not contain child"),
+    1 => (),
+    _ => throw!("Child id {child_id} found multiple times"),
+  };
+  match parent {
+    TrackList::Playlist(_) => panic!(),
+    TrackList::Folder(folder) => folder.children = new_children,
+    TrackList::Special(special) => match special.name {
+      SpecialTrackListName::Root => special.children = new_children,
+    },
+  };
+  Ok(())
+}
+
+fn delete_track_list(data: &mut Data, id: String) -> Result<()> {
+  let parent_id = data
+    .library
+    .get_parent_id(&id)
+    .ok_or(nerr!("No parent found"))?;
+
+  let mut ids = HashSet::new();
+  ids.insert(id.clone());
+  get_child_ids_recursive(&mut data.library, &id, &mut ids)?;
+
+  if ids.contains(&parent_id) {
+    throw!("Parent id {parent_id} contains itself");
+  }
+  remove_child_id(&mut data.library, &parent_id, &id)?;
+  for id in &ids {
+    data.library.trackLists.remove(id);
+  }
+  if ids.contains(&data.open_playlist_id) {
+    data.open_playlist("root".to_string())?;
+  }
+  Ok(())
+}
+
+/// Returns the deleted track lists, including folder children
+#[napi(js_name = "delete_track_list")]
+#[allow(dead_code)]
+pub fn delete_track_list_js(id: String, env: Env) -> Result<()> {
+  let data: &mut Data = get_data(&env)?;
+  delete_track_list(data, id)
 }
 
 #[napi(js_name = "add_tracks_to_playlist")]

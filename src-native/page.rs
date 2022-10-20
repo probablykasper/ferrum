@@ -11,21 +11,9 @@ use std::time::Instant;
 
 #[napi(js_name = "open_playlist")]
 #[allow(dead_code)]
-pub fn open_playlist(open_playlist_id: String, env: Env) -> Result<JsUndefined> {
+pub fn open_playlist(open_playlist_id: String, env: Env) -> Result<()> {
   let data: &mut Data = get_data(&env)?;
-  data.open_playlist_id = open_playlist_id;
-  data.open_playlist_track_ids = get_track_ids(&data)?;
-  data.page_track_ids = None;
-  match data.library.get_tracklist(&data.open_playlist_id)? {
-    TrackList::Special(_) => {
-      sort(data, "dateAdded", true)?;
-    }
-    _ => {
-      data.sort_key = "index".to_string();
-      data.sort_desc = true;
-    }
-  };
-  return env.get_undefined();
+  data.open_playlist(open_playlist_id)
 }
 
 #[napi(js_name = "get_page_track")]
@@ -132,15 +120,6 @@ pub fn get_page_info(env: Env) -> Result<PageInfo> {
     sort_desc: data.sort_desc,
     length: data.get_page_tracks().len().try_into().expect("Too long"),
   })
-  // let v = serde_json::json!({
-  //   "id": data.open_playlist_id,
-  //   "tracklist": tracklist,
-  //   "sort_key": data.sort_key,
-  //   "sort_desc": data.sort_desc,
-  //   "length": data.get_page_tracks().len(),
-  // });
-  // let js = env.to_js_value(&v)?;
-  // return Ok(js);
 }
 
 #[napi(js_name = "sort")]

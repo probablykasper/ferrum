@@ -135,7 +135,9 @@ export interface TrackListDetails {
   children?: Array<string>
 }
 export function get_track_lists_details(): Record<string, TrackListDetails>
-export function get_track_list(id: string): TrackListsHashMap
+export function get_track_list(id: string): TrackList
+/** Returns the deleted track lists, including folder children */
+export function delete_track_list(id: string): void
 export function add_tracks_to_playlist(playlistId: string, trackIds: Array<string>): void
 export function playlist_filter_duplicates(playlistId: string, ids: Array<string>): Array<TrackID>
 export function remove_from_open_playlist(indexesToRemove: Array<number>): void

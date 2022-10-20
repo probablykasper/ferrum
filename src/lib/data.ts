@@ -1,6 +1,6 @@
 import { writable } from 'svelte/store'
 import { ipcRenderer } from '@/lib/window'
-import type { MsSinceUnixEpoch, TrackID, TrackListID, TrackMd } from 'ferrum-addon'
+import type { MsSinceUnixEpoch, TrackID, TrackList, TrackListID, TrackMd } from 'ferrum-addon'
 import { selection as pageSelection } from './page'
 import { queue } from './queue'
 
@@ -126,19 +126,19 @@ export type PlaylistInfo = {
 }
 export function newPlaylist(info: PlaylistInfo) {
   call((addon) => addon.new_playlist(info.name, info.description, info.isFolder, info.id))
-  methods.save()
   trackListsDetailsMap.refresh()
+  methods.save()
 }
 export function updatePlaylist(id: string, name: string, description: string) {
   call((addon) => addon.update_playlist(id, name, description))
-  methods.save()
   trackListsDetailsMap.refresh()
   page.refreshIdsAndKeepSelection()
+  methods.save()
 }
 export function movePlaylist(id: TrackListID, fromParent: TrackListID, toParent: TrackListID) {
   call((addon) => addon.move_playlist(id, fromParent, toParent))
-  methods.save()
   trackListsDetailsMap.refresh()
+  methods.save()
 }
 
 export const paths = call((addon) => addon.get_paths())
@@ -162,9 +162,9 @@ export async function importTracks(paths: string[]) {
       else errState = 'skippable'
     }
   }
-  methods.save()
   page.refreshIdsAndKeepSelection()
   pageSelection.clear()
+  methods.save()
 }
 
 export const methods = {
@@ -178,32 +178,39 @@ export const methods = {
     return call((data) => data.track_exists(id))
   },
   getTrackList: (id: TrackListID) => {
-    return call((data) => data.get_track_list(id))
+    return call((data) => data.get_track_list(id)) as TrackList
+  },
+  deleteTrackList: (id: TrackListID) => {
+    call((data) => data.delete_track_list(id))
+    page.refreshIdsAndKeepSelection()
+    pageSelection.clear()
+    trackListsDetailsMap.refresh()
+    methods.save()
   },
   save: () => {
     return call((addon) => addon.save())
   },
   addPlay: (id: TrackID) => {
     call((data) => data.add_play(id))
-    methods.save()
     page.refreshIdsAndKeepSelection()
+    methods.save()
   },
   addSkip: (id: TrackID) => {
     call((data) => data.add_skip(id))
-    methods.save()
     page.refreshIdsAndKeepSelection()
+    methods.save()
   },
   addPlayTime: (id: TrackID, startTime: MsSinceUnixEpoch, durationMs: number) => {
     call((data) => data.add_play_time(id, startTime, durationMs))
-    methods.save()
     page.refreshIdsAndKeepSelection()
+    methods.save()
   },
   readCoverAsync: (id: TrackID) => innerAddon.read_cover_async(id),
   updateTrackInfo: (id: TrackID, md: TrackMd) => {
     call((data) => data.update_track_info(id, md))
-    methods.save()
     trackMetadataUpdated.emit()
     page.refreshIdsAndKeepSelection()
+    methods.save()
   },
   loadTags: (id: TrackID) => {
     call((data) => data.load_tags(id))

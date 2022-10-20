@@ -117,6 +117,7 @@ type Events = {
   ) => void
 
   'context.playlist.edit': (id: TrackID) => void
+  'context.playlist.delete': (id: TrackID) => void
   'context.Remove from Queue': () => void
   'context.Play Next': (ids: TrackID[]) => void
   'context.Add to Queue': (ids: TrackID[]) => void

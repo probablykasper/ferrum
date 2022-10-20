@@ -40,6 +40,7 @@
   export let parentId: string | null
   export let show = true
   export let trackList: { children: string[] }
+
   export let level = 0
   $: childLists = trackList.children.map((childId) => {
     return $trackListsDetailsMap[childId]

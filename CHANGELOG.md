@@ -6,6 +6,7 @@
 - Add repeat feature
 - Add warning when adding duplicate songs to a playlist
 - Add `Playback > Next` and `Playback > Previous` menus, with shortcuts
+- Add support for deleting playlists
 - Rewritten iTunes import, should be much more reliabile
 - iTunes import no longer overwrites the existing library
 - Scroll sidebar to opened playlist
