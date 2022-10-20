@@ -88,6 +88,9 @@ interface TypedIpcRenderer<IpcEvents extends InputMap, IpcCommands extends Input
 }
 
 type Events = {
+  readyToQuit: () => void
+  gonnaQuit: () => void
+
   newPlaylist: (id: string, isFolder: boolean) => void
   itunesImport: () => void
   import: () => void
@@ -145,25 +148,6 @@ type Commands = {
 export type IpcMain = TypedIpcMain<Events, Commands>
 export type IpcRenderer = TypedIpcRenderer<Events, Commands>
 export type WebContents = TypedWebContents<Events>
-
-// export type IpcListen<K extends keyof Events> = () => () => void
-// on<K extends keyof IpcEvents>(
-//     channel: K,
-//     listener: (event: IpcRendererEvent, ...args: Parameters<IpcEvents[K]>) => void
-//   )
-
-// interface IpcFunctions<IpcEvents extends InputMap> {
-//   IpcListen<K extends keyof IpcEvents>(
-//     channel: K,
-//     listener: (event: IpcRendererEvent, ...args: Parameters<IpcEvents[K]>) => void
-//   ): () => void
-// }
-// export type IpcListen = IpcFunctions<Events>
-
-// export type IpcListen<E extends Events, K extends keyof E> = (
-//   channel: K,
-//   listener: (event: IpcRendererEvent, ...args: Parameters<E[K]>) => void
-// ): () => void
 
 interface TypedIpcFunctions<IpcEvents extends InputMap> extends ElectronIpcRenderer {
   ipcListen<K extends keyof IpcEvents>(
