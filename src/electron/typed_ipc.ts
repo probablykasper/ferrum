@@ -94,6 +94,8 @@ type Events = {
   filter: () => void
 
   playPause: () => void
+  Next: () => void
+  Previous: () => void
   volumeUp: () => void
   volumeDown: () => void
   'Toggle Queue': () => void

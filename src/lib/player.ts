@@ -272,6 +272,5 @@ if (navigator.mediaSession) {
 }
 
 ipcRenderer.on('playPause', playPause)
-ipcRenderer.on('next', next)
-ipcRenderer.on('previous', previous)
-ipcRenderer.on('stop', stop)
+ipcRenderer.on('Next', next)
+ipcRenderer.on('Previous', previous)

@@ -165,9 +165,23 @@ export function initMenuBar(app: App, mainWindow: BrowserWindow) {
       submenu: [
         {
           label: 'Pause',
-          // accelerator: 'Space',
+          // no accelerator because it's unreliable
           click: () => {
             webContents.send('playPause')
+          },
+        },
+        {
+          label: 'Next',
+          accelerator: 'CmdOrCtrl+Right',
+          click: () => {
+            webContents.send('Next')
+          },
+        },
+        {
+          label: 'Previous',
+          accelerator: 'CmdOrCtrl+Left',
+          click: () => {
+            webContents.send('Previous')
           },
         },
         { type: 'separator' },
