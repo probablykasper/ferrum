@@ -3,6 +3,7 @@ import type { TrackID } from 'ferrum-addon'
 import { writable } from 'svelte/store'
 import { methods } from './data'
 import { getterWritable } from './helpers'
+import { ipcRenderer } from './window'
 
 export const queueVisible = writable(false)
 export function toggleQueueVisibility() {
@@ -12,6 +13,7 @@ export function toggleQueueVisibility() {
 export type QueueItem = {
   qId: number
   id: TrackID
+  nonShufflePos?: number
 }
 let lastQId = -1
 function newQueueItem(id: TrackID): QueueItem {
@@ -49,6 +51,53 @@ export const queue = (() => {
     removeDeleted,
   }
 })()
+
+/** Fisher-Yates shuffle */
+function shuffleArray<T>(array: Array<T>) {
+  let currentIndex = array.length,
+    randomIndex
+
+  // While there remain elements to shuffle.
+  while (currentIndex != 0) {
+    // Pick a remaining element.
+    randomIndex = Math.floor(Math.random() * currentIndex)
+    currentIndex--
+
+    // And swap it with the current element.
+    ;[array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]]
+  }
+
+  return array
+}
+
+export const shuffle = writable(false)
+shuffle.subscribe(($shuffle) => {
+  queue.update((q) => {
+    if ($shuffle) {
+      for (let i = 0; i < q.autoQueue.length; i++) {
+        q.autoQueue[i].nonShufflePos = i
+      }
+      q.autoQueue = shuffleArray(q.autoQueue)
+      return q
+    } else {
+      const oldItems: Partial<QueueItem[]> = []
+      const newItems: QueueItem[] = []
+      for (const item of q.autoQueue) {
+        if (item.nonShufflePos !== undefined) {
+          oldItems[item.nonShufflePos] = item
+        } else {
+          newItems.push(item)
+        }
+      }
+      const oldItemsClean = oldItems.filter((i) => i !== undefined) as QueueItem[]
+      q.autoQueue = newItems.concat(oldItemsClean)
+      return q
+    }
+  })
+})
+ipcRenderer.on('Shuffle', () => {
+  shuffle.update((value) => !value)
+})
 
 export function getCurrent() {
   const { past } = queue.get()

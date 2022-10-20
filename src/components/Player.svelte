@@ -14,7 +14,7 @@
     volume,
   } from '../lib/player'
   import { getDuration } from '../lib/helpers'
-  import { queueVisible, toggleQueueVisibility, queue } from '../lib/queue'
+  import { queueVisible, toggleQueueVisibility, queue, shuffle } from '../lib/queue'
   import { isDev, methods } from '../lib/data'
   import { showTrackMenu } from '@/lib/menus'
   import { dragged } from '@/lib/drag-drop'
@@ -87,6 +87,18 @@
   </div>
   <div class="middle">
     <div class="controls" on:mousedown|preventDefault>
+      <button
+        class="side-controls shuffle"
+        class:on={$shuffle}
+        tabindex="-1"
+        on:click={() => ($shuffle = !$shuffle)}
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" viewBox="-8 -8 40 40" height="24"
+          ><path
+            d="M2 7h-2v-2h2c3.49 0 5.48 1.221 6.822 2.854-.41.654-.754 1.312-1.055 1.939-1.087-1.643-2.633-2.793-5.767-2.793zm16 10c-3.084 0-4.604-1.147-5.679-2.786-.302.627-.647 1.284-1.06 1.937 1.327 1.629 3.291 2.849 6.739 2.849v3l6-4-6-4v3zm0-10v3l6-4-6-4v3c-5.834 0-7.436 3.482-8.85 6.556-1.343 2.921-2.504 5.444-7.15 5.444h-2v2h2c5.928 0 7.543-3.511 8.968-6.609 1.331-2.893 2.479-5.391 7.032-5.391z"
+          /></svg
+        >
+      </button>
       <button tabindex="-1" on:click={previous}>
         <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24">
           <path
@@ -97,7 +109,7 @@
 
       {#if $paused}
         <button class="play" tabindex="-1" on:click={playPause}>
-          <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24">
+          <svg xmlns="http://www.w3.org/2000/svg" height="36" viewBox="0 0 24 24" width="36">
             <path
               d="M8 6.82v10.36c0 .79.87 1.27 1.54.84l8.14-5.18c.62-.39.62-1.29 0-1.69L9.54 5.98C8.87 5.55 8 6.03 8 6.82z"
             />
@@ -105,7 +117,7 @@
         </button>
       {:else}
         <button class="pause" tabindex="-1" on:click={playPause}>
-          <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24">
+          <svg xmlns="http://www.w3.org/2000/svg" height="36" viewBox="0 0 24 24" width="36">
             <path
               d="M8 19c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2s-2 .9-2 2v10c0 1.1.9 2 2 2zm6-12v10c0 1.1.9 2 2 2s2-.9 2-2V7c0-1.1-.9-2-2-2s-2 .9-2 2z"
             />
@@ -119,6 +131,10 @@
             d="M7.58 16.89l5.77-4.07c.56-.4.56-1.24 0-1.63L7.58 7.11C6.91 6.65 6 7.12 6 7.93v8.14c0 .81.91 1.28 1.58.82zM16 7v10c0 .55.45 1 1 1s1-.45 1-1V7c0-.55-.45-1-1-1s-1 .45-1 1z"
           />
         </svg>
+      </button>
+
+      <button class="side-controls" tabindex="-1">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" />
       </button>
     </div>
     <div class="time-bar">
@@ -201,8 +217,6 @@
 <style lang="sass">
   svg
     fill: var(--icon-color)
-    width: 24px
-    height: 24px
     display: block
   .player
     display: flex
@@ -259,22 +273,26 @@
     padding: 0px
     opacity: 1
     transition: 0.05s ease-out
-    &:hover
-      // opacity: 0.7
     &:active
       opacity: 0.7
       transform: scale(0.95)
-  button.play, button.pause
-    margin: 0px 15px
+  button.shuffle svg
+      transform: scaleY(0.85)
+  button.side-controls
+    margin: 0px 18px
     svg
-      width: 36px
-      height: 36px
+      opacity: 0.8
+    &.on svg
+      opacity: 0.9
+  button.play, button.pause
+    margin: 0px 14px
   .controls
     display: flex
     justify-content: center
   .time-bar
     display: flex
     align-items: center
+    margin-bottom: 2px
     .current-time
       text-align: right
     small
@@ -308,8 +326,6 @@
     width: 100%
   .on svg
     fill: var(--icon-highlight-color)
-  svg
-    width: 24px
   button.volume-icon
     width: 24px
     padding-right: 4px

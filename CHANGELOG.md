@@ -2,6 +2,7 @@
 
 ## Next
 - Add drag-and-drop, selection and context menus in queue panel
+- Add shuffle feature
 - Add warning when adding duplicate songs to a playlist
 - Add `Playback > Next` and `Playback > Previous` menus, with shortcuts
 - Rewritten iTunes import, should be much more reliabile

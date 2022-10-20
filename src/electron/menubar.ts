@@ -186,6 +186,14 @@ export function initMenuBar(app: App, mainWindow: BrowserWindow) {
         },
         { type: 'separator' },
         {
+          label: 'Shuffle',
+          accelerator: 'CmdOrCtrl+S',
+          click: () => {
+            webContents.send('Shuffle')
+          },
+        },
+        { type: 'separator' },
+        {
           label: 'Volume Up',
           accelerator: 'CmdOrCtrl+Up',
           click: () => {
