@@ -14,6 +14,7 @@
 - Don't clear selection unnecessarily
 - Reload file when updating the currently playing song's info
 - Require focus when using Song menubar
+- Improve loading time of artwork in Track Info modal
 - Fix `Song > Delete from Library` menu
 - Fix incorrect handling of macOS `Ctrl+click` context menu
 - Fix sidebar icons showing over dialogs

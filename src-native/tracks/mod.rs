@@ -176,7 +176,7 @@ pub struct JsImage {
   pub index: i64,
   pub total_images: i64,
   pub mime_type: String,
-  pub data: String,
+  pub data: JsArrayBuffer,
 }
 
 #[napi(js_name = "get_image")]
@@ -197,7 +197,7 @@ pub fn get_image(index: u32, env: Env) -> Result<Option<JsImage>> {
     index: img.index.try_into().expect("usize conv"),
     total_images: img.total_images.try_into().expect("usize conv"),
     mime_type: img.mime_type,
-    data: base64::encode(&img.data),
+    data: env.create_arraybuffer_with_data(img.data)?.into_raw(),
   };
   Ok(Some(js_image))
 }

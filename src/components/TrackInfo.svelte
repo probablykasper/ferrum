@@ -10,15 +10,23 @@
   import { checkShortcut } from '@/lib/helpers'
   import Button from './Button.svelte'
   import { methods } from '@/lib/data'
-  import type { Track, JsImage, TrackID } from 'ferrum-addon'
+  import type { Track, TrackID } from 'ferrum-addon'
   import { ipcRenderer } from '@/lib/window'
   import { reload } from '@/lib/player'
+  import { onDestroy, tick } from 'svelte'
 
   export let currentList: TrackInfoList
   export let cancel: () => void
   let id: TrackID
   let track: Track
-  let image: JsImage | null
+  type ImageStuff = {
+    index: number
+    totalImages: number
+    mimeType: string
+    objectUrl: string
+  }
+  /** Undefined when loading, null when no image exists */
+  let image: ImageStuff | null | undefined
 
   $: openIndex(currentList)
   function openIndex(list: TrackInfoList) {
@@ -28,14 +36,39 @@
     loadImage(0)
   }
   async function loadImage(index: number) {
-    image = methods.getImage(index)
+    if (image) {
+      URL.revokeObjectURL(image.objectUrl)
+    }
+    image = undefined
+    await tick()
+    const imageInfo = methods.getImage(index)
+
+    if (imageInfo === null) {
+      image = null
+    } else {
+      image = {
+        index: imageInfo.index,
+        totalImages: imageInfo.totalImages,
+        mimeType: imageInfo.mimeType,
+        objectUrl: URL.createObjectURL(new Blob([imageInfo.data], {})),
+      }
+    }
   }
+  onDestroy(() => {
+    if (image && typeof image === 'object') {
+      URL.revokeObjectURL(image.objectUrl)
+    }
+  })
 
   function openPrev() {
-    if (currentList) currentList.index -= 1
+    if (currentList.index > 0) {
+      currentList.index -= 1
+    }
   }
   function openNext() {
-    if (currentList) currentList.index += 1
+    if (currentList.index + 1 < currentList.ids.length) {
+      currentList.index += 1
+    }
   }
 
   function uintFilter(value: string) {
@@ -274,7 +307,7 @@
 <svelte:body on:keydown|self={keydownNoneSelected} on:paste={coverPaste} />
 <Modal onCancel={cancel} let:focus>
   <form class="modal" on:submit|preventDefault={() => save()}>
-    <div class="header" class:has-subtitle={image !== null && image.totalImages >= 2}>
+    <div class="header" class:has-subtitle={image && image.totalImages >= 2}>
       <div class="cover-area" class:droppable tabindex="0" on:keydown={coverKeydown}>
         <div
           class="cover"
@@ -284,7 +317,9 @@
           on:drop={drop}
           on:dblclick={pickCover}
         >
-          {#if image === null}
+          {#if image}
+            <img class="outline-element" alt="" src={image.objectUrl} />
+          {:else if image === null}
             <svg
               class="cover-svg outline-element"
               xmlns="http://www.w3.org/2000/svg"
@@ -297,14 +332,10 @@
               />
             </svg>
           {:else}
-            <img
-              class="outline-element"
-              alt=""
-              src={'data:' + image.mimeType + ';base64,' + image.data}
-            />
+            <!-- empty when loading -->
           {/if}
         </div>
-        {#if image !== null && image.totalImages >= 2}
+        {#if image && image.totalImages >= 2}
           {@const imageIndex = image.index}
           <div class="cover-subtitle">
             <div class="arrow" class:unclickable={imageIndex <= 0}>

@@ -163,6 +163,12 @@ export interface TrackMd {
   bpm: string
   comments: string
 }
+export interface Image {
+  index: number
+  totalImages: number
+  mimeType: string
+  data: ArrayBuffer
+}
 export function get_track(id: string): Track
 export function track_exists(id: string): boolean
 export function add_play(trackId: string): void
@@ -175,7 +181,7 @@ export interface JsImage {
   index: number
   totalImages: number
   mimeType: string
-  data: string
+  data: JsArrayBuffer
 }
 export function get_image(index: number): JsImage | null
 export function set_image(index: number, pathStr: string): void

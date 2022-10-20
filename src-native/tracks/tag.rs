@@ -39,11 +39,13 @@ pub fn id3_timestamp_from_year(year: i32) -> id3::Timestamp {
   };
 }
 
-pub struct Image<'a> {
-  pub index: usize,
-  pub total_images: usize,
+#[napi(object)]
+pub struct Image {
+  pub index: i64,
+  pub total_images: i64,
   pub mime_type: String,
-  pub data: &'a [u8],
+  #[napi(ts_type = "ArrayBuffer")]
+  pub data: Vec<u8>,
 }
 
 pub enum Tag {
@@ -501,18 +503,18 @@ impl Tag {
     match self {
       Tag::Id3(tag) => match tag.pictures().nth(index) {
         Some(pic) => Some(Image {
-          index,
-          total_images: tag.pictures().count(),
-          data: &pic.data,
+          index: index.try_into().expect("usize conv"),
+          total_images: tag.pictures().count().try_into().expect("usize conv"),
+          data: pic.data.to_vec(),
           mime_type: pic.mime_type.clone(),
         }),
         None => None,
       },
       Tag::Mp4(tag) => match tag.artworks().nth(index) {
         Some(artwork) => Some(Image {
-          index,
-          total_images: tag.artworks().count(),
-          data: artwork.data,
+          index: index.try_into().expect("usize conv"),
+          total_images: tag.artworks().count().try_into().expect("usize conv"),
+          data: artwork.data.to_vec(),
           mime_type: match artwork.fmt {
             mp4ameta::ImgFmt::Bmp => "image/bmp".to_string(),
             mp4ameta::ImgFmt::Jpeg => "image/jpeg".to_string(),
@@ -527,9 +529,9 @@ impl Tag {
           Some(pic) => {
             let data = pic.data();
             Some(Image {
-              index,
-              total_images: pictures.len(),
-              data,
+              index: index.try_into().expect("usize conv"),
+              total_images: pictures.len().try_into().expect("usize conv"),
+              data: data.to_vec(),
               mime_type: pic.mime_type().to_string(),
             })
           }
