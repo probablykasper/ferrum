@@ -94,6 +94,7 @@ shuffle.subscribe(($shuffle) => {
       return q
     }
   })
+  ipcRenderer.invoke('update:Shuffle', $shuffle)
 })
 ipcRenderer.on('Shuffle', () => {
   shuffle.update((value) => !value)
@@ -102,6 +103,9 @@ ipcRenderer.on('Shuffle', () => {
 export const repeat = getterWritable(false)
 ipcRenderer.on('Repeat', () => {
   repeat.update((value) => !value)
+})
+repeat.subscribe(($repeat) => {
+  ipcRenderer.invoke('update:Repeat', $repeat)
 })
 
 export function getCurrent() {

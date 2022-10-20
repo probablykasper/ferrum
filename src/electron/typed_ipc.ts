@@ -7,6 +7,7 @@ import type {
   WebContents as ElectronWebContents,
   dialog,
 } from 'electron'
+import { ipcMain as electronIpcMain } from 'electron'
 import type { TrackID } from 'ferrum-addon'
 
 type OptionalPromise<T> = T | Promise<T>
@@ -103,7 +104,7 @@ type Events = {
   Repeat: () => void
   volumeUp: () => void
   volumeDown: () => void
-  'Toggle Queue': () => void
+  'Show Queue': () => void
 
   selectedTracksAction: (
     action:
@@ -145,11 +146,17 @@ type Commands = {
   revealTrackFile: (...paths: string[]) => void
   showTrackMenu: (options: ShowTrackMenuOptions) => void
   showTracklistMenu: (options: { id: string; isFolder: boolean; isRoot: boolean }) => void
+
+  'update:Shuffle': (checked: boolean) => void
+  'update:Repeat': (checked: boolean) => void
+  'update:Show Queue': (checked: boolean) => void
 }
 
 export type IpcMain = TypedIpcMain<Events, Commands>
 export type IpcRenderer = TypedIpcRenderer<Events, Commands>
 export type WebContents = TypedWebContents<Events>
+
+export const ipcMain = electronIpcMain as IpcMain
 
 interface TypedIpcFunctions<IpcEvents extends InputMap> extends ElectronIpcRenderer {
   ipcListen<K extends keyof IpcEvents>(

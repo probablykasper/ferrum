@@ -1,6 +1,5 @@
-import { ipcMain as untypedIpcMain, dialog, Menu, shell, BrowserWindow } from 'electron'
-import type { IpcMain } from './typed_ipc'
-const ipcMain = untypedIpcMain as IpcMain
+import { dialog, Menu, shell, BrowserWindow } from 'electron'
+import { ipcMain } from './typed_ipc'
 import path from 'path'
 import is from './is'
 

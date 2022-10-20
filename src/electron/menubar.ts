@@ -1,4 +1,5 @@
 import { App, BrowserWindow, Menu, shell } from 'electron'
+import { ipcMain } from './typed_ipc'
 import type { MenuItemConstructorOptions } from 'electron/common'
 import is from './is'
 import type { WebContents } from './typed_ipc'
@@ -142,10 +143,11 @@ export function initMenuBar(app: App, mainWindow: BrowserWindow) {
       label: 'View',
       submenu: [
         {
-          label: 'Toggle Queue',
+          label: 'Show Queue',
+          type: 'checkbox',
           accelerator: 'CmdOrCtrl+U',
           click: () => {
-            webContents.send('Toggle Queue')
+            webContents.send('Show Queue')
           },
         },
         { type: 'separator' },
@@ -187,6 +189,7 @@ export function initMenuBar(app: App, mainWindow: BrowserWindow) {
         { type: 'separator' },
         {
           label: 'Shuffle',
+          type: 'checkbox',
           accelerator: 'CmdOrCtrl+S',
           click: () => {
             webContents.send('Shuffle')
@@ -194,6 +197,7 @@ export function initMenuBar(app: App, mainWindow: BrowserWindow) {
         },
         {
           label: 'Repeat',
+          type: 'checkbox',
           accelerator: 'CmdOrCtrl+R',
           click: () => {
             webContents.send('Repeat')
@@ -241,4 +245,23 @@ export function initMenuBar(app: App, mainWindow: BrowserWindow) {
   ]
   const menu = Menu.buildFromTemplate(template)
   Menu.setApplicationMenu(menu)
+
+  ipcMain.handle('update:Shuffle', (_, checked) => {
+    const item = menu.getMenuItemById('Shuffle')
+    if (item) {
+      item.checked = checked
+    }
+  })
+  ipcMain.handle('update:Repeat', (_, checked) => {
+    const item = menu.getMenuItemById('Repeat')
+    if (item) {
+      item.checked = checked
+    }
+  })
+  ipcMain.handle('update:Show Queue', (_, checked) => {
+    const item = menu.getMenuItemById('Repeat')
+    if (item) {
+      item.checked = checked
+    }
+  })
 }

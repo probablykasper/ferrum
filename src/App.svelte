@@ -38,9 +38,10 @@
   function toggleQueue() {
     $queueVisible = !$queueVisible
   }
-  ipcRenderer.on('Toggle Queue', toggleQueue)
+  $: ipcRenderer.invoke('update:Show Queue', $queueVisible)
+  ipcRenderer.on('Show Queue', toggleQueue)
   onDestroy(() => {
-    ipcRenderer.removeListener('Toggle Queue', toggleQueue)
+    ipcRenderer.removeListener('Show Queue', toggleQueue)
   })
 
   let droppable = false
