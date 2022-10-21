@@ -1,6 +1,6 @@
 # Changelog
 
-## Next
+## 0.16.1 - 2022 Oct 21
 - Fix `Enter` not working Track Info window
 
 ## 0.16.0 - 2022 Oct 21
