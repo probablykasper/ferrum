@@ -305,8 +305,8 @@
 
 <svelte:window on:keydown={keydown} />
 <svelte:body on:keydown|self={keydownNoneSelected} on:paste={coverPaste} />
-<Modal onCancel={cancel} let:focus>
-  <form class="modal" on:submit|preventDefault={() => save()}>
+<Modal onCancel={cancel} let:focus form={save}>
+  <main class="modal">
     <div class="header" class:has-subtitle={image && image.totalImages >= 2}>
       <div class="cover-area" class:droppable tabindex="0" on:keydown={coverKeydown}>
         <div
@@ -449,10 +449,10 @@
       <input type="text" bind:value={comments} />
     </div>
     <div class="spacer" />
-  </form>
+  </main>
   <svelte:fragment slot="buttons">
     <Button secondary on:click={cancel}>Cancel</Button>
-    <Button on:click={() => save()}>Save</Button>
+    <Button type="submit" on:click={() => save()}>Save</Button>
   </svelte:fragment>
 </Modal>
 

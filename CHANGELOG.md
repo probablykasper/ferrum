@@ -1,5 +1,8 @@
 # Changelog
 
+## Next
+- Fix `Enter` not working Track Info window
+
 ## 0.16.0 - 2022 Oct 21
 - Add drag-and-drop, selection and context menus in queue panel
 - Add shuffle feature
