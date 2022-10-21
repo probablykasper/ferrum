@@ -159,7 +159,6 @@ version = "0.0.0"
 dependencies = [
  "alphanumeric-sort",
  "atomicwrites",
- "base64",
  "dirs",
  "id3",
  "linked-hash-map",
