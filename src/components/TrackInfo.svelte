@@ -12,7 +12,7 @@
   import { methods } from '@/lib/data'
   import type { Track, TrackID } from 'ferrum-addon'
   import { ipcRenderer } from '@/lib/window'
-  import { reload } from '@/lib/player'
+  import { playingId, reload } from '@/lib/player'
   import { onDestroy, tick } from 'svelte'
 
   export let currentList: TrackInfoList
@@ -166,7 +166,9 @@
         // playCount,
         comments,
       })
-      reload()
+      if (id === $playingId) {
+        reload()
+      }
     }
     if (hideAfter) {
       cancel()

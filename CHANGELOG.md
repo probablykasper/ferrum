@@ -2,6 +2,7 @@
 
 ## Next
 - Hide app when window is closed on macOS
+- Fix unnecessary audio reloading
 
 ## 0.16.1 - 2022 Oct 21
 - Fix `Enter` not working Track Info window
