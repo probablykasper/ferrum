@@ -90,7 +90,7 @@ app.whenReady().then(async () => {
   mainWindow.on('close', (e) => {
     if (!quitting) {
       e.preventDefault()
-      mainWindow?.hide()
+      app.hide()
     }
   })
   mainWindow.on('closed', () => {

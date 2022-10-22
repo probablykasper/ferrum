@@ -1,5 +1,8 @@
 # Changelog
 
+## Next
+- Hide app when window is closed on macOS
+
 ## 0.16.1 - 2022 Oct 21
 - Fix `Enter` not working Track Info window
 
