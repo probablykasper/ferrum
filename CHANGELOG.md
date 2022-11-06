@@ -1,6 +1,6 @@
 # Changelog
 
-## Next
+## 0.16.3 - 2022 Nov 7
 - Improve focus behavior
 
 ## 0.16.2 - 2022 Oct 23
