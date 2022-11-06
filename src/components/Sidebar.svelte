@@ -18,13 +18,13 @@
     const selectedList = $trackListsDetailsMap[$page.tracklist.id]
     let prevent = true
     if (e.key == 'Home') {
-      viewport.scrollTop = 0
+      // viewport.scrollTop = 0
     } else if (e.key == 'End') {
-      viewport.scrollTop = viewport.scrollHeight
+      // viewport.scrollTop = viewport.scrollHeight
     } else if (e.key == 'PageUp') {
-      viewport.scrollTop -= viewport.clientHeight
+      // viewport.scrollTop -= viewport.clientHeight
     } else if (e.key == 'PageDown') {
-      viewport.scrollTop += viewport.clientHeight
+      // viewport.scrollTop += viewport.clientHeight
     } else if (checkShortcut(e, 'ArrowLeft') && selectedList.kind === 'folder') {
       hideFolder(selectedList.id)
     } else if (checkShortcut(e, 'ArrowRight') && selectedList.kind === 'folder') {
@@ -87,6 +87,14 @@
       }
     }
   }
+
+  /** Prevent focus weirdness */
+  function focuser() {
+    const scrollTop = contentElement.scrollTop
+    viewport.focus()
+    contentElement.scrollTop = scrollTop
+    scrollToActive()
+  }
 </script>
 
 <aside on:mousedown|self|preventDefault>
@@ -94,14 +102,19 @@
     <div class="titlebar-spacer" />
   {/if}
   <div class="content" bind:this={contentElement}>
-    <Filter />
+    <Filter
+      on:focus={() => {
+        contentElement.scrollTop = 0
+      }}
+    />
     <div
       class="items"
-      tabindex="0"
+      tabindex="-1"
       on:keydown={handleKeydown}
       bind:this={viewport}
       class:droppable={rootDroppable}
     >
+      <div class="focuser" tabindex="0" on:focus={focuser} />
       <div class="spacer" />
       <SidebarItems
         trackList={special}
@@ -167,6 +180,8 @@
     background-color: inherit
     display: flex
     flex-direction: column
+    &:focus .focuser
+      display: none
   .bottom-space
     flex-grow: 1
   .droppable

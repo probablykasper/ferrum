@@ -1,5 +1,8 @@
 # Changelog
 
+## Next
+- Improve focus behavior
+
 ## 0.16.2 - 2022 Oct 23
 - Hide app when window is closed on macOS
 - Fix unnecessary audio reloading

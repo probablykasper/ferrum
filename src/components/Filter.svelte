@@ -12,6 +12,7 @@
 </script>
 
 <input
+  on:focus
   bind:this={filterInput}
   type="text"
   class="search"
