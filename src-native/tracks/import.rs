@@ -4,7 +4,7 @@ use crate::tracks::{generate_filename, tag};
 use crate::{sys_time_to_timestamp, UniResult};
 use id3::TagLike;
 use lofty::ogg::OpusFile;
-use lofty::{Accessor, AudioFile, TagExt};
+use lofty::{Accessor, AudioFile, ParseOptions, TagExt};
 use mp3_metadata;
 use std::fs::{self, File};
 use std::path::Path;
@@ -27,7 +27,7 @@ impl FileType {
   }
   pub fn from_lofty_file_type(lofty_type: lofty::FileType) -> UniResult<Self> {
     match lofty_type {
-      lofty::FileType::MP3 => Ok(FileType::Mp3),
+      lofty::FileType::MPEG => Ok(FileType::Mp3),
       lofty::FileType::MP4 => Ok(FileType::M4a),
       lofty::FileType::Opus => Ok(FileType::Opus),
       _ => throw!("Unsupported file type {:?}", lofty_type),
@@ -110,7 +110,7 @@ pub fn import_opus(data: &Data, track_path: &Path, now: i64) -> UniResult<Track>
     Ok(file) => file,
     Err(e) => throw!("Unable to open file: {}", e),
   };
-  let mut opusfile = match OpusFile::read_from(&mut file, true) {
+  let mut opusfile = match OpusFile::read_from(&mut file, ParseOptions::new()) {
     Ok(opusfile) => opusfile,
     Err(e) => throw!("Unable to read opus tags: {}", e),
   };

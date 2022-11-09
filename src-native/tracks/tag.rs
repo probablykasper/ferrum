@@ -83,10 +83,19 @@ impl Tag {
         Tag::Mp4(tag)
       }
       "opus" => {
-        let mut tagged_file = match lofty::read_from_path(path, false) {
+        let probe = match lofty::Probe::open(path) {
+          Ok(f) => {
+            let parse_options = lofty::ParseOptions::new().read_properties(false);
+            f.options(parse_options)
+          },
+          Err(e) => throw!("File does not exist: {}", e),
+        };
+
+        let mut tagged_file = match probe.read() {
           Ok(f) => f,
           Err(e) => throw!("Unable to read file: {}", e),
         };
+
         let tag = match tagged_file.take(lofty::TagType::VorbisComments) {
           Some(t) => t,
           None => lofty::Tag::new(lofty::TagType::VorbisComments),
