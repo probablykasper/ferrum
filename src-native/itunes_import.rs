@@ -349,7 +349,7 @@ fn parse_track(
   // this will also checks if the file exists
   let file_md = read_file_metadata(&xml_track_path)?;
 
-  let tagged_file = match lofty::read_from_path(&xml_track_path, true) {
+  let tagged_file = match lofty::read_from_path(&xml_track_path) {
     Ok(tagged_file) => tagged_file,
     Err(e) => throw!("Failed to read file information: {}", e),
   };
