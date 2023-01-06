@@ -1,5 +1,8 @@
 # Changelog
 
+## Next
+- Fix Next/Previous/Stop media key shortcuts
+
 ## 0.16.3 - 2022 Nov 7
 - Improve focus behavior
 

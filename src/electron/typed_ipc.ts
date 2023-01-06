@@ -100,6 +100,7 @@ type Events = {
   playPause: () => void
   Next: () => void
   Previous: () => void
+  Stop: () => void
   Shuffle: () => void
   Repeat: () => void
   volumeUp: () => void

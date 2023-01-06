@@ -1,19 +1,21 @@
 import { globalShortcut, dialog, systemPreferences, BrowserWindow } from 'electron'
 import is from './is'
+import type { WebContents } from './typed_ipc'
 
 function tryRegistering(mainWindow: BrowserWindow) {
+  const webContents = mainWindow.webContents as WebContents
   const success1 = globalShortcut.register('MediaPlayPause', () => {
-    if (mainWindow !== null) mainWindow.webContents.send('playPause')
+    if (mainWindow !== null) webContents.send('playPause')
   })
   if (!success1) return false
   globalShortcut.register('MediaNextTrack', () => {
-    if (mainWindow !== null) mainWindow.webContents.send('next')
+    if (mainWindow !== null) webContents.send('Next')
   })
   globalShortcut.register('MediaPreviousTrack', () => {
-    if (mainWindow !== null) mainWindow.webContents.send('previous')
+    if (mainWindow !== null) webContents.send('Previous')
   })
   globalShortcut.register('MediaStop', () => {
-    if (mainWindow !== null) mainWindow.webContents.send('stop')
+    if (mainWindow !== null) webContents.send('Stop')
   })
   return true
 }

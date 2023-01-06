@@ -274,3 +274,4 @@ if (navigator.mediaSession) {
 ipcRenderer.on('playPause', playPause)
 ipcRenderer.on('Next', next)
 ipcRenderer.on('Previous', previous)
+ipcRenderer.on('Stop', stop)
