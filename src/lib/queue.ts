@@ -160,7 +160,8 @@ export function moveIndexes(indexes: number[], newIndex: number, top = false) {
     }
     return q
   })
-  return insertItems(ids, newIndex, top)
+  // We sorted the indexes descending, so now reverse them
+  return insertItems(ids.reverse(), newIndex, top)
 }
 
 export function insertItems(items: QueueItem[], index: number, top = false) {

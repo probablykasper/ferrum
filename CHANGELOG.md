@@ -1,6 +1,7 @@
 # Changelog
 
 ## Next
+- Fix queue rearranging reversing tracks
 - Fix error when rearranging many tracks in the queue
 
 ## 0.16.4 - 2022 Jan 7
