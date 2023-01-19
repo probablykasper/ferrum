@@ -1,5 +1,8 @@
 # Changelog
 
+## Next
+- Fix error when rearranging many tracks in the queue
+
 ## 0.16.4 - 2022 Jan 7
 - Fix media key shortcuts
 

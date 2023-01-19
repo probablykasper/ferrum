@@ -151,8 +151,8 @@ export function appendToUserQueue(trackIds: TrackID[]) {
 export function moveIndexes(indexes: number[], newIndex: number, top = false) {
   const ids: QueueItem[] = []
   queue.update((q) => {
-    // we need to remove the last indexes first to not mess up the indexes
-    for (const index of indexes.sort().reverse()) {
+    // Sort descending. We need to remove the last indexes first to not mess up the indexes
+    for (const index of indexes.sort((a, b) => b - a)) {
       ids.push(removeIndex(q, index))
       if (index < newIndex) {
         newIndex--
