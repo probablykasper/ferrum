@@ -3,7 +3,8 @@ import { viteExternalsPlugin } from 'vite-plugin-externals'
 import { defineConfig } from 'vite'
 import { svelte } from '@sveltejs/vite-plugin-svelte'
 import sveltePreprocess from 'svelte-preprocess' // using vitePreprocess results in an error
-import { electronX } from 'vite-plugin-electron-x'
+// import { electronX } from 'vite-plugin-electron-x'
+import electron from 'vite-plugin-electron'
 
 export default defineConfig({
   base: './', // use relative paths
@@ -27,20 +28,15 @@ export default defineConfig({
     svelte({
       preprocess: sveltePreprocess(),
     }),
-    electronX({
-      dev: {
-        env: {
-          NODE_ENV: 'development',
+    electron({
+      entry: ['./src/electron/main.ts', './src/electron/preload.ts'],
+      vite: {
+        build: {
+          outDir: './build/electron',
+          rollupOptions: {
+            external: [/^.*\.node$/],
+          },
         },
-      },
-      main: {
-        entry: './src/electron/main.ts',
-        outDir: './build/electron',
-      },
-      preload: {
-        entry: './src/electron/preload.ts',
-        external: [/^.*\.node$/],
-        outDir: './build/electron',
       },
     }),
   ],
