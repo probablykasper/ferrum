@@ -2,7 +2,7 @@ import { resolve } from 'path'
 import { viteExternalsPlugin } from 'vite-plugin-externals'
 import { defineConfig } from 'vite'
 import { svelte } from '@sveltejs/vite-plugin-svelte'
-import sveltePreprocess from 'svelte-preprocess'
+import sveltePreprocess from 'svelte-preprocess' // using vitePreprocess results in an error
 import { electronX } from 'vite-plugin-electron-x'
 
 export default defineConfig({
