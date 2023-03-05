@@ -44,7 +44,7 @@ app.on('window-all-closed', () => {
 
 app.whenReady().then(async () => {
   let mainWindow: BrowserWindow | null = new BrowserWindow({
-    width: 1300,
+    width: 1305,
     height: 1000,
     minWidth: 850,
     minHeight: 400,

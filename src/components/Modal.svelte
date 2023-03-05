@@ -83,10 +83,27 @@
       e.preventDefault()
     }
   }
+
+  // Prevent clicks where the mousedown or mouseup happened on a child element. This could've
+  // been solved with a non-parent backdrop element, but that interferes with text selection.
+  let clickable = true
 </script>
 
-<div class="container" on:keydown>
-  <div class="backdrop" on:click={onCancel} on:mousedown|preventDefault />
+<svelte:body
+  on:click={() => {
+    clickable = true
+  }}
+/>
+
+<div
+  class="modal"
+  on:keydown
+  on:click={() => {
+    if (clickable) {
+      onCancel()
+    }
+  }}
+>
   <svelte:element
     this={tag}
     class="box"
@@ -94,6 +111,12 @@
     use:focusTrap
     tabindex="-1"
     on:keydown|self={boxKeydown}
+    on:mousedown={() => {
+      clickable = false
+    }}
+    on:mouseup={() => {
+      clickable = false
+    }}
   >
     {#if title !== null}
       <h3>{title}</h3>
@@ -108,12 +131,11 @@
 </div>
 
 <style lang="sass">
-  .backdrop
-    background-color: rgba(#000000, 0.5)
-    outline: none
   h3
     margin-bottom: 15px
-  .backdrop, .container
+  .modal
+    background-color: rgba(#000000, 0.5)
+    outline: none
     position: fixed
     user-select: text
     z-index: 90

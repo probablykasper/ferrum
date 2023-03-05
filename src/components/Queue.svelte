@@ -63,7 +63,7 @@
     return newItems
   }
 
-  let virtualList: VirtualList<typeof items[number]>
+  let virtualList: VirtualList<(typeof items)[number]>
 
   const selection = newSelection({
     getItemCount: () => getQueueLength(),

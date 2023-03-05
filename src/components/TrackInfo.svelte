@@ -380,7 +380,7 @@
           </div>
         {/if}
       </div>
-      <div>
+      <div class="text">
         <div class="name">{name}</div>
         <div class="artist">{artist}</div>
       </div>
@@ -464,12 +464,17 @@
     width: 450px
   .header
     display: flex
-    align-items: center
+    align-items: stretch
     min-height: $cover-size
     &.has-subtitle
       margin-bottom: 7px
   .spacer
     height: 15px
+  .text
+    flex-grow: 1
+    display: flex
+    flex-direction: column
+    justify-content: center
   .name
     font-size: 18px
     font-weight: 500
