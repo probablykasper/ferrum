@@ -13,7 +13,7 @@
     "build": "npm run napi && npm run build:web && electron-builder",
     "build:web": "vite build",
     "electron-builder": "electron-builder",
-    "lint": "prettier --check --plugin-search-dir=. src && svelte-check --compiler-warnings a11y-click-events-have-key-events:ignore,a11y-no-noninteractive-tabindex:ignore && eslint src",
+    "lint": "prettier --check --plugin-search-dir=. src && svelte-check && eslint src",
     "format": "prettier --write --plugin-search-dir=. src && eslint --fix src",
     "check": "npm run lint && cargo check"
   },
@@ -72,6 +72,7 @@
     "eslint": "^8.35.0",
     "eslint-config-prettier": "^8.6.0",
     "eslint-plugin-svelte3": "^4.0.0",
+    "ferrum-addon": "file:ferrum-addon",
     "prettier": "^2.8.4",
     "prettier-plugin-svelte": "^2.9.0",
     "sass": "^1.58.3",
@@ -83,9 +84,6 @@
     "vite-plugin-electron": "^0.11.1",
     "vite-plugin-externals": "^0.6.2"
   },
-  "workspaces": [
-    "ferrum-addon"
-  ],
   "prettier": {
     "printWidth": 100,
     "semi": false,

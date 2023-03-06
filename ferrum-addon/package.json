@@ -1,5 +1,6 @@
 {
   "private": true,
   "name": "ferrum-addon",
-  "main": "main.ts"
+  "main": "addon.node",
+  "types": "main.d"
 }

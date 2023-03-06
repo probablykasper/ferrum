@@ -1,4 +1,6 @@
-export * as default from './addon.node'
+/* tslint:disable */
+/* eslint-disable */
+
 export * from './addon.d'
 
 declare module 'ferrum-addon/addon' {
