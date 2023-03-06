@@ -1,6 +1,7 @@
 use serde::de::DeserializeOwned;
 use std::fs::File;
 use std::io::BufReader;
+use std::mem;
 use std::path::PathBuf;
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -78,10 +79,9 @@ impl From<UniError> for napi::Error {
   }
 }
 impl From<napi::Error> for UniError {
-  fn from(n_err: napi::Error) -> Self {
-    UniError {
-      message: n_err.reason,
-    }
+  fn from(mut n_err: napi::Error) -> Self {
+    let message = mem::replace(&mut n_err.reason, "".to_string());
+    UniError { message }
   }
 }
 

@@ -120,7 +120,7 @@ pub fn import_opus(data: &Data, track_path: &Path, now: i64) -> UniResult<Track>
   let tag = opusfile.vorbis_comments_mut();
 
   let title = match tag.title() {
-    Some(title) => title.to_owned(),
+    Some(title) => title.into_owned(),
     None => {
       let file_stem = match track_path.file_stem() {
         Some(stem) => stem.to_string_lossy().into_owned(),
@@ -131,10 +131,10 @@ pub fn import_opus(data: &Data, track_path: &Path, now: i64) -> UniResult<Track>
       file_stem
     }
   };
-  let artist = tag.artist();
+  let artist = tag.artist().map(|s| s.into_owned()).unwrap_or_default();
 
   let tracks_dir = &data.paths.tracks_dir;
-  let filename = generate_filename(&tracks_dir, artist.unwrap_or(""), &title, "opus");
+  let filename = generate_filename(&tracks_dir, &artist, &title, "opus");
   let dest_path = tracks_dir.join(&filename);
 
   fs::copy(track_path, &dest_path).expect("Error copying file");
@@ -160,22 +160,22 @@ pub fn import_opus(data: &Data, track_path: &Path, now: i64) -> UniResult<Track>
     file: filename,
     dateModified: date_modified,
     dateAdded: now,
-    name: title.to_string(),
+    name: title,
     importedFrom: None,
     originalId: None,
-    artist: artist.unwrap_or_default().to_string(),
+    artist,
     composer: tag.get("COMPOSER").map(|s| s.to_string()),
     sortName: tag.get("TITLESORT").map(|s| s.to_string()),
     sortArtist: tag.get("ARTISTSORT").map(|s| s.to_string()),
     sortComposer: tag.get("COMPOSERSORT").map(|s| s.to_string()),
-    genre: tag.genre().map(|s| s.to_owned()),
+    genre: tag.genre().map(|s| s.into_owned()),
     rating: None,
     year: tag.year().map(|y| y.into()),
     bpm: match tag.get("BPM") {
       Some(n) => n.parse().ok(),
       None => None,
     },
-    comments: tag.comment().map(|s| s.to_owned()),
+    comments: tag.comment().map(|s| s.into_owned()),
     grouping: tag.get("GROUPING").map(|s| s.to_string()),
     liked: None,
     disliked: None,

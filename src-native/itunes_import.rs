@@ -3,12 +3,13 @@ use crate::get_now_timestamp;
 use crate::library_types::{CountObject, Folder, Library, Playlist, Track, TrackList};
 use crate::tracks::generate_filename;
 use crate::tracks::import::{read_file_metadata, FileType};
-use lofty::AudioFile;
+use lofty::{AudioFile, TaggedFileExt};
 use napi::{Env, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::sync::Mutex;
 use time::serde::iso8601;
 use time::serde::iso8601::option as iso8601_opt;
 use time::OffsetDateTime;
@@ -589,9 +590,9 @@ pub struct ImportStatus {
 
 #[napi]
 pub struct ItunesImport {
-  new_library: Option<Library>,
+  new_library: Mutex<Option<Library>>,
   /// iTunes path -> Ferrum file
-  itunes_track_paths: HashMap<PathBuf, String>,
+  itunes_track_paths: Mutex<HashMap<PathBuf, String>>,
 }
 #[napi]
 impl ItunesImport {
@@ -599,36 +600,39 @@ impl ItunesImport {
   pub fn new(env: Env) -> Result<Self> {
     let data = get_data(&env)?;
     Ok(Self {
-      new_library: Some(data.library.clone()),
-      itunes_track_paths: HashMap::new(),
+      new_library: Some(data.library.clone()).into(),
+      itunes_track_paths: HashMap::new().into(),
     })
   }
   #[napi]
-  pub async fn start(&mut self, path: String, tracks_dir: String) -> Result<ImportStatus> {
+  pub async fn start(&self, path: String, tracks_dir: String) -> Result<ImportStatus> {
     import_itunes(self, path, tracks_dir).await
   }
   #[napi]
   pub fn finish(&mut self, env: Env) -> Result<()> {
     let mut data = get_data(&env)?;
-    for (itunes_path, ferrum_file) in &self.itunes_track_paths {
+    let itunes_track_paths = &mut *self.itunes_track_paths.lock().unwrap();
+    for (itunes_path, ferrum_file) in itunes_track_paths {
       let new_path = data.paths.tracks_dir.join(ferrum_file);
       fs::copy(itunes_path, new_path).or(Err(nerr!("Error copying file")))?;
     }
-    data.library = self.new_library.take().ok_or(nerr!("Not initialized"))?;
+    let new_library = &mut self.new_library.lock().unwrap();
+    data.library = new_library.take().ok_or(nerr!("Not initialized"))?;
     Ok(())
   }
 }
 
 pub async fn import_itunes(
-  itunes_import: &mut ItunesImport,
+  itunes_import: &ItunesImport,
   path: String,
   tracks_dir: String,
 ) -> Result<ImportStatus> {
-  let mut library = match &mut itunes_import.new_library {
+  let new_library_lock = &mut *itunes_import.new_library.lock().unwrap();
+  let mut library = match new_library_lock {
     Some(library) => library,
     None => throw!("Not initialized"),
   };
-  let itunes_track_paths = &mut itunes_import.itunes_track_paths;
+  let mut itunes_track_paths = itunes_import.itunes_track_paths.lock().unwrap();
   let original_tracks_count = library.tracks.len();
   let original_tracklists_count = library.trackLists.len();
   let xml_lib: XmlLibrary = match plist::from_file(path) {

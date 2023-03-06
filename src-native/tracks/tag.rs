@@ -1,6 +1,6 @@
 use crate::{UniError, UniResult};
 use id3::{self, TagLike};
-use lofty::{Accessor, TagExt};
+use lofty::{Accessor, TagExt, TaggedFileExt};
 use mp4ameta;
 use std::io::Cursor;
 use std::path::{Path, PathBuf};
@@ -87,7 +87,7 @@ impl Tag {
           Ok(f) => {
             let parse_options = lofty::ParseOptions::new().read_properties(false);
             f.options(parse_options)
-          },
+          }
           Err(e) => throw!("File does not exist: {}", e),
         };
 
@@ -96,7 +96,7 @@ impl Tag {
           Err(e) => throw!("Unable to read file: {}", e),
         };
 
-        let tag = match tagged_file.take(lofty::TagType::VorbisComments) {
+        let tag = match tagged_file.remove(lofty::TagType::VorbisComments) {
           Some(t) => t,
           None => lofty::Tag::new(lofty::TagType::VorbisComments),
         };
