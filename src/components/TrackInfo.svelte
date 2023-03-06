@@ -310,6 +310,7 @@
 <Modal onCancel={cancel} let:focus form={save}>
   <main class="modal">
     <div class="header" class:has-subtitle={image && image.totalImages >= 2}>
+      <!-- svelte-ignore a11y-no-noninteractive-tabindex -->
       <div class="cover-area" class:droppable tabindex="0" on:keydown={coverKeydown}>
         <div
           class="cover"
@@ -341,6 +342,7 @@
           {@const imageIndex = image.index}
           <div class="cover-subtitle">
             <div class="arrow" class:unclickable={imageIndex <= 0}>
+              <!-- svelte-ignore a11y-click-events-have-key-events -->
               <svg
                 on:click={prevImage}
                 clip-rule="evenodd"
@@ -361,6 +363,7 @@
               {image.index + 1} / {image.totalImages}
             </div>
             <div class="arrow" class:unclickable={imageIndex >= image.totalImages - 1}>
+              <!-- svelte-ignore a11y-click-events-have-key-events -->
               <svg
                 on:click={nextImage}
                 clip-rule="evenodd"

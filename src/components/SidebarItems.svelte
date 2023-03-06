@@ -151,6 +151,7 @@
         on:mousedown={() => open(childList.id)}
         on:contextmenu={() => tracklistContextMenu(childList.id, true)}
       >
+        <!-- svelte-ignore a11y-click-events-have-key-events -->
         <svg
           class="arrow"
           on:mousedown|stopPropagation

@@ -73,6 +73,7 @@
   }
 </script>
 
+<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
 <div
   class="viewport"
   bind:this={viewport}

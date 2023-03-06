@@ -225,6 +225,7 @@
       {:else}
         <!-- @const here to fix bugged type guard -->
         {@const index = item}
+        <!-- svelte-ignore a11y-click-events-have-key-events -->
         <div
           class="row"
           class:selected={$selection.list[item] === true}

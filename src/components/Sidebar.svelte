@@ -114,6 +114,7 @@
       bind:this={viewport}
       class:droppable={rootDroppable}
     >
+      <!-- svelte-ignore a11y-no-noninteractive-tabindex -->
       <div class="focuser" tabindex="0" on:focus={focuser} />
       <div class="spacer" />
       <SidebarItems

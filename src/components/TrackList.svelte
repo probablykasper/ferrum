@@ -226,12 +226,15 @@
     {/if}
   </div>
   <div class="row table-header" class:desc={$page.sortDesc}>
+    <!-- Fix: Add view options and "View > Sort By" menu -->
     <div class="c index" class:sort={sortKey === 'index'} on:click={() => sortBy('index')}>
       <span>#</span>
     </div>
+    <!-- svelte-ignore a11y-click-events-have-key-events -->
     <div class="c name" class:sort={sortKey === 'name'} on:click={() => sortBy('name')}>
       <span>Name</span>
     </div>
+    <!-- svelte-ignore a11y-click-events-have-key-events -->
     <div
       class="c playCount"
       class:sort={sortKey === 'playCount'}
@@ -239,12 +242,15 @@
     >
       <span>Plays</span>
     </div>
+    <!-- svelte-ignore a11y-click-events-have-key-events -->
     <div class="c duration" class:sort={sortKey === 'duration'} on:click={() => sortBy('duration')}>
       <span>Time</span>
     </div>
+    <!-- svelte-ignore a11y-click-events-have-key-events -->
     <div class="c artist" class:sort={sortKey === 'artist'} on:click={() => sortBy('artist')}>
       <span>Artist</span>
     </div>
+    <!-- svelte-ignore a11y-click-events-have-key-events -->
     <div
       class="c albumName"
       class:sort={sortKey === 'albumName'}
@@ -252,12 +258,15 @@
     >
       <span>Album</span>
     </div>
+    <!-- svelte-ignore a11y-click-events-have-key-events -->
     <div class="c comments" class:sort={sortKey === 'comments'} on:click={() => sortBy('comments')}>
       <span>Comments</span>
     </div>
+    <!-- svelte-ignore a11y-click-events-have-key-events -->
     <div class="c genre" class:sort={sortKey === 'genre'} on:click={() => sortBy('genre')}>
       <span>Genre</span>
     </div>
+    <!-- svelte-ignore a11y-click-events-have-key-events -->
     <div
       class="c dateAdded"
       class:sort={sortKey === 'dateAdded'}
@@ -265,6 +274,7 @@
     >
       <span>Date Added</span>
     </div>
+    <!-- svelte-ignore a11y-click-events-have-key-events -->
     <div class="c year" class:sort={sortKey === 'year'} on:click={() => sortBy('year')}>
       <span>Year</span>
     </div>
@@ -280,6 +290,7 @@
     let:index
   >
     {#if track !== null}
+      <!-- svelte-ignore a11y-click-events-have-key-events -->
       <div
         class="row"
         on:dblclick={(e) => doubleClick(e, index)}
