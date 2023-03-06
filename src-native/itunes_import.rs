@@ -669,10 +669,10 @@ pub async fn import_itunes(
     let artist_title = xml_track.artist_title();
 
     if matches!(xml_track.name.as_deref(), Some("") | None) {
-      errors.push("[{artist_title}] Missing track name".to_string());
+      errors.push(format!("Missing track name: {artist_title}"));
     }
     if matches!(xml_track.artist.as_deref(), Some("") | None) {
-      errors.push("[{artist_title}] Missing track artist".to_string());
+      errors.push(format!("Missing track artist: {artist_title}"));
     }
 
     match parse_track(xml_track, start_time, Path::new(&tracks_dir)) {
@@ -682,7 +682,7 @@ pub async fn import_itunes(
         itunes_track_paths.insert(xml_track_path, track.file.clone());
         library.tracks.insert(generated_id.clone(), track);
         if xml_track_id_map.contains_key(&xml_id) {
-          errors.push(format!("[{artist_title}] Duplicate track ids {}", xml_id));
+          errors.push(format!("Duplicate track ids \"{}\": artist_title", xml_id));
         }
         xml_track_id_map.insert(xml_id, generated_id);
       }

@@ -1,5 +1,9 @@
 # Changelog
 
+## Next
+- Improve text selection in modals
+- Change "Reveal in File Manager" shortcut to `Shift+Ctrl+R` (macOS: `Shift+Cmd+R`)
+
 ## 0.16.5 - 2022 Jan 19
 - Fix queue rearranging reversing tracks
 - Fix error when rearranging many tracks in the queue

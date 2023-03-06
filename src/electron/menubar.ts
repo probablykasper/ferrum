@@ -117,7 +117,7 @@ export function initMenuBar(app: App, mainWindow: BrowserWindow) {
             else if (is.windows) return 'Reveal in File Explorer'
             else return 'Reveal in File Manager'
           })(),
-          accelerator: 'Alt+CmdOrCtrl+R',
+          accelerator: 'Shift+CmdOrCtrl+R',
           click: () => {
             webContents.send('selectedTracksAction', 'revealTrackFile')
           },
@@ -151,8 +151,8 @@ export function initMenuBar(app: App, mainWindow: BrowserWindow) {
           },
         },
         { type: 'separator' },
-        { role: 'reload', accelerator: 'CmdOrCtrl+Shift+R' },
-        { role: 'forceReload', accelerator: 'CmdOrCtrl+Alt+R' },
+        { role: 'reload', accelerator: 'CmdOrCtrl+Option+R' },
+        { role: 'forceReload', accelerator: 'Shift+CmdOrCtrl+Option+R' },
         { role: 'toggleDevTools' },
         { type: 'separator' },
         { role: 'resetZoom' },
