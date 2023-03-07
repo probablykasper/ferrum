@@ -1,5 +1,6 @@
 {
   "name": "ferrum",
+  "private": true,
   "productName": "Ferrum",
   "author": "kasper.space",
   "description": "Music library app",

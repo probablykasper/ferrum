@@ -1,6 +1,7 @@
 # Changelog
 
 ## Next
+- Prevent focus when clicking the player bar
 - Improve text selection in modals
 - Change "Reveal in File Manager" shortcut to `Shift+Ctrl+R` (macOS: `Shift+Cmd+R`)
 
