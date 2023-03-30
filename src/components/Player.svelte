@@ -64,7 +64,6 @@
   class:dev={isDev}
   tabindex="0"
   on:focusin={(e) => {
-    console.log(e.relatedTarget, e.currentTarget)
     if (e.relatedTarget instanceof HTMLElement) {
       e.relatedTarget.focus()
     } else {

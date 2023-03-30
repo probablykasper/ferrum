@@ -4,6 +4,7 @@
 - Prevent focus when clicking the player bar
 - Improve text selection in modals
 - Change "Reveal in File Manager" shortcut to `Shift+Ctrl+R` (macOS: `Shift+Cmd+R`)
+- Fix plays and skips not counted for last track in queue
 
 ## 0.16.5 - 2022 Jan 19
 - Fix queue rearranging reversing tracks

@@ -146,6 +146,8 @@ function savePlayTime() {
   clearInterval(playTimeCounter)
   const currentId = queue.getCurrent()?.id
   if (playTime >= 1000 && currentId) {
+    console.log('SAVEPLAYTIME')
+
     methods.addPlayTime(currentId, startTime, playTime)
   }
   playTime = 0
@@ -212,6 +214,9 @@ audio.onended = () => {
     setPlayingFile(nextId)
     queueNext()
   } else {
+    if (currentId) {
+      methods.addPlay(currentId)
+    }
     stop()
   }
 }
@@ -219,9 +224,11 @@ audio.onended = () => {
 export function next() {
   const nextId = queue.getNext()?.id
   const currentId = queue.getCurrent()?.id
+  if (currentId) {
+    methods.addSkip(currentId)
+  }
   if (nextId && currentId) {
     savePlayTime()
-    methods.addSkip(currentId)
     setPlayingFile(nextId)
     queueNext()
   } else {
