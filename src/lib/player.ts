@@ -146,8 +146,6 @@ function savePlayTime() {
   clearInterval(playTimeCounter)
   const currentId = queue.getCurrent()?.id
   if (playTime >= 1000 && currentId) {
-    console.log('SAVEPLAYTIME')
-
     methods.addPlayTime(currentId, startTime, playTime)
   }
   playTime = 0
@@ -206,45 +204,44 @@ quit.setHandler('player', () => {
 })
 
 audio.onended = () => {
-  const nextId = queue.getNext()?.id
-  const currentId = queue.getCurrent()?.id
-  if (nextId && currentId) {
-    savePlayTime()
-    methods.addPlay(currentId)
-    setPlayingFile(nextId)
-    queueNext()
-  } else {
-    if (currentId) {
-      methods.addPlay(currentId)
-    }
-    stop()
-  }
+  next(false)
 }
 
-export function next() {
-  const nextId = queue.getNext()?.id
+export function skipToNext() {
+  next(true)
+}
+
+function next(skip: boolean) {
   const currentId = queue.getCurrent()?.id
   if (currentId) {
-    methods.addSkip(currentId)
-  }
-  if (nextId && currentId) {
+    if (skip) {
+      methods.addSkip(currentId)
+    } else {
+      methods.addPlay(currentId)
+    }
     savePlayTime()
-    setPlayingFile(nextId)
     queueNext()
-  } else {
-    stop()
+    const newCurrentId = queue.getCurrent()?.id
+    if (newCurrentId) {
+      setPlayingFile(newCurrentId)
+    } else {
+      stop()
+    }
   }
 }
 export function previous() {
-  const prevId = queue.getPrevious()?.id
   const currentId = queue.getCurrent()?.id
-  if (prevId && currentId) {
+  if (currentId) {
     savePlayTime()
     methods.addSkip(currentId)
-    setPlayingFile(prevId)
     queuePrev()
-  } else {
-    stop()
+    const newCurrentId = queue.getCurrent()?.id
+    if (newCurrentId) {
+      setPlayingFile(newCurrentId)
+    } else {
+      // this should never happen because the first track will play again
+      stop()
+    }
   }
 }
 
@@ -275,10 +272,10 @@ if (navigator.mediaSession) {
     }
   })
   mediaSession.setActionHandler('previoustrack', previous)
-  mediaSession.setActionHandler('nexttrack', next)
+  mediaSession.setActionHandler('nexttrack', skipToNext)
 }
 
 ipcRenderer.on('playPause', playPause)
-ipcRenderer.on('Next', next)
+ipcRenderer.on('Next', skipToNext)
 ipcRenderer.on('Previous', previous)
 ipcRenderer.on('Stop', stop)

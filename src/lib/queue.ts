@@ -24,8 +24,12 @@ function newQueueItem(id: TrackID): QueueItem {
   }
 }
 
+/**
+ * If `hasCurrent` is true, the current track is past[length-1]
+ */
 export type Queue = {
   past: QueueItem[]
+  current: QueueItem | null
   userQueue: QueueItem[]
   autoQueue: QueueItem[]
 }
@@ -33,6 +37,7 @@ export const queue = (() => {
   const store = getterWritable({
     past: [],
     userQueue: [],
+    current: null,
     autoQueue: [],
   } as Queue)
   return {
@@ -41,8 +46,6 @@ export const queue = (() => {
     update: store.update,
     get: store.get,
     getCurrent,
-    getPrevious,
-    getNext,
     getQueueLength,
     getByQueueIndex,
     prependToUserQueue,
@@ -109,16 +112,7 @@ repeat.subscribe(($repeat) => {
 })
 
 export function getCurrent() {
-  const { past } = queue.get()
-  return (past as Partial<QueueItem[]>)[past.length - 1] || null
-}
-export function getPrevious() {
-  const { past } = queue.get()
-  return (past as Partial<QueueItem[]>)[past.length - 2] || null
-}
-export function getNext() {
-  const { userQueue, autoQueue } = queue.get()
-  return (userQueue as Partial<QueueItem[]>)[0] || (autoQueue as Partial<QueueItem[]>)[0] || null
+  return queue.get().current
 }
 export function getQueueLength() {
   const { userQueue, autoQueue } = queue.get()
@@ -206,37 +200,42 @@ export function removeIndexes(indexes: number[]) {
 export function removeDeleted() {
   const q = queue.get()
   const past = q.past.filter((qi) => methods.trackExists(qi.id))
+  const current = q.current && methods.trackExists(q.current.id) ? q.current : null
   const userQueue = q.userQueue.filter((qi) => methods.trackExists(qi.id))
   const autoQueue = q.autoQueue.filter((qi) => methods.trackExists(qi.id))
   if (
     past.length !== q.past.length ||
+    current !== null ||
     userQueue.length !== q.userQueue.length ||
     autoQueue.length !== q.autoQueue.length
   ) {
-    queue.set({ userQueue, autoQueue, past })
+    queue.set({ past, current, userQueue, autoQueue })
   }
 }
 
 export function next() {
   const q = queue.get()
-  if (q.userQueue.length) {
-    q.past.push(q.userQueue.shift()!)
-    queue.set(q)
-  } else if (q.autoQueue.length) {
-    const item = q.autoQueue.shift()!
-    q.past.push(item)
-    if (repeat.get()) {
-      q.autoQueue.push(newQueueItem(item.id))
-    }
-    queue.set(q)
+  if (q.current) {
+    q.past.push(q.current)
+    q.current = null
   }
+  if (q.userQueue.length) {
+    q.current = q.userQueue.shift()!
+  } else if (q.autoQueue.length) {
+    q.current = q.autoQueue.shift()!
+    if (repeat.get()) {
+      q.autoQueue.push(newQueueItem(q.current.id))
+    }
+  }
+  queue.set(q)
 }
 export function prev() {
   const q = queue.get()
-  // the last item is the current track, which we don't wanna remove
-  if (q.past.length >= 2) {
-    const current = q.past.pop()!
-    q.userQueue.unshift(current)
+  if (q.past.length) {
+    if (q.current) {
+      q.userQueue.unshift(q.current)
+    }
+    q.current = q.past.pop()!
     queue.set(q)
   }
 }
@@ -244,10 +243,12 @@ export function prev() {
 // TODO: Preserve userQueue when setting a new queue. Before we do that, a clear user queue button would be nice
 export function setNewQueue(newIds: TrackID[], newCurrentIndex: number) {
   const autoQueue = newIds.splice(newCurrentIndex + 1)
+  const current = newIds.pop()
   queue.set({
-    userQueue: [{ qId: 23818328, id: 'dss' }],
-    autoQueue: autoQueue.map(newQueueItem),
     past: newIds.map(newQueueItem),
+    current: current ? newQueueItem(current) : null,
+    userQueue: [],
+    autoQueue: autoQueue.map(newQueueItem),
   })
   queue.removeDeleted()
 }
