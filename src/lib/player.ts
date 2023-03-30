@@ -233,7 +233,6 @@ export function previous() {
   const currentId = queue.getCurrent()?.id
   if (currentId) {
     savePlayTime()
-    methods.addSkip(currentId)
     queuePrev()
     const newCurrentId = queue.getCurrent()?.id
     if (newCurrentId) {

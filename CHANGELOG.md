@@ -2,6 +2,7 @@
 
 ## Next
 - Prevent focus when clicking the player bar
+- Don't count skips from clicking "Previous"
 - Improve text selection in modals
 - Change "Reveal in File Manager" shortcut to `Shift+Ctrl+R` (macOS: `Shift+Cmd+R`)
 - Clicking "Previous" now replays the first track instead of stopping
