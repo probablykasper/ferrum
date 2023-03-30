@@ -8,6 +8,7 @@
 - Clicking "Previous" now replays the first track instead of stopping
 - Fix plays and skips not counted for last track in queue
 - Fix playing indicator staying after playback stops
+- Fix playing track not included when repeating
 
 ## 0.16.5 - 2022 Jan 19
 - Fix queue rearranging reversing tracks

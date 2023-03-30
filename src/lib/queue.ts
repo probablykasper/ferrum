@@ -29,7 +29,10 @@ function newQueueItem(id: TrackID): QueueItem {
  */
 export type Queue = {
   past: QueueItem[]
-  current: QueueItem | null
+  current: {
+    item: QueueItem
+    fromAutoQueue: boolean
+  } | null
   userQueue: QueueItem[]
   autoQueue: QueueItem[]
 }
@@ -112,7 +115,7 @@ repeat.subscribe(($repeat) => {
 })
 
 export function getCurrent() {
-  return queue.get().current
+  return queue.get().current?.item ?? null
 }
 export function getQueueLength() {
   const { userQueue, autoQueue } = queue.get()
@@ -200,7 +203,7 @@ export function removeIndexes(indexes: number[]) {
 export function removeDeleted() {
   const q = queue.get()
   const past = q.past.filter((qi) => methods.trackExists(qi.id))
-  const current = q.current && methods.trackExists(q.current.id) ? q.current : null
+  const current = q.current && methods.trackExists(q.current.item.id) ? q.current : null
   const userQueue = q.userQueue.filter((qi) => methods.trackExists(qi.id))
   const autoQueue = q.autoQueue.filter((qi) => methods.trackExists(qi.id))
   if (
@@ -216,16 +219,23 @@ export function removeDeleted() {
 export function next() {
   const q = queue.get()
   if (q.current) {
-    q.past.push(q.current)
-    q.current = null
+    q.past.push(q.current.item)
   }
   if (q.userQueue.length) {
-    q.current = q.userQueue.shift()!
-  } else if (q.autoQueue.length) {
-    q.current = q.autoQueue.shift()!
-    if (repeat.get()) {
-      q.autoQueue.push(newQueueItem(q.current.id))
+    q.current = {
+      item: q.userQueue.shift()!,
+      fromAutoQueue: false,
     }
+  } else if (q.autoQueue.length) {
+    if (repeat.get() && q.current) {
+      q.autoQueue.push(newQueueItem(q.current.item.id))
+    }
+    q.current = {
+      item: q.autoQueue.shift()!,
+      fromAutoQueue: true,
+    }
+  } else {
+    q.current = null
   }
   queue.set(q)
 }
@@ -233,9 +243,12 @@ export function prev() {
   const q = queue.get()
   if (q.past.length) {
     if (q.current) {
-      q.userQueue.unshift(q.current)
+      q.userQueue.unshift(q.current.item)
     }
-    q.current = q.past.pop()!
+    q.current = {
+      item: q.past.pop()!,
+      fromAutoQueue: false,
+    }
     queue.set(q)
   }
 }
@@ -246,7 +259,12 @@ export function setNewQueue(newIds: TrackID[], newCurrentIndex: number) {
   const current = newIds.pop()
   queue.set({
     past: newIds.map(newQueueItem),
-    current: current ? newQueueItem(current) : null,
+    current: current
+      ? {
+          item: newQueueItem(current),
+          fromAutoQueue: true,
+        }
+      : null,
     userQueue: [],
     autoQueue: autoQueue.map(newQueueItem),
   })
