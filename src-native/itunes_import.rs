@@ -59,14 +59,14 @@ impl XmlLibrary {
         continue;
       }
 
-      let track: XmlTrack = match plist::from_value(value) {
+      let track: XmlTrack = match plist::from_value(&value) {
         Ok(track) => track,
         Err(e) => throw!("Could not read track with id \"{key}\": {e}"),
       };
       tracks.insert(key, track);
     }
     let mut playlists = Vec::new();
-    for value in self.playlists {
+    for value in &self.playlists {
       let name = value
         .as_dictionary()
         .and_then(|dict| dict.get("Name"))

@@ -14,23 +14,23 @@ crate-type = ["cdylib"]
 napi-build = "2.0"
 
 [dependencies]
-napi = { version = "2.11", features = ["serde-json", "napi6", "tokio_rt"] }
-napi-derive = "2.9"
-dirs = "4.0"
+napi = { version = "2.12", features = ["serde-json", "napi6", "tokio_rt"] }
+napi-derive = "2.12"
+dirs = "5.0"
 serde = { version = "1.0", features = ["derive"] }
 serde_repr = "0.1"
-id3 = "1.1"
+id3 = "1.6"
 mp3-metadata = "0.3"
 mp4ameta = "0.11"
-lofty = "0.11.0"
+lofty = "0.11"
 serde_json = "1.0"
 nanoid = "0.4"
-alphanumeric-sort = "1.4"
+alphanumeric-sort = "1.5"
 linked-hash-map = { version = "0.5", features = ["serde_impl"] }
 atomicwrites = "0.4"
 trash = "3.0"
-plist = { git = "https://github.com/ebarnard/rust-plist", rev = "0e9a85a4de3a7882157519d3f253960261fd6d08" }
-tokio = { version = "1.21", features = ["macros"] }
+plist = { git = "https://github.com/ebarnard/rust-plist", rev = "2e90783310622d78696cd7f797d43b8a22a656de" }
+tokio = { version = "1.27", features = ["macros"] }
 time = { version = "0.3", features = ["serde", "serde-well-known"] }
 url = "2.3"
 
