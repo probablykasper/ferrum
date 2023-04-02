@@ -1,26 +1,11 @@
 {
+  "extends": "@tsconfig/svelte/tsconfig.json",
   "compilerOptions": {
-    "moduleResolution": "node",
     "target": "ESNext",
     "useDefineForClassFields": true,
     "module": "ESNext",
-
-    // svelte-preprocess can't tell if you're importing a value or
-    // type, so require 'import type' instead of 'import' for types
-    "importsNotUsedAsValues": "error",
-
-    // To have svelte warnings/errors correct position
-    "sourceMap": true,
-
-    // Prevent type errors
-    "types": ["svelte", "node", "wicg-mediasession"],
-
-    "isolatedModules": true,
     "resolveJsonModule": true,
-    "strict": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
+    "isolatedModules": true,
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"]

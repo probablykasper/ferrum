@@ -7,7 +7,7 @@
     moveIndexes,
     prependToUserQueue,
     queue,
-    Queue,
+    type Queue,
   } from '../lib/queue'
   import { page, paths } from '../lib/data'
   import { onDestroy } from 'svelte'

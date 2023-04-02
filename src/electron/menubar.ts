@@ -1,4 +1,4 @@
-import { App, BrowserWindow, Menu, shell } from 'electron'
+import { type App, BrowserWindow, Menu, shell } from 'electron'
 import { ipcMain } from './typed_ipc'
 import type { MenuItemConstructorOptions } from 'electron/common'
 import is from './is'

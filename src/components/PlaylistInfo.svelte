@@ -1,6 +1,6 @@
 <script lang="ts">
   import { checkShortcut } from '../lib/helpers'
-  import { newPlaylist, PlaylistInfo, updatePlaylist } from '../lib/data'
+  import { newPlaylist, type PlaylistInfo, updatePlaylist } from '../lib/data'
   import Modal from './Modal.svelte'
   import Button from './Button.svelte'
 

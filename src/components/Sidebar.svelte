@@ -1,5 +1,9 @@
 <script lang="ts">
-  import SidebarItems, { hideFolder, showFolder, SidebarItemHandle } from './SidebarItems.svelte'
+  import SidebarItems, {
+    hideFolder,
+    showFolder,
+    type SidebarItemHandle,
+  } from './SidebarItems.svelte'
   import Filter from './Filter.svelte'
   import { isMac, trackListsDetailsMap, page, movePlaylist } from '../lib/data'
   import { ipcRenderer } from '../lib/window'

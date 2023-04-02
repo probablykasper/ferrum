@@ -1,4 +1,4 @@
-import { Updater, Writable, writable } from 'svelte/store'
+import { type Updater, type Writable, writable } from 'svelte/store'
 import type { TrackListDetails } from 'ferrum-addon'
 
 export function getDuration(dur: number) {

@@ -1,8 +1,7 @@
 import { resolve } from 'path'
 import { viteExternalsPlugin } from 'vite-plugin-externals'
 import { defineConfig } from 'vite'
-import { svelte } from '@sveltejs/vite-plugin-svelte'
-import sveltePreprocess from 'svelte-preprocess' // using vitePreprocess results in an error
+import { svelte, vitePreprocess } from '@sveltejs/vite-plugin-svelte'
 import electron from 'vite-plugin-electron'
 
 export default defineConfig({
@@ -16,16 +15,15 @@ export default defineConfig({
   build: {
     outDir: './build/web',
     emptyOutDir: true,
-    minify: false,
     sourcemap: true,
-    target: ['chrome64', 'edge79', 'firefox62', 'safari11.1'],
+    target: 'chrome93',
   },
   plugins: [
     viteExternalsPlugin({
       'ferrum-addon': 'ferrum-addon',
     }),
     svelte({
-      preprocess: sveltePreprocess(),
+      preprocess: vitePreprocess(),
     }),
     electron({
       entry: ['./src/electron/main.ts', './src/electron/preload.ts'],
