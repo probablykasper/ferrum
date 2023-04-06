@@ -1,5 +1,5 @@
-node_modules
-build
-target
-src-native/appdata
-ferrum-addon/addon.node
+/node_modules
+/build
+/target
+/src-native/appdata
+/ferrum-addon/addon.node
