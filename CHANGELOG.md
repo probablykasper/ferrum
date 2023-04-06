@@ -1,6 +1,6 @@
 # Changelog
 
-## Next
+## 0.16.7 - 2023 Apr 6
 - Fix blank screen
 
 ## 0.16.6 - 2023 Apr 6
