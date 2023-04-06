@@ -7,7 +7,7 @@ import {
 } from '@/lib/data'
 import { flattenChildLists } from '@/lib/helpers'
 import { ipcRenderer } from '@/lib/window'
-import type { TrackID } from 'ferrum-addon'
+import type { TrackID } from '../../ferrum-addon'
 import { get } from 'svelte/store'
 import { appendToUserQueue, prependToUserQueue } from './queue'
 import type { ShowTrackMenuOptions } from '@/electron/typed_ipc'

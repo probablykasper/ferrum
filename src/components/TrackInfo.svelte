@@ -10,7 +10,7 @@
   import { checkShortcut } from '@/lib/helpers'
   import Button from './Button.svelte'
   import { methods } from '@/lib/data'
-  import type { Track, TrackID } from 'ferrum-addon'
+  import type { Track, TrackID } from '../../ferrum-addon'
   import { ipcRenderer } from '@/lib/window'
   import { playingId, reload } from '@/lib/player'
   import { onDestroy, tick } from 'svelte'

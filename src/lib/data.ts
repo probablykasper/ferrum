@@ -1,6 +1,6 @@
 import { writable } from 'svelte/store'
 import { ipcRenderer } from '@/lib/window'
-import type { MsSinceUnixEpoch, TrackID, TrackList, TrackListID, TrackMd } from 'ferrum-addon'
+import type { MsSinceUnixEpoch, TrackID, TrackList, TrackListID, TrackMd } from '../../ferrum-addon'
 import { selection as pageSelection } from './page'
 import { queue } from './queue'
 

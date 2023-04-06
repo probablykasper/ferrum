@@ -1,5 +1,8 @@
 # Changelog
 
+## Next
+- Fix blank screen
+
 ## 0.16.6 - 2023 Apr 6
 - Prevent focus when clicking the player bar
 - Don't count skips from clicking "Previous"

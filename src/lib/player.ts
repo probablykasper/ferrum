@@ -3,7 +3,7 @@ import type { Writable } from 'svelte/store'
 import { clamp } from './helpers'
 import quit from './quit'
 import { methods, paths } from './data'
-import type { Track, TrackID } from 'ferrum-addon'
+import type { Track, TrackID } from '../../ferrum-addon'
 import { ipcRenderer, joinPaths } from './window'
 import { queue, setNewQueue, next as queueNext, prev as queuePrev } from './queue'
 

@@ -1,5 +1,4 @@
 import { resolve } from 'path'
-import { viteExternalsPlugin } from 'vite-plugin-externals'
 import { defineConfig } from 'vite'
 import { svelte, vitePreprocess } from '@sveltejs/vite-plugin-svelte'
 import electron from 'vite-plugin-electron'
@@ -19,9 +18,6 @@ export default defineConfig({
     target: 'chrome93',
   },
   plugins: [
-    viteExternalsPlugin({
-      'ferrum-addon': 'ferrum-addon',
-    }),
     svelte({
       preprocess: vitePreprocess(),
     }),
@@ -30,6 +26,7 @@ export default defineConfig({
       vite: {
         build: {
           outDir: './build/electron',
+          emptyOutDir: true,
           rollupOptions: {
             external: [/^.*\.node$/],
           },

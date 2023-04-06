@@ -8,7 +8,7 @@ import type {
   dialog,
 } from 'electron'
 import { ipcMain as electronIpcMain } from 'electron'
-import type { TrackID } from 'ferrum-addon'
+import type { TrackID } from '../../ferrum-addon'
 
 type OptionalPromise<T> = T | Promise<T>
 type InputMap = {

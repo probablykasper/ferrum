@@ -2,7 +2,7 @@
   import { methods, trackMetadataUpdated } from '@/lib/data'
   import { fade } from 'svelte/transition'
   import { onDestroy } from 'svelte'
-  import type { Track } from 'ferrum-addon'
+  import type { Track } from '../../ferrum-addon'
 
   export let id: string
 

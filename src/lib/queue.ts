@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import type { TrackID } from 'ferrum-addon'
+import type { TrackID } from '../../ferrum-addon'
 import { writable } from 'svelte/store'
 import { methods } from './data'
 import { getterWritable } from './helpers'
