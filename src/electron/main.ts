@@ -50,7 +50,6 @@ app.whenReady().then(async () => {
     minHeight: 400,
     titleBarStyle: is.mac ? 'hidden' : 'default',
     webPreferences: {
-      nativeWindowOpen: true,
       contextIsolation: false,
       nodeIntegration: true,
       preload: path.resolve(__dirname, './preload.js'),

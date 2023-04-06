@@ -15,7 +15,7 @@ export default defineConfig({
     outDir: './build/web',
     emptyOutDir: true,
     sourcemap: true,
-    target: 'chrome93',
+    target: 'chrome106',
   },
   plugins: [
     svelte({
