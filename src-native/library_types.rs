@@ -10,10 +10,49 @@ use serde_repr::{Deserialize_repr, Serialize_repr};
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(deny_unknown_fields)]
 pub struct Library {
+  pub tracks: LinkedHashMap<TrackID, Track>,
+  pub trackLists: TrackLists,
+  /// v1 playtime has two issues:
+  /// - some durations are double counted (or triple, etc.)
+  /// - timestamps aren't updated after pausing
+  pub v1PlayTime: Vec<PlayTime>,
+  pub playTime: Vec<PlayTime>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(tag = "version", deny_unknown_fields)]
+pub enum VersionedLibrary {
+  #[serde(rename = "1")]
+  V1(V1Library),
+  #[serde(rename = "2")]
+  V2(Library),
+}
+impl VersionedLibrary {
+  pub fn into_latest(self) -> Library {
+    match self {
+      VersionedLibrary::V1(v1) => v1.into_v2(),
+      VersionedLibrary::V2(v2) => v2,
+    }
+  }
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct V1Library {
   pub version: Version,
   pub tracks: LinkedHashMap<TrackID, Track>,
   pub trackLists: TrackLists,
   pub playTime: Vec<PlayTime>,
+}
+impl V1Library {
+  pub fn into_v2(self) -> Library {
+    Library {
+      tracks: self.tracks,
+      trackLists: self.trackLists,
+      v1PlayTime: self.playTime,
+      playTime: Vec::new(),
+    }
+  }
 }
 
 impl Library {
@@ -27,7 +66,7 @@ impl Library {
     };
     track_lists.insert("root".to_string(), TrackList::Special(root));
     Library {
-      version: Version::V1,
+      v1PlayTime: Vec::new(),
       playTime: Vec::new(),
       tracks: LinkedHashMap::new(),
       trackLists: track_lists,
