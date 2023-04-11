@@ -2,6 +2,7 @@
 
 ## Next
 - Fix play time sometimes double counted
+- Fix button click transition
 
 ## 0.16.7 - 2023 Apr 6
 - Fix blank screen

@@ -56,21 +56,9 @@
   }
 </script>
 
-<!-- tabindex="0" causes the on:focusin event to fire -->
+<!-- on:mousedown|preventDefault prevents focus -->
 <!-- svelte-ignore a11y-no-noninteractive-tabindex -->
-<div
-  class="player"
-  class:stopped={$stopped}
-  class:dev={isDev}
-  tabindex="0"
-  on:focusin={(e) => {
-    if (e.relatedTarget instanceof HTMLElement) {
-      e.relatedTarget.focus()
-    } else {
-      e.currentTarget.blur()
-    }
-  }}
->
+<div class="player" class:stopped={$stopped} class:dev={isDev} on:mousedown|preventDefault>
   <div class="left">
     {#if !$stopped && $playingTrack}
       <div
