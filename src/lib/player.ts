@@ -97,20 +97,15 @@ audio.addEventListener('error', async (e) => {
   await ipcRenderer.invoke('showMessageBox', false, { type: 'error', message, detail })
 })
 
-let startTime = 0
-let playStartTime: number | null = null
+let startTime = Date.now()
 function getPlayTime() {
-  if (playStartTime === null) {
-    return 0
-  } else {
-    return Date.now() - playStartTime
-  }
+  return Date.now() - (startTime ?? Date.now())
 }
 
 function startPlayback() {
   audio.play()
-  playStartTime = Date.now()
   paused.set(false)
+  startTime = Date.now()
   if (mediaSession) mediaSession.playbackState = 'playing'
 }
 
@@ -144,19 +139,19 @@ audio.ondurationchange = () => {
 }
 
 /** Saves play time if needed */
-function savePlayTime() {
+function resetAndSavePlayTime() {
   const currentId = queue.getCurrent()?.id
   if (getPlayTime() >= 1000 && currentId) {
     methods.addPlayTime(currentId, startTime, getPlayTime())
   }
+  startTime = Date.now()
 }
 
 function pausePlayback() {
   waitingToPlay = false
   audio.pause()
   paused.set(true)
-  savePlayTime()
-  playStartTime = null
+  resetAndSavePlayTime()
   if (mediaSession) mediaSession.playbackState = 'paused'
 }
 
@@ -191,8 +186,7 @@ export function stop() {
   waitingToPlay = false
   audio.pause()
   paused.set(true)
-  savePlayTime()
-  playStartTime = null
+  resetAndSavePlayTime()
   stopped.set(true)
   seek(0)
   if (mediaSession) {
@@ -221,7 +215,7 @@ function next(skip: boolean) {
     } else {
       methods.addPlay(currentId)
     }
-    savePlayTime()
+    resetAndSavePlayTime()
     queueNext()
     const newCurrentId = queue.getCurrent()?.id
     if (newCurrentId) {
@@ -234,7 +228,7 @@ function next(skip: boolean) {
 export function previous() {
   const currentId = queue.getCurrent()?.id
   if (currentId) {
-    savePlayTime()
+    resetAndSavePlayTime()
     queuePrev()
     const newCurrentId = queue.getCurrent()?.id
     if (newCurrentId) {
