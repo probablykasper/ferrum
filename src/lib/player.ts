@@ -98,16 +98,18 @@ audio.addEventListener('error', async (e) => {
 })
 
 let startTime = 0
-let playTime = 0
-
-let playTimeCounter: NodeJS.Timeout
+let playStartTime: number | null = null
+function getPlayTime() {
+  if (playStartTime === null) {
+    return 0
+  } else {
+    return Date.now() - playStartTime
+  }
+}
 
 function startPlayback() {
   audio.play()
-  playTimeCounter = setInterval(() => {
-    playTime += 20
-  }, 20)
-  playTime = 0
+  playStartTime = Date.now()
   paused.set(false)
   if (mediaSession) mediaSession.playbackState = 'playing'
 }
@@ -143,12 +145,10 @@ audio.ondurationchange = () => {
 
 /** Saves play time if needed */
 function savePlayTime() {
-  clearInterval(playTimeCounter)
   const currentId = queue.getCurrent()?.id
-  if (playTime >= 1000 && currentId) {
-    methods.addPlayTime(currentId, startTime, playTime)
+  if (getPlayTime() >= 1000 && currentId) {
+    methods.addPlayTime(currentId, startTime, getPlayTime())
   }
-  playTime = 0
 }
 
 function pausePlayback() {
@@ -156,6 +156,7 @@ function pausePlayback() {
   audio.pause()
   paused.set(true)
   savePlayTime()
+  playStartTime = null
   if (mediaSession) mediaSession.playbackState = 'paused'
 }
 
@@ -191,6 +192,7 @@ export function stop() {
   audio.pause()
   paused.set(true)
   savePlayTime()
+  playStartTime = null
   stopped.set(true)
   seek(0)
   if (mediaSession) {

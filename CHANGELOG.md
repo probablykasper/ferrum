@@ -1,5 +1,8 @@
 # Changelog
 
+## Next
+- Fix play time sometimes double counted
+
 ## 0.16.7 - 2023 Apr 6
 - Fix blank screen
 
