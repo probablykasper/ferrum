@@ -856,7 +856,7 @@ checksum = "bebd363326d05ec3e2f532ab7660680f3b02130d780c299bca73469d521bc0ed"
 [[package]]
 name = "serde"
 version = "1.0.126"
-source = "git+https://github.com/serde-rs/serde?rev=47ac87c5e0747e24eb4b4ee513b119b0254ac01f#47ac87c5e0747e24eb4b4ee513b119b0254ac01f"
+source = "git+https://github.com/AmaranthineCodices/serde?rev=47ac87c5e0747e24eb4b4ee513b119b0254ac01f#47ac87c5e0747e24eb4b4ee513b119b0254ac01f"
 dependencies = [
  "serde_derive",
 ]
@@ -864,7 +864,7 @@ dependencies = [
 [[package]]
 name = "serde_derive"
 version = "1.0.126"
-source = "git+https://github.com/serde-rs/serde?rev=47ac87c5e0747e24eb4b4ee513b119b0254ac01f#47ac87c5e0747e24eb4b4ee513b119b0254ac01f"
+source = "git+https://github.com/AmaranthineCodices/serde?rev=47ac87c5e0747e24eb4b4ee513b119b0254ac01f#47ac87c5e0747e24eb4b4ee513b119b0254ac01f"
 dependencies = [
  "proc-macro2",
  "quote",
