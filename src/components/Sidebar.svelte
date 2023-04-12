@@ -101,6 +101,7 @@
   }
 </script>
 
+<!-- NOTE: aside is used as css selector in -->
 <aside on:mousedown|self|preventDefault>
   {#if isMac}
     <div class="titlebar-spacer" />

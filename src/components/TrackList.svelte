@@ -284,6 +284,7 @@
     itemHeight={24}
     itemCount={$page.length}
     bind:this={virtualList}
+    isMain={-1}
     on:keydown={keydown}
     on:mousedown-self={selection.clear}
     let:item={track}

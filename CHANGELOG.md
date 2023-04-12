@@ -1,5 +1,8 @@
 # Changelog
 
+## Next
+- Fix slider dragging
+
 ## 0.16.9 - 2023 Apr 12
 - Fix error loading library
 - Fix errors causing crashes, show error messages instead

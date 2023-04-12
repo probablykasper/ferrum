@@ -56,9 +56,8 @@
   }
 </script>
 
-<!-- on:mousedown|preventDefault prevents focus -->
 <!-- svelte-ignore a11y-no-noninteractive-tabindex -->
-<div class="player" class:stopped={$stopped} class:dev={isDev} on:mousedown|preventDefault>
+<div class="player" class:stopped={$stopped} class:dev={isDev}>
   <div class="left">
     {#if !$stopped && $playingTrack}
       <div
@@ -92,6 +91,8 @@
       <button
         class="side-controls shuffle"
         class:on={$shuffle}
+        tabindex="-1"
+        on:mousedown|preventDefault
         on:click={() => ($shuffle = !$shuffle)}
       >
         <svg xmlns="http://www.w3.org/2000/svg" width="24" viewBox="-8 -8 40 40" height="24"
@@ -100,7 +101,7 @@
           /></svg
         >
       </button>
-      <button on:click={previous}>
+      <button on:click={previous} tabindex="-1" on:mousedown|preventDefault>
         <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24">
           <path
             d="M7 6c.55 0 1 .45 1 1v10c0 .55-.45 1-1 1s-1-.45-1-1V7c0-.55.45-1 1-1zm3.66 6.82l5.77 4.07c.66.47 1.58-.01 1.58-.82V7.93c0-.81-.91-1.28-1.58-.82l-5.77 4.07c-.57.4-.57 1.24 0 1.64z"
@@ -108,25 +109,23 @@
         </svg>
       </button>
 
-      {#if $paused}
-        <button class="play" on:click={playPause}>
+      <button class="play-pause" on:click={playPause} tabindex="-1" on:mousedown|preventDefault>
+        {#if $paused}
           <svg xmlns="http://www.w3.org/2000/svg" height="36" viewBox="0 0 24 24" width="36">
             <path
               d="M8 6.82v10.36c0 .79.87 1.27 1.54.84l8.14-5.18c.62-.39.62-1.29 0-1.69L9.54 5.98C8.87 5.55 8 6.03 8 6.82z"
             />
           </svg>
-        </button>
-      {:else}
-        <button class="pause" on:click={playPause}>
+        {:else}
           <svg xmlns="http://www.w3.org/2000/svg" height="36" viewBox="0 0 24 24" width="36">
             <path
               d="M8 19c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2s-2 .9-2 2v10c0 1.1.9 2 2 2zm6-12v10c0 1.1.9 2 2 2s2-.9 2-2V7c0-1.1-.9-2-2-2s-2 .9-2 2z"
             />
           </svg>
-        </button>
-      {/if}
+        {/if}
+      </button>
 
-      <button on:click={skipToNext}>
+      <button on:click={skipToNext} tabindex="-1" on:mousedown|preventDefault>
         <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24">
           <path
             d="M7.58 16.89l5.77-4.07c.56-.4.56-1.24 0-1.63L7.58 7.11C6.91 6.65 6 7.12 6 7.93v8.14c0 .81.91 1.28 1.58.82zM16 7v10c0 .55.45 1 1 1s1-.45 1-1V7c0-.55-.45-1-1-1s-1 .45-1 1z"
@@ -134,7 +133,13 @@
         </svg>
       </button>
 
-      <button class="side-controls repeat" class:on={$repeat} on:click={() => ($repeat = !$repeat)}>
+      <button
+        class="side-controls repeat"
+        class:on={$repeat}
+        tabindex="-1"
+        on:mousedown|preventDefault
+        on:click={() => ($repeat = !$repeat)}
+      >
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="-8 -8 40 40"
           ><path
             d="M2 12c0 .999.381 1.902.989 2.604l-1.098.732-.587.392c-.814-1.025-1.304-2.318-1.304-3.728 0-3.313 2.687-6 6-6h9v-3l6 4-6 4v-3h-9c-2.206 0-4 1.794-4 4zm20.696-3.728l-.587.392-1.098.732c.608.702.989 1.605.989 2.604 0 2.206-1.795 4-4 4h-9v-3l-6 4 6 4v-3h9c3.313 0 6-2.687 6-6 0-1.41-.489-2.703-1.304-3.728z"
@@ -146,10 +151,18 @@
       <small class="current-time">{getDuration($currentTime)}</small>
       <input
         type="range"
+        tabindex="-1"
         class="time"
         min="0"
         max={sliderSteps}
         bind:value={sliderValue}
+        on:focus={(e) => {
+          if (e.relatedTarget instanceof HTMLElement) {
+            e.relatedTarget.focus()
+          } else {
+            e.currentTarget.blur()
+          }
+        }}
         on:mousedown={sliderMousedown}
         on:mouseup={sliderMouseup}
       />
@@ -157,7 +170,7 @@
     </div>
   </div>
   <div class="right">
-    <button class="volume-icon" on:click={volume.toggle}>
+    <button class="volume-icon" tabindex="-1" on:click={volume.toggle}>
       {#if $volume > 0.5}
         <svg
           class="high"
@@ -199,8 +212,29 @@
         </svg>
       {/if}
     </button>
-    <input type="range" class="volume" min="0" max="1" step="0.01" bind:value={$volume} />
-    <button class="queue" tabindex="-1" on:click={toggleQueueVisibility} class:on={$queueVisible}>
+    <input
+      type="range"
+      tabindex="-1"
+      class="volume"
+      min="0"
+      max="1"
+      step="0.01"
+      bind:value={$volume}
+      on:focus={(e) => {
+        if (e.relatedTarget instanceof HTMLElement) {
+          e.relatedTarget.focus()
+        } else {
+          e.currentTarget.blur()
+        }
+      }}
+    />
+    <button
+      class="queue"
+      tabindex="-1"
+      on:mousedown|preventDefault
+      on:click={toggleQueueVisibility}
+      class:on={$queueVisible}
+    >
       <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px">
         <path
           d="M5 10h10c.55 0 1 .45 1 1s-.45 1-1 1H5c-.55 0-1-.45-1-1s.45-1 1-1zm0-4h10c.55 0 1 .45 1 1s-.45 1-1 1H5c-.55 0-1-.45-1-1s.45-1 1-1zm0 8h6c.55 0 1 .45 1 1s-.45 1-1 1H5c-.55 0-1-.45-1-1s.45-1 1-1zm9 .88v4.23c0 .39.42.63.76.43l3.53-2.12c.32-.19.32-.66 0-.86l-3.53-2.12c-.34-.19-.76.05-.76.44z"
@@ -282,7 +316,7 @@
       opacity: 0.8
     &.on svg
       opacity: 0.9
-  button.play, button.pause
+  button.play-pause
     margin: 0px 14px
   .controls
     display: flex

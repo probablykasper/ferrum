@@ -5,6 +5,7 @@
 
   type T = $$Generic
   export let getItem: (index: number) => T
+  export let isMain = 0
   export let itemCount: number
   export let itemHeight: number
   let startIndex = -1
@@ -85,6 +86,14 @@
     }
   }
 </script>
+
+<svelte:body
+  on:keydown={(e) => {
+    if (isMain) {
+      keydown(e)
+    }
+  }}
+/>
 
 <!-- svelte-ignore a11y-no-noninteractive-tabindex -->
 <div

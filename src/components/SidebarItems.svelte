@@ -267,7 +267,7 @@
     box-shadow: inset 2px 0px 0px 0px hsl(var(--hue), 30%, 60%)
     background-image: linear-gradient(90deg, hsl(var(--hue), 20%, 25%) 30%, transparent 66.6666%)
     background-position: 0% 0%
-  :global(:focus)
+  :global(aside :focus)
     .active
       box-shadow: inset 2px 0px 0px 0px hsl(var(--hue), 70%, 60%)
       background-image: linear-gradient(90deg, hsl(var(--hue), 45%, 30%) 30%, transparent 66.6666%)
