@@ -1,6 +1,6 @@
 # Changelog
 
-## Next
+## 0.16.10 - 2023 Apr 12
 - Fix slider dragging
 
 ## 0.16.9 - 2023 Apr 12
