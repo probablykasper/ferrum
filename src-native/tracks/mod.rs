@@ -194,8 +194,8 @@ pub fn get_image(index: u32, env: Env) -> Result<Option<JsImage>> {
   };
 
   let js_image = JsImage {
-    index: img.index.try_into().expect("usize conv"),
-    total_images: img.total_images.try_into().expect("usize conv"),
+    index: img.index,
+    total_images: img.total_images,
     mime_type: img.mime_type,
     data: env.create_arraybuffer_with_data(img.data)?.into_raw(),
   };

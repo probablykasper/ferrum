@@ -41,6 +41,7 @@ pub fn id3_timestamp_from_year(year: i32) -> id3::Timestamp {
 
 #[napi(object)]
 pub struct Image {
+  // i64 because napi doesn't support u64
   pub index: i64,
   pub total_images: i64,
   pub mime_type: String,
@@ -106,27 +107,28 @@ impl Tag {
     };
     Ok(tag)
   }
-  pub fn write_to_path(&mut self, path: &Path) {
+  pub fn write_to_path(&mut self, path: &Path) -> UniResult<()> {
     match self {
       Tag::Id3(tag) => {
         match tag.write_to_path(path, id3::Version::Id3v24) {
           Ok(_) => {}
-          Err(e) => panic!("Unable to tag file: {}", e.description),
+          Err(e) => throw!("Unable to tag file: {}", e.description),
         };
       }
       Tag::Mp4(tag) => {
         match tag.write_to_path(path) {
-          Ok(_) => (),
-          Err(e) => panic!("Unable to tag file: {}", e.description),
+          Ok(_) => {}
+          Err(e) => throw!("Unable to tag file: {}", e.description),
         };
       }
       Tag::Lofty(tag) => {
         match tag.save_to_path(path) {
-          Ok(_) => (),
-          Err(e) => panic!("Unable to tag file: {}", e),
+          Ok(_) => {}
+          Err(e) => throw!("Unable to tag file: {}", e),
         };
       }
-    }
+    };
+    Ok(())
   }
   pub fn remove_title(&mut self) {
     match self {

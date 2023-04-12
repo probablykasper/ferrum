@@ -1,4 +1,5 @@
 use crate::library_types::{Library, VersionedLibrary};
+use crate::UniResult;
 use serde::{Deserialize, Serialize};
 use std::fs::{create_dir_all, File};
 use std::io::{Error, ErrorKind, Read};
@@ -21,12 +22,12 @@ impl Paths {
   }
 }
 
-pub fn load_library(paths: &Paths) -> Library {
+pub fn load_library(paths: &Paths) -> UniResult<Library> {
   let mut now = Instant::now();
 
   match paths.ensure_dirs_exists() {
     Ok(_) => {}
-    Err(err) => panic!("Error ensuring folder exists: {}", err),
+    Err(err) => throw!("Error ensuring folder exists: {}", err),
   };
 
   let versioned_library = match File::open(&paths.library_json) {
@@ -34,14 +35,14 @@ pub fn load_library(paths: &Paths) -> Library {
       let mut json_str = String::new();
       match file.read_to_string(&mut json_str) {
         Ok(_) => {}
-        Err(err) => panic!("Error reading library file: {}", err),
+        Err(err) => throw!("Error reading library file: {}", err),
       };
       println!("Read library: {}ms", now.elapsed().as_millis());
       now = Instant::now();
 
       let versioned_library: VersionedLibrary = match serde_json::from_str(&mut json_str) {
         Ok(library) => library,
-        Err(err) => panic!("Error parsing library file: {:?}", err),
+        Err(err) => throw!("Error parsing library file: {:?}", err),
       };
 
       println!("Parse library: {}ms", now.elapsed().as_millis());
@@ -49,13 +50,13 @@ pub fn load_library(paths: &Paths) -> Library {
     }
     Err(err) => match err.kind() {
       ErrorKind::NotFound => {
-        return Library::new();
+        return Ok(Library::new());
       }
-      _err_kind => panic!("Error opening library file: {}", err),
+      _err_kind => throw!("Error opening library file: {}", err),
     },
   };
 
-  versioned_library.upgrade()
+  Ok(versioned_library.upgrade())
 }
 
 pub enum TrackField {

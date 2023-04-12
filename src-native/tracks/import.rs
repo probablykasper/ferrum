@@ -137,7 +137,10 @@ pub fn import_opus(data: &Data, track_path: &Path, now: i64) -> UniResult<Track>
   let filename = generate_filename(&tracks_dir, &artist, &title, "opus");
   let dest_path = tracks_dir.join(&filename);
 
-  fs::copy(track_path, &dest_path).expect("Error copying file");
+  match fs::copy(track_path, &dest_path) {
+    Ok(_) => (),
+    Err(e) => throw!("Error copying file: {e}"),
+  };
   println!(
     "{} -> {}",
     track_path.to_string_lossy(),
@@ -146,7 +149,10 @@ pub fn import_opus(data: &Data, track_path: &Path, now: i64) -> UniResult<Track>
 
   if tag_changed {
     println!("Writing:::::::");
-    tag.save_to_path(&dest_path).expect("Unable to tag file");
+    match tag.save_to_path(&dest_path) {
+      Ok(_) => (),
+      Err(e) => throw!("Unable to tag file {}: {e}", dest_path.to_string_lossy()),
+    };
     // manually set date_modified because the date_modified doens't seem to
     // immediately update after tag.write_to_path().
     date_modified = now;
@@ -262,7 +268,10 @@ pub fn import_m4a(data: &Data, track_path: &Path, now: i64) -> UniResult<Track> 
   let filename = generate_filename(&tracks_dir, artist.unwrap_or(""), &title, "m4a");
   let dest_path = tracks_dir.join(&filename);
 
-  fs::copy(track_path, &dest_path).expect("Error copying file");
+  match fs::copy(track_path, &dest_path) {
+    Ok(_) => (),
+    Err(e) => throw!("Error copying file: {e}"),
+  };
   println!(
     "{} -> {}",
     track_path.to_string_lossy(),
@@ -271,7 +280,10 @@ pub fn import_m4a(data: &Data, track_path: &Path, now: i64) -> UniResult<Track> 
 
   if tag_changed {
     println!("Writing:::::::");
-    tag.write_to_path(&dest_path).expect("Unable to tag file");
+    match tag.write_to_path(&dest_path) {
+      Ok(_) => (),
+      Err(e) => throw!("Unable to tag file {}: {e}", dest_path.to_string_lossy()),
+    };
     // manually set date_modified because the date_modified doens't seem to
     // immediately update after tag.write_to_path().
     date_modified = now;
@@ -382,12 +394,16 @@ pub fn import_mp3(data: &Data, track_path: &Path, now: i64) -> UniResult<Track> 
   let filename = generate_filename(&tracks_dir, artist.unwrap_or(""), &title, "mp3");
   let dest_path = tracks_dir.join(&filename);
 
-  fs::copy(track_path, &dest_path).expect("Error copying file");
+  match fs::copy(track_path, &dest_path) {
+    Ok(_) => (),
+    Err(e) => throw!("Error copying file: {e}"),
+  };
 
   if tag_changed {
-    tag
-      .write_to_path(&dest_path, id3::Version::Id3v24)
-      .expect("Unable to tag file");
+    match tag.write_to_path(&dest_path, id3::Version::Id3v24) {
+      Ok(_) => (),
+      Err(e) => throw!("Unable to tag file {}: {e}", dest_path.to_string_lossy()),
+    };
     // manually set date_modified because the date_modified doens't seem to
     // immediately update after tag.write_to_path().
     date_modified = now;

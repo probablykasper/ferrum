@@ -2,6 +2,7 @@
 
 ## Next
 - Fix error loading library
+- Fix errors causing crashes, show error messages instead
 
 ## 0.16.8 - 2023 Apr 12
 - Fix play time sometimes double counted

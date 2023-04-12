@@ -84,7 +84,7 @@ impl Data {
       }
     };
 
-    let loaded_library = load_library(&paths);
+    let loaded_library = load_library(&paths)?;
     let loaded_cache = SidebarView::load(&paths);
 
     let mut data = Data {

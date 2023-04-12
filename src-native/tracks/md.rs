@@ -39,7 +39,7 @@ pub fn update_track_info(
 ) -> UniResult<()> {
   let old_path = tracks_dir.join(&track.file);
   if !old_path.exists() {
-    panic!("File does not exist: {}", track.file);
+    throw!("File does not exist: {}", track.file);
   }
   let ext = old_path.extension().unwrap_or_default().to_string_lossy();
 
@@ -170,7 +170,7 @@ pub fn update_track_info(
   let new_comments = str_to_option(new_info.comments);
 
   // save tag
-  tag.write_to_path(&old_path);
+  tag.write_to_path(&old_path)?;
 
   // move file
   if new_name != track.name || new_artist != track.artist {
