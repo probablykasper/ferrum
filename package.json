@@ -4,7 +4,7 @@
   "productName": "Ferrum",
   "author": "kasper.space",
   "description": "Music library app",
-  "version": "0.16.8",
+  "version": "0.16.9",
   "repository": "https://github.com/probablykasper/ferrum",
   "scripts": {
     "dev": "npm run napi:dev && vite",
@@ -22,6 +22,9 @@
     "appId": "space.kasper.ferrum",
     "productName": "Ferrum",
     "artifactName": "${productName}-v${version}-${os}.${ext}",
+    "releaseInfo": {
+      "releaseName": ""
+    },
     "mac": {
       "category": "public.app-category.music",
       "icon": "assets/icon.icns",
