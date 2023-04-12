@@ -36,7 +36,7 @@ impl Data {
 
     let mut json = Vec::new();
     let mut ser = serde_json::Serializer::with_formatter(&mut json, formatter);
-    self.library.serialize(&mut ser)?;
+    self.library.versioned().serialize(&mut ser)?;
     println!("Stringify: {}ms", now.elapsed().as_millis());
 
     now = Instant::now();

@@ -34,6 +34,9 @@ tokio = { version = "1.27", features = ["macros"] }
 time = { version = "0.3", features = ["serde", "serde-well-known"] }
 url = "2.3"
 
+[patch.crates-io]
+serde = { git = "https://github.com/serde-rs/serde", rev = "47ac87c5e0747e24eb4b4ee513b119b0254ac01f" }
+
 [profile.dev]
 panic = "abort"
 

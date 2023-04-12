@@ -1,5 +1,8 @@
 # Changelog
 
+## Next
+- Fix error loading library
+
 ## 0.16.8 - 2023 Apr 12
 - Fix play time sometimes double counted
 - Fix play time timestamp not updated after pausing

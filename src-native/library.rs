@@ -55,7 +55,7 @@ pub fn load_library(paths: &Paths) -> Library {
     },
   };
 
-  versioned_library.into_latest()
+  versioned_library.upgrade()
 }
 
 pub enum TrackField {

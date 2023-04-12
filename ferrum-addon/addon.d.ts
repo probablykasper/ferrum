@@ -20,9 +20,6 @@ export interface ImportStatus {
 }
 export function copyFile(from: string, to: string): void
 export function atomicFileSave(filePath: string, content: string): void
-export const enum Version {
-  V1 = 1
-}
 export interface Track {
   size: number
   duration: number

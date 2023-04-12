@@ -3,9 +3,9 @@
 use crate::{get_now_timestamp, UniResult};
 use linked_hash_map::LinkedHashMap;
 use nanoid::nanoid;
-use napi::bindgen_prelude::ToNapiValue;
+use napi::bindgen_prelude::{FromNapiValue, ToNapiValue};
 use serde::{Deserialize, Serialize};
-use serde_repr::{Deserialize_repr, Serialize_repr};
+use std::borrow::Cow;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(deny_unknown_fields)]
@@ -18,20 +18,25 @@ pub struct Library {
   pub v1PlayTime: Vec<PlayTime>,
   pub playTime: Vec<PlayTime>,
 }
+impl Library {
+  pub fn versioned(&self) -> VersionedLibrary {
+    VersionedLibrary::V2(Cow::Borrowed(self))
+  }
+}
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(tag = "version", deny_unknown_fields)]
-pub enum VersionedLibrary {
-  #[serde(rename = "1")]
-  V1(V1Library),
-  #[serde(rename = "2")]
-  V2(Library),
+pub enum VersionedLibrary<'a> {
+  #[serde(rename = 1)]
+  V1(Cow<'a, V1Library>),
+  #[serde(rename = 2)]
+  V2(Cow<'a, Library>),
 }
-impl VersionedLibrary {
-  pub fn into_latest(self) -> Library {
+impl VersionedLibrary<'_> {
+  pub fn upgrade(self) -> Library {
     match self {
-      VersionedLibrary::V1(v1) => v1.into_v2(),
-      VersionedLibrary::V2(v2) => v2,
+      VersionedLibrary::V1(v1) => v1.into_owned().upgrade(),
+      VersionedLibrary::V2(v2) => v2.into_owned(),
     }
   }
 }
@@ -39,13 +44,12 @@ impl VersionedLibrary {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(deny_unknown_fields)]
 pub struct V1Library {
-  pub version: Version,
   pub tracks: LinkedHashMap<TrackID, Track>,
   pub trackLists: TrackLists,
   pub playTime: Vec<PlayTime>,
 }
 impl V1Library {
-  pub fn into_v2(self) -> Library {
+  pub fn upgrade(self) -> Library {
     Library {
       tracks: self.tracks,
       trackLists: self.trackLists,
@@ -159,13 +163,6 @@ pub type MsSinceUnixEpoch = i64;
 /// Should be 0-100
 pub type PercentInteger = u8;
 pub type TrackLists = LinkedHashMap<TrackListID, TrackList>;
-
-#[derive(Serialize_repr, Deserialize_repr, Debug)]
-#[repr(u8)]
-#[napi]
-pub enum Version {
-  V1 = 1,
-}
 
 /// (track id, start time, duration)
 pub type PlayTime = (TrackID, MsSinceUnixEpoch, i64);
