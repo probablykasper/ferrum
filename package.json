@@ -22,9 +22,6 @@
     "appId": "space.kasper.ferrum",
     "productName": "Ferrum",
     "artifactName": "${productName}-v${version}-${os}.${ext}",
-    "releaseInfo": {
-      "releaseName": ""
-    },
     "mac": {
       "category": "public.app-category.music",
       "icon": "assets/icon.icns",
