@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.16.11 - 2023 Apr 30
+- Fix shuffle not staying on after starting new queue
+
 ## 0.16.10 - 2023 Apr 12
 - Fix slider dragging
 
