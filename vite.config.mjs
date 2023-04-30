@@ -4,7 +4,6 @@ import { svelte, vitePreprocess } from '@sveltejs/vite-plugin-svelte'
 import electron from 'vite-plugin-electron'
 
 export default defineConfig({
-  base: './', // use relative paths
   clearScreen: false,
   resolve: {
     alias: {
@@ -13,7 +12,6 @@ export default defineConfig({
   },
   build: {
     outDir: './build/web',
-    emptyOutDir: true,
     sourcemap: true,
     target: 'chrome106',
   },

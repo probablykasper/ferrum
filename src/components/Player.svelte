@@ -56,7 +56,6 @@
   }
 </script>
 
-<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
 <div class="player" class:stopped={$stopped} class:dev={isDev}>
   <div class="left">
     {#if !$stopped && $playingTrack}

@@ -14,8 +14,8 @@
     "build": "npm run napi && npm run build:web && electron-builder",
     "build:web": "vite build",
     "electron-builder": "electron-builder",
-    "lint": "prettier --check --plugin-search-dir=. src && svelte-check --tsconfig ./tsconfig.json && eslint src",
-    "format": "prettier --write --plugin-search-dir=. src && eslint --fix src",
+    "lint": "svelte-check --tsconfig ./tsconfig.json && eslint src && prettier --check src",
+    "format": "eslint --fix src && prettier --write src",
     "check": "npm run lint && cargo check"
   },
   "build": {
@@ -63,29 +63,32 @@
   },
   "devDependencies": {
     "@napi-rs/cli": "^2.15.2",
-    "@sveltejs/vite-plugin-svelte": "^2.0.4",
+    "@sveltejs/vite-plugin-svelte": "^2.1.1",
     "@tsconfig/svelte": "^4.0.1",
-    "@typescript-eslint/eslint-plugin": "^5.57.1",
-    "@typescript-eslint/parser": "^5.57.1",
+    "@typescript-eslint/eslint-plugin": "^5.59.1",
+    "@typescript-eslint/parser": "^5.59.1",
     "concurrently": "^8.0.1",
     "electron": "^19.1.9",
     "electron-builder": "^23.6.0",
-    "eslint": "^8.37.0",
+    "eslint": "^8.39.0",
     "eslint-config-prettier": "^8.8.0",
     "eslint-plugin-svelte3": "^4.0.0",
-    "prettier": "^2.8.7",
+    "prettier": "^2.8.8",
     "prettier-plugin-svelte": "^2.10.0",
-    "sass": "^1.60.0",
+    "sass": "^1.62.1",
     "svelte": "^3.58.0",
     "svelte-check": "^3.2.0",
     "svelte-preprocess": "^5.0.3",
-    "typescript": "^5.0.3",
-    "vite": "^4.2.1",
-    "vite-plugin-electron": "^0.11.1"
+    "typescript": "^5.0.4",
+    "vite": "^4.3.3",
+    "vite-plugin-electron": "^0.11.2"
   },
   "prettier": {
     "printWidth": 100,
     "semi": false,
-    "singleQuote": true
+    "singleQuote": true,
+    "pluginSearchDirs": [
+      "."
+    ]
   }
 }
