@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import type { TrackID } from '../../ferrum-addon'
-import { writable } from 'svelte/store'
+import { get, writable } from 'svelte/store'
 import { methods } from './data'
 import { getterWritable } from './helpers'
 import { ipcRenderer } from './window'
@@ -77,9 +77,9 @@ function shuffleArray<T>(array: Array<T>) {
 }
 
 export const shuffle = writable(false)
-shuffle.subscribe(($shuffle) => {
+function applyShuffle(shuffle: boolean) {
   queue.update((q) => {
-    if ($shuffle) {
+    if (shuffle) {
       for (let i = 0; i < q.autoQueue.length; i++) {
         q.autoQueue[i].nonShufflePos = i
       }
@@ -100,6 +100,9 @@ shuffle.subscribe(($shuffle) => {
       return q
     }
   })
+}
+shuffle.subscribe(($shuffle) => {
+  applyShuffle($shuffle)
   ipcRenderer.invoke('update:Shuffle', $shuffle)
 })
 ipcRenderer.on('Shuffle', () => {
@@ -269,4 +272,5 @@ export function setNewQueue(newIds: TrackID[], newCurrentIndex: number) {
     autoQueue: autoQueue.map(newQueueItem),
   })
   queue.removeDeleted()
+  applyShuffle(get(shuffle))
 }
