@@ -86,7 +86,9 @@ impl Tag {
       "opus" => {
         let probe = match lofty::Probe::open(path) {
           Ok(f) => {
-            let parse_options = lofty::ParseOptions::new().read_properties(false);
+            let parse_options = lofty::ParseOptions::new()
+              .read_properties(false)
+              .parsing_mode(lofty::ParsingMode::Strict);
             f.options(parse_options)
           }
           Err(e) => throw!("File does not exist: {}", e),
@@ -389,7 +391,7 @@ impl Tag {
       }
       Tag::Mp4(tag) => tag.remove_bpm(),
       Tag::Lofty(tag) => {
-        let _ = tag.remove_key(&lofty::ItemKey::BPM);
+        let _ = tag.remove_key(&lofty::ItemKey::Bpm);
       }
     };
   }
@@ -402,7 +404,7 @@ impl Tag {
         tag.set_bpm(value);
       }
       Tag::Lofty(tag) => {
-        let inserted = tag.insert_text(lofty::ItemKey::BPM, value.to_string());
+        let inserted = tag.insert_text(lofty::ItemKey::Bpm, value.to_string());
         assert!(inserted, "Failed to set BPM");
       }
     };

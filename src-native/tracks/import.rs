@@ -27,8 +27,8 @@ impl FileType {
   }
   pub fn from_lofty_file_type(lofty_type: lofty::FileType) -> UniResult<Self> {
     match lofty_type {
-      lofty::FileType::MPEG => Ok(FileType::Mp3),
-      lofty::FileType::MP4 => Ok(FileType::M4a),
+      lofty::FileType::Mpeg => Ok(FileType::Mp3),
+      lofty::FileType::Mp4 => Ok(FileType::M4a),
       lofty::FileType::Opus => Ok(FileType::Opus),
       _ => throw!("Unsupported file type {:?}", lofty_type),
     }
