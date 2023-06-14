@@ -4,6 +4,7 @@ use crate::library_types::TrackID;
 use napi::{Env, Result};
 use std::str::Chars;
 use std::time::Instant;
+use unicode_normalization::UnicodeNormalization;
 
 #[napi(js_name = "filter_open_playlist")]
 #[allow(dead_code)]
@@ -13,22 +14,22 @@ pub fn filter_js(query: String, env: Env) -> Result<()> {
   return Ok(());
 }
 
-fn match_at_start(mut haystack: Chars, needle: Chars) -> bool {
-  for needle_char in needle {
-    let haystack_char = match haystack.next() {
+fn match_at_start(mut text: Chars, keyword: Chars) -> bool {
+  for keyword_char in keyword {
+    let text_char = match text.next() {
       Some(x) => x,
       None => return false,
     };
-    match check(needle_char, haystack_char) {
+    match check(keyword_char, text_char) {
       Eq::True => {}
       Eq::False => return false,
       Eq::Skip => {
         // skip only once. would it be useful to skip multiple times?
-        let new_haystack_char = match haystack.next() {
+        let new_text_char = match text.next() {
           Some(x) => x,
           None => return false,
         };
-        match check(needle_char, new_haystack_char) {
+        match check(keyword_char, new_text_char) {
           Eq::True => {}
           Eq::False => return false,
           Eq::Skip => return false,
@@ -39,17 +40,18 @@ fn match_at_start(mut haystack: Chars, needle: Chars) -> bool {
   return true;
 }
 
-fn find_match(haystack: &str, needle: &str) -> bool {
-  let mut needle_chars = needle.chars();
-  let first_needle_char = match needle_chars.next() {
+fn find_match(text: &str, keyword: &str) -> bool {
+  let text: String = text.nfc().collect();
+  let mut keyword_chars = keyword.chars();
+  let first_keyword_char = match keyword_chars.next() {
     Some(x) => x,
-    None => return true, // match if needle is empty string
+    None => return true, // match if keyword is empty string
   };
-  let mut haystack_chars = haystack.chars();
-  while let Some(haystack_char) = haystack_chars.next() {
-    match check(first_needle_char, haystack_char) {
+  let mut text_chars = text.chars();
+  while let Some(text_char) = text_chars.next() {
+    match check(first_keyword_char, text_char) {
       Eq::True => {
-        if match_at_start(haystack_chars.clone(), needle_chars.clone()) {
+        if match_at_start(text_chars.clone(), keyword_chars.clone()) {
           return true;
         }
       }
@@ -59,17 +61,17 @@ fn find_match(haystack: &str, needle: &str) -> bool {
   return false;
 }
 
-fn find_match_opt(haystack: &Option<String>, needle: &str) -> bool {
-  let haystack = match haystack {
-    Some(x) => x,
+fn find_match_opt(text: &Option<String>, keyword: &str) -> bool {
+  match text {
+    Some(text) => find_match(text, keyword),
     None => return false,
-  };
-  return find_match(haystack, needle);
+  }
 }
 
 fn filter_keyword(data: &Data, ids: &Vec<TrackID>, keyword: &str) -> Vec<TrackID> {
   let tracks = &data.library.tracks;
   let mut filtered_tracks: Vec<TrackID> = Vec::new();
+  let keyword: String = keyword.nfc().collect();
   for id in ids {
     let track = tracks.get(id).expect("Track ID not found");
     let is_match = find_match(&track.name, &keyword)

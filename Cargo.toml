@@ -33,6 +33,7 @@ plist = { git = "https://github.com/ebarnard/rust-plist", rev = "2e90783310622d7
 tokio = { version = "1.27", features = ["macros"] }
 time = { version = "0.3", features = ["serde", "serde-well-known"] }
 url = "2.3"
+unicode-normalization = "0.1.22"
 
 [patch.crates-io]
 # For allowing integer version field in Library.json (https://github.com/serde-rs/serde/pull/2056)

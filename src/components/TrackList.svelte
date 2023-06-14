@@ -226,7 +226,7 @@
     {/if}
   </div>
   <div class="row table-header" class:desc={$page.sortDesc}>
-    <!-- Fix: Add view options and "View > Sort By" menu -->
+    <!-- svelte-ignore a11y-click-events-have-key-events -->
     <div class="c index" class:sort={sortKey === 'index'} on:click={() => sortBy('index')}>
       <span>#</span>
     </div>

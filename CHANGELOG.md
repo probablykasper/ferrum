@@ -1,5 +1,8 @@
 # Changelog
 
+## Next
+- Improve filtering by perofrming unicode normalization
+
 ## 0.16.11 - 2023 Apr 30
 - Fix shuffle not staying on after starting new queue
 
