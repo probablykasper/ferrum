@@ -5,7 +5,7 @@ use napi::{Env, Result};
 use rayon::prelude::*;
 use std::str::Chars;
 use std::time::Instant;
-use unicode_normalization::UnicodeNormalization;
+use unicode_normalization::{Recompositions, UnicodeNormalization};
 
 #[napi(js_name = "filter_open_playlist")]
 #[allow(dead_code)]
@@ -15,7 +15,7 @@ pub fn filter_js(query: String, env: Env) -> Result<()> {
   return Ok(());
 }
 
-fn match_at_start(mut text: Chars, keyword: Chars) -> bool {
+fn match_at_start(mut text: Recompositions<Chars>, keyword: Chars) -> bool {
   for keyword_char in keyword {
     let text_char = match text.next() {
       Some(x) => x,
@@ -42,17 +42,16 @@ fn match_at_start(mut text: Chars, keyword: Chars) -> bool {
 }
 
 fn find_match(text: &str, keyword: &str) -> bool {
-  let text: String = text.nfc().collect();
   let mut keyword_chars = keyword.chars();
   let first_keyword_char = match keyword_chars.next() {
     Some(x) => x,
     None => return true, // match if keyword is empty string
   };
-  let mut text_chars = text.chars();
+  let mut text_chars = text.nfc();
   while let Some(text_char) = text_chars.next() {
     match check(first_keyword_char, text_char) {
       Eq::True => {
-        if match_at_start(text_chars.clone(), keyword_chars.clone()) {
+        if match_at_start(text.nfc(), keyword.chars()) {
           return true;
         }
       }
@@ -71,7 +70,6 @@ fn find_match_opt(text: &Option<String>, keyword: &str) -> bool {
 
 fn filter_keyword(data: &Data, ids: &Vec<TrackID>, keyword: &str) -> Vec<TrackID> {
   let tracks = &data.library.tracks;
-  let keyword: String = keyword.nfc().collect();
   let filtered_tracks: Vec<_> = ids
     .into_par_iter()
     .with_min_len(2000)
@@ -94,16 +92,13 @@ pub fn filter(data: &mut Data, query: String) {
   data.page_track_ids = if query == "" {
     None
   } else {
-    let mut filtered_tracks: Vec<TrackID> = Vec::new();
-    let keywords = query.split(" ");
-    let mut first = true;
-    for keyword in keywords {
-      if first {
-        filtered_tracks = filter_keyword(&data, &data.open_playlist_track_ids, keyword);
-        first = false;
-      } else {
-        filtered_tracks = filter_keyword(&data, &filtered_tracks, keyword);
-      }
+    let mut keywords_iter = query.split(" ");
+    let mut filtered_tracks = match keywords_iter.next() {
+      Some(keyword) => filter_keyword(&data, &data.open_playlist_track_ids, keyword),
+      None => return,
+    };
+    for keyword in keywords_iter {
+      filtered_tracks = filter_keyword(&data, &filtered_tracks, keyword);
     }
     Some(filtered_tracks)
   };
