@@ -2,6 +2,9 @@ use crate::data::Data;
 use crate::data_js::get_data;
 use crate::library_types::TrackID;
 use napi::{Env, Result};
+use rayon::prelude::{
+  IndexedParallelIterator, IntoParallelIterator, ParallelIterator,
+};
 use std::str::Chars;
 use std::time::Instant;
 use unicode_normalization::UnicodeNormalization;
@@ -41,7 +44,7 @@ fn match_at_start(mut text: Chars, keyword: Chars) -> bool {
 }
 
 fn find_match(text: &str, keyword: &str) -> bool {
-  let text: String = text.nfc().collect();
+  let text: String = text.nfd().collect();
   let mut keyword_chars = keyword.chars();
   let first_keyword_char = match keyword_chars.next() {
     Some(x) => x,
@@ -70,20 +73,22 @@ fn find_match_opt(text: &Option<String>, keyword: &str) -> bool {
 
 fn filter_keyword(data: &Data, ids: &Vec<TrackID>, keyword: &str) -> Vec<TrackID> {
   let tracks = &data.library.tracks;
-  let mut filtered_tracks: Vec<TrackID> = Vec::new();
-  let keyword: String = keyword.nfc().collect();
-  for id in ids {
-    let track = tracks.get(id).expect("Track ID not found");
-    let is_match = find_match(&track.name, &keyword)
-      || find_match(&track.artist, &keyword)
-      || find_match_opt(&track.albumName, &keyword)
-      || find_match_opt(&track.comments, &keyword)
-      || find_match_opt(&track.genre, &keyword);
-    if is_match {
-      filtered_tracks.push(id.clone());
-    }
-  }
-  return filtered_tracks;
+  let keyword: String = keyword.nfd().collect();
+  let filtered_tracks: Vec<_> = ids
+    .into_par_iter()
+    .with_min_len(2000)
+    .filter(|id| {
+      let track = tracks.get(*id).expect("Track ID not found");
+      let is_match = find_match(&track.name, &keyword)
+        || find_match(&track.artist, &keyword)
+        || find_match_opt(&track.albumName, &keyword)
+        || find_match_opt(&track.comments, &keyword)
+        || find_match_opt(&track.genre, &keyword);
+      is_match
+    })
+    .map(|id| id.clone())
+    .collect();
+  filtered_tracks
 }
 
 pub fn filter(data: &mut Data, query: String) {
