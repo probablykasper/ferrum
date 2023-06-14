@@ -1,6 +1,6 @@
 # Changelog
 
-## Next
+## 0.16.12 - 2023 Jun 14
 - Improve filtering by perofrming unicode normalization
 
 ## 0.16.11 - 2023 Apr 30
