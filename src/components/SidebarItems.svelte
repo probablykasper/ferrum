@@ -31,7 +31,7 @@
 <script lang="ts">
   import type { TrackListDetails } from '../../ferrum-addon'
   import { type Writable, writable } from 'svelte/store'
-  import { createEventDispatcher, SvelteComponent } from 'svelte'
+  import { createEventDispatcher } from 'svelte'
   import { getContext } from 'svelte'
   import { dragged } from '../lib/drag-drop'
   import * as dragGhost from './DragGhost.svelte'
@@ -41,6 +41,7 @@
   export let parentId: string | null
   export let show = true
   export let trackList: { children: string[] }
+  export let preventDrop = false
 
   export let level = 0
   $: childLists = trackList.children.map((childId) => {
@@ -128,14 +129,12 @@
   let dragTrackOntoIndex = null as number | null
   let dragPlaylistOntoIndex = null as number | null
 
-  let dragPlaylistId: string | null = null
   function onDragStart(e: DragEvent, tracklist: TrackListDetails) {
     if (e.dataTransfer && tracklist.kind !== 'special' && parentId) {
       e.dataTransfer.effectAllowed = 'move'
-      dragPlaylistId = tracklist.id
       dragGhost.setInnerText(tracklist.name)
       dragged.playlist = {
-        id: dragPlaylistId,
+        id: tracklist.id,
         fromFolder: parentId,
         level,
       }
@@ -161,12 +160,12 @@
             e.currentTarget &&
             e.dataTransfer?.types[0] === 'ferrum.playlist' &&
             dragged.playlist &&
-            level <= dragged.playlist.level &&
+            !preventDrop &&
             dragged.playlist.id !== childList.id
           ) {
             movePlaylist(dragged.playlist.id, dragged.playlist.fromFolder, childList.id)
+            dragPlaylistOntoIndex = null
           }
-          dragPlaylistOntoIndex = null
         }}
         on:mousedown={() => open(childList.id)}
         on:contextmenu={() => tracklistContextMenu(childList.id, true)}
@@ -196,7 +195,7 @@
               e.currentTarget &&
               e.dataTransfer?.types[0] === 'ferrum.playlist' &&
               dragged.playlist &&
-              level <= dragged.playlist.level &&
+              !preventDrop &&
               dragged.playlist.id !== childList.id
             ) {
               dragPlaylistOntoIndex = i
@@ -215,6 +214,7 @@
         trackList={childList}
         parentId={childList.id}
         level={level + 1}
+        preventDrop={preventDrop || dragged.playlist?.id === childList.id}
         on:selectDown={() => {
           if (i < trackList.children.length - 1) {
             open(trackList.children[i + 1])

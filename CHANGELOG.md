@@ -3,8 +3,9 @@
 ## Next
 - Sidebar selection improvements:
   - Add left arrow key shortcut for going to the parent playlist folder
-  - Fix up arrow selecting siblings only
   - Add alt+up/down shortcut
+  - Fix up arrow selecting siblings only
+  - Fix inability to move playlists into deeper levels
 
 ## 0.16.12 - 2023 Jun 14
 - Improve filtering by perofrming unicode normalization

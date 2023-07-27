@@ -392,6 +392,10 @@ pub fn move_playlist(id: String, from_id: String, to_id: String, env: Env) -> Re
   // check that the to_id is valid before we remove it from from_id
   get_children_if_user_editable(&mut data.library, &to_id)?;
 
+  if id == to_id {
+    throw!("Cannot move playlist into itself");
+  }
+
   let from_id_children = get_all_tracklist_children(&data, &id)?;
   if from_id_children.contains(&to_id) {
     throw!("Cannot move playlist to a child of itself");
