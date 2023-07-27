@@ -58,36 +58,34 @@
     return list.children && list.children.length > 0 && $shownFolders.has(id)
   }
 
-  let itemChildren: SvelteComponent[] = []
   const dispatch = createEventDispatcher()
-  export function selectFirst() {
-    if (childLists[0]) {
-      open(childLists[0].id)
+  function selectFirst(in_id: string) {
+    const children = $trackListsDetailsMap[in_id].children
+    if (children[0]) {
+      open(children[0])
     }
   }
-  export function selectLast() {
-    if (childLists[childLists.length - 1]) {
-      const lastId = childLists[childLists.length - 1].id
-      if (hasShowingChildren(lastId)) {
-        itemChildren[childLists.length - 1].selectLast()
-      } else {
-        open(lastId)
-      }
+  function selectLast(in_id: string) {
+    const children = $trackListsDetailsMap[in_id].children
+    if ((children && hasShowingChildren(in_id)) || in_id === 'root') {
+      selectLast(children[children.length - 1])
+    } else {
+      open(in_id)
     }
   }
   function selectUp(i: number) {
     const prevId = trackList.children[i - 1] || null
-    if (i === 0) {
-      dispatch('selectUp')
+    if (i === 0 && parentId) {
+      open(parentId)
     } else if (prevId && hasShowingChildren(prevId)) {
-      itemChildren[i - 1].selectLast()
+      selectLast(prevId)
     } else if (prevId) {
       open(prevId)
     }
   }
   function selectDown(i: number) {
     if (hasShowingChildren(trackList.children[i])) {
-      itemChildren[i].selectFirst()
+      selectFirst(trackList.children[i])
     } else if (trackList.children[i + 1]) {
       open(trackList.children[i + 1])
     } else {
@@ -103,6 +101,10 @@
     const selectedList = $trackListsDetailsMap[$page.tracklist.id]
     if (checkShortcut(e, 'ArrowUp')) {
       selectUp(index)
+    } else if (checkShortcut(e, 'ArrowUp', { alt: true })) {
+      open('root')
+    } else if (checkShortcut(e, 'ArrowDown', { alt: true })) {
+      selectLast('root')
     } else if (checkShortcut(e, 'ArrowDown')) {
       selectDown(index)
     } else if (checkShortcut(e, 'ArrowLeft')) {
@@ -209,14 +211,10 @@
         </div>
       </div>
       <svelte:self
-        bind:this={itemChildren[i]}
         show={$shownFolders.has(childList.id)}
         trackList={childList}
         parentId={childList.id}
         level={level + 1}
-        on:selectUp={() => {
-          open(childList.id)
-        }}
         on:selectDown={() => {
           if (i < trackList.children.length - 1) {
             open(trackList.children[i + 1])

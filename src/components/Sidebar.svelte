@@ -115,9 +115,6 @@
       />
       <SidebarItems
         trackList={{ children: $trackListsDetailsMap['root'].children || [] }}
-        on:selectUp={() => {
-          open(special.children[special.children.length - 1])
-        }}
         parentId={$trackListsDetailsMap['root'].id}
       />
       <div
