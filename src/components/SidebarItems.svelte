@@ -8,18 +8,18 @@
   } from '../lib/data'
 
   export type SidebarItemHandle = {
-    arrowUpDown(key: 'ArrowUp' | 'ArrowDown'): void
+    handleKey(e: KeyboardEvent): void
   }
 
   let shownFolders = writable(new Set(methods.shownPlaylistFolders()))
-  export function showFolder(id: string) {
+  function showFolder(id: string) {
     shownFolders.update((folders) => {
       folders.add(id)
       return folders
     })
     methods.viewFolderSetShow(id, true)
   }
-  export function hideFolder(id: string) {
+  function hideFolder(id: string) {
     shownFolders.update((folders) => {
       folders.delete(id)
       return folders
@@ -36,6 +36,7 @@
   import { dragged } from '../lib/drag-drop'
   import * as dragGhost from './DragGhost.svelte'
   import { ipcRenderer } from '@/lib/window'
+  import { checkShortcut } from '@/lib/helpers'
 
   export let parentId: string | null
   export let show = true
@@ -89,20 +90,32 @@
     }
   }
 
-  export function arrowUpDown(key: 'ArrowUp' | 'ArrowDown') {
+  export function handleKey(e: KeyboardEvent) {
     const index = trackList.children.findIndex((id) => id === $page.tracklist.id)
     if (index < 0) {
       return
     }
-    if (key === 'ArrowUp') {
+    const selectedList = $trackListsDetailsMap[$page.tracklist.id]
+    if (checkShortcut(e, 'ArrowUp')) {
       selectUp(index)
-    } else {
+    } else if (checkShortcut(e, 'ArrowDown')) {
       selectDown(index)
+    } else if (checkShortcut(e, 'ArrowLeft')) {
+      if (selectedList.kind === 'folder' && $shownFolders.has(selectedList.id)) {
+        hideFolder(selectedList.id)
+      } else if (parentId) {
+        open(parentId)
+      }
+    } else if (checkShortcut(e, 'ArrowRight') && selectedList.kind === 'folder') {
+      showFolder(selectedList.id)
+    } else {
+      return
     }
+    e.preventDefault()
   }
   $: if (trackList.children.includes($page.id)) {
     const itemHandle = getContext<Writable<SidebarItemHandle | null>>('itemHandle')
-    itemHandle.set({ arrowUpDown })
+    itemHandle.set({ handleKey })
   }
 
   let dragTrackOntoIndex = null as number | null

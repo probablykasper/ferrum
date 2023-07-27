@@ -1,5 +1,8 @@
 # Changelog
 
+## Next
+- Add left arrow key shortcut for going to the parent playlist folder
+
 ## 0.16.12 - 2023 Jun 14
 - Improve filtering by perofrming unicode normalization
 

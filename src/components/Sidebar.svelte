@@ -1,16 +1,11 @@
 <script lang="ts">
-  import SidebarItems, {
-    hideFolder,
-    showFolder,
-    type SidebarItemHandle,
-  } from './SidebarItems.svelte'
+  import SidebarItems, { type SidebarItemHandle } from './SidebarItems.svelte'
   import Filter from './Filter.svelte'
   import { isMac, trackListsDetailsMap, page, movePlaylist } from '../lib/data'
   import { ipcRenderer } from '../lib/window'
   import { writable } from 'svelte/store'
   import { setContext, tick } from 'svelte'
   import { dragged } from '../lib/drag-drop'
-  import { checkShortcut } from '@/lib/helpers'
 
   const special = {
     children: ['root'],
@@ -18,32 +13,6 @@
   let viewport: HTMLDivElement
   const itemHandle = setContext('itemHandle', writable(null as SidebarItemHandle | null))
 
-  function handleKeydown(e: KeyboardEvent) {
-    const selectedList = $trackListsDetailsMap[$page.tracklist.id]
-    let prevent = true
-    if (e.key == 'Home') {
-      // viewport.scrollTop = 0
-    } else if (e.key == 'End') {
-      // viewport.scrollTop = viewport.scrollHeight
-    } else if (e.key == 'PageUp') {
-      // viewport.scrollTop -= viewport.clientHeight
-    } else if (e.key == 'PageDown') {
-      // viewport.scrollTop += viewport.clientHeight
-    } else if (checkShortcut(e, 'ArrowLeft') && selectedList.kind === 'folder') {
-      hideFolder(selectedList.id)
-    } else if (checkShortcut(e, 'ArrowRight') && selectedList.kind === 'folder') {
-      showFolder(selectedList.id)
-    } else if (checkShortcut(e, 'ArrowUp')) {
-      $itemHandle?.arrowUpDown('ArrowUp')
-    } else if (checkShortcut(e, 'ArrowDown')) {
-      $itemHandle?.arrowUpDown('ArrowDown')
-    } else {
-      prevent = false
-    }
-    if (prevent) {
-      e.preventDefault()
-    }
-  }
   async function onContextMenu() {
     await ipcRenderer.invoke('showTracklistMenu', {
       id: 'root',
@@ -115,7 +84,13 @@
     <div
       class="items"
       tabindex="-1"
-      on:keydown={handleKeydown}
+      on:keydown={(e) => {
+        if (e.key == 'Home' || e.key == 'End' || e.key == 'PageUp' || e.key == 'PageDown') {
+          e.preventDefault()
+        } else {
+          $itemHandle?.handleKey(e)
+        }
+      }}
       bind:this={viewport}
       class:droppable={rootDroppable}
     >

@@ -80,7 +80,7 @@ type FlattenedListMenuItem = { label: string; enabled: boolean; id: string }
 export function flattenChildLists(
   trackList: TrackListDetails,
   trackLists: Record<string, TrackListDetails>,
-  indentPrefix: string
+  indentPrefix: string,
 ) {
   let flat: FlattenedListMenuItem[] = []
   for (const childListId of trackList.children || []) {
