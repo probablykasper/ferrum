@@ -1,6 +1,7 @@
 # Changelog
 
 ## Next
+- Add `Ctrl+K` quick playlist search (macOS: `Cmd+K`)
 - Add playlist reordering
 - Sidebar selection improvements:
   - Add left arrow key shortcut for going to the parent playlist folder

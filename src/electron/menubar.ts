@@ -150,6 +150,14 @@ export function initMenuBar(app: App, mainWindow: BrowserWindow) {
             webContents.send('Show Queue')
           },
         },
+        {
+          label: 'Toggle Quick Nav',
+          type: 'checkbox',
+          accelerator: 'CmdOrCtrl+K',
+          click: () => {
+            webContents.send('ToggleQuickNav')
+          },
+        },
         { type: 'separator' },
         { role: 'reload', accelerator: 'CmdOrCtrl+Option+R' },
         { role: 'forceReload', accelerator: 'Shift+CmdOrCtrl+Option+R' },

@@ -106,6 +106,7 @@ type Events = {
   volumeUp: () => void
   volumeDown: () => void
   'Show Queue': () => void
+  ToggleQuickNav: () => void
 
   selectedTracksAction: (
     action:

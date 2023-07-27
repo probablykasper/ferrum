@@ -15,6 +15,7 @@
   import ItunesImport from './components/ItunesImport.svelte'
   import type { TrackID } from 'ferrum-addon/addon'
   import { modalCount } from './components/Modal.svelte'
+  import QuickNav from './components/QuickNav.svelte'
 
   ipcRenderer.emit('appLoaded')
 
@@ -192,6 +193,7 @@
 {#if showItunesImport}
   <ItunesImport cancel={() => (showItunesImport = false)} />
 {/if}
+<QuickNav />
 
 <DragGhost />
 

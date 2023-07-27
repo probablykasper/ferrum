@@ -73,6 +73,7 @@
     "eslint": "^8.45.0",
     "eslint-config-prettier": "^8.8.0",
     "eslint-plugin-svelte3": "^4.0.0",
+    "fuzzysort": "^2.0.4",
     "prettier": "^3.0.0",
     "prettier-plugin-svelte": "^3.0.1",
     "sass": "^1.64.1",
