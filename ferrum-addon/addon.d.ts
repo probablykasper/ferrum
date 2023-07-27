@@ -141,7 +141,7 @@ export function remove_from_open_playlist(indexesToRemove: Array<number>): void
 export function delete_tracks_in_open(indexesToDelete: Array<number>): void
 export function new_playlist(name: string, description: string, isFolder: boolean, parentId: string): void
 export function update_playlist(id: string, name: string, description: string): void
-export function move_playlist(id: string, fromId: string, toId: string): void
+export function move_playlist(id: string, fromId: string, toId: string, toIndex: number): void
 export function shown_playlist_folders(): Array<string>
 export function view_folder_set_show(id: string, show: boolean): void
 export interface TrackMd {

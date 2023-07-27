@@ -1,6 +1,7 @@
 # Changelog
 
 ## Next
+- Add playlist reordering
 - Sidebar selection improvements:
   - Add left arrow key shortcut for going to the parent playlist folder
   - Add alt+up/down shortcut

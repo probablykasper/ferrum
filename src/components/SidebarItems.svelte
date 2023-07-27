@@ -127,6 +127,7 @@
   }
 
   let dragTrackOntoIndex = null as number | null
+  let dropAbove = false
   let dragPlaylistOntoIndex = null as number | null
 
   function onDragStart(e: DragEvent, tracklist: TrackListDetails) {
@@ -163,7 +164,12 @@
             !preventDrop &&
             dragged.playlist.id !== childList.id
           ) {
-            movePlaylist(dragged.playlist.id, dragged.playlist.fromFolder, childList.id)
+            movePlaylist(
+              dragged.playlist.id,
+              dragged.playlist.fromFolder,
+              childList.id,
+              childList.children.length - 1
+            )
             dragPlaylistOntoIndex = null
           }
         }}
@@ -232,11 +238,28 @@
         class:active={$page.id === childList.id}
         on:mousedown={() => open(childList.id)}
         class:droppable={dragTrackOntoIndex === i}
+        class:droppable-above={dragPlaylistOntoIndex === i && dropAbove}
+        class:droppable-below={dragPlaylistOntoIndex === i && !dropAbove}
         on:drop={(e) => {
           if (e.currentTarget && e.dataTransfer?.types[0] === 'ferrum.tracks' && dragged.tracks) {
             addTracksToPlaylist(childList.id, dragged.tracks.ids)
+            dragTrackOntoIndex = null
+          } else if (
+            e.currentTarget &&
+            e.dataTransfer?.types[0] === 'ferrum.playlist' &&
+            dragged.playlist &&
+            !preventDrop
+          ) {
+            const rect = e.currentTarget.getBoundingClientRect()
+            dropAbove = e.pageY < rect.bottom - rect.height / 2
+            movePlaylist(
+              dragged.playlist.id,
+              dragged.playlist.fromFolder,
+              parentId,
+              dropAbove ? i : i + 1
+            )
+            dragPlaylistOntoIndex = null
           }
-          dragTrackOntoIndex = null
         }}
         on:contextmenu={() => tracklistContextMenu(childList.id, false)}
       >
@@ -244,13 +267,24 @@
         <div
           class="text"
           on:dragover={(e) => {
-            if (e.currentTarget && e.dataTransfer?.types[0] === 'ferrum.tracks') {
+            if (e.currentTarget && e.dataTransfer?.types[0] === 'ferrum.tracks' && dragged.tracks) {
               dragTrackOntoIndex = i
               e.preventDefault()
+            } else if (
+              e.currentTarget &&
+              e.dataTransfer?.types[0] === 'ferrum.playlist' &&
+              dragged.playlist &&
+              !preventDrop
+            ) {
+              dragPlaylistOntoIndex = i
+              e.preventDefault()
+              const rect = e.currentTarget.getBoundingClientRect()
+              dropAbove = e.pageY < rect.bottom - rect.height / 2
             }
           }}
           on:dragleave|self={() => {
             dragTrackOntoIndex = null
+            dragPlaylistOntoIndex = null
           }}
         >
           {childList.name}
@@ -289,9 +323,6 @@
       background-image: linear-gradient(90deg, hsl(var(--hue), 45%, 30%) 30%, transparent 66.6666%)
       background-position: 0% 0%
   .item
-    white-space: nowrap
-    overflow: hidden
-    text-overflow: ellipsis
     display: flex
     align-items: center
     margin-right: 10px
@@ -304,6 +335,10 @@
     border-radius: 6px
     box-shadow: inset 0px 0px 0px 2px var(--accent-1)
     background-color: hsla(var(--hue), 74%, 53%, 0.25)
+  .item.droppable-above .text
+    box-shadow: 0px -1px 0px 0px var(--accent-1), inset 0px 1px 0px 0px var(--accent-1)
+  .item.droppable-below .text
+    box-shadow: 0px 1px 0px 0px var(--accent-1), inset 0px -1px 0px 0px var(--accent-1)
   .sub
     display: none
     &.show
@@ -321,6 +356,7 @@
   .show > svg.arrow
     transform: rotate(90deg)
   .text
+    white-space: nowrap
     overflow: hidden
     text-overflow: ellipsis
     padding-right: 10px

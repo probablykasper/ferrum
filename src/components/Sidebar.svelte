@@ -36,7 +36,8 @@
   }
   function drop(e: DragEvent) {
     if (e.currentTarget && e.dataTransfer?.types[0] === 'ferrum.playlist' && dragged.playlist) {
-      movePlaylist(dragged.playlist.id, dragged.playlist.fromFolder, 'root')
+      const root = $trackListsDetailsMap['root']
+      movePlaylist(dragged.playlist.id, dragged.playlist.fromFolder, 'root', root.children.length)
       rootDroppable = false
     }
   }

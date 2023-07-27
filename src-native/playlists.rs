@@ -380,7 +380,13 @@ fn get_children_if_user_editable<'a>(
 
 #[napi(js_name = "move_playlist")]
 #[allow(dead_code)]
-pub fn move_playlist(id: String, from_id: String, to_id: String, env: Env) -> Result<()> {
+pub fn move_playlist(
+  id: String,
+  from_id: String,
+  to_id: String,
+  to_index: u32,
+  env: Env,
+) -> Result<()> {
   let data: &mut Data = get_data(&env)?;
 
   match data.library.trackLists.get(&id) {
@@ -409,7 +415,13 @@ pub fn move_playlist(id: String, from_id: String, to_id: String, env: Env) -> Re
   children.remove(i);
 
   let to_folder_children = get_children_if_user_editable(&mut data.library, &to_id)?;
-  to_folder_children.push(id.clone());
+  let to_index = to_index.try_into().unwrap();
+  let move_down = from_id == to_id && i < to_index;
+  if move_down {
+    to_folder_children.insert(to_index - 1, id);
+  } else {
+    to_folder_children.insert(to_index, id);
+  }
 
   Ok(())
 }

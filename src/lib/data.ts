@@ -135,8 +135,13 @@ export function updatePlaylist(id: string, name: string, description: string) {
   page.refreshIdsAndKeepSelection()
   methods.save()
 }
-export function movePlaylist(id: TrackListID, fromParent: TrackListID, toParent: TrackListID) {
-  call((addon) => addon.move_playlist(id, fromParent, toParent))
+export function movePlaylist(
+  id: TrackListID,
+  fromParent: TrackListID,
+  toParent: TrackListID,
+  toIndex: number,
+) {
+  call((addon) => addon.move_playlist(id, fromParent, toParent, toIndex))
   trackListsDetailsMap.refresh()
   methods.save()
 }
