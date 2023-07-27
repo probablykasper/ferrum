@@ -1,6 +1,6 @@
 # Changelog
 
-## Next
+## 0.17.0 - 2023 Jul 27
 - Add `Ctrl+K` quick playlist search (macOS: `Cmd+K`)
 - Add playlist reordering
 - Sidebar selection improvements:
