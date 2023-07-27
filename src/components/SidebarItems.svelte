@@ -67,10 +67,15 @@
   }
   export function selectLast() {
     if (childLists[childLists.length - 1]) {
-      open(childLists[childLists.length - 1].id)
+      const lastId = childLists[childLists.length - 1].id
+      if (hasShowingChildren(lastId)) {
+        itemChildren[childLists.length - 1].selectLast()
+      } else {
+        open(lastId)
+      }
     }
   }
-  async function selectUp(i: number) {
+  function selectUp(i: number) {
     const prevId = trackList.children[i - 1] || null
     if (i === 0) {
       dispatch('selectUp')
@@ -80,7 +85,7 @@
       open(prevId)
     }
   }
-  async function selectDown(i: number) {
+  function selectDown(i: number) {
     if (hasShowingChildren(trackList.children[i])) {
       itemChildren[i].selectFirst()
     } else if (trackList.children[i + 1]) {
