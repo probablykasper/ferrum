@@ -87,8 +87,8 @@
     "printWidth": 100,
     "semi": false,
     "singleQuote": true,
-    "pluginSearchDirs": [
-      "."
+    "plugins": [
+      "prettier-plugin-svelte"
     ]
   }
 }

@@ -71,7 +71,7 @@ export const trackListsDetailsMap = (() => {
 export async function addTracksToPlaylist(
   playlistId: TrackListID,
   trackIds: TrackID[],
-  checkDuplicates = true
+  checkDuplicates = true,
 ) {
   if (checkDuplicates) {
     const filteredIds = call((addon) => addon.playlist_filter_duplicates(playlistId, trackIds))

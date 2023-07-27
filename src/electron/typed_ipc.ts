@@ -28,15 +28,15 @@ interface TypedIpcMain<IpcEvents extends InputMap, IpcCommands extends InputMap>
   extends ElectronIpcMain {
   on<K extends keyof IpcEvents>(
     channel: K,
-    listener: (event: IpcMainEvent, ...args: Parameters<IpcEvents[K]>) => void
+    listener: (event: IpcMainEvent, ...args: Parameters<IpcEvents[K]>) => void,
   ): this
   once<K extends keyof IpcEvents>(
     channel: K,
-    listener: (event: IpcMainEvent, ...args: Parameters<IpcEvents[K]>) => void
+    listener: (event: IpcMainEvent, ...args: Parameters<IpcEvents[K]>) => void,
   ): this
   removeListener<K extends keyof IpcEvents>(
     channel: K,
-    listener: (event: IpcMainEvent, ...args: Parameters<IpcEvents[K]>) => void
+    listener: (event: IpcMainEvent, ...args: Parameters<IpcEvents[K]>) => void,
   ): this
   removeAllListeners<K extends keyof IpcEvents>(channel?: K): this
   handle<K extends keyof IpcCommands>(
@@ -44,14 +44,14 @@ interface TypedIpcMain<IpcEvents extends InputMap, IpcCommands extends InputMap>
     listener: (
       event: TypedIpcMainInvokeEvent<IpcEvents>,
       ...args: Parameters<IpcCommands[K]>
-    ) => OptionalPromise<ReturnType<IpcCommands[K]>>
+    ) => OptionalPromise<ReturnType<IpcCommands[K]>>,
   ): void
   handleOnce<K extends keyof IpcCommands>(
     channel: K,
     listener: (
       event: TypedIpcMainInvokeEvent<IpcEvents>,
       ...args: Parameters<IpcCommands[K]>
-    ) => OptionalPromise<ReturnType<IpcCommands[K]>>
+    ) => OptionalPromise<ReturnType<IpcCommands[K]>>,
   ): void
   removeHandler<K extends keyof IpcCommands>(channel: K): void
 }
@@ -60,15 +60,15 @@ interface TypedIpcRenderer<IpcEvents extends InputMap, IpcCommands extends Input
   extends ElectronIpcRenderer {
   on<K extends keyof IpcEvents>(
     channel: K,
-    listener: (event: IpcRendererEvent, ...args: Parameters<IpcEvents[K]>) => void
+    listener: (event: IpcRendererEvent, ...args: Parameters<IpcEvents[K]>) => void,
   ): this
   once<K extends keyof IpcEvents>(
     channel: K,
-    listener: (event: IpcRendererEvent, ...args: Parameters<IpcEvents[K]>) => void
+    listener: (event: IpcRendererEvent, ...args: Parameters<IpcEvents[K]>) => void,
   ): this
   removeListener<K extends keyof IpcEvents>(
     channel: K,
-    listener: (event: IpcRendererEvent, ...args: Parameters<IpcEvents[K]>) => void
+    listener: (event: IpcRendererEvent, ...args: Parameters<IpcEvents[K]>) => void,
   ): this
   removeAllListeners<K extends keyof IpcEvents>(channel: K): this
   send<K extends keyof IpcEvents>(channel: K, ...args: Parameters<IpcEvents[K]>): void
@@ -114,7 +114,7 @@ type Events = {
       | 'Get Info'
       | 'revealTrackFile'
       | 'Remove from Playlist'
-      | 'Delete from Library'
+      | 'Delete from Library',
   ) => void
 
   'context.playlist.edit': (id: TrackID) => void
@@ -139,11 +139,11 @@ export type ShowTrackMenuOptions = {
 type Commands = {
   showMessageBox: (
     attached: boolean,
-    options: Parameters<typeof dialog.showMessageBox>[0]
+    options: Parameters<typeof dialog.showMessageBox>[0],
   ) => ReturnType<typeof dialog.showMessageBox>
   showOpenDialog: (
     attached: boolean,
-    options: Parameters<typeof dialog.showOpenDialog>[0]
+    options: Parameters<typeof dialog.showOpenDialog>[0],
   ) => ReturnType<typeof dialog.showOpenDialog>
   revealTrackFile: (...paths: string[]) => void
   showTrackMenu: (options: ShowTrackMenuOptions) => void
@@ -163,7 +163,7 @@ export const ipcMain = electronIpcMain as IpcMain
 interface TypedIpcFunctions<IpcEvents extends InputMap> extends ElectronIpcRenderer {
   ipcListen<K extends keyof IpcEvents>(
     channel: K,
-    listener: (event: IpcRendererEvent, ...args: Parameters<IpcEvents[K]>) => void
+    listener: (event: IpcRendererEvent, ...args: Parameters<IpcEvents[K]>) => void,
   ): () => void
 }
 export type IpcFunctions = TypedIpcFunctions<Events>

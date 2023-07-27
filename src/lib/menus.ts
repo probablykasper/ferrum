@@ -16,7 +16,7 @@ export async function showTrackMenu(
   allIds: string[],
   selectedIndexes: number[],
   playlist?: { editable: boolean },
-  queue = false
+  queue = false,
 ) {
   const trackLists = get(trackListsDetailsMap)
   const flat = flattenChildLists(trackLists.root, trackLists, '')
