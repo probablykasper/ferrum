@@ -51,7 +51,7 @@ fn find_match(text: &str, keyword: &str) -> bool {
   while let Some(text_char) = text_chars.next() {
     match check(first_keyword_char, text_char) {
       Eq::True => {
-        if match_at_start(text.nfc(), keyword.chars()) {
+        if match_at_start(text_chars.clone(), keyword_chars.clone()) {
           return true;
         }
       }
@@ -92,6 +92,7 @@ pub fn filter(data: &mut Data, query: String) {
   data.page_track_ids = if query == "" {
     None
   } else {
+    let query: String = query.nfc().collect();
     let mut keywords_iter = query.split(" ");
     let mut filtered_tracks = match keywords_iter.next() {
       Some(keyword) => filter_keyword(&data, &data.open_playlist_track_ids, keyword),
