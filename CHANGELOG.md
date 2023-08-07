@@ -1,6 +1,6 @@
 # Changelog
 
-## Next
+## 0.17.1 - 2023 Aug 7
 - Fix filtering only working for first words
 
 ## 0.17.0 - 2023 Jul 27
