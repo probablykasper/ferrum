@@ -610,7 +610,7 @@ impl ItunesImport {
   }
   #[napi]
   pub fn finish(&mut self, env: Env) -> Result<()> {
-    let mut data = get_data(&env)?;
+    let data = get_data(&env)?;
     let itunes_track_paths = &mut *self.itunes_track_paths.lock().unwrap();
     for (itunes_path, ferrum_file) in itunes_track_paths {
       let new_path = data.paths.tracks_dir.join(ferrum_file);
