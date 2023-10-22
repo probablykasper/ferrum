@@ -170,7 +170,7 @@
               dragged.playlist.id,
               dragged.playlist.fromFolder,
               childList.id,
-              childList.children.length - 1,
+              Math.max(0, childList.children.length - 1),
             )
             dragPlaylistOntoIndex = null
           }
