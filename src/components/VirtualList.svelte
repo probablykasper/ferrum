@@ -1,10 +1,12 @@
-<script lang="ts">
+<script lang="ts" generics="T">
   import { createEventDispatcher, onMount, tick } from 'svelte'
 
-  const dispatch = createEventDispatcher()
+  const dispatch = createEventDispatcher<{ 'mousedown-self': null }>()
 
-  type T = $$Generic
-  export let getItem: (index: number) => T
+  // eslint-disable-next-line no-undef
+  type X = T
+
+  export let getItem: (index: number) => X
   export let isMain = 0
   export let itemCount: number
   export let itemHeight: number
@@ -12,7 +14,7 @@
   let endIndex = -1
   let height = 0
   let scrollTop = 0
-  let visibleItems: T[] = []
+  let visibleItems: X[] = []
 
   export function scrollToItem(index: number) {
     const top = index * itemHeight
@@ -98,6 +100,7 @@
 <!-- svelte-ignore a11y-no-noninteractive-tabindex -->
 <div
   class="viewport"
+  role="none"
   bind:this={viewport}
   bind:clientHeight={height}
   on:scroll={handleScroll}
@@ -112,7 +115,7 @@
     style:height={itemCount * itemHeight + 'px'}
     style:padding-top={startIndex * itemHeight + 'px'}
   >
-    {#each visibleItems as item, i}
+    {#each visibleItems as item, i (startIndex + i)}
       <slot {item} index={startIndex + i} />
     {/each}
   </div>

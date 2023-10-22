@@ -42,6 +42,7 @@
     image = undefined
     await tick()
     const imageInfo = methods.getImage(index)
+    console.log(imageInfo)
 
     if (imageInfo === null) {
       image = null
@@ -307,11 +308,18 @@
 
 <svelte:window on:keydown={keydown} />
 <svelte:body on:keydown|self={keydownNoneSelected} on:paste={coverPaste} />
-<Modal onCancel={cancel} let:focus form={save}>
+<Modal onCancel={cancel} form={save}>
   <main class="modal">
     <div class="header" class:has-subtitle={image && image.totalImages >= 2}>
-      <!-- svelte-ignore a11y-no-noninteractive-tabindex -->
-      <div class="cover-area" class:droppable tabindex="0" on:keydown={coverKeydown}>
+      <div
+        class="cover-area"
+        class:droppable
+        tabindex="0"
+        on:keydown={coverKeydown}
+        role="button"
+        aria-label="Cover artwork"
+      >
+        <!-- svelte-ignore a11y-no-static-element-interactions -->
         <div
           class="cover"
           on:dragenter={dragEnterOrOver}
@@ -345,6 +353,9 @@
               <!-- svelte-ignore a11y-click-events-have-key-events -->
               <svg
                 on:click={prevImage}
+                tabindex="-1"
+                role="button"
+                aria-label="Previous image"
                 clip-rule="evenodd"
                 fill-rule="evenodd"
                 stroke-linejoin="round"
@@ -366,6 +377,9 @@
               <!-- svelte-ignore a11y-click-events-have-key-events -->
               <svg
                 on:click={nextImage}
+                tabindex="-1"
+                role="button"
+                aria-label="Next image"
                 clip-rule="evenodd"
                 fill-rule="evenodd"
                 stroke-linejoin="round"
@@ -391,7 +405,8 @@
     <div class="spacer" />
     <div class="row">
       <div class="label">Title</div>
-      <input type="text" bind:value={name} use:focus />
+      <!-- svelte-ignore a11y-autofocus -->
+      <input type="text" bind:value={name} autofocus />
     </div>
     <div class="row">
       <div class="label">Artist</div>

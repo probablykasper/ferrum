@@ -61,6 +61,7 @@
     {#if !$stopped && $playingTrack}
       <div
         class="cover"
+        role="none"
         on:contextmenu={playingContextMenu}
         on:dragstart={dragStart}
         draggable="true"
@@ -75,7 +76,12 @@
           </svg>
         {/if}
       </div>
-      <div on:contextmenu={playingContextMenu} on:dragstart={dragStart} draggable="true">
+      <div
+        on:contextmenu={playingContextMenu}
+        on:dragstart={dragStart}
+        draggable="true"
+        role="none"
+      >
         <div class="name">
           {$playingTrack.name}
         </div>

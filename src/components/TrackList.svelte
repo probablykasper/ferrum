@@ -208,6 +208,7 @@
 <div
   bind:this={tracklistElement}
   class="tracklist"
+  role="table"
   on:dragleave={() => (dragToIndex = null)}
   class:no-selection={$selection.count === 0}
 >
@@ -225,57 +226,105 @@
       <div class="description">{$page.tracklist.description}</div>
     {/if}
   </div>
-  <div class="row table-header" class:desc={$page.sortDesc}>
+  <div class="row table-header" class:desc={$page.sortDesc} role="row">
+    <!-- svelte-ignore a11y-interactive-supports-focus -->
     <!-- svelte-ignore a11y-click-events-have-key-events -->
-    <div class="c index" class:sort={sortKey === 'index'} on:click={() => sortBy('index')}>
+    <div
+      class="c index"
+      class:sort={sortKey === 'index'}
+      on:click={() => sortBy('index')}
+      role="button"
+    >
       <span>#</span>
     </div>
+    <!-- svelte-ignore a11y-interactive-supports-focus -->
     <!-- svelte-ignore a11y-click-events-have-key-events -->
-    <div class="c name" class:sort={sortKey === 'name'} on:click={() => sortBy('name')}>
+    <div
+      class="c name"
+      class:sort={sortKey === 'name'}
+      on:click={() => sortBy('name')}
+      role="button"
+    >
       <span>Name</span>
     </div>
+    <!-- svelte-ignore a11y-interactive-supports-focus -->
     <!-- svelte-ignore a11y-click-events-have-key-events -->
     <div
       class="c playCount"
       class:sort={sortKey === 'playCount'}
       on:click={() => sortBy('playCount')}
+      role="button"
     >
       <span>Plays</span>
     </div>
+    <!-- svelte-ignore a11y-interactive-supports-focus -->
     <!-- svelte-ignore a11y-click-events-have-key-events -->
-    <div class="c duration" class:sort={sortKey === 'duration'} on:click={() => sortBy('duration')}>
+    <div
+      class="c duration"
+      class:sort={sortKey === 'duration'}
+      on:click={() => sortBy('duration')}
+      role="button"
+    >
       <span>Time</span>
     </div>
+    <!-- svelte-ignore a11y-interactive-supports-focus -->
     <!-- svelte-ignore a11y-click-events-have-key-events -->
-    <div class="c artist" class:sort={sortKey === 'artist'} on:click={() => sortBy('artist')}>
+    <div
+      class="c artist"
+      class:sort={sortKey === 'artist'}
+      on:click={() => sortBy('artist')}
+      role="button"
+    >
       <span>Artist</span>
     </div>
+    <!-- svelte-ignore a11y-interactive-supports-focus -->
     <!-- svelte-ignore a11y-click-events-have-key-events -->
     <div
       class="c albumName"
       class:sort={sortKey === 'albumName'}
       on:click={() => sortBy('albumName')}
+      role="button"
     >
       <span>Album</span>
     </div>
+    <!-- svelte-ignore a11y-interactive-supports-focus -->
     <!-- svelte-ignore a11y-click-events-have-key-events -->
-    <div class="c comments" class:sort={sortKey === 'comments'} on:click={() => sortBy('comments')}>
+    <div
+      class="c comments"
+      class:sort={sortKey === 'comments'}
+      on:click={() => sortBy('comments')}
+      role="button"
+    >
       <span>Comments</span>
     </div>
+    <!-- svelte-ignore a11y-interactive-supports-focus -->
     <!-- svelte-ignore a11y-click-events-have-key-events -->
-    <div class="c genre" class:sort={sortKey === 'genre'} on:click={() => sortBy('genre')}>
+    <div
+      class="c genre"
+      class:sort={sortKey === 'genre'}
+      on:click={() => sortBy('genre')}
+      role="button"
+    >
       <span>Genre</span>
     </div>
+    <!-- svelte-ignore a11y-interactive-supports-focus -->
     <!-- svelte-ignore a11y-click-events-have-key-events -->
     <div
       class="c dateAdded"
       class:sort={sortKey === 'dateAdded'}
       on:click={() => sortBy('dateAdded')}
+      role="button"
     >
       <span>Date Added</span>
     </div>
+    <!-- svelte-ignore a11y-interactive-supports-focus -->
     <!-- svelte-ignore a11y-click-events-have-key-events -->
-    <div class="c year" class:sort={sortKey === 'year'} on:click={() => sortBy('year')}>
+    <div
+      class="c year"
+      class:sort={sortKey === 'year'}
+      on:click={() => sortBy('year')}
+      role="button"
+    >
       <span>Year</span>
     </div>
   </div>
@@ -292,8 +341,10 @@
   >
     {#if track !== null}
       <!-- svelte-ignore a11y-click-events-have-key-events -->
+      <!-- svelte-ignore a11y-interactive-supports-focus -->
       <div
         class="row"
+        role="row"
         on:dblclick={(e) => doubleClick(e, index)}
         on:mousedown={(e) => selection.handleMouseDown(e, index)}
         on:contextmenu={(e) => selection.handleContextMenu(e, index)}

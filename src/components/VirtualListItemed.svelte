@@ -1,12 +1,14 @@
-<script lang="ts">
+<script lang="ts" generics="T">
   import { createEventDispatcher, onMount, tick } from 'svelte'
 
-  const dispatch = createEventDispatcher()
+  const dispatch = createEventDispatcher<{ 'mousedown-self': null }>()
 
-  type T = $$Generic
+  // eslint-disable-next-line no-undef
+  type X = T
+
   export let itemHeight: number
-  export let items: T[]
-  export let getKey: (item: T, i: number) => unknown
+  export let items: X[]
+  export let getKey: (item: X, i: number) => number | string
   export let buffer = 5
   let startIndex = 0
   let visibleCount = 0
@@ -84,12 +86,15 @@
   on:mousedown|self={() => dispatch('mousedown-self')}
   tabindex="0"
   on:keydown={keydown}
+  role="none"
 >
   <div
     class="content"
     style:height={items.length * itemHeight + 'px'}
     style:padding-top={startIndex * itemHeight + 'px'}
   >
+    <!-- disable no-unused-vars for '_' -->
+    <!-- eslint-disable-next-line @typescript-eslint/no-unused-vars -->
     {#each { length: visibleCount } as _, i (getKey(items[i + startIndex], i + startIndex))}
       <slot item={items[i + startIndex]} index={i + startIndex} />
     {/each}

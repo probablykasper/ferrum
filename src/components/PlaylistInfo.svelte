@@ -39,13 +39,13 @@
 
 <Modal
   onCancel={cancel}
-  let:focus
   form={save}
   on:keydown={formKeydown}
   title={(info.editMode ? 'Edit' : 'New') + ' Playlist' + (info.isFolder ? ' Folder' : '')}
 >
   <main>
-    <input type="text" bind:value={info.name} placeholder="Title" use:focus />
+    <!-- svelte-ignore a11y-autofocus -->
+    <input type="text" bind:value={info.name} placeholder="Title" autofocus />
     <textarea
       rows={rows(info.description)}
       bind:value={info.description}

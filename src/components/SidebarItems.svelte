@@ -59,16 +59,16 @@
     return list.children && list.children.length > 0 && $shownFolders.has(id)
   }
 
-  const dispatch = createEventDispatcher()
+  const dispatch = createEventDispatcher<{ selectDown: null }>()
   function selectFirst(in_id: string) {
     const children = $trackListsDetailsMap[in_id].children
-    if (children[0]) {
+    if (children && children[0]) {
       open(children[0])
     }
   }
   function selectLast(in_id: string) {
     const children = $trackListsDetailsMap[in_id].children
-    if ((children && hasShowingChildren(in_id)) || in_id === 'root') {
+    if (children && (hasShowingChildren(in_id) || in_id === 'root')) {
       selectLast(children[children.length - 1])
     } else {
       open(in_id)
@@ -156,19 +156,21 @@
         on:dragstart={(e) => onDragStart(e, childList)}
         class:show={$shownFolders.has(childList.id)}
         class:droppable={dragPlaylistOntoIndex === i}
+        role="none"
         on:drop={(e) => {
           if (
             e.currentTarget &&
             e.dataTransfer?.types[0] === 'ferrum.playlist' &&
             dragged.playlist &&
             !preventDrop &&
-            dragged.playlist.id !== childList.id
+            dragged.playlist.id !== childList.id &&
+            childList.children !== undefined
           ) {
             movePlaylist(
               dragged.playlist.id,
               dragged.playlist.fromFolder,
               childList.id,
-              childList.children.length - 1
+              childList.children.length - 1,
             )
             dragPlaylistOntoIndex = null
           }
@@ -177,8 +179,11 @@
         on:contextmenu={() => tracklistContextMenu(childList.id, true)}
       >
         <!-- svelte-ignore a11y-click-events-have-key-events -->
+        <!-- svelte-ignore a11y-interactive-supports-focus -->
         <svg
           class="arrow"
+          role="button"
+          aria-label="Arrow button"
           on:mousedown|stopPropagation
           on:click={() => {
             if ($shownFolders.has(childList.id)) {
@@ -194,8 +199,10 @@
         >
           <path d="M21 12l-18 12v-24z" />
         </svg>
+        <!-- svelte-ignore a11y-interactive-supports-focus -->
         <div
           class="text"
+          role="link"
           on:dragover={(e) => {
             if (
               e.currentTarget &&
@@ -230,8 +237,11 @@
         }}
       />
     {:else if childList.kind === 'playlist'}
+      <!-- svelte-ignore a11y-interactive-supports-focus -->
       <div
         class="item"
+        role="button"
+        aria-label="playlist"
         style:padding-left={14 * level + 'px'}
         draggable="true"
         on:dragstart={(e) => onDragStart(e, childList)}
@@ -248,7 +258,8 @@
             e.currentTarget &&
             e.dataTransfer?.types[0] === 'ferrum.playlist' &&
             dragged.playlist &&
-            !preventDrop
+            !preventDrop &&
+            parentId !== null
           ) {
             const rect = e.currentTarget.getBoundingClientRect()
             dropAbove = e.pageY < rect.bottom - rect.height / 2
@@ -256,7 +267,7 @@
               dragged.playlist.id,
               dragged.playlist.fromFolder,
               parentId,
-              dropAbove ? i : i + 1
+              dropAbove ? i : i + 1,
             )
             dragPlaylistOntoIndex = null
           }
@@ -266,6 +277,7 @@
         <div class="arrow" />
         <div
           class="text"
+          role="link"
           on:dragover={(e) => {
             if (e.currentTarget && e.dataTransfer?.types[0] === 'ferrum.tracks' && dragged.tracks) {
               dragTrackOntoIndex = i
@@ -291,8 +303,10 @@
         </div>
       </div>
     {:else}
+      <!-- svelte-ignore a11y-interactive-supports-focus -->
       <div
         class="item"
+        role="link"
         style:padding-left={14 * level + 'px'}
         on:mousedown={() => open(childList.id)}
         class:active={$page.id === childList.id}

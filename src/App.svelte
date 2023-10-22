@@ -103,7 +103,7 @@
       if ($modalCount === 0) {
         showItunesImport = true
       }
-    })
+    }),
   )
 
   let trackInfoList: TrackInfoList | null = null
@@ -115,7 +115,7 @@
   onDestroy(
     ipcListen('context.Get Info', (_, ids: TrackID[], trackIndex: number) => {
       onTrackInfo(ids, trackIndex)
-    })
+    }),
   )
 
   let playlistInfo: PlaylistInfo | null = null
@@ -131,7 +131,7 @@
           editMode: true,
         }
       }
-    })
+    }),
   )
   onDestroy(
     ipcListen('context.playlist.delete', async (_, id) => {
@@ -146,7 +146,7 @@
       if (result.response === 0) {
         methods.deleteTrackList(id)
       }
-    })
+    }),
   )
   onDestroy(
     ipcListen('newPlaylist', (_, id, isFolder) => {
@@ -157,7 +157,7 @@
         id: id,
         editMode: false,
       }
-    })
+    }),
   )
 </script>
 
@@ -180,7 +180,15 @@
     <div class="drag-overlay" transition:fade={{ duration: 100 }}>
       <h1>Drop files to import</h1>
     </div>
-    <div class="dropzone" on:dragleave={dragLeave} on:drop={drop} on:dragover={dragEnterOrOver} />
+    <div
+      class="dropzone"
+      on:dragleave={dragLeave}
+      on:drop={drop}
+      on:dragover={dragEnterOrOver}
+      role="dialog"
+      aria-label="Drop files to import"
+      aria-dropeffect="copy"
+    />
   {/if}
 </main>
 
@@ -198,7 +206,7 @@
 <DragGhost />
 
 {#if isMac}
-  <div class="titlebar" on:mousedown|self|preventDefault />
+  <div class="titlebar" on:mousedown|self|preventDefault role="none" />
 {/if}
 
 <style lang="sass">

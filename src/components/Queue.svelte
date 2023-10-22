@@ -11,7 +11,7 @@
   } from '../lib/queue'
   import { page, paths } from '../lib/data'
   import { onDestroy } from 'svelte'
-  import VirtualList from './VirtualListItemed.svelte'
+  import VirtualListItemed from './VirtualListItemed.svelte'
   import QueueItemComponent from './QueueItem.svelte'
   import { newSelection } from '@/lib/selection'
   import { showTrackMenu } from '@/lib/menus'
@@ -63,7 +63,7 @@
     return newItems
   }
 
-  let virtualList: VirtualList<(typeof items)[number]>
+  let virtualList: VirtualListItemed<(typeof items)[number]>
 
   const selection = newSelection({
     getItemCount: () => getQueueLength(),
@@ -205,7 +205,7 @@
 <aside bind:this={queueElement}>
   <div class="shadow" />
   <div class="content">
-    <VirtualList
+    <VirtualListItemed
       bind:this={virtualList}
       {items}
       getKey={(i) => {
@@ -226,8 +226,10 @@
         <!-- @const here to fix bugged type guard -->
         {@const index = item}
         <!-- svelte-ignore a11y-click-events-have-key-events -->
+        <!-- svelte-ignore a11y-interactive-supports-focus -->
         <div
           class="row"
+          role="row"
           class:selected={$selection.list[item] === true}
           on:mousedown={(e) => selection.handleMouseDown(e, index)}
           on:contextmenu={(e) => selection.handleContextMenu(e, index)}
@@ -242,7 +244,7 @@
           <QueueItemComponent id={getByQueueIndex(item).id} />
         </div>
       {/if}
-    </VirtualList>
+    </VirtualListItemed>
     <div class="drag-line" class:show={dragToIndex !== null} bind:this={dragLine} />
   </div>
 </aside>

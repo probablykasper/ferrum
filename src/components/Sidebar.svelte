@@ -10,7 +10,7 @@
   const special = {
     children: ['root'],
   }
-  let viewport: HTMLDivElement
+  let viewport: HTMLElement
   const itemHandle = setContext('itemHandle', writable(null as SidebarItemHandle | null))
 
   async function onContextMenu() {
@@ -37,6 +37,9 @@
   function drop(e: DragEvent) {
     if (e.currentTarget && e.dataTransfer?.types[0] === 'ferrum.playlist' && dragged.playlist) {
       const root = $trackListsDetailsMap['root']
+      if (!root.children) {
+        return
+      }
       movePlaylist(dragged.playlist.id, dragged.playlist.fromFolder, 'root', root.children.length)
       rootDroppable = false
     }
@@ -71,8 +74,8 @@
   }
 </script>
 
-<!-- NOTE: aside is used as css selector in -->
-<aside on:mousedown|self|preventDefault>
+<!-- NOTE: aside is used as css selector in SidebarItems -->
+<aside on:mousedown|self|preventDefault role="none">
   {#if isMac}
     <div class="titlebar-spacer" />
   {/if}
@@ -82,7 +85,8 @@
         contentElement.scrollTop = 0
       }}
     />
-    <div
+    <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
+    <nav
       class="items"
       tabindex="-1"
       on:keydown={(e) => {
@@ -94,6 +98,10 @@
       }}
       bind:this={viewport}
       class:droppable={rootDroppable}
+      on:contextmenu|self={onContextMenu}
+      on:dragover|self={dragover}
+      on:dragleave|self={dragleave}
+      on:drop|self={drop}
     >
       <!-- svelte-ignore a11y-no-noninteractive-tabindex -->
       <div class="focuser" tabindex="0" on:focus={focuser} />
@@ -107,25 +115,12 @@
         }}
         parentId={null}
       />
-      <div
-        class="spacer"
-        on:contextmenu={onContextMenu}
-        on:dragover={dragover}
-        on:dragleave={dragleave}
-        on:drop={drop}
-      />
+      <div class="spacer" />
       <SidebarItems
         trackList={{ children: $trackListsDetailsMap['root'].children || [] }}
         parentId={$trackListsDetailsMap['root'].id}
       />
-      <div
-        class="bottom-space spacer"
-        on:contextmenu={onContextMenu}
-        on:dragover={dragover}
-        on:dragleave={dragleave}
-        on:drop={drop}
-      />
-    </div>
+    </nav>
   </div>
 </aside>
 
@@ -151,6 +146,7 @@
   .spacer
     height: 10px
     flex-shrink: 0
+    pointer-events: none
   .items
     width: 100%
     flex-grow: 1
@@ -161,8 +157,6 @@
     flex-direction: column
     &:focus .focuser
       display: none
-  .bottom-space
-    flex-grow: 1
   .droppable
     box-shadow: inset 0px 0px 0px 2px var(--accent-1)
     background-color: hsla(var(--hue), 74%, 53%, 0.1)

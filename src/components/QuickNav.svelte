@@ -73,7 +73,7 @@
   onDestroy(
     ipcListen('ToggleQuickNav', () => {
       show = !show
-    })
+    }),
   )
 
   // Prevent clicks where the mousedown or mouseup happened on a child element. This could've
@@ -88,9 +88,10 @@
 />
 
 {#if show}
+  <!-- svelte-ignore a11y-click-events-have-key-events -->
+  <!-- svelte-ignore a11y-no-static-element-interactions -->
   <div
     class="modal"
-    on:keydown
     on:click={() => {
       if (clickable) {
         show = false
