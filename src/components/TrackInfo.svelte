@@ -42,7 +42,6 @@
     image = undefined
     await tick()
     const imageInfo = methods.getImage(index)
-    console.log(imageInfo)
 
     if (imageInfo === null) {
       image = null

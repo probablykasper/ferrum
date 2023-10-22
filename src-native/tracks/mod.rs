@@ -3,7 +3,7 @@ use crate::data_js::get_data;
 use crate::get_now_timestamp;
 use crate::js::nerr;
 use crate::library_types::{MsSinceUnixEpoch, Track, TrackID};
-use napi::{Env, JsArrayBuffer, JsObject, Result, Task};
+use napi::{Env, JsArrayBuffer, JsBuffer, JsObject, Result, Task};
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -79,14 +79,16 @@ pub fn add_play_time(id: TrackID, start: MsSinceUnixEpoch, dur_ms: i64, env: Env
   Ok(())
 }
 
-struct ReadCover(PathBuf);
+/// FIle path, artwork index
+struct ReadCover(PathBuf, usize);
 impl Task for ReadCover {
   type Output = Vec<u8>;
-  type JsValue = JsArrayBuffer;
+  type JsValue = JsBuffer;
   fn compute(&mut self) -> Result<Self::Output> {
     let path = &self.0;
+    let index = self.1;
     let tag = Tag::read_from_path(path)?;
-    match tag.get_image(0) {
+    match tag.get_image(index) {
       Some(image) => Ok(image.data.to_vec()),
       None => {
         let x = nerr!("No image");
@@ -95,7 +97,7 @@ impl Task for ReadCover {
     }
   }
   fn resolve(&mut self, env: Env, output: Self::Output) -> Result<Self::JsValue> {
-    let result = env.create_arraybuffer_with_data(output)?;
+    let result = env.create_buffer_copy(output)?;
     return Ok(result.into_raw());
   }
 }
@@ -106,7 +108,17 @@ pub fn read_cover_async(track_id: String, env: Env) -> Result<JsObject> {
   let track = id_to_track(&env, &track_id)?;
   let tracks_dir = &data.paths.tracks_dir;
   let file_path = tracks_dir.join(&track.file);
-  let task = ReadCover(file_path);
+  let task = ReadCover(file_path, 0);
+  env.spawn(task).map(|t| t.promise_object())
+}
+
+#[napi(
+  js_name = "read_cover_async_at",
+  ts_return_type = "Promise<ArrayBuffer>"
+)]
+#[allow(dead_code)]
+pub fn read_cover_async_at(file_path: String, index: u16, env: Env) -> Result<JsObject> {
+  let task = ReadCover(file_path.into(), index.into());
   env.spawn(task).map(|t| t.promise_object())
 }
 
@@ -176,7 +188,7 @@ pub struct JsImage {
   pub index: i64,
   pub total_images: i64,
   pub mime_type: String,
-  pub data: JsArrayBuffer,
+  pub data: JsBuffer,
 }
 
 #[napi(js_name = "get_image")]
@@ -197,7 +209,7 @@ pub fn get_image(index: u32, env: Env) -> Result<Option<JsImage>> {
     index: img.index,
     total_images: img.total_images,
     mime_type: img.mime_type,
-    data: env.create_arraybuffer_with_data(img.data)?.into_raw(),
+    data: env.create_buffer_copy(img.data)?.into_raw(),
   };
   Ok(Some(js_image))
 }

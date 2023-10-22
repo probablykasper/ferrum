@@ -1,5 +1,9 @@
 # Changelog
 
+## Next
+- Fix error when moving playlist into empty folder
+- Improve accessibility
+
 ## 0.17.1 - 2023 Aug 7
 - Fix filtering only working for first words
 
