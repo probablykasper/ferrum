@@ -11,6 +11,7 @@
   export let onCancel: () => void
   export let cancelOnEscape = false
   export let form: (() => void) | undefined = undefined
+  export let plain = false
   $: tag = form === undefined ? 'div' : 'form'
   export let title: string | null = null
   let dialogEl: HTMLDialogElement
@@ -41,14 +42,12 @@
 <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
 <dialog
   class="modal"
-  aria-modal="true"
   bind:this={dialogEl}
   on:click|self={() => {
     if (clickable) {
       onCancel()
     }
   }}
-  tabindex="-1"
   on:keydown
   on:keydown={(e) => {
     if (checkShortcut(e, 'Escape') && cancelOnEscape) {
@@ -65,6 +64,7 @@
   <svelte:element
     this={tag}
     class="box"
+    class:padded={!plain}
     on:submit|preventDefault={form}
     on:mousedown={() => {
       clickable = false
@@ -90,14 +90,21 @@
   h3
     margin-bottom: 15px
   ::backdrop
-    background-color: rgba(#000000, 0.5)
+    background-color: rgba(#000000, 0.4)
   dialog
     color: inherit
-    background-color: #191B20
-    border: 1px solid rgba(#ffffff, 0.2)
     box-sizing: border-box
-    border-radius: 7px
     box-shadow: 0px 0px 30px 0px rgba(#000000, 0.5)
+    background-color: transparent
+    padding: 0
+    border: none
+  .box
+    background-color: rgba(#1b1d22, 75%)
+    backdrop-filter: saturate(3) blur(20px) brightness(1.25)
+    border: 1px solid rgba(#ffffff, 0.2)
+    border-radius: 7px
+  .padded
+    padding: 1em
   .buttons
     display: flex
     justify-content: flex-end

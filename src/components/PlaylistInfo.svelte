@@ -21,13 +21,6 @@
     cancel()
   }
 
-  function keydown(e: KeyboardEvent) {
-    if (checkShortcut(e, 'escape')) {
-      if (document.activeElement instanceof HTMLElement) {
-        cancel()
-      }
-    }
-  }
   function formKeydown(e: KeyboardEvent) {
     if (checkShortcut(e, 'enter', { cmdOrCtrl: true })) {
       save()
@@ -35,17 +28,15 @@
   }
 </script>
 
-<svelte:window on:keydown={keydown} />
-
 <Modal
   onCancel={cancel}
+  cancelOnEscape
   form={save}
   on:keydown={formKeydown}
   title={(info.editMode ? 'Edit' : 'New') + ' Playlist' + (info.isFolder ? ' Folder' : '')}
 >
   <main>
-    <!-- svelte-ignore a11y-autofocus -->
-    <input type="text" bind:value={info.name} placeholder="Title" autofocus />
+    <input type="text" bind:value={info.name} placeholder="Title" />
     <textarea
       rows={rows(info.description)}
       bind:value={info.description}
@@ -62,7 +53,6 @@
   main
     display: flex
     flex-direction: column
-    background-color: inherit
     margin-bottom: 15px
   input, textarea
     resize: none
@@ -72,7 +62,7 @@
     font-size: 13px
     font-family: inherit
     padding: 4px 6px
-    background-color: inherit
+    background-color: transparent
     color: inherit
     border: 1px solid rgba(#ffffff, 0.25)
     box-sizing: border-box

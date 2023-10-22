@@ -227,6 +227,7 @@
   :global(html), :global(body)
     background-color: #0D1115
     height: 100%
+    color-scheme: dark
   :global(body)
     position: relative
     width: 100%

@@ -3,6 +3,7 @@
 ## Next
 - Fix error when moving playlist into empty folder
 - Improve accessibility
+- Refine modal design
 
 ## 0.17.1 - 2023 Aug 7
 - Fix filtering only working for first words

@@ -178,11 +178,7 @@
     return v.length >= 3
   }
   function keydown(e: KeyboardEvent) {
-    if (checkShortcut(e, 'escape')) {
-      if (document.activeElement instanceof HTMLElement) {
-        cancel()
-      }
-    } else if (checkShortcut(e, '[', { cmdOrCtrl: true })) {
+    if (checkShortcut(e, '[', { cmdOrCtrl: true })) {
       save(false)
       openPrev()
     } else if (checkShortcut(e, ']', { cmdOrCtrl: true })) {
@@ -307,7 +303,7 @@
 
 <svelte:window on:keydown={keydown} />
 <svelte:body on:keydown|self={keydownNoneSelected} on:paste={coverPaste} />
-<Modal onCancel={cancel} form={save}>
+<Modal onCancel={cancel} cancelOnEscape form={save}>
   <main class="modal">
     <div class="header" class:has-subtitle={image && image.totalImages >= 2}>
       <div
