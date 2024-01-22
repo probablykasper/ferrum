@@ -160,19 +160,16 @@ export interface TrackMd {
   bpm: string
   comments: string
 }
-export interface Image {
-  index: number
-  totalImages: number
-  mimeType: string
-  data: ArrayBuffer
-}
 export function get_track(id: string): Track
 export function track_exists(id: string): boolean
 export function add_play(trackId: string): void
 export function add_skip(trackId: string): void
 export function add_play_time(id: TrackID, start: MsSinceUnixEpoch, durMs: number): void
-export function read_cover_async(trackId: string): Promise<ArrayBuffer>
-export function read_cover_async_at(filePath: string, index: number): Promise<ArrayBuffer>
+export interface Size {
+  maxWidth: number
+  maxHeight: number
+}
+export function read_cover_async(trackId: string, index: number, size?: Size | undefined | null): Promise<ArrayBuffer>
 export function import_file(path: string, now: MsSinceUnixEpoch): void
 export function load_tags(trackId: string): void
 export interface JsImage {

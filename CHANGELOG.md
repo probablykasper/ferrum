@@ -5,6 +5,7 @@
 - Fix error when moving playlist into empty folder
 - Improve accessibility
 - Refine modal design
+- Slightly faster image loading
 
 ## 0.17.1 - 2023 Aug 7
 - Fix filtering only working for first words
