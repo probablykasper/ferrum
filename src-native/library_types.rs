@@ -3,7 +3,6 @@
 use crate::{get_now_timestamp, UniResult};
 use linked_hash_map::LinkedHashMap;
 use nanoid::nanoid;
-use napi::bindgen_prelude::{FromNapiValue, ToNapiValue};
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
 

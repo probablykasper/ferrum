@@ -508,7 +508,7 @@ impl Tag {
           Err(e) => throw!("Unable to read picture: {}", e),
         };
         match picture.mime_type() {
-          lofty::MimeType::Png | lofty::MimeType::Jpeg => {
+          Some(lofty::MimeType::Png | lofty::MimeType::Jpeg) => {
             tag.set_picture(index, picture);
           }
           _ => throw!("Unsupported picture type"),
@@ -550,7 +550,10 @@ impl Tag {
               index: index.try_into().expect("usize conv"),
               total_images: pictures.len().try_into().expect("usize conv"),
               data,
-              mime_type: pic.mime_type().to_string(),
+              mime_type: match pic.mime_type() {
+                Some(mime_type) => mime_type.to_string(),
+                _ => return None,
+              },
             })
           }
           None => None,
@@ -594,7 +597,10 @@ impl Tag {
         Some(Image {
           index: index.try_into().expect("usize conv"),
           total_images: pictures_len.try_into().expect("usize conv"),
-          mime_type: pic.mime_type().to_string(),
+          mime_type: match pic.mime_type() {
+            Some(mime_type) => mime_type.to_string(),
+            _ => return None,
+          },
           data: pic.into_data(),
         })
       }
