@@ -1,8 +1,3 @@
-<script lang="ts" context="module">
-  const durations: number[] = []
-  let total_duration = 0
-</script>
-
 <script lang="ts">
   import { methods, paths, trackMetadataUpdated } from '@/lib/data'
   import { fade } from 'svelte/transition'
@@ -16,8 +11,6 @@
   let success: boolean | null = null
 
   $: filePath = joinPaths(paths.tracksDir, track.file)
-
-  const start = Date.now()
 </script>
 
 <div class="box">
@@ -42,9 +35,6 @@
       alt=""
       on:load={() => {
         success = true
-        durations.push(Date.now() - start)
-        total_duration += durations[durations.length - 1]
-        console.log('durations avg', total_duration / durations.length, durations)
       }}
       on:error={() => {
         success = false

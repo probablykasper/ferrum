@@ -7,7 +7,7 @@
   onDestroy(
     ipcListen('filter', () => {
       filterInput.select()
-    })
+    }),
   )
 </script>
 

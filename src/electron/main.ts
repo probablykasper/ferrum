@@ -71,9 +71,9 @@ app.whenReady().then(async () => {
 
   protocol.registerBufferProtocol('trackimg', (request, callback) => {
     const url = decodeURI(request.url)
-    const track_id = url.substring(9)
+    const path = url.substring(9)
     addon
-      .read_cover_async_path(track_id, 0)
+      .read_cover_async_path(path, 0)
       .then((buffer) => {
         callback(Buffer.from(buffer))
       })

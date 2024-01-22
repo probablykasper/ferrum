@@ -361,12 +361,12 @@
     margin-left: 2px
     margin-right: -8px
     padding: 6px
-    width: 6px
-    height: 6px
+    width: 7px
+    height: 7px
     z-index: 1
     flex-shrink: 0
     fill: white
-    transition: 120ms transform cubic-bezier(0, 0.02, 0.2, 1)
+    transition: 140ms transform var(--cubic-out)
   .show > svg.arrow
     transform: rotate(90deg)
   .text

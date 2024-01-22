@@ -33,7 +33,7 @@
       bottom: 0px
       right: 0px
       border-radius: 7px
-      transition: all 120ms cubic-bezier(0.4, 0.0, 0.2, 1)
+      transition: all 120ms var(--cubic-out)
   button.normal
     &::before
       background-color: hsl(220, 100%, 46%)

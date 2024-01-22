@@ -211,6 +211,7 @@
 
 <style lang="sass">
   :global(:root)
+    --cubic-out: cubic-bezier(0.33, 1, 0.68, 1)
     --player-bg-color: #17181c
     --text-color: #e6e6e6
     --drag-bg-color: #1e1f24
