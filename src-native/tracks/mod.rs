@@ -113,6 +113,15 @@ pub fn read_cover_async(track_id: String, index: u16, env: Env) -> Result<JsObje
   let task = ReadCover(file_path.into(), index.into());
   env.spawn(task).map(|t| t.promise_object())
 }
+#[napi(
+  js_name = "read_cover_async_path",
+  ts_return_type = "Promise<ArrayBuffer>"
+)]
+#[allow(dead_code)]
+pub fn read_cover_async_path(path: String, index: u16, env: Env) -> Result<JsObject> {
+  let task = ReadCover(path.into(), index.into());
+  env.spawn(task).map(|t| t.promise_object())
+}
 
 fn sanitize_filename(input: &String) -> String {
   let mut string = input.replace("/", "_");

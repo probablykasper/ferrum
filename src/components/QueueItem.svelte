@@ -1,42 +1,30 @@
+<script lang="ts" context="module">
+  const durations: number[] = []
+  let total_duration = 0
+</script>
+
 <script lang="ts">
-  import { methods, trackMetadataUpdated } from '@/lib/data'
+  import { methods, paths, trackMetadataUpdated } from '@/lib/data'
   import { fade } from 'svelte/transition'
-  import { onDestroy } from 'svelte'
   import type { Track } from '../../ferrum-addon'
+  import { joinPaths } from '@/lib/window'
 
   export let id: string
 
   let track: Track
   $: $trackMetadataUpdated, (track = methods.getTrack(id))
+  let success: boolean | null = null
 
-  let objectUrl: string | undefined
+  $: filePath = joinPaths(paths.tracksDir, track.file)
 
-  let promise: Promise<string>
-  $: $trackMetadataUpdated, (promise = loadCover(id))
-
-  async function loadCover(id: string) {
-    if (objectUrl) {
-      URL.revokeObjectURL(objectUrl)
-    }
-    let buf = await methods.readCoverAsync(id, 0)
-    let url = URL.createObjectURL(new Blob([buf], {}))
-    objectUrl = url
-    return url
-  }
-  onDestroy(() => {
-    if (objectUrl) {
-      URL.revokeObjectURL(objectUrl)
-    }
-  })
+  const start = Date.now()
 </script>
 
 <div class="box">
-  {#await promise then blob}
-    <img class="cover" src={blob} alt="" in:fade={{ duration: 300 }} />
-  {:catch}
+  {#if success === false}
     <svg
       class="cover"
-      in:fade={{ duration: 300 }}
+      in:fade={{ duration: 200 }}
       xmlns="http://www.w3.org/2000/svg"
       width="24"
       height="24"
@@ -46,7 +34,23 @@
         d="M23 0l-15.996 3.585v13.04c-2.979-.589-6.004 1.671-6.004 4.154 0 2.137 1.671 3.221 3.485 3.221 2.155 0 4.512-1.528 4.515-4.638v-10.9l12-2.459v8.624c-2.975-.587-6 1.664-6 4.141 0 2.143 1.715 3.232 3.521 3.232 2.14 0 4.476-1.526 4.479-4.636v-17.364z"
       />
     </svg>
-  {/await}
+  {:else}
+    <img
+      class="cover"
+      class:invisible={success === null}
+      src="trackimg:{filePath}"
+      alt=""
+      on:load={() => {
+        success = true
+        durations.push(Date.now() - start)
+        total_duration += durations[durations.length - 1]
+        console.log('durations avg', total_duration / durations.length, durations)
+      }}
+      on:error={() => {
+        success = false
+      }}
+    />
+  {/if}
 </div>
 <div class="text">
   <p>{track.name}</p>
@@ -76,6 +80,9 @@
     min-width: 42px
     height: 42px
     min-height: 42px
+    transition: 200ms opacity linear
+  .invisible
+    opacity: 0
   img.cover
     object-fit: contain
   svg.cover
