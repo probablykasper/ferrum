@@ -5,6 +5,7 @@ use crate::js::nerr;
 use crate::library_types::{MsSinceUnixEpoch, Track, TrackID};
 use napi::{Env, JsArrayBuffer, JsBuffer, JsObject, Result, Task};
 use std::fs;
+use std::io::Cursor;
 use std::path::{Path, PathBuf};
 
 pub mod import;
@@ -79,46 +80,67 @@ pub fn add_play_time(id: TrackID, start: MsSinceUnixEpoch, dur_ms: i64, env: Env
   Ok(())
 }
 
-/// FIle path, artwork index
-struct ReadCover(PathBuf, usize);
+/// File path, artwork index
+struct ReadCover(PathBuf, usize, Option<Size>);
 impl Task for ReadCover {
   type Output = Vec<u8>;
   type JsValue = JsBuffer;
   fn compute(&mut self) -> Result<Self::Output> {
     let path = &self.0;
     let index = self.1;
+    let size = &self.2;
+
     let tag = Tag::read_from_path(path)?;
-    match tag.get_image(index) {
-      Some(image) => Ok(image.data.to_vec()),
+    let image = match tag.get_image_consume(index) {
+      Some(image) => image,
       None => {
         let x = nerr!("No image");
-        Err(x)
+        return Err(x);
       }
+    };
+
+    if let Some(size) = size {
+      let mime_type = image.mime_type.to_string();
+      let image_format = image::ImageFormat::from_mime_type(&mime_type)
+        .ok_or(nerr!("Unsupported image format {}", mime_type))?;
+      let reader = image::io::Reader::with_format(Cursor::new(image.data), image_format);
+      let image = reader
+        .decode()
+        .map_err(|_| nerr!("Could not decode image"))?;
+      let output = image.thumbnail(size.max_width, size.max_height);
+      let mut bytes = Vec::new();
+      output
+        .write_to(&mut Cursor::new(&mut bytes), image::ImageFormat::Png)
+        .map_err(|_| nerr!("Could not encode image"))?;
+      return Ok(bytes);
     }
+    Ok(image.data)
   }
   fn resolve(&mut self, env: Env, output: Self::Output) -> Result<Self::JsValue> {
     let result = env.create_buffer_copy(output)?;
     return Ok(result.into_raw());
   }
 }
+
+#[napi(object)]
+pub struct Size {
+  pub max_width: u32,
+  pub max_height: u32,
+}
+
 #[napi(js_name = "read_cover_async", ts_return_type = "Promise<ArrayBuffer>")]
 #[allow(dead_code)]
-pub fn read_cover_async(track_id: String, env: Env) -> Result<JsObject> {
+pub fn read_cover_async(
+  track_id: String,
+  index: u16,
+  size: Option<Size>,
+  env: Env,
+) -> Result<JsObject> {
   let data: &mut Data = get_data(&env)?;
   let track = id_to_track(&env, &track_id)?;
   let tracks_dir = &data.paths.tracks_dir;
   let file_path = tracks_dir.join(&track.file);
-  let task = ReadCover(file_path, 0);
-  env.spawn(task).map(|t| t.promise_object())
-}
-
-#[napi(
-  js_name = "read_cover_async_at",
-  ts_return_type = "Promise<ArrayBuffer>"
-)]
-#[allow(dead_code)]
-pub fn read_cover_async_at(file_path: String, index: u16, env: Env) -> Result<JsObject> {
-  let task = ReadCover(file_path.into(), index.into());
+  let task = ReadCover(file_path.into(), index.into(), size);
   env.spawn(task).map(|t| t.promise_object())
 }
 
@@ -200,7 +222,7 @@ pub fn get_image(index: u32, env: Env) -> Result<Option<JsImage>> {
     Some(tag) => tag,
     None => return Ok(None),
   };
-  let img = match tag.get_image(index as usize) {
+  let img = match tag.get_image_ref(index as usize) {
     Some(image) => image,
     None => return Ok(None),
   };

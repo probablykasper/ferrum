@@ -18,7 +18,10 @@
     if (objectUrl) {
       URL.revokeObjectURL(objectUrl)
     }
-    let buf = await methods.readCoverAsync(id)
+    let buf = await methods.readCoverAsync(id, 0, {
+      maxHeight: 100,
+      maxWidth: 100,
+    })
     let url = URL.createObjectURL(new Blob([buf], {}))
     objectUrl = url
     return url

@@ -1,6 +1,13 @@
 import { writable } from 'svelte/store'
 import { ipcRenderer } from '@/lib/window'
-import type { MsSinceUnixEpoch, TrackID, TrackList, TrackListID, TrackMd } from '../../ferrum-addon'
+import type {
+  MsSinceUnixEpoch,
+  TrackID,
+  TrackList,
+  TrackListID,
+  TrackMd,
+  Size,
+} from '../../ferrum-addon'
 import { selection as pageSelection } from './page'
 import { queue } from './queue'
 
@@ -52,6 +59,8 @@ export function call<T, P extends T | Promise<T>>(cb: (addon: typeof innerAddon)
       return result
     }
   } catch (err) {
+    console.log('errorPopup')
+
     errorPopup(err)
     throw err
   }
@@ -210,7 +219,12 @@ export const methods = {
     page.refreshIdsAndKeepSelection()
     methods.save()
   },
-  readCoverAsync: (id: TrackID) => innerAddon.read_cover_async(id),
+  readCoverAsync(id: TrackID, index: number, size?: Size) {
+    return innerAddon.read_cover_async(id, index, size).catch((error) => {
+      console.log('Could not read cover', error)
+      throw error
+    })
+  },
   updateTrackInfo: (id: TrackID, md: TrackMd) => {
     call((data) => data.update_track_info(id, md))
     trackMetadataUpdated.emit()

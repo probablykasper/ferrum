@@ -39,14 +39,19 @@ pub fn id3_timestamp_from_year(year: i32) -> id3::Timestamp {
   };
 }
 
-#[napi(object)]
 pub struct Image {
   // i64 because napi doesn't support u64
   pub index: i64,
   pub total_images: i64,
   pub mime_type: String,
-  #[napi(ts_type = "ArrayBuffer")]
   pub data: Vec<u8>,
+}
+pub struct ImageRef<'a> {
+  // i64 because napi doesn't support u64
+  pub index: i64,
+  pub total_images: i64,
+  pub mime_type: String,
+  pub data: &'a [u8],
 }
 
 pub enum Tag {
@@ -512,22 +517,22 @@ impl Tag {
     }
     Ok(())
   }
-  pub fn get_image(&self, index: usize) -> Option<Image> {
+  pub fn get_image_ref(&self, index: usize) -> Option<ImageRef> {
     match self {
       Tag::Id3(tag) => match tag.pictures().nth(index) {
-        Some(pic) => Some(Image {
+        Some(pic) => Some(ImageRef {
           index: index.try_into().expect("usize conv"),
           total_images: tag.pictures().count().try_into().expect("usize conv"),
-          data: pic.data.to_vec(),
+          data: &pic.data,
           mime_type: pic.mime_type.clone(),
         }),
         None => None,
       },
       Tag::Mp4(tag) => match tag.artworks().nth(index) {
-        Some(artwork) => Some(Image {
+        Some(artwork) => Some(ImageRef {
           index: index.try_into().expect("usize conv"),
           total_images: tag.artworks().count().try_into().expect("usize conv"),
-          data: artwork.data.to_vec(),
+          data: artwork.data,
           mime_type: match artwork.fmt {
             mp4ameta::ImgFmt::Bmp => "image/bmp".to_string(),
             mp4ameta::ImgFmt::Jpeg => "image/jpeg".to_string(),
@@ -541,15 +546,57 @@ impl Tag {
         match pictures.get(index) {
           Some(pic) => {
             let data = pic.data();
-            Some(Image {
+            Some(ImageRef {
               index: index.try_into().expect("usize conv"),
               total_images: pictures.len().try_into().expect("usize conv"),
-              data: data.to_vec(),
+              data,
               mime_type: pic.mime_type().to_string(),
             })
           }
           None => None,
         }
+      }
+    }
+  }
+  pub fn get_image_consume(self, index: usize) -> Option<Image> {
+    match self {
+      Tag::Id3(tag) => match tag.pictures().nth(index) {
+        Some(pic) => Some(Image {
+          index: index.try_into().expect("usize conv"),
+          total_images: tag.pictures().count().try_into().expect("usize conv"),
+          data: pic.data.to_vec(),
+          mime_type: pic.mime_type.clone(),
+        }),
+        None => None,
+      },
+      Tag::Mp4(mut tag) => {
+        let total_images = tag.artworks().count().try_into().expect("usize conv");
+        match tag.take_artworks().nth(index) {
+          Some(artwork) => Some(Image {
+            index: index.try_into().expect("usize conv"),
+            total_images,
+            data: artwork.data,
+            mime_type: match artwork.fmt {
+              mp4ameta::ImgFmt::Bmp => "image/bmp".to_string(),
+              mp4ameta::ImgFmt::Jpeg => "image/jpeg".to_string(),
+              mp4ameta::ImgFmt::Png => "image/png".to_string(),
+            },
+          }),
+          None => None,
+        }
+      }
+      Tag::Lofty(mut tag) => {
+        let pictures_len = tag.pictures().len();
+        if tag.picture_count() <= index.try_into().expect("usize conv") {
+          return None;
+        }
+        let pic = tag.remove_picture(index);
+        Some(Image {
+          index: index.try_into().expect("usize conv"),
+          total_images: pictures_len.try_into().expect("usize conv"),
+          mime_type: pic.mime_type().to_string(),
+          data: pic.into_data(),
+        })
       }
     }
   }
