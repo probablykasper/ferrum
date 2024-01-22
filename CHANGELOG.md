@@ -1,6 +1,7 @@
 # Changelog
 
 ## Next
+- Fix wrong songs being removed from queue when multiple are selected
 - Fix error when moving playlist into empty folder
 - Improve accessibility
 - Refine modal design

@@ -197,7 +197,7 @@ function removeIndex(q: Queue, index: number): QueueItem {
 export function removeIndexes(indexes: number[]) {
   queue.update((q) => {
     // we need to remove the last indexes first to not mess up the indexes
-    for (const index of indexes.sort().reverse()) {
+    for (const index of indexes.sort((a, b) => a - b).reverse()) {
       removeIndex(q, index)
     }
     return q
