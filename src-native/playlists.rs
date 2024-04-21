@@ -67,7 +67,7 @@ fn get_child_ids_recursive(
   id: &String,
   ids: &mut HashSet<String>,
 ) -> Result<()> {
-  let folder_children = match library.trackLists.get(&*id) {
+  let folder_children = match library.trackLists.get(id) {
     Some(TrackList::Playlist(_)) => return Ok(()),
     Some(TrackList::Folder(folder)) => folder.children.clone(),
     Some(TrackList::Special(_)) => throw!("Cannot delete special track list"),
@@ -165,7 +165,7 @@ pub fn add_tracks(playlist_id: String, mut track_ids: Vec<String>, env: Env) -> 
 #[allow(dead_code)]
 pub fn filter_duplicates(playlist_id: String, ids: Vec<String>, env: Env) -> Result<Vec<TrackID>> {
   let data: &mut Data = get_data(&env)?;
-  let mut track_ids: HashSet<String> = HashSet::from_iter(ids.into_iter());
+  let mut track_ids: HashSet<String> = HashSet::from_iter(ids);
   let playlist = match data.library.get_tracklist_mut(&playlist_id)? {
     TrackList::Playlist(playlist) => playlist,
     _ => throw!("Cannot check if folder/special contains track"),
@@ -190,7 +190,7 @@ pub fn remove_from_open(mut indexes_to_remove: Vec<u32>, env: Env) -> Result<()>
     TrackList::Folder(_) => throw!("Cannot remove track from folder"),
     TrackList::Special(_) => throw!("Cannot remove track from special playlist"),
   };
-  if data.sort_key != "index" || data.sort_desc != true {
+  if data.sort_key != "index" || !data.sort_desc {
     throw!("Cannot remove track when custom sorting is used");
   }
   if data.filter != "" {

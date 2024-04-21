@@ -75,11 +75,11 @@ fn filter_keyword(data: &Data, ids: &Vec<TrackID>, keyword: &str) -> Vec<TrackID
     .with_min_len(2000)
     .filter(|id| {
       let track = tracks.get(*id).expect("Track ID not found");
-      let is_match = find_match(&track.name, &keyword)
-        || find_match(&track.artist, &keyword)
-        || find_match_opt(&track.albumName, &keyword)
-        || find_match_opt(&track.comments, &keyword)
-        || find_match_opt(&track.genre, &keyword);
+      let is_match = find_match(&track.name, keyword)
+        || find_match(&track.artist, keyword)
+        || find_match_opt(&track.albumName, keyword)
+        || find_match_opt(&track.comments, keyword)
+        || find_match_opt(&track.genre, keyword);
       is_match
     })
     .map(|id| id.clone())
@@ -93,13 +93,13 @@ pub fn filter(data: &mut Data, query: String) {
     None
   } else {
     let query: String = query.nfc().collect();
-    let mut keywords_iter = query.split(" ");
+    let mut keywords_iter = query.split(' ');
     let mut filtered_tracks = match keywords_iter.next() {
-      Some(keyword) => filter_keyword(&data, &data.open_playlist_track_ids, keyword),
+      Some(keyword) => filter_keyword(data, &data.open_playlist_track_ids, keyword),
       None => return,
     };
     for keyword in keywords_iter {
-      filtered_tracks = filter_keyword(&data, &filtered_tracks, keyword);
+      filtered_tracks = filter_keyword(data, &filtered_tracks, keyword);
     }
     Some(filtered_tracks)
   };

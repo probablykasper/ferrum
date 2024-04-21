@@ -50,9 +50,9 @@ impl Data {
     println!("Write: {}ms", now.elapsed().as_millis());
     Ok(())
   }
-  pub fn get_page_tracks<'a>(&'a self) -> &'a Vec<String> {
+  pub fn get_page_tracks(&self) -> &Vec<String> {
     match &self.page_track_ids {
-      Some(ids) => &ids,
+      Some(ids) => ids,
       None => &self.open_playlist_track_ids,
     }
   }
@@ -106,7 +106,7 @@ impl Data {
   }
   pub fn open_playlist(&mut self, playlist_id: TrackID) -> Result<()> {
     self.open_playlist_id = playlist_id;
-    self.open_playlist_track_ids = get_track_ids(&self)?;
+    self.open_playlist_track_ids = get_track_ids(self)?;
     self.page_track_ids = None;
     match self.library.get_tracklist(&self.open_playlist_id)? {
       TrackList::Special(_) => {

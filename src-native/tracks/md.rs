@@ -100,7 +100,7 @@ pub fn update_track_info(
       Err(_) => throw!("Invalid year"),
     },
   };
-  let new_year_i64 = new_year_i32.map(|n| i64::from(n));
+  let new_year_i64 = new_year_i32.map(i64::from);
   match new_year_i32 {
     None => tag.remove_year(),
     Some(value) => tag.set_year(value),
@@ -174,7 +174,7 @@ pub fn update_track_info(
 
   // move file
   if new_name != track.name || new_artist != track.artist {
-    let new_filename = generate_filename(&tracks_dir, &new_artist, &new_name, &ext);
+    let new_filename = generate_filename(tracks_dir, &new_artist, &new_name, &ext);
     let new_path = tracks_dir.join(&new_filename);
     match fs::rename(old_path, new_path) {
       Ok(_) => {

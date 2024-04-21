@@ -50,7 +50,7 @@ pub fn get_page_track_id(index: i64, env: Env) -> Result<JsString> {
 pub fn refresh(env: Env) -> Result<JsUndefined> {
   let data: &mut Data = get_data(&env)?;
   let sort_key = data.sort_key.clone();
-  let sort_desc = data.sort_desc.clone();
+  let sort_desc = data.sort_desc;
   sort(data, &sort_key, sort_desc)?;
   filter::filter(data, data.filter.clone());
   return env.get_undefined();
@@ -173,7 +173,7 @@ pub fn move_tracks(
     TrackList::Folder(_) => return Err(nerr!("Cannot rearrange tracks in folder")),
     TrackList::Special(_) => return Err(nerr!("Cannot rearrange tracks in special playlist")),
   };
-  if data.sort_key != "index" || data.sort_desc != true {
+  if data.sort_key != "index" || !data.sort_desc {
     return Err(nerr!("Cannot rearrange when custom sorting is used"));
   }
   if data.filter != "" {

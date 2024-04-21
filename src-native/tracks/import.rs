@@ -48,9 +48,9 @@ impl std::fmt::Display for FileType {
 }
 pub fn import_auto(data: &Data, path: &Path, now: i64) -> UniResult<Track> {
   let track = match FileType::from_path(path)? {
-    FileType::Mp3 => import_mp3(&data, &path, now)?,
-    FileType::M4a => import_m4a(&data, &path, now)?,
-    FileType::Opus => import_opus(&data, &path, now)?,
+    FileType::Mp3 => import_mp3(data, path, now)?,
+    FileType::M4a => import_m4a(data, path, now)?,
+    FileType::Opus => import_opus(data, path, now)?,
   };
   Ok(track)
 }
@@ -99,7 +99,7 @@ pub fn read_file_metadata(path: &Path) -> UniResult<fs::Metadata> {
 }
 
 pub fn import_opus(data: &Data, track_path: &Path, now: i64) -> UniResult<Track> {
-  let file_md = read_file_metadata(&track_path)?;
+  let file_md = read_file_metadata(track_path)?;
 
   let mut date_modified = match file_md.modified() {
     Ok(sys_time) => sys_time_to_timestamp(&sys_time),
@@ -114,7 +114,7 @@ pub fn import_opus(data: &Data, track_path: &Path, now: i64) -> UniResult<Track>
     Ok(opusfile) => opusfile,
     Err(e) => throw!("Unable to read opus tags: {}", e),
   };
-  let opus_properties = opusfile.properties().clone();
+  let opus_properties = *opusfile.properties();
 
   let mut tag_changed = false;
   let tag = opusfile.vorbis_comments_mut();
@@ -134,7 +134,7 @@ pub fn import_opus(data: &Data, track_path: &Path, now: i64) -> UniResult<Track>
   let artist = tag.artist().map(|s| s.into_owned()).unwrap_or_default();
 
   let tracks_dir = &data.paths.tracks_dir;
-  let filename = generate_filename(&tracks_dir, &artist, &title, "opus");
+  let filename = generate_filename(tracks_dir, &artist, &title, "opus");
   let dest_path = tracks_dir.join(&filename);
 
   match fs::copy(track_path, &dest_path) {
@@ -208,7 +208,7 @@ pub fn import_opus(data: &Data, track_path: &Path, now: i64) -> UniResult<Track>
 }
 
 pub fn import_m4a(data: &Data, track_path: &Path, now: i64) -> UniResult<Track> {
-  let file_md = read_file_metadata(&track_path)?;
+  let file_md = read_file_metadata(track_path)?;
 
   let mut date_modified = match file_md.modified() {
     Ok(sys_time) => sys_time_to_timestamp(&sys_time),
@@ -216,7 +216,7 @@ pub fn import_m4a(data: &Data, track_path: &Path, now: i64) -> UniResult<Track> 
   };
 
   let mut tag_changed = false;
-  let mut tag = match mp4ameta::Tag::read_from_path(&track_path) {
+  let mut tag = match mp4ameta::Tag::read_from_path(track_path) {
     Ok(tag) => tag,
     Err(e) => match e.kind {
       mp4ameta::ErrorKind::NoTag => {
@@ -265,7 +265,7 @@ pub fn import_m4a(data: &Data, track_path: &Path, now: i64) -> UniResult<Track> 
   let artist = tag.artist();
 
   let tracks_dir = &data.paths.tracks_dir;
-  let filename = generate_filename(&tracks_dir, artist.unwrap_or(""), &title, "m4a");
+  let filename = generate_filename(tracks_dir, artist.unwrap_or(""), &title, "m4a");
   let dest_path = tracks_dir.join(&filename);
 
   match fs::copy(track_path, &dest_path) {
@@ -279,7 +279,6 @@ pub fn import_m4a(data: &Data, track_path: &Path, now: i64) -> UniResult<Track> 
   );
 
   if tag_changed {
-    println!("Writing:::::::");
     match tag.write_to_path(&dest_path) {
       Ok(_) => (),
       Err(e) => throw!("Unable to tag file {}: {e}", dest_path.to_string_lossy()),
@@ -339,17 +338,17 @@ pub fn import_m4a(data: &Data, track_path: &Path, now: i64) -> UniResult<Track> 
 fn get_first_text_id3(tag: &id3::Tag, id: &str) -> Option<String> {
   let frame = tag.get(id)?;
   let text = frame.content().text()?;
-  return Some(text.to_owned());
+  Some(text.to_owned())
 }
 pub fn import_mp3(data: &Data, track_path: &Path, now: i64) -> UniResult<Track> {
-  let file_md = read_file_metadata(&track_path)?;
+  let file_md = read_file_metadata(track_path)?;
 
   let mut date_modified = match file_md.modified() {
     Ok(sys_time) => sys_time_to_timestamp(&sys_time),
     Err(_) => now,
   };
 
-  let mp3_md = match mp3_metadata::read_from_file(&track_path) {
+  let mp3_md = match mp3_metadata::read_from_file(track_path) {
     Ok(md) => md,
     Err(e) => throw!("Error reading mp3 metadata: {}", e),
   };
@@ -369,7 +368,7 @@ pub fn import_mp3(data: &Data, track_path: &Path, now: i64) -> UniResult<Track> 
   };
 
   let mut tag_changed = false;
-  let mut tag = match id3::Tag::read_from_path(&track_path) {
+  let mut tag = match id3::Tag::read_from_path(track_path) {
     Ok(tag) => tag,
     Err(_) => id3::Tag::new(),
   };
@@ -391,7 +390,7 @@ pub fn import_mp3(data: &Data, track_path: &Path, now: i64) -> UniResult<Track> 
   let artist = tag.artist();
 
   let tracks_dir = &data.paths.tracks_dir;
-  let filename = generate_filename(&tracks_dir, artist.unwrap_or(""), &title, "mp3");
+  let filename = generate_filename(tracks_dir, artist.unwrap_or(""), &title, "mp3");
   let dest_path = tracks_dir.join(&filename);
 
   match fs::copy(track_path, &dest_path) {

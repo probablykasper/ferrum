@@ -273,7 +273,7 @@ fn datetime_to_timestamp_millis(datetime: OffsetDateTime) -> i64 {
   datetime.unix_timestamp() * 1000 + datetime.millisecond() as i64
 }
 fn keep_true(value: Option<bool>) -> Option<bool> {
-  value.filter(|v| *v == true)
+  value.filter(|v| *v)
 }
 fn keep_filled(value: Option<String>) -> Option<String> {
   value.filter(|v| v != "")

@@ -1,7 +1,7 @@
 use crate::data::Data;
 use napi::{Env, JsUndefined, Result};
 
-pub fn get_data<'a>(env: &'a Env) -> Result<&'a mut Data> {
+pub fn get_data(env: &Env) -> Result<&mut Data> {
   let data = env.get_instance_data::<Data>()?.ok_or(nerr!("No data"))?;
   return Ok(data);
 }

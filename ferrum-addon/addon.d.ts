@@ -177,7 +177,7 @@ export interface JsImage {
 }
 export function get_image(index: number): JsImage | null
 export function set_image(index: number, pathStr: string): void
-export function set_image_data(index: number, bytes: JsArrayBuffer, mimeType: string): void
+export function set_image_data(index: number, bytes: ArrayBuffer, mimeType: string): void
 export function remove_image(index: number): void
 export function update_track_info(trackId: string, info: TrackMd): void
 export class ItunesImport {

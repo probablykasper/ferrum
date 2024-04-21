@@ -1,7 +1,6 @@
 use crate::{UniError, UniResult};
 use id3::{self, TagLike};
 use lofty::{file::TaggedFileExt, tag::Accessor, tag::TagExt};
-use mp4ameta;
 use std::io::Cursor;
 use std::path::{Path, PathBuf};
 
@@ -29,14 +28,14 @@ impl From<SetInfoError> for UniError {
 }
 
 pub fn id3_timestamp_from_year(year: i32) -> id3::Timestamp {
-  return id3::Timestamp {
+  id3::Timestamp {
     year,
     month: None,
     day: None,
     hour: None,
     minute: None,
     second: None,
-  };
+  }
 }
 
 pub struct Image {
@@ -68,14 +67,14 @@ impl Tag {
 
     let tag = match ext.as_ref() {
       "mp3" => {
-        let tag = match id3::Tag::read_from_path(&path) {
+        let tag = match id3::Tag::read_from_path(path) {
           Ok(tag) => tag,
           Err(_) => id3::Tag::new(),
         };
         Tag::Id3(tag)
       }
       "m4a" => {
-        let tag = match mp4ameta::Tag::read_from_path(&path) {
+        let tag = match mp4ameta::Tag::read_from_path(path) {
           Ok(tag) => tag,
           Err(e) => match e.kind {
             mp4ameta::ErrorKind::NoTag => {
@@ -101,12 +100,7 @@ impl Tag {
 
         let mut tagged_file = match probe.read() {
           Ok(f) => f,
-          Err(e) => {
-            println!("1>>>>> {}", e);
-            println!("2>>>>> {:#?}", e.kind());
-            println!("3>>>>> {}", e.to_string());
-            throw!("Unable to read file: {}", e)
-          }
+          Err(e) => throw!("Unable to read file: {}", e),
         };
 
         let tag = match tagged_file.remove(lofty::tag::TagType::VorbisComments) {
@@ -448,7 +442,7 @@ impl Tag {
         let mut pic_frames: Vec<_> = tag
           .frames()
           .filter(|frame| frame.content().picture().is_some())
-          .map(|frame| frame.clone())
+          .cloned()
           .collect();
         let mut new_pic = id3::frame::Picture {
           mime_type: match mime_type {
@@ -512,7 +506,6 @@ impl Tag {
           Ok(picture) => picture,
           Err(e) => throw!("Unable to read picture: {}", e),
         };
-        println!("picture.mime_type() {:?}", picture.mime_type());
         match picture.mime_type() {
           Some(lofty::picture::MimeType::Png | lofty::picture::MimeType::Jpeg) => {
             tag.set_picture(index, picture);
@@ -618,7 +611,7 @@ impl Tag {
         let mut pic_frames: Vec<_> = tag
           .frames()
           .filter(|frame| frame.content().picture().is_some())
-          .map(|frame| frame.clone())
+          .cloned()
           .collect();
         pic_frames.remove(index);
         tag.remove_all_pictures();

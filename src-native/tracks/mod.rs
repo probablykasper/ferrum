@@ -14,7 +14,7 @@ mod tag;
 pub use tag::Tag;
 
 fn id_to_track<'a>(env: &'a Env, id: &String) -> Result<&'a mut Track> {
-  let data: &mut Data = get_data(&env)?;
+  let data: &mut Data = get_data(env)?;
   let tracks = &mut data.library.tracks;
   let track = tracks.get_mut(id).ok_or(nerr("Track ID not found"))?;
   return Ok(track);
@@ -110,7 +110,7 @@ pub fn read_cover_async(track_id: String, index: u16, env: Env) -> Result<JsObje
   let track = id_to_track(&env, &track_id)?;
   let tracks_dir = &data.paths.tracks_dir;
   let file_path = tracks_dir.join(&track.file);
-  let task = ReadCover(file_path.into(), index.into());
+  let task = ReadCover(file_path, index.into());
   env.spawn(task).map(|t| t.promise_object())
 }
 #[napi(
@@ -124,14 +124,14 @@ pub fn read_cover_async_path(path: String, index: u16, env: Env) -> Result<JsObj
 }
 
 fn sanitize_filename(input: &String) -> String {
-  let mut string = input.replace("/", "_");
-  string = string.replace("?", "_");
-  string = string.replace("<", "_");
-  string = string.replace(">", "_");
-  string = string.replace("\\", "_");
-  string = string.replace(":", "_");
-  string = string.replace("*", "_");
-  string = string.replace("\"", "_");
+  let mut string = input.replace('/', "_");
+  string = string.replace('?', "_");
+  string = string.replace('<', "_");
+  string = string.replace('>', "_");
+  string = string.replace('\\', "_");
+  string = string.replace(':', "_");
+  string = string.replace('*', "_");
+  string = string.replace('\"', "_");
   // prevent control characters:
   string = string.replace("0x", "__");
   // Filenames can be max 255 bytes. We use 230 to give
