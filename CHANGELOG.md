@@ -2,6 +2,7 @@
 
 ## Next
 - Fix rare error with updating artwork
+- Fix importing of iTunes playlist likes. These aren't visible in the app, but they do get imported. If you previously imported playlists, the likes got lost in Ferrum.
 
 ## 0.17.2 - 2024 Jan 22
 - Fix wrong songs being removed from queue when multiple are selected

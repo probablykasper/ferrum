@@ -276,8 +276,9 @@ impl TrackList {
   }
 }
 
-fn is_false(value: &bool) -> bool {
-  *value == true
+// Shit, this should've been is_false
+fn is_true(value: &bool) -> bool {
+  *value
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -287,9 +288,9 @@ pub struct Playlist {
   pub name: String,
   #[serde(default, skip_serializing_if = "Option::is_none")]
   pub description: Option<String>,
-  #[serde(default, skip_serializing_if = "is_false")]
+  #[serde(default, skip_serializing_if = "is_true")]
   pub liked: bool,
-  #[serde(default, skip_serializing_if = "is_false")]
+  #[serde(default, skip_serializing_if = "is_true")]
   pub disliked: bool,
   #[serde(default, skip_serializing_if = "Option::is_none")]
   pub importedFrom: Option<String>,
@@ -309,9 +310,9 @@ pub struct Folder {
   pub name: String,
   #[serde(default, skip_serializing_if = "Option::is_none")]
   pub description: Option<String>,
-  #[serde(default, skip_serializing_if = "is_false")]
+  #[serde(default, skip_serializing_if = "is_true")]
   pub liked: bool,
-  #[serde(default, skip_serializing_if = "is_false")]
+  #[serde(default, skip_serializing_if = "is_true")]
   pub disliked: bool,
   /// For example "itunes"
   #[serde(default, skip_serializing_if = "Option::is_none")]
