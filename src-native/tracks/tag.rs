@@ -1,6 +1,6 @@
 use crate::{UniError, UniResult};
 use id3::{self, TagLike};
-use lofty::{Accessor, TagExt, TaggedFileExt};
+use lofty::{file::TaggedFileExt, tag::Accessor, tag::TagExt};
 use mp4ameta;
 use std::io::Cursor;
 use std::path::{Path, PathBuf};
@@ -57,7 +57,7 @@ pub struct ImageRef<'a> {
 pub enum Tag {
   Id3(id3::Tag),
   Mp4(mp4ameta::Tag),
-  Lofty(lofty::Tag),
+  Lofty(lofty::tag::Tag),
 }
 impl Tag {
   pub fn read_from_path(path: &PathBuf) -> UniResult<Tag> {
@@ -89,11 +89,11 @@ impl Tag {
         Tag::Mp4(tag)
       }
       "opus" => {
-        let probe = match lofty::Probe::open(path) {
+        let probe = match lofty::probe::Probe::open(path) {
           Ok(f) => {
-            let parse_options = lofty::ParseOptions::new()
+            let parse_options = lofty::config::ParseOptions::new()
               .read_properties(false)
-              .parsing_mode(lofty::ParsingMode::Strict);
+              .parsing_mode(lofty::config::ParsingMode::Strict);
             f.options(parse_options)
           }
           Err(e) => throw!("File does not exist: {}", e),
@@ -101,12 +101,17 @@ impl Tag {
 
         let mut tagged_file = match probe.read() {
           Ok(f) => f,
-          Err(e) => throw!("Unable to read file: {}", e),
+          Err(e) => {
+            println!("1>>>>> {}", e);
+            println!("2>>>>> {:#?}", e.kind());
+            println!("3>>>>> {}", e.to_string());
+            throw!("Unable to read file: {}", e)
+          }
         };
 
-        let tag = match tagged_file.remove(lofty::TagType::VorbisComments) {
+        let tag = match tagged_file.remove(lofty::tag::TagType::VorbisComments) {
           Some(t) => t,
-          None => lofty::Tag::new(lofty::TagType::VorbisComments),
+          None => lofty::tag::Tag::new(lofty::tag::TagType::VorbisComments),
         };
         Tag::Lofty(tag)
       }
@@ -129,7 +134,7 @@ impl Tag {
         };
       }
       Tag::Lofty(tag) => {
-        match tag.save_to_path(path) {
+        match tag.save_to_path(path, lofty::config::WriteOptions::default()) {
           Ok(_) => {}
           Err(e) => throw!("Unable to tag file: {}", e),
         };
@@ -184,7 +189,7 @@ impl Tag {
       Tag::Id3(tag) => tag.remove_album_artist(),
       Tag::Mp4(tag) => tag.remove_album_artists(),
       Tag::Lofty(tag) => {
-        let _ = tag.remove_key(&lofty::ItemKey::AlbumArtist);
+        let _ = tag.remove_key(&lofty::tag::ItemKey::AlbumArtist);
       }
     }
   }
@@ -193,7 +198,7 @@ impl Tag {
       Tag::Id3(tag) => tag.set_album_artist(value),
       Tag::Mp4(tag) => tag.set_album_artist(value),
       Tag::Lofty(tag) => {
-        let inserted = tag.insert_text(lofty::ItemKey::AlbumArtist, value.to_string());
+        let inserted = tag.insert_text(lofty::tag::ItemKey::AlbumArtist, value.to_string());
         assert!(inserted, "Failed to set album artist");
       }
     }
@@ -205,7 +210,7 @@ impl Tag {
       }
       Tag::Mp4(tag) => tag.remove_composers(),
       Tag::Lofty(tag) => {
-        let _ = tag.remove_key(&lofty::ItemKey::Composer);
+        let _ = tag.remove_key(&lofty::tag::ItemKey::Composer);
       }
     }
   }
@@ -214,7 +219,7 @@ impl Tag {
       Tag::Id3(tag) => tag.set_text("TCOM", value),
       Tag::Mp4(tag) => tag.set_composer(value),
       Tag::Lofty(tag) => {
-        let inserted = tag.insert_text(lofty::ItemKey::Composer, value.to_string());
+        let inserted = tag.insert_text(lofty::tag::ItemKey::Composer, value.to_string());
         assert!(inserted, "Failed to set composer");
       }
     }
@@ -226,7 +231,7 @@ impl Tag {
       }
       Tag::Mp4(tag) => tag.remove_groupings(),
       Tag::Lofty(tag) => {
-        let _ = tag.remove_key(&lofty::ItemKey::ContentGroup);
+        let _ = tag.remove_key(&lofty::tag::ItemKey::ContentGroup);
       }
     }
   }
@@ -235,7 +240,7 @@ impl Tag {
       Tag::Id3(tag) => tag.set_text("GRP1", value),
       Tag::Mp4(tag) => tag.set_grouping(value),
       Tag::Lofty(tag) => {
-        let inserted = tag.insert_text(lofty::ItemKey::ContentGroup, value.to_string());
+        let inserted = tag.insert_text(lofty::tag::ItemKey::ContentGroup, value.to_string());
         assert!(inserted, "Failed to set grouping");
       }
     }
@@ -396,7 +401,7 @@ impl Tag {
       }
       Tag::Mp4(tag) => tag.remove_bpm(),
       Tag::Lofty(tag) => {
-        let _ = tag.remove_key(&lofty::ItemKey::Bpm);
+        let _ = tag.remove_key(&lofty::tag::ItemKey::Bpm);
       }
     };
   }
@@ -409,7 +414,7 @@ impl Tag {
         tag.set_bpm(value);
       }
       Tag::Lofty(tag) => {
-        let inserted = tag.insert_text(lofty::ItemKey::Bpm, value.to_string());
+        let inserted = tag.insert_text(lofty::tag::ItemKey::Bpm, value.to_string());
         assert!(inserted, "Failed to set BPM");
       }
     };
@@ -503,12 +508,13 @@ impl Tag {
       }
       Tag::Lofty(tag) => {
         let mut reader = Cursor::new(data);
-        let picture = match lofty::Picture::from_reader(&mut reader) {
+        let picture = match lofty::picture::Picture::from_reader(&mut reader) {
           Ok(picture) => picture,
           Err(e) => throw!("Unable to read picture: {}", e),
         };
+        println!("picture.mime_type() {:?}", picture.mime_type());
         match picture.mime_type() {
-          Some(lofty::MimeType::Png | lofty::MimeType::Jpeg) => {
+          Some(lofty::picture::MimeType::Png | lofty::picture::MimeType::Jpeg) => {
             tag.set_picture(index, picture);
           }
           _ => throw!("Unsupported picture type"),

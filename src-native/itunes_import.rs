@@ -3,7 +3,7 @@ use crate::get_now_timestamp;
 use crate::library_types::{CountObject, Folder, Library, Playlist, Track, TrackList};
 use crate::tracks::generate_filename;
 use crate::tracks::import::{read_file_metadata, FileType};
-use lofty::{AudioFile, TaggedFileExt};
+use lofty::file::{AudioFile, TaggedFileExt};
 use napi::{Env, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;

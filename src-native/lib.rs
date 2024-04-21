@@ -1,3 +1,6 @@
+#![allow(clippy::all)]
+#![deny(clippy::perf)]
+
 use serde::de::DeserializeOwned;
 use std::fs::File;
 use std::io::BufReader;

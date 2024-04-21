@@ -3,8 +3,8 @@ use crate::library_types::Track;
 use crate::tracks::{generate_filename, tag};
 use crate::{sys_time_to_timestamp, UniResult};
 use id3::TagLike;
-use lofty::ogg::OpusFile;
-use lofty::{Accessor, AudioFile, ParseOptions, TagExt};
+use lofty::tag::{Accessor, TagExt};
+use lofty::{config::ParseOptions, file::AudioFile, ogg::OpusFile};
 use mp3_metadata;
 use std::fs::{self, File};
 use std::path::Path;
@@ -25,11 +25,11 @@ impl FileType {
       _ => throw!("Unsupported file extension {}", ext),
     }
   }
-  pub fn from_lofty_file_type(lofty_type: lofty::FileType) -> UniResult<Self> {
+  pub fn from_lofty_file_type(lofty_type: lofty::file::FileType) -> UniResult<Self> {
     match lofty_type {
-      lofty::FileType::Mpeg => Ok(FileType::Mp3),
-      lofty::FileType::Mp4 => Ok(FileType::M4a),
-      lofty::FileType::Opus => Ok(FileType::Opus),
+      lofty::file::FileType::Mpeg => Ok(FileType::Mp3),
+      lofty::file::FileType::Mp4 => Ok(FileType::M4a),
+      lofty::file::FileType::Opus => Ok(FileType::Opus),
       _ => throw!("Unsupported file type {:?}", lofty_type),
     }
   }
@@ -149,7 +149,7 @@ pub fn import_opus(data: &Data, track_path: &Path, now: i64) -> UniResult<Track>
 
   if tag_changed {
     println!("Writing:::::::");
-    match tag.save_to_path(&dest_path) {
+    match tag.save_to_path(&dest_path, lofty::config::WriteOptions::default()) {
       Ok(_) => (),
       Err(e) => throw!("Unable to tag file {}: {e}", dest_path.to_string_lossy()),
     };
