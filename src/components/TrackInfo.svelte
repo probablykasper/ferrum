@@ -273,12 +273,17 @@
       replaceCover(result.filePaths[0])
     }
   }
+  console.log('x')
   function replaceCover(filePath: string) {
+    console.log('setImage')
+
     methods.setImage(image?.index || 0, filePath)
     imageEdited = true
     loadImage(image?.index || 0)
   }
   function replaceCoverData(data: ArrayBuffer, mimeType: string) {
+    console.log('setImageData')
+
     methods.setImageData(image?.index || 0, data, mimeType)
     imageEdited = true
     loadImage(image?.index || 0)
