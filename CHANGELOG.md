@@ -1,5 +1,8 @@
 # Changelog
 
+## Next
+- Fix rare error with updating artwork
+
 ## 0.17.2 - 2024 Jan 22
 - Fix wrong songs being removed from queue when multiple are selected
 - Fix error when moving playlist into empty folder
