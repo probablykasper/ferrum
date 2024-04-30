@@ -111,69 +111,91 @@ pub fn sort(data: &mut Data, sort_key: &str, desc: bool) -> UniResult<()> {
   data.open_playlist_track_ids = page::get_track_ids(&data)?;
 
   let tracks = &data.library.tracks;
-  let field = get_track_field_type(sort_key);
+  let field = match get_track_field_type(sort_key) {
+    Some(field) => field,
+    None => throw!("Field type not found for {sort_key}"),
+  };
+  let sort_2 = match sort_key {
+    "albumName" => Some(("trackNum", TrackField::U32, false)),
+    _ => None,
+  };
   data.open_playlist_track_ids.sort_by(|id_a, id_b| {
     let track_a = tracks.get(id_a).expect("Track ID non-existant (1)");
     let track_b = tracks.get(id_b).expect("Track ID non-existant (2)");
-    match field {
-      Some(TrackField::String) => {
-        let empty_str = &"".to_string();
-        let str_a = get_field_str(track_a, sort_key).unwrap_or(empty_str);
-        let str_b = get_field_str(track_b, sort_key).unwrap_or(empty_str);
-        if str_a == "" && str_b == "" {
-          return Ordering::Equal;
-        }
-        if str_a == "" {
-          return Ordering::Greater;
-        }
-        if str_b == "" {
-          return Ordering::Less;
-        }
-        return compare_str(str_a, str_b);
-      }
-      Some(TrackField::F64) => {
-        let num_a = get_field_f64(track_a, sort_key).unwrap_or(0.0);
-        let num_b = get_field_f64(track_b, sort_key).unwrap_or(0.0);
-        match num_a.partial_cmp(&num_b) {
-          Some(v) => v,
-          None => panic!("Unable to compare f64 {} and {}", num_a, num_b),
+    match compare_track_field(track_a, track_b, sort_key, &field) {
+      Ordering::Equal => {}
+      order => {
+        return match desc {
+          true => order.reverse(),
+          false => order,
         }
       }
-      Some(TrackField::I64) => {
-        let num_a = get_field_i64(track_a, sort_key).unwrap_or(0);
-        let num_b = get_field_i64(track_b, sort_key).unwrap_or(0);
-        return num_a.cmp(&num_b);
-      }
-      Some(TrackField::U32) => {
-        let num_a = get_field_u32(track_a, sort_key).unwrap_or(0);
-        let num_b = get_field_u32(track_b, sort_key).unwrap_or(0);
-        return num_a.cmp(&num_b);
-      }
-      Some(TrackField::I8) => {
-        let num_a = get_field_i8(track_a, sort_key).unwrap_or(0);
-        let num_b = get_field_i8(track_b, sort_key).unwrap_or(0);
-        return num_a.cmp(&num_b);
-      }
-      Some(TrackField::U8) => {
-        let num_a = get_field_u8(track_a, sort_key).unwrap_or(0);
-        let num_b = get_field_u8(track_b, sort_key).unwrap_or(0);
-        return num_a.cmp(&num_b);
-      }
-      Some(TrackField::Bool) => {
-        let bool_a = get_field_bool(track_a, sort_key).unwrap_or(false); //? look into this
-        let bool_b = get_field_bool(track_b, sort_key).unwrap_or(false); //? look into this
-        return bool_a.cmp(&bool_b);
-      }
-      None => {
-        panic!("Field type not found for {}", sort_key)
-      }
+    };
+    if let Some((sort_key, field, desc)) = &sort_2 {
+      let order = compare_track_field(track_a, track_b, sort_key, &field);
+      return match desc {
+        true => order.reverse(),
+        false => order,
+      };
+    } else {
+      Ordering::Equal
     }
   });
-  if desc {
-    data.open_playlist_track_ids.reverse();
-  }
   data.sort_key = sort_key.to_string();
   data.sort_desc = desc;
   println!("Sort: {}ms", now.elapsed().as_millis());
   return Ok(());
+}
+
+pub fn compare_track_field(a: &Track, b: &Track, sort_key: &str, field: &TrackField) -> Ordering {
+  match field {
+    TrackField::String => {
+      let empty_str = &"".to_string();
+      let str_a = get_field_str(a, sort_key).unwrap_or(empty_str);
+      let str_b = get_field_str(b, sort_key).unwrap_or(empty_str);
+      if str_a == "" && str_b == "" {
+        return Ordering::Equal;
+      }
+      if str_a == "" {
+        return Ordering::Greater;
+      }
+      if str_b == "" {
+        return Ordering::Less;
+      }
+      return compare_str(str_a, str_b);
+    }
+    TrackField::F64 => {
+      let num_a = get_field_f64(a, sort_key).unwrap_or(0.0);
+      let num_b = get_field_f64(b, sort_key).unwrap_or(0.0);
+      match num_a.partial_cmp(&num_b) {
+        Some(v) => v,
+        None => panic!("Unable to compare f64 {} and {}", num_a, num_b),
+      }
+    }
+    TrackField::I64 => {
+      let num_a = get_field_i64(a, sort_key).unwrap_or(0);
+      let num_b = get_field_i64(b, sort_key).unwrap_or(0);
+      return num_a.cmp(&num_b);
+    }
+    TrackField::U32 => {
+      let num_a = get_field_u32(a, sort_key).unwrap_or(0);
+      let num_b = get_field_u32(b, sort_key).unwrap_or(0);
+      return num_a.cmp(&num_b);
+    }
+    TrackField::I8 => {
+      let num_a = get_field_i8(a, sort_key).unwrap_or(0);
+      let num_b = get_field_i8(b, sort_key).unwrap_or(0);
+      return num_a.cmp(&num_b);
+    }
+    TrackField::U8 => {
+      let num_a = get_field_u8(a, sort_key).unwrap_or(0);
+      let num_b = get_field_u8(b, sort_key).unwrap_or(0);
+      return num_a.cmp(&num_b);
+    }
+    TrackField::Bool => {
+      let bool_a = get_field_bool(a, sort_key).unwrap_or(false); //? look into this
+      let bool_b = get_field_bool(b, sort_key).unwrap_or(false); //? look into this
+      return bool_a.cmp(&bool_b);
+    }
+  }
 }
