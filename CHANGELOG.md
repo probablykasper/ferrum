@@ -1,6 +1,7 @@
 # Changelog
 
 ## Next
+- Add `Escape` shortcut for de-focusing the sidebar and filter
 - Fix rare error with updating artwork
 - Fix importing of iTunes playlist likes. These aren't visible in the app, but they do get imported. If you previously imported playlists, the likes got lost in Ferrum.
 

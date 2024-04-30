@@ -25,6 +25,10 @@
     }
   }
 
+  export function focus() {
+    viewport.focus()
+  }
+
   let viewport: HTMLDivElement
   function handleScroll(e: Event) {
     const target = e.target as HTMLTextAreaElement

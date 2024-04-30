@@ -13,6 +13,7 @@
 
 <input
   on:focus
+  on:keydown
   bind:this={filterInput}
   type="text"
   class="search"

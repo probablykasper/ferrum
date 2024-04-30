@@ -10,7 +10,7 @@
     assertUnreachable,
   } from '../lib/helpers'
   import { appendToUserQueue, prependToUserQueue } from '../lib/queue'
-  import { selection, scrollToIndex } from '../lib/page'
+  import { selection, scrollToIndex, main_area } from '../lib/page'
   import { ipcListen, ipcRenderer } from '../lib/window'
   import { onDestroy } from 'svelte'
   import { dragged } from '../lib/drag-drop'
@@ -184,6 +184,10 @@
   }
 
   let virtualList: VirtualList<ReturnType<typeof getItem>>
+
+  $: if (virtualList) {
+    main_area.focus = virtualList.focus
+  }
 
   $: if ($page && virtualList) {
     virtualList.refresh()
