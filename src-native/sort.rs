@@ -115,31 +115,33 @@ pub fn sort(data: &mut Data, sort_key: &str, desc: bool) -> UniResult<()> {
     Some(field) => field,
     None => throw!("Field type not found for {sort_key}"),
   };
-  let sort_2 = match sort_key {
-    "albumName" => Some(("trackNum", TrackField::U32, false)),
-    _ => None,
+  let subsort_field = match sort_key {
+    "dateAdded" | "albumName" | "comments" | "genre" | "year" | "artist" => true,
+    _ => false,
   };
   data.open_playlist_track_ids.sort_by(|id_a, id_b| {
     let track_a = tracks.get(id_a).expect("Track ID non-existant (1)");
     let track_b = tracks.get(id_b).expect("Track ID non-existant (2)");
-    match compare_track_field(track_a, track_b, sort_key, &field) {
-      Ordering::Equal => {}
-      order => {
-        return match desc {
-          true => order.reverse(),
-          false => order,
-        }
-      }
-    };
-    if let Some((sort_key, field, desc)) = &sort_2 {
-      let order = compare_track_field(track_a, track_b, sort_key, &field);
-      return match desc {
-        true => order.reverse(),
-        false => order,
+    if subsort_field
+      && track_a.albumName.is_some()
+      && track_a.albumName == track_b.albumName
+      && track_a.albumArtist.is_some()
+      && track_a.albumArtist == track_b.albumArtist
+    {
+      match compare_track_field(track_a, track_b, "discNum", &TrackField::U32) {
+        Ordering::Equal => {}
+        order => return order,
       };
-    } else {
-      Ordering::Equal
+      match compare_track_field(track_a, track_b, "trackNum", &TrackField::U32) {
+        Ordering::Equal => {}
+        order => return order,
+      };
     }
+    let order = compare_track_field(track_a, track_b, sort_key, &field);
+    return match desc {
+      true => order.reverse(),
+      false => order,
+    };
   });
   data.sort_key = sort_key.to_string();
   data.sort_desc = desc;

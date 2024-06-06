@@ -1,5 +1,8 @@
 # Changelog
 
+## Next
+- Fix album grouping
+
 ## 0.17.3 - 2024 Apr 30
 - Sub-sort albums by track number when sorting by album
 - Add `Escape` shortcut for de-focusing the sidebar and filter
