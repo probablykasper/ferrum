@@ -107,6 +107,7 @@ type Events = {
   volumeDown: () => void
   'Show Queue': () => void
   ToggleQuickNav: () => void
+  'Group Album Tracks': (checked: boolean) => void
 
   selectedTracksAction: (
     action:

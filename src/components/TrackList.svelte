@@ -15,7 +15,7 @@
   import { onDestroy } from 'svelte'
   import { dragged } from '../lib/drag-drop'
   import * as dragGhost from './DragGhost.svelte'
-  import type { TrackID } from '../../ferrum-addon'
+  import type { TrackID } from 'ferrum-addon/addon'
   import { modalCount } from './Modal.svelte'
 
   export let onTrackInfo: (allIds: TrackID[], index: number) => void
@@ -50,6 +50,10 @@
 
   const sortBy = page.sortBy
   $: sortKey = $page.sortKey
+
+  ipcRenderer.on('Group Album Tracks', (_, checked) => {
+    page.set_group_album_tracks(checked)
+  })
 
   $: if ($scrollToIndex !== null) {
     virtualList.scrollToItem($scrollToIndex)

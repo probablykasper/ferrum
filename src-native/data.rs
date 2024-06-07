@@ -25,6 +25,7 @@ pub struct Data {
   pub filter: String,
   pub sort_key: String,
   pub sort_desc: bool,
+  pub group_album_tracks: bool,
   /// Current tag being edited
   pub current_tag: Option<Tag>,
 }
@@ -98,6 +99,7 @@ impl Data {
       filter: "".to_string(),
       sort_key: "index".to_string(),
       sort_desc: true,
+      group_album_tracks: true,
       current_tag: None,
     };
     data.open_playlist_track_ids = page::get_track_ids(&data)?;

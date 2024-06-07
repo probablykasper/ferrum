@@ -299,6 +299,11 @@ export const page = (() => {
       refreshIdsAndKeepSelection()
       pageSelection.clear()
     },
+    set_group_album_tracks: (value: boolean) => {
+      call((addon) => addon.set_group_album_tracks(value))
+      refreshIdsAndKeepSelection()
+      pageSelection.clear()
+    },
     getTrack: (index: number) => {
       return call((addon) => addon.get_page_track(index))
     },

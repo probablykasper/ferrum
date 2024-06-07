@@ -118,6 +118,7 @@ export interface PageInfo {
   length: number
 }
 export function get_page_info(): PageInfo
+export function set_group_album_tracks(value: boolean): void
 export function sort(sortKey: string, keepFilter: boolean): void
 export interface SelectionInfo {
   from: number

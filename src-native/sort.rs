@@ -115,10 +115,11 @@ pub fn sort(data: &mut Data, sort_key: &str, desc: bool) -> UniResult<()> {
     Some(field) => field,
     None => throw!("Field type not found for {sort_key}"),
   };
-  let subsort_field = match sort_key {
-    "dateAdded" | "albumName" | "comments" | "genre" | "year" | "artist" => true,
-    _ => false,
-  };
+  let subsort_field = data.group_album_tracks
+    && match sort_key {
+      "dateAdded" | "albumName" | "comments" | "genre" | "year" | "artist" => true,
+      _ => false,
+    };
   data.open_playlist_track_ids.sort_by(|id_a, id_b| {
     let track_a = tracks.get(id_a).expect("Track ID non-existant (1)");
     let track_b = tracks.get(id_b).expect("Track ID non-existant (2)");

@@ -168,6 +168,14 @@ export function initMenuBar(app: App, mainWindow: BrowserWindow) {
             webContents.send('ToggleQuickNav')
           },
         },
+        {
+          label: 'Group Album Tracks',
+          type: 'checkbox',
+          checked: true,
+          click: (item) => {
+            webContents.send('Group Album Tracks', item.checked)
+          },
+        },
         { type: 'separator' },
         { role: 'reload', accelerator: 'CmdOrCtrl+Option+R' },
         { role: 'forceReload', accelerator: 'Shift+CmdOrCtrl+Option+R' },

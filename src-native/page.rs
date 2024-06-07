@@ -122,6 +122,14 @@ pub fn get_page_info(env: Env) -> Result<PageInfo> {
   })
 }
 
+#[napi(js_name = "set_group_album_tracks")]
+#[allow(dead_code)]
+pub fn set_group_album_tracks(value: bool, env: Env) -> Result<JsUndefined> {
+  let data: &mut Data = get_data(&env)?;
+  data.group_album_tracks = value;
+  env.get_undefined()
+}
+
 #[napi(js_name = "sort")]
 #[allow(dead_code)]
 pub fn sort_js(sort_key: String, keep_filter: bool, env: Env) -> Result<JsUndefined> {
