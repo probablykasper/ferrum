@@ -8,18 +8,25 @@ env:
 jobs:
   release:
     runs-on: ${{ matrix.os }}
+    name: ${{ matrix.arg }}
     strategy:
+      fail-fast: false
       matrix:
         include:
-          - { os: macos-latest, arg: --mac }
-          - { os: ubuntu-latest, arg: --linux }
-          - { os: windows-latest, arg: --windows }
+          - { os: macos-latest, arg: --mac --x64, target: x86_64-apple-darwin }
+          - { os: macos-latest, arg: --mac --arm64, target: aarch64-apple-darwin }
+          - { os: ubuntu-latest, arg: --linux --x64, target: x86_64-unknown-linux-gnu }
+          # - { os: ubuntu-latest, arg: --linux --arm64, target: aarch64-unknown-linux-gnu }
+          - { os: windows-latest, arg: --windows --x64, target: x86_64-pc-windows-msvc }
+          - { os: windows-latest, arg: --windows --arm64, target: aarch64-pc-windows-msvc }
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Rust setup
         uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
 
       - name: Node.js setup
         uses: actions/setup-node@v2
@@ -27,8 +34,8 @@ jobs:
           node-version: 20
 
       - run: npm install
-      - run: npm run napi
+      - run: npm run napi -- --target ${{ matrix.target }}
       - run: npm run build:web
-      - run: npm run electron-builder -- ${{ matrix.arg }} --publish always
+      - run: npm run electron-builder -- ${{ matrix.arg }} --publish always --config.publish.provider github --config.publish.publishAutoUpdate false
         env:
           GH_TOKEN: ${{ secrets.github_token }}

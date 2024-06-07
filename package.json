@@ -21,7 +21,7 @@
   "build": {
     "appId": "space.kasper.ferrum",
     "productName": "Ferrum",
-    "artifactName": "${productName}-v${version}-${os}.${ext}",
+    "artifactName": "${productName}-v${version}-${os}-${arch}.${ext}",
     "mac": {
       "category": "public.app-category.music",
       "icon": "assets/icon.icns",

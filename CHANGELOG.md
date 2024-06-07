@@ -1,6 +1,7 @@
 # Changelog
 
 ## Next
+- Add arm64 support for macOS and Windows
 - Add View menu bar checkbox for album track grouping
 - Use album track grouping when sorting by album, date added, comments, genre, year & artist
 - Fix menu bar checkboxes
