@@ -1,8 +1,17 @@
-import { type App, BrowserWindow, Menu, shell } from 'electron'
+import { type App, BrowserWindow, Menu, shell, dialog } from 'electron'
 import { ipcMain } from './typed_ipc'
 import type { MenuItemConstructorOptions } from 'electron/common'
 import is from './is'
 import type { WebContents } from './typed_ipc'
+
+export async function handle_missing(id: string) {
+  dialog.showMessageBoxSync({
+    type: 'error',
+    message: 'Missing ID ' + id,
+    detail: 'Please let me know what happened',
+    title: 'Error',
+  })
+}
 
 export function initMenuBar(app: App, mainWindow: BrowserWindow) {
   const webContents = mainWindow.webContents as WebContents
@@ -144,6 +153,7 @@ export function initMenuBar(app: App, mainWindow: BrowserWindow) {
       submenu: [
         {
           label: 'Show Queue',
+          id: 'Show Queue',
           type: 'checkbox',
           accelerator: 'CmdOrCtrl+U',
           click: () => {
@@ -197,6 +207,7 @@ export function initMenuBar(app: App, mainWindow: BrowserWindow) {
         { type: 'separator' },
         {
           label: 'Shuffle',
+          id: 'Shuffle',
           type: 'checkbox',
           accelerator: 'CmdOrCtrl+S',
           click: () => {
@@ -205,6 +216,7 @@ export function initMenuBar(app: App, mainWindow: BrowserWindow) {
         },
         {
           label: 'Repeat',
+          id: 'Repeat',
           type: 'checkbox',
           accelerator: 'CmdOrCtrl+R',
           click: () => {
@@ -256,20 +268,17 @@ export function initMenuBar(app: App, mainWindow: BrowserWindow) {
 
   ipcMain.handle('update:Shuffle', (_, checked) => {
     const item = menu.getMenuItemById('Shuffle')
-    if (item) {
-      item.checked = checked
-    }
+    if (!item) return handle_missing('Shuffle')
+    item.checked = checked
   })
   ipcMain.handle('update:Repeat', (_, checked) => {
     const item = menu.getMenuItemById('Repeat')
-    if (item) {
-      item.checked = checked
-    }
+    if (!item) return handle_missing('Repeat')
+    item.checked = checked
   })
   ipcMain.handle('update:Show Queue', (_, checked) => {
-    const item = menu.getMenuItemById('Repeat')
-    if (item) {
-      item.checked = checked
-    }
+    const item = menu.getMenuItemById('Show Queue')
+    if (!item) return handle_missing('Show Queue')
+    item.checked = checked
   })
 }

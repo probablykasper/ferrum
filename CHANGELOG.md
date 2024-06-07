@@ -2,6 +2,7 @@
 
 ## Next
 - Fix album grouping
+- Fix menu bar checkboxes
 
 ## 0.17.3 - 2024 Apr 30
 - Sub-sort albums by track number when sorting by album
