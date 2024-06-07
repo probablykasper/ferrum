@@ -95,12 +95,9 @@
     color: inherit
     box-sizing: border-box
     box-shadow: 0px 0px 30px 0px rgba(#000000, 0.5)
-    background-color: transparent
-    padding: 0
-    border: none
-  .box
     background-color: rgba(#1b1d22, 75%)
     backdrop-filter: saturate(3) blur(20px) brightness(1.25)
+    padding: 0
     border: 1px solid rgba(#ffffff, 0.2)
     border-radius: 7px
   .padded
