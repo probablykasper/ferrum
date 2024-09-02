@@ -67,7 +67,7 @@
     "@tsconfig/svelte": "^5.0.4",
     "concurrently": "^8.2.2",
     "electron": "^28.3.3",
-    "electron-builder": "^24.13.3",
+    "electron-builder": "^25.0.5",
     "eslint": "^9.9.1",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-svelte": "^2.43.0",
