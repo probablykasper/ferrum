@@ -1,5 +1,8 @@
 # Changelog
 
+## Next
+- Update dependencies
+
 ## 0.18.0 - 2024 Jun 7
 - Add arm64 support for macOS and Windows
 - Add View menu bar checkbox for album track grouping

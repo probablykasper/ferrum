@@ -20,13 +20,13 @@ serde = { version = "1.0", features = ["derive"] }
 id3 = "1.8"
 mp3-metadata = "0.3"
 mp4ameta = "0.11"
-lofty = { git = "https://github.com/Serial-ATA/lofty-rs", rev = "3402a69f2644167e25fc00b9614f94c62759be96" }
+lofty = "0.21"
 serde_json = "1.0"
 nanoid = "0.4"
 alphanumeric-sort = "1.5"
 linked-hash-map = { version = "0.5", features = ["serde_impl"] }
 atomicwrites = "0.4"
-trash = "4.0"
+trash = "5.1"
 plist = "1.5"
 tokio = { version = "1.28", features = ["macros"] }
 time = { version = "0.3", features = ["serde", "serde-well-known"] }
