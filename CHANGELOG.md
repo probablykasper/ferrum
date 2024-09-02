@@ -2,6 +2,8 @@
 
 ## Next
 - Update dependencies
+- Drop support for Windows 7 and 8
+- Drop support for macOS 10.13 and 10.14
 
 ## 0.18.0 - 2024 Jun 7
 - Add arm64 support for macOS and Windows
