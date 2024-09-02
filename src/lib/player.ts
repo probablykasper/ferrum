@@ -68,7 +68,7 @@ export const coverSrc = (() => {
         const buf = await methods.readCoverAsync(id, 0)
         const url = URL.createObjectURL(new Blob([buf], {}))
         set(url)
-      } catch (e) {
+      } catch (_) {
         set(null)
       }
     },

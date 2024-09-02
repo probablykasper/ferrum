@@ -182,7 +182,7 @@
     try {
       const track = page.getTrack(index)
       return { ...track, id: page.getTrackId(index) }
-    } catch (err) {
+    } catch (_) {
       return null
     }
   }
