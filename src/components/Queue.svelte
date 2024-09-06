@@ -30,9 +30,11 @@
     }
   })
 
-  $: items = getQueue($queue)
+  let show_history = false
+  $: items = getQueue($queue, show_history)
+  $: up_next_index = $queue.past.length + ($queue.current ? 1 : 0)
 
-  function getQueue(queue: Queue) {
+  function getQueue(queue: Queue, show_history: boolean) {
     // reset selection/dragging if queue gets updated
     selection.clear()
     draggedIndexes = []
@@ -40,20 +42,35 @@
     const newItems: (number | string)[] = []
     let i = 0
 
+    if (queue.past.length) {
+      newItems.push('History')
+      if (show_history) {
+        for (const _ of queue.past) {
+          newItems.push(i)
+          i++
+        }
+      } else {
+        i += queue.past.length
+      }
+    }
+    if (queue.current) {
+      i += 1
+    }
+
     if (queue.userQueue.length) {
       newItems.push('Up Next')
-      queue.userQueue.forEach(() => {
+      for (const _ of queue.userQueue) {
         newItems.push(i)
         i++
-      })
+      }
     }
 
     if (queue.autoQueue.length) {
       newItems.push('Autoplay')
-      queue.autoQueue.forEach(() => {
+      for (const _ of queue.autoQueue) {
         newItems.push(i)
         i++
-      })
+      }
     }
 
     if (newItems.length === 0) {
@@ -77,7 +94,8 @@
     },
     async onContextMenu() {
       const indexes = selection.getSelectedIndexes()
-      const allItems = [...$queue.userQueue, ...$queue.autoQueue]
+      const current_array = $queue.current ? [$queue.current.item] : []
+      const allItems = [...$queue.past, ...current_array, ...$queue.userQueue, ...$queue.autoQueue]
       const allIds = allItems.map((item) => item.id)
       await showTrackMenu(allIds, indexes, undefined, true)
     },
@@ -152,7 +170,7 @@
   let dragToIndex: null | number = null
   let dragTopOfItem = false
   function onDragOver(e: DragEvent, index: number) {
-    if (e.currentTarget && e.dataTransfer?.types[0] === 'ferrum.tracks') {
+    if (e.currentTarget && e.dataTransfer?.types[0] === 'ferrum.tracks' && index >= up_next_index) {
       e.preventDefault()
       const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
       if (e.pageY < rect.bottom - rect.height / 2) {
@@ -220,7 +238,28 @@
       on:keydown={keydown}
       on:mousedown-self={selection.clear}
     >
-      {#if typeof item === 'string'}
+      {#if item === 'History'}
+        <button
+          class="row history-button"
+          type="button"
+          on:click={() => {
+            show_history = !show_history
+          }}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class:rotate-90={show_history}
+            height="24px"
+            viewBox="0 0 24 24"
+            width="24px"
+            fill="#e8eaed"
+            ><path d="M0 0h24v24H0z" fill="none" /><path
+              d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"
+            /></svg
+          >
+          <h4>{item}</h4>
+        </button>
+      {:else if typeof item === 'string'}
         <h4 class="row" on:dragover={() => (dragToIndex = null)}>{item}</h4>
       {:else}
         <!-- @const here to fix bugged type guard -->
@@ -269,7 +308,7 @@
     box-shadow: inset -20px 0 20px -20px #000000
   .content
     height: 100%
-    width: 250px
+    width: var(--right-sidebar-width)
     background-color: #000000
     pointer-events: all
     overflow-y: scroll
@@ -291,4 +330,13 @@
     display: none
     &.show
       display: block
+  .history-button
+    width: 100%
+    font-size: inherit
+    background: none
+    border: none
+    padding: 0
+    cursor: pointer
+  .rotate-90
+    transform: rotate(90deg)
 </style>

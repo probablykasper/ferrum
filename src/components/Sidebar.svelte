@@ -78,7 +78,7 @@
 <!-- NOTE: aside is used as css selector in SidebarItems -->
 <aside on:mousedown|self|preventDefault role="none">
   {#if isMac}
-    <div class="titlebar-spacer" />
+    <div class="titlebar" on:mousedown|self|preventDefault role="none" />
   {/if}
   <div class="content" bind:this={contentElement}>
     <Filter
@@ -141,7 +141,8 @@
     flex-direction: column
     background-color: hsla(0, 0%, 0%, 0.7)
     box-shadow: inset -6px 0px 6px -6px #000000
-  .titlebar-spacer
+  .titlebar
+    -webkit-app-region: drag
     height: var(--titlebar-height)
     flex-shrink: 0
   .content

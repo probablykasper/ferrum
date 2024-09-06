@@ -120,16 +120,24 @@ export function getCurrent() {
   return queue.get().current?.item ?? null
 }
 export function getQueueLength() {
-  const { userQueue, autoQueue } = queue.get()
-  return userQueue.length + autoQueue.length
+  const { past, current, userQueue, autoQueue } = queue.get()
+  return past.length + Number(!!current) + userQueue.length + autoQueue.length
 }
 export function getByQueueIndex(index: number) {
-  const { userQueue, autoQueue } = queue.get()
+  const { past, current, userQueue, autoQueue } = queue.get()
+  if (index < past.length) {
+    return past[index]
+  }
+  index -= past.length
+  if (current && index === 0) {
+    return current.item
+  }
+  index -= Number(!!current)
   if (index < userQueue.length) {
     return userQueue[index]
-  } else {
-    return autoQueue[index - userQueue.length]
   }
+  index -= userQueue.length
+  return autoQueue[index]
 }
 
 export function prependToUserQueue(trackIds: TrackID[]) {
@@ -148,29 +156,37 @@ export function appendToUserQueue(trackIds: TrackID[]) {
 }
 
 export function moveIndexes(indexes: number[], newIndex: number, top = false) {
-  const ids: QueueItem[] = []
+  const items: QueueItem[] = []
   queue.update((q) => {
     // Sort descending. We need to remove the last indexes first to not mess up the indexes
     for (const index of indexes.sort((a, b) => b - a)) {
-      ids.push(removeIndex(q, index))
-      if (index < newIndex) {
-        newIndex--
+      const removed_item = removeIndex(q, index)
+      if (removed_item) {
+        items.push(removed_item)
+        if (index < newIndex) {
+          newIndex--
+        }
+      } else {
+        items.push(newQueueItem(getByQueueIndex(index).id))
       }
     }
     return q
   })
   // We sorted the indexes descending, so now reverse them
-  return insertItems(ids.reverse(), newIndex, top)
+  return insertItems(items.reverse(), newIndex, top)
 }
 
-export function insertItems(items: QueueItem[], index: number, top = false) {
+function insertItems(items: QueueItem[], index: number, top = false) {
   queue.update((q) => {
+    const user_queue_index = q.past.length + Number(!!q.current)
+    index -= user_queue_index
     const snapTop = index === q.userQueue.length && top
     if (index < q.userQueue.length || snapTop) {
       q.userQueue.splice(index, 0, ...items)
-    } else {
-      q.autoQueue.splice(index - q.userQueue.length, 0, ...items)
+      return q
     }
+    index -= q.userQueue.length
+    q.autoQueue.splice(index, 0, ...items)
     return q
   })
   return {
@@ -183,14 +199,19 @@ export function insertIds(ids: TrackID[], index: number, top = false) {
   return insertItems(ids.map(newQueueItem), index, top)
 }
 
-function removeIndex(q: Queue, index: number): QueueItem {
+function removeIndex(q: Queue, index: number): QueueItem | null {
+  const up_next_index = q.past.length + Number(!!q.current)
+  if (index < up_next_index) {
+    return null
+  }
+  index -= up_next_index
   if (index < q.userQueue.length) {
     const [removed] = q.userQueue.splice(index, 1)
     return removed
-  } else {
-    const [removed] = q.autoQueue.splice(index - q.userQueue.length, 1)
-    return removed
   }
+  index -= q.userQueue.length
+  const [removed] = q.autoQueue.splice(index, 1)
+  return removed
 }
 
 export function removeIndexes(indexes: number[]) {

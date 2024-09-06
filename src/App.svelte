@@ -9,7 +9,7 @@
   import PlaylistInfoModal from './components/PlaylistInfo.svelte'
   import { queueVisible } from './lib/queue'
   import { ipcListen, ipcRenderer } from '@/lib/window'
-  import { isMac, importTracks, type PlaylistInfo, methods } from './lib/data'
+  import { importTracks, type PlaylistInfo, methods } from './lib/data'
   import { playPause } from './lib/player'
   import DragGhost from './components/DragGhost.svelte'
   import ItunesImport from './components/ItunesImport.svelte'
@@ -205,10 +205,6 @@
 
 <DragGhost />
 
-{#if isMac}
-  <div class="titlebar" on:mousedown|self|preventDefault role="none" />
-{/if}
-
 <style lang="sass">
   :global(:root)
     --cubic-out: cubic-bezier(0.33, 1, 0.68, 1)
@@ -225,6 +221,7 @@
     --icon-highlight-color: #00ffff
     --titlebar-height: 22px
     --hue: 225
+    --right-sidebar-width: 250px
   :global(html), :global(body)
     background-color: #0D1115
     height: 100%
@@ -267,12 +264,4 @@
     display: flex
     flex-direction: row
     flex-grow: 1
-  .titlebar
-    height: var(--titlebar-height)
-    width: 100%
-    top: 0px
-    left: 0px
-    position: absolute
-    -webkit-app-region: drag
-    z-index: 500
 </style>

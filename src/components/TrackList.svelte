@@ -1,5 +1,12 @@
 <script lang="ts">
-  import { page, removeFromOpenPlaylist, filter, deleteTracksInOpen, paths } from '../lib/data'
+  import {
+    page,
+    removeFromOpenPlaylist,
+    filter,
+    deleteTracksInOpen,
+    paths,
+    isMac,
+  } from '../lib/data'
   import VirtualList from './VirtualList.svelte'
   import { newPlaybackInstance, playingId } from '../lib/player'
   import {
@@ -9,7 +16,7 @@
     checkShortcut,
     assertUnreachable,
   } from '../lib/helpers'
-  import { appendToUserQueue, prependToUserQueue } from '../lib/queue'
+  import { appendToUserQueue, prependToUserQueue, queueVisible } from '../lib/queue'
   import { selection, scrollToIndex, main_area } from '../lib/page'
   import { ipcListen, ipcRenderer } from '../lib/window'
   import { onDestroy } from 'svelte'
@@ -196,21 +203,6 @@
   $: if ($page && virtualList) {
     virtualList.refresh()
   }
-
-  function electronDragRegion(el: HTMLElement) {
-    const unsubscribe = modalCount.subscribe((count) => {
-      if (count === 0) {
-        el.style.setProperty('-webkit-app-region', 'drag')
-      } else {
-        el.style.setProperty('-webkit-app-region', 'no-drag')
-      }
-    })
-    return {
-      destroy() {
-        unsubscribe()
-      },
-    }
-  }
 </script>
 
 <div
@@ -221,7 +213,7 @@
   class:no-selection={$selection.count === 0}
 >
   <div class="header">
-    <div class="dragbar" use:electronDragRegion />
+    <div class:dragbar={$modalCount === 0 && isMac} class:queue-visible={$queueVisible} />
     <h3 class="title">
       {#if $page.tracklist.id === 'root'}
         Songs
@@ -417,10 +409,12 @@
   .dragbar
     -webkit-app-region: drag
     position: absolute
-    height: 35px
+    height: 40px
     width: 100%
     top: 0px
     left: 0px
+    &.queue-visible
+      width: calc(100% - var(--right-sidebar-width))
   .title
     margin: 0px
     font-weight: 500

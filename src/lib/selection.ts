@@ -270,6 +270,8 @@ export function newSelection(options: SelectOptions) {
       mouseDownSelect(e, index)
     },
     handleContextMenu(e: MouseEvent, index: number) {
+      console.log('handleContextMenu', index)
+
       mouseDownSelect(e, index)
       options.onContextMenu()
     },
