@@ -1,10 +1,11 @@
 # Changelog
 
 ## Next
-- Add playback history to queue panel
-- Update dependencies
 - Drop support for Windows 7 and 8
 - Drop support for macOS 10.13 and 10.14
+- Add playback history to queue panel
+- Fix dragging tracks to up next/autoplay queue boundary
+- Update dependencies
 
 ## 0.18.0 - 2024 Jun 7
 - Add arm64 support for macOS and Windows

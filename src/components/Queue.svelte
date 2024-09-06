@@ -192,13 +192,9 @@
       return
     }
     if (dragged.tracks) {
-      if ($queue.userQueue.length === 0) {
-        // if user drags to top of autoqueue, create userqueue
-        dragTopOfItem = false
-      }
       const newSelection = dragged.tracks.queueIndexes
-        ? moveIndexes(dragged.tracks.queueIndexes, dragToIndex, !dragTopOfItem)
-        : insertIds(dragged.tracks.ids, dragToIndex, !dragTopOfItem)
+        ? moveIndexes(dragged.tracks.queueIndexes, dragToIndex, dragTopOfItem)
+        : insertIds(dragged.tracks.ids, dragToIndex, dragTopOfItem)
       for (let i = newSelection.from; i <= newSelection.to; i++) {
         selection.add(i)
       }
