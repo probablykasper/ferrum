@@ -169,27 +169,25 @@
   //     dragToIndex = null
   //   }
   // }
-
-  let scroll_container: HTMLDivElement
 </script>
 
-<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-<aside
-  bind:this={queue_element}
-  class="outline-none"
-  tabindex="-1"
-  transition:fly={{ x: '100%', duration: 150, opacity: 1 }}
-  on:keydown={(e) => {
-    if (checkShortcut(e, 'Backspace') && $selection.count >= 1) {
-      e.preventDefault()
-      removeFromQueue()
-    } else {
-      selection.handleKeyDown(e)
-    }
-  }}
->
+<aside transition:fly={{ x: '100%', duration: 150, opacity: 1 }}>
   <div class="shadow" />
-  <div class="content relative -mt-px border-l" bind:this={scroll_container}>
+  <!-- svelte-ignore a11y-no-static-element-interactions -->
+  <div
+    class="content relative -mt-px border-l outline-none"
+    bind:this={queue_element}
+    tabindex="-1"
+    on:keydown={(e) => {
+      if (checkShortcut(e, 'Backspace') && $selection.count >= 1) {
+        e.preventDefault()
+        removeFromQueue()
+      } else {
+        selection.handleKeyDown(e)
+      }
+    }}
+    on:mousedown|self={selection.clear}
+  >
     {#if $queue.past.length || $queue.current}
       <div class="relative">
         <h4
@@ -202,7 +200,7 @@
           items={$queue.past}
           get_key={(i) => i.qId}
           item_height={54}
-          {scroll_container}
+          scroll_container={queue_element}
           let:item
           let:i={qi}
         >
@@ -249,7 +247,7 @@
           items={$queue.userQueue}
           get_key={(i) => i.qId}
           item_height={54}
-          {scroll_container}
+          scroll_container={queue_element}
           let:item
           let:i
         >
@@ -282,7 +280,7 @@
           items={$queue.autoQueue}
           get_key={(i) => i.qId}
           item_height={54}
-          {scroll_container}
+          scroll_container={queue_element}
           let:item
           let:i
           id="autoplay"
