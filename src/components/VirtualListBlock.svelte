@@ -5,7 +5,8 @@
   export let item_height: number
   export let scroll_container: HTMLElement
   export let get_key: (item: T, i: number) => number | string
-  export let buffer = 5
+  export let buffer = 0
+  export let id = ''
 
   $: height = items.length * item_height
   $: buffer_height = buffer * item_height
@@ -21,7 +22,13 @@
   }
 
   function refresh() {
-    const element_top = main_element.offsetTop
+    let element_top = main_element.offsetTop
+    let offset_parent = main_element.offsetParent
+    while (offset_parent !== scroll_container && offset_parent instanceof HTMLElement) {
+      element_top += offset_parent.offsetTop
+      offset_parent = offset_parent.offsetParent
+    }
+
     const element_bottom = element_top + height
 
     // The currently visible area of the container
@@ -50,14 +57,15 @@
     scroll_event_element?.removeEventListener('scroll', refresh)
   })
 
-  export function scroll_to_index(index: number) {
-    const element_top = main_element.offsetTop
-    const top = index * item_height + element_top
-    if (scroll_container.scrollTop > top) {
-      scroll_container.scrollTop = top
-    } else if (scroll_container.scrollTop + scroll_container.clientHeight < top + item_height) {
-      scroll_container.scrollTop = top + item_height - scroll_container.clientHeight
-    }
+  export function scroll_to_index(index: number, offset: number) {
+    const dummy = document.createElement('div')
+    dummy.style.height = item_height + 'px'
+    dummy.style.position = 'absolute'
+    dummy.style.top = index * item_height + 'px'
+    // For some reason we apply the offset to the bottom
+    dummy.style.scrollMarginBottom = offset + 'px'
+    main_element.prepend(dummy)
+    dummy.scrollIntoView({ behavior: 'instant', block: 'nearest' })
   }
 </script>
 

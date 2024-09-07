@@ -91,15 +91,18 @@
     getItemCount: () => getQueueLength(),
     scrollToItem: (i) => {
       if (i < $queue.past.length) {
-        history_list.scroll_to_index(i)
+        return history_list.scroll_to_index(i, 40)
       }
       i -= $queue.past.length
+      if ($queue.current && i === 0) {
+        return history_list.scroll_to_index(i, 40)
+      }
       i -= Number(!!$queue.current)
       if (i < $queue.userQueue.length) {
-        up_next_list.scroll_to_index(i)
+        return up_next_list.scroll_to_index(i, 40)
       }
       i -= $queue.userQueue.length
-      autoplay_list.scroll_to_index(i)
+      autoplay_list.scroll_to_index(i, 40)
     },
     async onContextMenu() {
       const indexes = selection.getSelectedIndexes()
@@ -212,27 +215,35 @@
   //   }
   // }
 
-  // function keydown(e: KeyboardEvent) {
-  //   if (checkShortcut(e, 'Backspace') && $selection.count >= 1) {
-  //     e.preventDefault()
-  //     removeFromQueue()
-  //   } else {
-  //     selection.handleKeyDown(e)
-  //   }
-  // }
-
   let scroll_container: HTMLDivElement
 </script>
 
-<aside bind:this={queue_element} transition:fly={{ x: '100%', duration: 150, opacity: 1 }}>
+<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
+<aside
+  bind:this={queue_element}
+  class="outline-none"
+  tabindex="-1"
+  transition:fly={{ x: '100%', duration: 150, opacity: 1 }}
+  on:keydown={(e) => {
+    if (checkShortcut(e, 'Backspace') && $selection.count >= 1) {
+      e.preventDefault()
+      removeFromQueue()
+    } else {
+      selection.handleKeyDown(e)
+    }
+  }}
+>
   <div class="shadow" />
   <div class="content relative -mt-px border-l" bind:this={scroll_container}>
-    <div class="relative">
-      {#if $queue.past.length}
-        <h4 class="sticky top-0 z-1 border-y bg-[hsl(226,35%,11%)]/50 py-2 backdrop-blur-md">
+    {#if $queue.past.length || $queue.current}
+      <div class="relative">
+        <h4
+          class="sticky top-0 z-1 flex h-[40px] items-center border-y bg-[hsl(226,35%,11%)]/50 backdrop-blur-md"
+        >
           History
         </h4>
         <VirtualListBlock
+          bind:this={history_list}
           items={$queue.past}
           get_key={(i) => i.qId}
           item_height={54}
@@ -253,14 +264,31 @@
             <QueueItemComponent id={item.id} />
           </div>
         </VirtualListBlock>
-      {/if}
-    </div>
+        {#if $queue.current}
+          <!-- svelte-ignore a11y-click-events-have-key-events -->
+          <!-- svelte-ignore a11y-interactive-supports-focus -->
+          <div
+            class="row"
+            role="row"
+            class:selected={$selection.list[$queue.past.length] === true}
+            on:mousedown={(e) => selection.handleMouseDown(e, $queue.past.length)}
+            on:contextmenu={(e) => selection.handleContextMenu(e, $queue.past.length)}
+            on:click={(e) => selection.handleClick(e, $queue.past.length)}
+          >
+            <QueueItemComponent id={$queue.current.item.id} />
+          </div>
+        {/if}
+      </div>
+    {/if}
 
     <div class="relative">
-      <h4 class="sticky top-0 z-1 border-y bg-[hsl(226,35%,11%)]/50 py-2 backdrop-blur-md">
+      <h4
+        class="sticky top-0 z-1 flex h-[40px] items-center border-y bg-[hsl(226,35%,11%)]/50 backdrop-blur-md"
+      >
         Up Next
       </h4>
       <VirtualListBlock
+        bind:this={up_next_list}
         items={$queue.userQueue}
         get_key={(i) => i.qId}
         item_height={54}
@@ -288,16 +316,20 @@
     </div>
 
     <div class="relative">
-      <h4 class="sticky top-0 z-1 border-y bg-[hsl(226,35%,11%)]/50 py-2 backdrop-blur-md">
+      <h4
+        class="sticky top-0 z-1 flex h-[40px] items-center border-y bg-[hsl(226,35%,11%)]/50 backdrop-blur-md"
+      >
         Autoplay
       </h4>
       <VirtualListBlock
+        bind:this={autoplay_list}
         items={$queue.autoQueue}
         get_key={(i) => i.qId}
         item_height={54}
         {scroll_container}
         let:item
         let:i
+        id="autoplay"
       >
         <!-- svelte-ignore a11y-click-events-have-key-events -->
         <!-- svelte-ignore a11y-interactive-supports-focus -->
@@ -349,7 +381,6 @@
     width: 20px
     box-shadow: inset -20px 0 20px -20px #000000
   .content
-    height: 100%
     width: var(--right-sidebar-width)
     background-color: #000000
     pointer-events: all
