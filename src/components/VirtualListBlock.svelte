@@ -7,6 +7,9 @@
   export let get_key: (item: T, i: number) => number | string
   export let buffer = 5
 
+  $: height = items.length * item_height
+  $: buffer_height = buffer * item_height
+
   let main_element: HTMLDivElement
   let start_pixel = 0
   let start_index = 0
@@ -18,9 +21,6 @@
   }
 
   function refresh() {
-    const height = items.length * item_height
-    const buffer_height = buffer * item_height
-
     const element_top = main_element.offsetTop
     const element_bottom = element_top + height
 
