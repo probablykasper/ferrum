@@ -33,55 +33,10 @@
     }
   })
 
-  // let show_history = false
-  // $: items = getQueue($queue, show_history)
-  // $: up_next_index = $queue.past.length + ($queue.current ? 1 : 0)
-
-  // function getQueue(queue: Queue, show_history: boolean) {
-  //   // reset selection/dragging if queue gets updated
-  //   selection.clear()
-  //   draggedIndexes = []
-
-  //   const newItems: (number | string)[] = []
-  //   let i = 0
-
-  //   if (queue.past.length) {
-  //     newItems.push('History')
-  //     if (show_history) {
-  //       for (const _ of queue.past) {
-  //         newItems.push(i)
-  //         i++
-  //       }
-  //     } else {
-  //       i += queue.past.length
-  //     }
-  //   }
-  //   if (queue.current) {
-  //     i += 1
-  //   }
-
-  //   if (queue.userQueue.length) {
-  //     newItems.push('Up Next')
-  //     for (const _ of queue.userQueue) {
-  //       newItems.push(i)
-  //       i++
-  //     }
-  //   }
-
-  //   if (queue.autoQueue.length) {
-  //     newItems.push('Autoplay')
-  //     for (const _ of queue.autoQueue) {
-  //       newItems.push(i)
-  //       i++
-  //     }
-  //   }
-
-  //   if (newItems.length === 0) {
-  //     newItems.push('Up Next')
-  //   }
-
-  //   return newItems
-  // }
+  let show_history = false
+  $: current_index = $queue.past.length
+  $: up_next_index = current_index + Number(!!$queue.current)
+  $: autoplay_index = up_next_index + $queue.userQueue.length
 
   let history_list: VirtualListBlock<QueueItem>
   let up_next_list: VirtualListBlock<QueueItem>
@@ -249,31 +204,32 @@
           item_height={54}
           {scroll_container}
           let:item
-          let:i
+          let:i={qi}
         >
           <!-- svelte-ignore a11y-click-events-have-key-events -->
           <!-- svelte-ignore a11y-interactive-supports-focus -->
           <div
             class="row"
             role="row"
-            class:selected={$selection.list[i] === true}
-            on:mousedown={(e) => selection.handleMouseDown(e, i)}
-            on:contextmenu={(e) => selection.handleContextMenu(e, i)}
-            on:click={(e) => selection.handleClick(e, i)}
+            class:selected={$selection.list[qi] === true}
+            on:mousedown={(e) => selection.handleMouseDown(e, qi)}
+            on:contextmenu={(e) => selection.handleContextMenu(e, qi)}
+            on:click={(e) => selection.handleClick(e, qi)}
           >
             <QueueItemComponent id={item.id} />
           </div>
         </VirtualListBlock>
         {#if $queue.current}
+          {@const qi = $queue.past.length}
           <!-- svelte-ignore a11y-click-events-have-key-events -->
           <!-- svelte-ignore a11y-interactive-supports-focus -->
           <div
             class="row"
             role="row"
-            class:selected={$selection.list[$queue.past.length] === true}
-            on:mousedown={(e) => selection.handleMouseDown(e, $queue.past.length)}
-            on:contextmenu={(e) => selection.handleContextMenu(e, $queue.past.length)}
-            on:click={(e) => selection.handleClick(e, $queue.past.length)}
+            class:selected={$selection.list[qi] === true}
+            on:mousedown={(e) => selection.handleMouseDown(e, qi)}
+            on:contextmenu={(e) => selection.handleContextMenu(e, qi)}
+            on:click={(e) => selection.handleClick(e, qi)}
           >
             <QueueItemComponent id={$queue.current.item.id} />
           </div>
@@ -297,19 +253,16 @@
           let:item
           let:i
         >
+          {@const qi = i + up_next_index}
           <!-- svelte-ignore a11y-click-events-have-key-events -->
           <!-- svelte-ignore a11y-interactive-supports-focus -->
           <div
             class="row"
             role="row"
-            class:selected={$selection.list[i + $queue.past.length + Number(!!$queue.current)] ===
-              true}
-            on:mousedown={(e) =>
-              selection.handleMouseDown(e, i + $queue.past.length + Number(!!$queue.current))}
-            on:contextmenu={(e) =>
-              selection.handleContextMenu(e, i + $queue.past.length + Number(!!$queue.current))}
-            on:click={(e) =>
-              selection.handleClick(e, i + $queue.past.length + Number(!!$queue.current))}
+            class:selected={$selection.list[qi] === true}
+            on:mousedown={(e) => selection.handleMouseDown(e, qi)}
+            on:contextmenu={(e) => selection.handleContextMenu(e, qi)}
+            on:click={(e) => selection.handleClick(e, qi)}
           >
             <QueueItemComponent id={item.id} />
           </div>
@@ -334,29 +287,16 @@
           let:i
           id="autoplay"
         >
+          {@const qi = i + autoplay_index}
           <!-- svelte-ignore a11y-click-events-have-key-events -->
           <!-- svelte-ignore a11y-interactive-supports-focus -->
           <div
             class="row"
             role="row"
-            class:selected={$selection.list[
-              i + $queue.past.length + Number(!!$queue.current) + $queue.userQueue.length
-            ] === true}
-            on:mousedown={(e) =>
-              selection.handleMouseDown(
-                e,
-                i + $queue.past.length + Number(!!$queue.current) + $queue.userQueue.length,
-              )}
-            on:contextmenu={(e) =>
-              selection.handleContextMenu(
-                e,
-                i + $queue.past.length + Number(!!$queue.current) + $queue.userQueue.length,
-              )}
-            on:click={(e) =>
-              selection.handleClick(
-                e,
-                i + $queue.past.length + Number(!!$queue.current) + $queue.userQueue.length,
-              )}
+            class:selected={$selection.list[qi] === true}
+            on:mousedown={(e) => selection.handleMouseDown(e, qi)}
+            on:contextmenu={(e) => selection.handleContextMenu(e, qi)}
+            on:click={(e) => selection.handleClick(e, qi)}
           >
             <QueueItemComponent id={item.id} />
           </div>
