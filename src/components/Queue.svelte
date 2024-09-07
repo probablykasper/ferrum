@@ -32,7 +32,7 @@
     }
   })
 
-  let show_history = false
+  // let show_history = false
   // $: items = getQueue($queue, show_history)
   // $: up_next_index = $queue.past.length + ($queue.current ? 1 : 0)
 
@@ -216,46 +216,59 @@
 
 <aside transition:fly={{ x: '100%', duration: 150, opacity: 1 }}>
   <div class="shadow" />
-  <div class="content" bind:this={scroll_container}>
-    <h4 class="row">History</h4>
-    <VirtualListBlock
-      items={$queue.past}
-      let:item
-      get_key={(i) => i.qId}
-      item_height={54}
-      {scroll_container}
-    >
-      <div class="row">
-        <QueueItemComponent id={item.id} />
-      </div>
-    </VirtualListBlock>
+  <div class="content relative -mt-px border-l" bind:this={scroll_container}>
+    <div class="relative">
+      {#if $queue.past.length}
+        <h4 class="sticky top-0 z-1 border-y bg-[hsl(226,35%,11%)]/50 py-2 backdrop-blur-md">
+          History
+        </h4>
+        <VirtualListBlock
+          items={$queue.past}
+          let:item
+          get_key={(i) => i.qId}
+          item_height={54}
+          {scroll_container}
+        >
+          <div class="row">
+            <QueueItemComponent id={item.id} />
+          </div>
+        </VirtualListBlock>
+      {/if}
+    </div>
 
-    <h4 class="row">Up Next</h4>
-    <VirtualListBlock
-      items={$queue.userQueue}
-      let:item
-      get_key={(i) => i.qId}
-      item_height={54}
-      {scroll_container}
-    >
-      <div class="row">
-        <QueueItemComponent id={item.id} />
-      </div>
-    </VirtualListBlock>
+    <div class="relative">
+      <h4 class="sticky top-0 z-1 border-y bg-[hsl(226,35%,11%)]/50 py-2 backdrop-blur-md">
+        Up Next
+      </h4>
+      <VirtualListBlock
+        items={$queue.userQueue}
+        let:item
+        get_key={(i) => i.qId}
+        item_height={54}
+        {scroll_container}
+      >
+        <div class="row">
+          <QueueItemComponent id={item.id} />
+        </div>
+      </VirtualListBlock>
+    </div>
 
-    <h4 class="row">Autoplay</h4>
-    <VirtualListBlock
-      items={$queue.autoQueue}
-      let:item
-      get_key={(i) => i.qId}
-      item_height={54}
-      {scroll_container}
-      id="autoplay"
-    >
-      <div class="row">
-        <QueueItemComponent id={item.id} />
-      </div>
-    </VirtualListBlock>
+    <div class="relative">
+      <h4 class="sticky top-0 z-1 border-y bg-[hsl(226,35%,11%)]/50 py-2 backdrop-blur-md">
+        Autoplay
+      </h4>
+      <VirtualListBlock
+        items={$queue.autoQueue}
+        let:item
+        get_key={(i) => i.qId}
+        item_height={54}
+        {scroll_container}
+      >
+        <div class="row">
+          <QueueItemComponent id={item.id} />
+        </div>
+      </VirtualListBlock>
+    </div>
   </div>
 </aside>
 
@@ -283,7 +296,6 @@
     background-color: #000000
     pointer-events: all
     overflow-y: scroll
-    border-left: 1px solid var(--border-color)
   .row
     height: 54px
     display: flex
