@@ -141,14 +141,12 @@
     if (e.currentTarget && e.dataTransfer?.types[0] === 'ferrum.tracks' && index >= up_next_index) {
       e.preventDefault()
       const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
-      console.log('rect', rect)
-
       if (e.pageY < rect.bottom - rect.height / 2) {
-        drag_line.style.top = rect.top - 1 + 'px'
+        drag_line.style.top = rect.top - 1 + queue_element.scrollTop + 'px'
         drag_to_index = index
         drag_top_of_item = true
       } else {
-        drag_line.style.top = rect.bottom - 1 + 'px'
+        drag_line.style.top = rect.bottom - 1 + queue_element.scrollTop + 'px'
         drag_to_index = index + 1
         drag_top_of_item = false
       }
@@ -329,7 +327,7 @@
     {/if}
     <div
       bind:this={drag_line}
-      class="pointer-events-none fixed z-10 h-[2px] w-full bg-[var(--drag-line-color)]"
+      class="pointer-events-none absolute z-10 h-[2px] w-full bg-[var(--drag-line-color)]"
       class:hidden={drag_to_index === null}
     />
   </div>
