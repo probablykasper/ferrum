@@ -21,6 +21,7 @@
   import { ipcListen, ipcRenderer } from '@/lib/window'
   import { assertUnreachable, checkShortcut } from '@/lib/helpers'
   import type { TrackID } from 'ferrum-addon/addon'
+  import { fly } from 'svelte/transition'
 
   let objectUrls: string[] = []
 
@@ -216,7 +217,7 @@
   }
 </script>
 
-<aside bind:this={queueElement}>
+<aside bind:this={queueElement} transition:fly={{ x: '100%', duration: 150, opacity: 1 }}>
   <div class="shadow" />
   <div class="content">
     <VirtualListItemed
@@ -244,6 +245,7 @@
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
+            class="transition duration-75 ease-out"
             class:rotate-90={show_history}
             height="24px"
             viewBox="0 0 24 24"
@@ -333,6 +335,4 @@
     border: none
     padding: 0
     cursor: pointer
-  .rotate-90
-    transform: rotate(90deg)
 </style>

@@ -4,11 +4,8 @@ input:focus-visible {
   outline: none;
 }
 
-.ease-out-cubic {
-  transition-timing-function: cubic-bezier(0.33, 1, 0.68, 1);
-}
-
 @theme {
+  --default-transition-timing-function: cubic-bezier(0.33, 1, 0.68, 1); /* cubic-out */
   --color-background: hsl(0, 0%, 100%);
   --color-foreground: black;
   --color-edges: hsla(215, 16%, 47%, 0.6);
@@ -22,7 +19,7 @@ input:focus-visible {
 
 @layer utilities {
   .parent-active-zoom {
-    @apply transition duration-[50ms] ease-out;
+    @apply transition duration-[50ms];
   }
   :active > .parent-active-zoom {
     @apply scale-95 opacity-70;
