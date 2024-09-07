@@ -51,6 +51,7 @@
   .text
     overflow: hidden
     white-space: nowrap
+    line-height: normal
   p
     margin: 0px
     font-size: 14px

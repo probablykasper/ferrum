@@ -41,7 +41,7 @@
 
 <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
 <dialog
-  class="modal"
+  class="modal m-auto"
   bind:this={dialogEl}
   on:click|self={() => {
     if (clickable) {

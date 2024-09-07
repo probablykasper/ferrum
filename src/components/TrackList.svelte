@@ -214,14 +214,14 @@
 >
   <div class="header">
     <div class:dragbar={$modalCount === 0 && isMac} class:queue-visible={$queueVisible} />
-    <h3 class="title">
+    <h3 class="title pb-0.5 text-[19px] leading-none">
       {#if $page.tracklist.id === 'root'}
         Songs
       {:else if $page.tracklist.type !== 'special'}
         {$page.tracklist.name}
       {/if}
     </h3>
-    <div class="info">{$page.length} songs</div>
+    <div class="info leading-none">{$page.length} songs</div>
     {#if 'description' in $page.tracklist && $page.tracklist.description !== ''}
       <div class="description">{$page.tracklist.description}</div>
     {/if}
@@ -361,7 +361,7 @@
         <div class="c index">
           {#if track.id === $playingId}
             <svg
-              class="playing-icon"
+              class="playing-icon inline"
               xmlns="http://www.w3.org/2000/svg"
               height="24"
               viewBox="0 0 24 24"
@@ -472,7 +472,7 @@
           fill: var(--icon-color)
       .index
         width: 0px
-        min-width: 36px
+        min-width: 46px
         text-align: right
         svg.playing-icon
           fill: #00ffff
@@ -482,11 +482,11 @@
         width: 170%
       .playCount
         width: 0px
-        min-width: 42px
+        min-width: 52px
         text-align: right
       .duration
         width: 0px
-        min-width: 40px
+        min-width: 50px
         text-align: right
       .artist
         width: 120%
@@ -498,10 +498,10 @@
         width: 65%
       .dateAdded
         width: 130px
-        min-width: 130px
+        min-width: 140px
       .year
         width: 0px
-        min-width: 37px
+        min-width: 47px
   .drag-line
     position: absolute
     width: 100%

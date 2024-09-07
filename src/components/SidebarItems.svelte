@@ -361,8 +361,8 @@
     margin-left: 2px
     margin-right: -8px
     padding: 6px
-    width: 7px
-    height: 7px
+    width: 19px
+    height: 19px
     z-index: 1
     flex-shrink: 0
     fill: white

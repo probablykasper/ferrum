@@ -16,7 +16,7 @@
   on:keydown
   bind:this={filterInput}
   type="text"
-  class="search"
+  class="search text-[13px] leading-none"
   class:on={$filter}
   bind:value={$filter}
   placeholder="Filter"

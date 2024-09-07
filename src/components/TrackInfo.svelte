@@ -558,6 +558,8 @@
     padding: 2px 0px
     display: flex
     align-items: center
+    line-height: normal
+    height: 27px
   input
     flex-grow: 1
     font-size: 13px
@@ -593,4 +595,5 @@
     display: inline-block
     width: 20px
     text-align: center
+    line-height: normal
 </style>

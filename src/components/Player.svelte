@@ -157,7 +157,7 @@
       <input
         type="range"
         tabindex="-1"
-        class="time"
+        class="time border-none"
         min="0"
         max={sliderSteps}
         bind:value={sliderValue}
@@ -220,7 +220,7 @@
     <input
       type="range"
       tabindex="-1"
-      class="volume"
+      class="volume border-none"
       min="0"
       max="1"
       step="0.01"

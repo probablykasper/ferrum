@@ -24,6 +24,7 @@
     outline: none
     z-index: 1
     user-select: none
+    line-height: normal
     &::before
       content: ''
       position: absolute

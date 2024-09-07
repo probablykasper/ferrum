@@ -1,0 +1,21 @@
+@import 'tailwindcss';
+
+input:focus-visible {
+  outline: none;
+}
+
+.ease-out-cubic {
+  transition-timing-function: cubic-bezier(0.33, 1, 0.68, 1);
+}
+
+@theme {
+  --color-background: hsl(0, 0%, 100%);
+  --color-foreground: black;
+  --color-edges: hsla(215, 16%, 47%, 0.6);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-background: hsl(120, 11%, 7%);
+    --color-foreground: white;
+  }
+}

@@ -56,6 +56,7 @@
     margin-bottom: 15px
   input, textarea
     resize: none
+    line-height: normal
     width: 300px
     margin: 2px 0px
     flex-grow: 1
