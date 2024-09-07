@@ -8,6 +8,7 @@
     prependToUserQueue,
     queue,
     type Queue,
+    type QueueItem,
   } from '../lib/queue'
   import { page, paths } from '../lib/data'
   import { onDestroy } from 'svelte'
@@ -82,65 +83,74 @@
   //   return newItems
   // }
 
-  // const selection = newSelection({
-  //   getItemCount: () => getQueueLength(),
-  //   scrollToItem: (i) => {
-  //     let itemIndex = 0
-  //     while (itemIndex <= i) {
-  //       if (typeof items[itemIndex] === 'string') i++
-  //       itemIndex++
-  //     }
-  //     virtualList.scrollToItem(i)
-  //   },
-  //   async onContextMenu() {
-  //     const indexes = selection.getSelectedIndexes()
-  //     const current_array = $queue.current ? [$queue.current.item] : []
-  //     const allItems = [...$queue.past, ...current_array, ...$queue.userQueue, ...$queue.autoQueue]
-  //     const allIds = allItems.map((item) => item.id)
-  //     await showTrackMenu(allIds, indexes, undefined, true)
-  //   },
-  // })
+  let history_list: VirtualListBlock<QueueItem>
+  let up_next_list: VirtualListBlock<QueueItem>
+  let autoplay_list: VirtualListBlock<QueueItem>
 
-  // function removeFromQueue() {
-  //   if ($selection.count >= 1) {
-  //     queue.removeIndexes(selection.getSelectedIndexes())
-  //   }
-  // }
-  // onDestroy(ipcListen('context.Remove from Queue', removeFromQueue))
+  const selection = newSelection({
+    getItemCount: () => getQueueLength(),
+    scrollToItem: (i) => {
+      if (i < $queue.past.length) {
+        history_list.scroll_to_index(i)
+      }
+      i -= $queue.past.length
+      i -= Number(!!$queue.current)
+      if (i < $queue.userQueue.length) {
+        up_next_list.scroll_to_index(i)
+      }
+      i -= $queue.userQueue.length
+      autoplay_list.scroll_to_index(i)
+    },
+    async onContextMenu() {
+      const indexes = selection.getSelectedIndexes()
+      const current_array = $queue.current ? [$queue.current.item] : []
+      const allItems = [...$queue.past, ...current_array, ...$queue.userQueue, ...$queue.autoQueue]
+      const allIds = allItems.map((item) => item.id)
+      await showTrackMenu(allIds, indexes, undefined, true)
+    },
+  })
+  $: $queue, selection.clear()
 
-  // let queueElement: HTMLElement
-  // export let onTrackInfo: (allIds: TrackID[], index: number) => void
+  function removeFromQueue() {
+    if ($selection.count >= 1) {
+      queue.removeIndexes(selection.getSelectedIndexes())
+    }
+  }
+  onDestroy(ipcListen('context.Remove from Queue', removeFromQueue))
 
-  // const trackActionUnlisten = ipcListen('selectedTracksAction', (_, action) => {
-  //   let firstIndex = selection.findFirst()
+  let queue_element: HTMLElement
+  export let onTrackInfo: (allIds: TrackID[], index: number) => void
 
-  //   if (firstIndex === null || !queueElement.contains(document.activeElement)) {
-  //     return
-  //   }
-  //   if (action === 'Play Next') {
-  //     const indexes = selection.getSelectedIndexes()
-  //     const ids = indexes.map((i) => queue.getByQueueIndex(i).id)
-  //     prependToUserQueue(ids)
-  //   } else if (action === 'Add to Queue') {
-  //     const indexes = selection.getSelectedIndexes()
-  //     const ids = indexes.map((i) => queue.getByQueueIndex(i).id)
-  //     appendToUserQueue(ids)
-  //   } else if (action === 'Get Info') {
-  //     const allItems = [...$queue.userQueue, ...$queue.autoQueue]
-  //     const allIds = allItems.map((item) => item.id)
-  //     onTrackInfo(allIds, firstIndex)
-  //   } else if (action === 'revealTrackFile') {
-  //     const track = methods.getTrack(queue.getByQueueIndex(firstIndex).id)
-  //     ipcRenderer.invoke('revealTrackFile', paths.tracksDir, track.file)
-  //   } else if (action === 'Remove from Playlist') {
-  //     return
-  //   } else if (action === 'Delete from Library') {
-  //     return
-  //   } else {
-  //     assertUnreachable(action)
-  //   }
-  // })
-  // onDestroy(trackActionUnlisten)
+  const trackActionUnlisten = ipcListen('selectedTracksAction', (_, action) => {
+    let firstIndex = selection.findFirst()
+
+    if (firstIndex === null || !queue_element.contains(document.activeElement)) {
+      return
+    }
+    if (action === 'Play Next') {
+      const indexes = selection.getSelectedIndexes()
+      const ids = indexes.map((i) => queue.getByQueueIndex(i).id)
+      prependToUserQueue(ids)
+    } else if (action === 'Add to Queue') {
+      const indexes = selection.getSelectedIndexes()
+      const ids = indexes.map((i) => queue.getByQueueIndex(i).id)
+      appendToUserQueue(ids)
+    } else if (action === 'Get Info') {
+      const allItems = [...$queue.userQueue, ...$queue.autoQueue]
+      const allIds = allItems.map((item) => item.id)
+      onTrackInfo(allIds, firstIndex)
+    } else if (action === 'revealTrackFile') {
+      const track = methods.getTrack(queue.getByQueueIndex(firstIndex).id)
+      ipcRenderer.invoke('revealTrackFile', paths.tracksDir, track.file)
+    } else if (action === 'Remove from Playlist') {
+      return
+    } else if (action === 'Delete from Library') {
+      return
+    } else {
+      assertUnreachable(action)
+    }
+  })
+  onDestroy(trackActionUnlisten)
 
   // let dragLine: HTMLElement
   // let draggedIndexes: number[] = []
@@ -214,7 +224,7 @@
   let scroll_container: HTMLDivElement
 </script>
 
-<aside transition:fly={{ x: '100%', duration: 150, opacity: 1 }}>
+<aside bind:this={queue_element} transition:fly={{ x: '100%', duration: 150, opacity: 1 }}>
   <div class="shadow" />
   <div class="content relative -mt-px border-l" bind:this={scroll_container}>
     <div class="relative">
@@ -224,12 +234,22 @@
         </h4>
         <VirtualListBlock
           items={$queue.past}
-          let:item
           get_key={(i) => i.qId}
           item_height={54}
           {scroll_container}
+          let:item
+          let:i
         >
-          <div class="row">
+          <!-- svelte-ignore a11y-click-events-have-key-events -->
+          <!-- svelte-ignore a11y-interactive-supports-focus -->
+          <div
+            class="row"
+            role="row"
+            class:selected={$selection.list[i] === true}
+            on:mousedown={(e) => selection.handleMouseDown(e, i)}
+            on:contextmenu={(e) => selection.handleContextMenu(e, i)}
+            on:click={(e) => selection.handleClick(e, i)}
+          >
             <QueueItemComponent id={item.id} />
           </div>
         </VirtualListBlock>
@@ -242,12 +262,26 @@
       </h4>
       <VirtualListBlock
         items={$queue.userQueue}
-        let:item
         get_key={(i) => i.qId}
         item_height={54}
         {scroll_container}
+        let:item
+        let:i
       >
-        <div class="row">
+        <!-- svelte-ignore a11y-click-events-have-key-events -->
+        <!-- svelte-ignore a11y-interactive-supports-focus -->
+        <div
+          class="row"
+          role="row"
+          class:selected={$selection.list[i + $queue.past.length + Number(!!$queue.current)] ===
+            true}
+          on:mousedown={(e) =>
+            selection.handleMouseDown(e, i + $queue.past.length + Number(!!$queue.current))}
+          on:contextmenu={(e) =>
+            selection.handleContextMenu(e, i + $queue.past.length + Number(!!$queue.current))}
+          on:click={(e) =>
+            selection.handleClick(e, i + $queue.past.length + Number(!!$queue.current))}
+        >
           <QueueItemComponent id={item.id} />
         </div>
       </VirtualListBlock>
@@ -259,12 +293,36 @@
       </h4>
       <VirtualListBlock
         items={$queue.autoQueue}
-        let:item
         get_key={(i) => i.qId}
         item_height={54}
         {scroll_container}
+        let:item
+        let:i
       >
-        <div class="row">
+        <!-- svelte-ignore a11y-click-events-have-key-events -->
+        <!-- svelte-ignore a11y-interactive-supports-focus -->
+        <div
+          class="row"
+          role="row"
+          class:selected={$selection.list[
+            i + $queue.past.length + Number(!!$queue.current) + $queue.userQueue.length
+          ] === true}
+          on:mousedown={(e) =>
+            selection.handleMouseDown(
+              e,
+              i + $queue.past.length + Number(!!$queue.current) + $queue.userQueue.length,
+            )}
+          on:contextmenu={(e) =>
+            selection.handleContextMenu(
+              e,
+              i + $queue.past.length + Number(!!$queue.current) + $queue.userQueue.length,
+            )}
+          on:click={(e) =>
+            selection.handleClick(
+              e,
+              i + $queue.past.length + Number(!!$queue.current) + $queue.userQueue.length,
+            )}
+        >
           <QueueItemComponent id={item.id} />
         </div>
       </VirtualListBlock>

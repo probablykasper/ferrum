@@ -49,6 +49,16 @@
   onDestroy(() => {
     scroll_event_element?.removeEventListener('scroll', refresh)
   })
+
+  export function scroll_to_index(index: number) {
+    const element_top = main_element.offsetTop
+    const top = index * item_height + element_top
+    if (scroll_container.scrollTop > top) {
+      scroll_container.scrollTop = top
+    } else if (scroll_container.scrollTop + scroll_container.clientHeight < top + item_height) {
+      scroll_container.scrollTop = top + item_height - scroll_container.clientHeight
+    }
+  }
 </script>
 
 <div
