@@ -69,20 +69,20 @@
   })
   $: $queue, selection.clear()
 
-  function removeFromQueue() {
+  function remove_from_queue() {
     if ($selection.count >= 1) {
       queue.removeIndexes(selection.getSelectedIndexes())
     }
   }
-  onDestroy(ipcListen('context.Remove from Queue', removeFromQueue))
+  onDestroy(ipcListen('context.Remove from Queue', remove_from_queue))
 
   let queue_element: HTMLElement
   export let onTrackInfo: (allIds: TrackID[], index: number) => void
 
-  const trackActionUnlisten = ipcListen('selectedTracksAction', (_, action) => {
-    let firstIndex = selection.findFirst()
+  const track_action_unlisten = ipcListen('selectedTracksAction', (_, action) => {
+    let first_index = selection.findFirst()
 
-    if (firstIndex === null || !queue_element.contains(document.activeElement)) {
+    if (first_index === null || !queue_element.contains(document.activeElement)) {
       return
     }
     if (action === 'Play Next') {
@@ -94,11 +94,11 @@
       const ids = indexes.map((i) => queue.getByQueueIndex(i).id)
       appendToUserQueue(ids)
     } else if (action === 'Get Info') {
-      const allItems = [...$queue.userQueue, ...$queue.autoQueue]
-      const allIds = allItems.map((item) => item.id)
-      onTrackInfo(allIds, firstIndex)
+      const all_items = [...$queue.userQueue, ...$queue.autoQueue]
+      const all_ids = all_items.map((item) => item.id)
+      onTrackInfo(all_ids, first_index)
     } else if (action === 'revealTrackFile') {
-      const track = methods.getTrack(queue.getByQueueIndex(firstIndex).id)
+      const track = methods.getTrack(queue.getByQueueIndex(first_index).id)
       ipcRenderer.invoke('revealTrackFile', paths.tracksDir, track.file)
     } else if (action === 'Remove from Playlist') {
       return
@@ -108,80 +108,82 @@
       assertUnreachable(action)
     }
   })
-  onDestroy(trackActionUnlisten)
+  onDestroy(track_action_unlisten)
 
-  // let dragLine: HTMLElement
-  // let draggedIndexes: number[] = []
-  // function onDragStart(e: DragEvent) {
-  //   if (e.dataTransfer) {
-  //     draggedIndexes = []
-  //     for (let i = 0; i < $selection.list.length; i++) {
-  //       if ($selection.list[i]) {
-  //         draggedIndexes.push(i)
-  //       }
-  //     }
-  //     e.dataTransfer.effectAllowed = 'move'
-  //     if (draggedIndexes.length === 1) {
-  //       const track = methods.getTrack(getByQueueIndex(draggedIndexes[0]).id)
-  //       dragGhost.setInnerText(track.artist + ' - ' + track.name)
-  //     } else {
-  //       dragGhost.setInnerText(draggedIndexes.length + ' items')
-  //     }
-  //     dragged.tracks = {
-  //       ids: draggedIndexes.map((i) => getByQueueIndex(i).id),
-  //       queueIndexes: draggedIndexes,
-  //     }
-  //     e.dataTransfer.setDragImage(dragGhost.dragEl, 0, 0)
-  //     e.dataTransfer.setData('ferrum.tracks', '')
-  //   }
-  // }
-  // let dragToIndex: null | number = null
-  // let dragTopOfItem = false
-  // function onDragOver(e: DragEvent, index: number) {
-  //   if (e.currentTarget && e.dataTransfer?.types[0] === 'ferrum.tracks' && index >= up_next_index) {
-  //     e.preventDefault()
-  //     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
-  //     if (e.pageY < rect.bottom - rect.height / 2) {
-  //       dragLine.style.top = rect.top - 1 + 'px'
-  //       dragToIndex = index
-  //       dragTopOfItem = true
-  //     } else {
-  //       dragLine.style.top = rect.bottom - 1 + 'px'
-  //       dragToIndex = index + 1
-  //       dragTopOfItem = false
-  //     }
-  //   }
-  // }
-  // function dragEndHandler() {
-  //   dragToIndex = null
-  // }
-  // function dropHandler() {
-  //   if (dragToIndex === null) {
-  //     return
-  //   }
-  //   if (dragged.tracks) {
-  //     const newSelection = dragged.tracks.queueIndexes
-  //       ? moveIndexes(dragged.tracks.queueIndexes, dragToIndex, dragTopOfItem)
-  //       : insertIds(dragged.tracks.ids, dragToIndex, dragTopOfItem)
-  //     for (let i = newSelection.from; i <= newSelection.to; i++) {
-  //       selection.add(i)
-  //     }
-  //     dragToIndex = null
-  //   }
-  // }
+  let drag_line: HTMLElement
+  let dagged_indexes: number[] = []
+  function onDragStart(e: DragEvent) {
+    if (e.dataTransfer) {
+      dagged_indexes = []
+      for (let i = 0; i < $selection.list.length; i++) {
+        if ($selection.list[i]) {
+          dagged_indexes.push(i)
+        }
+      }
+      e.dataTransfer.effectAllowed = 'move'
+      if (dagged_indexes.length === 1) {
+        const track = methods.getTrack(getByQueueIndex(dagged_indexes[0]).id)
+        dragGhost.setInnerText(track.artist + ' - ' + track.name)
+      } else {
+        dragGhost.setInnerText(dagged_indexes.length + ' items')
+      }
+      dragged.tracks = {
+        ids: dagged_indexes.map((i) => getByQueueIndex(i).id),
+        queueIndexes: dagged_indexes,
+      }
+      e.dataTransfer.setDragImage(dragGhost.dragEl, 0, 0)
+      e.dataTransfer.setData('ferrum.tracks', '')
+    }
+  }
+  let drag_to_index: null | number = null
+  let drag_top_of_item = false
+  function on_drag_over(e: DragEvent, index: number) {
+    if (e.currentTarget && e.dataTransfer?.types[0] === 'ferrum.tracks' && index >= up_next_index) {
+      e.preventDefault()
+      const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
+      console.log('rect', rect)
+
+      if (e.pageY < rect.bottom - rect.height / 2) {
+        drag_line.style.top = rect.top - 1 + 'px'
+        drag_to_index = index
+        drag_top_of_item = true
+      } else {
+        drag_line.style.top = rect.bottom - 1 + 'px'
+        drag_to_index = index + 1
+        drag_top_of_item = false
+      }
+    }
+  }
+  function drag_end_handler() {
+    drag_to_index = null
+  }
+  function drop_handler() {
+    if (drag_to_index === null) {
+      return
+    }
+    if (dragged.tracks) {
+      const new_selection = dragged.tracks.queueIndexes
+        ? moveIndexes(dragged.tracks.queueIndexes, drag_to_index, drag_top_of_item)
+        : insertIds(dragged.tracks.ids, drag_to_index, drag_top_of_item)
+      for (let i = new_selection.from; i <= new_selection.to; i++) {
+        selection.add(i)
+      }
+      drag_to_index = null
+    }
+  }
 </script>
 
 <aside transition:fly={{ x: '100%', duration: 150, opacity: 1 }}>
   <div class="shadow" />
   <!-- svelte-ignore a11y-no-static-element-interactions -->
   <div
-    class="content relative -mt-px border-l outline-none"
     bind:this={queue_element}
+    class="content relative -mt-px border-l outline-none"
     tabindex="-1"
     on:keydown={(e) => {
       if (checkShortcut(e, 'Backspace') && $selection.count >= 1) {
         e.preventDefault()
-        removeFromQueue()
+        remove_from_queue()
       } else {
         selection.handleKeyDown(e)
       }
@@ -213,6 +215,12 @@
             on:mousedown={(e) => selection.handleMouseDown(e, qi)}
             on:contextmenu={(e) => selection.handleContextMenu(e, qi)}
             on:click={(e) => selection.handleClick(e, qi)}
+            draggable="true"
+            on:dragstart={onDragStart}
+            on:dragover={(e) => on_drag_over(e, qi)}
+            on:drop={drop_handler}
+            on:dragleave={drag_end_handler}
+            on:dragend={drag_end_handler}
           >
             <QueueItemComponent id={item.id} />
           </div>
@@ -228,6 +236,12 @@
             on:mousedown={(e) => selection.handleMouseDown(e, qi)}
             on:contextmenu={(e) => selection.handleContextMenu(e, qi)}
             on:click={(e) => selection.handleClick(e, qi)}
+            draggable="true"
+            on:dragstart={onDragStart}
+            on:dragover={(e) => on_drag_over(e, qi)}
+            on:drop={drop_handler}
+            on:dragleave={drag_end_handler}
+            on:dragend={drag_end_handler}
           >
             <QueueItemComponent id={$queue.current.item.id} />
           </div>
@@ -261,6 +275,12 @@
             on:mousedown={(e) => selection.handleMouseDown(e, qi)}
             on:contextmenu={(e) => selection.handleContextMenu(e, qi)}
             on:click={(e) => selection.handleClick(e, qi)}
+            draggable="true"
+            on:dragstart={onDragStart}
+            on:dragover={(e) => on_drag_over(e, qi)}
+            on:drop={drop_handler}
+            on:dragleave={drag_end_handler}
+            on:dragend={drag_end_handler}
           >
             <QueueItemComponent id={item.id} />
           </div>
@@ -295,12 +315,23 @@
             on:mousedown={(e) => selection.handleMouseDown(e, qi)}
             on:contextmenu={(e) => selection.handleContextMenu(e, qi)}
             on:click={(e) => selection.handleClick(e, qi)}
+            draggable="true"
+            on:dragstart={onDragStart}
+            on:dragover={(e) => on_drag_over(e, qi)}
+            on:drop={drop_handler}
+            on:dragleave={drag_end_handler}
+            on:dragend={drag_end_handler}
           >
             <QueueItemComponent id={item.id} />
           </div>
         </VirtualListBlock>
       </div>
     {/if}
+    <div
+      bind:this={drag_line}
+      class="pointer-events-none fixed z-10 h-[2px] w-full bg-[var(--drag-line-color)]"
+      class:hidden={drag_to_index === null}
+    />
   </div>
 </aside>
 
@@ -335,15 +366,6 @@
     box-sizing: border-box
   h4
     padding-left: 18px
-  .drag-line
-    position: absolute
-    width: 100%
-    height: 2px
-    background-color: var(--drag-line-color)
-    pointer-events: none
-    display: none
-    &.show
-      display: block
   .history-button
     width: 100%
     font-size: inherit
