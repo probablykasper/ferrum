@@ -281,84 +281,88 @@
       </div>
     {/if}
 
-    <div class="relative">
-      <h4
-        class="sticky top-0 z-1 flex h-[40px] items-center border-y bg-[hsl(226,35%,11%)]/50 backdrop-blur-md"
-      >
-        Up Next
-      </h4>
-      <VirtualListBlock
-        bind:this={up_next_list}
-        items={$queue.userQueue}
-        get_key={(i) => i.qId}
-        item_height={54}
-        {scroll_container}
-        let:item
-        let:i
-      >
-        <!-- svelte-ignore a11y-click-events-have-key-events -->
-        <!-- svelte-ignore a11y-interactive-supports-focus -->
-        <div
-          class="row"
-          role="row"
-          class:selected={$selection.list[i + $queue.past.length + Number(!!$queue.current)] ===
-            true}
-          on:mousedown={(e) =>
-            selection.handleMouseDown(e, i + $queue.past.length + Number(!!$queue.current))}
-          on:contextmenu={(e) =>
-            selection.handleContextMenu(e, i + $queue.past.length + Number(!!$queue.current))}
-          on:click={(e) =>
-            selection.handleClick(e, i + $queue.past.length + Number(!!$queue.current))}
+    {#if $queue.userQueue.length || queue.getQueueLength() === 0}
+      <div class="relative">
+        <h4
+          class="sticky top-0 z-1 flex h-[40px] items-center border-y bg-[hsl(226,35%,11%)]/50 backdrop-blur-md"
         >
-          <QueueItemComponent id={item.id} />
-        </div>
-      </VirtualListBlock>
-    </div>
+          Up Next
+        </h4>
+        <VirtualListBlock
+          bind:this={up_next_list}
+          items={$queue.userQueue}
+          get_key={(i) => i.qId}
+          item_height={54}
+          {scroll_container}
+          let:item
+          let:i
+        >
+          <!-- svelte-ignore a11y-click-events-have-key-events -->
+          <!-- svelte-ignore a11y-interactive-supports-focus -->
+          <div
+            class="row"
+            role="row"
+            class:selected={$selection.list[i + $queue.past.length + Number(!!$queue.current)] ===
+              true}
+            on:mousedown={(e) =>
+              selection.handleMouseDown(e, i + $queue.past.length + Number(!!$queue.current))}
+            on:contextmenu={(e) =>
+              selection.handleContextMenu(e, i + $queue.past.length + Number(!!$queue.current))}
+            on:click={(e) =>
+              selection.handleClick(e, i + $queue.past.length + Number(!!$queue.current))}
+          >
+            <QueueItemComponent id={item.id} />
+          </div>
+        </VirtualListBlock>
+      </div>
+    {/if}
 
-    <div class="relative">
-      <h4
-        class="sticky top-0 z-1 flex h-[40px] items-center border-y bg-[hsl(226,35%,11%)]/50 backdrop-blur-md"
-      >
-        Autoplay
-      </h4>
-      <VirtualListBlock
-        bind:this={autoplay_list}
-        items={$queue.autoQueue}
-        get_key={(i) => i.qId}
-        item_height={54}
-        {scroll_container}
-        let:item
-        let:i
-        id="autoplay"
-      >
-        <!-- svelte-ignore a11y-click-events-have-key-events -->
-        <!-- svelte-ignore a11y-interactive-supports-focus -->
-        <div
-          class="row"
-          role="row"
-          class:selected={$selection.list[
-            i + $queue.past.length + Number(!!$queue.current) + $queue.userQueue.length
-          ] === true}
-          on:mousedown={(e) =>
-            selection.handleMouseDown(
-              e,
-              i + $queue.past.length + Number(!!$queue.current) + $queue.userQueue.length,
-            )}
-          on:contextmenu={(e) =>
-            selection.handleContextMenu(
-              e,
-              i + $queue.past.length + Number(!!$queue.current) + $queue.userQueue.length,
-            )}
-          on:click={(e) =>
-            selection.handleClick(
-              e,
-              i + $queue.past.length + Number(!!$queue.current) + $queue.userQueue.length,
-            )}
+    {#if $queue.autoQueue.length}
+      <div class="relative">
+        <h4
+          class="sticky top-0 z-1 flex h-[40px] items-center border-y bg-[hsl(226,35%,11%)]/50 backdrop-blur-md"
         >
-          <QueueItemComponent id={item.id} />
-        </div>
-      </VirtualListBlock>
-    </div>
+          Autoplay
+        </h4>
+        <VirtualListBlock
+          bind:this={autoplay_list}
+          items={$queue.autoQueue}
+          get_key={(i) => i.qId}
+          item_height={54}
+          {scroll_container}
+          let:item
+          let:i
+          id="autoplay"
+        >
+          <!-- svelte-ignore a11y-click-events-have-key-events -->
+          <!-- svelte-ignore a11y-interactive-supports-focus -->
+          <div
+            class="row"
+            role="row"
+            class:selected={$selection.list[
+              i + $queue.past.length + Number(!!$queue.current) + $queue.userQueue.length
+            ] === true}
+            on:mousedown={(e) =>
+              selection.handleMouseDown(
+                e,
+                i + $queue.past.length + Number(!!$queue.current) + $queue.userQueue.length,
+              )}
+            on:contextmenu={(e) =>
+              selection.handleContextMenu(
+                e,
+                i + $queue.past.length + Number(!!$queue.current) + $queue.userQueue.length,
+              )}
+            on:click={(e) =>
+              selection.handleClick(
+                e,
+                i + $queue.past.length + Number(!!$queue.current) + $queue.userQueue.length,
+              )}
+          >
+            <QueueItemComponent id={item.id} />
+          </div>
+        </VirtualListBlock>
+      </div>
+    {/if}
   </div>
 </aside>
 
