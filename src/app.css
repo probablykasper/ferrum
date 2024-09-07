@@ -19,3 +19,12 @@ input:focus-visible {
     --color-foreground: white;
   }
 }
+
+@layer utilities {
+  .parent-active-zoom {
+    @apply transition duration-[50ms] ease-out;
+  }
+  :active > .parent-active-zoom {
+    @apply scale-95 opacity-70;
+  }
+}

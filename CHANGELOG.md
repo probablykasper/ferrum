@@ -5,6 +5,7 @@
 - Drop support for macOS 10.13 and 10.14
 - Add playback history to queue panel
 - Fix dragging tracks to up next/autoplay queue boundary
+- Fix button edge not clickable due to zoom
 - Update dependencies
 
 ## 0.18.0 - 2024 Jun 7

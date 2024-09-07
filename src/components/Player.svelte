@@ -100,14 +100,27 @@
         on:mousedown|preventDefault
         on:click={() => ($shuffle = !$shuffle)}
       >
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" viewBox="-8 -8 40 40" height="24"
-          ><path
-            d="M2 7h-2v-2h2c3.49 0 5.48 1.221 6.822 2.854-.41.654-.754 1.312-1.055 1.939-1.087-1.643-2.633-2.793-5.767-2.793zm16 10c-3.084 0-4.604-1.147-5.679-2.786-.302.627-.647 1.284-1.06 1.937 1.327 1.629 3.291 2.849 6.739 2.849v3l6-4-6-4v3zm0-10v3l6-4-6-4v3c-5.834 0-7.436 3.482-8.85 6.556-1.343 2.921-2.504 5.444-7.15 5.444h-2v2h2c5.928 0 7.543-3.511 8.968-6.609 1.331-2.893 2.479-5.391 7.032-5.391z"
-          /></svg
-        >
+        <div class="parent-active-zoom">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="scale-y-[0.85]"
+            width="24"
+            viewBox="-8 -8 40 40"
+            height="24"
+            ><path
+              d="M2 7h-2v-2h2c3.49 0 5.48 1.221 6.822 2.854-.41.654-.754 1.312-1.055 1.939-1.087-1.643-2.633-2.793-5.767-2.793zm16 10c-3.084 0-4.604-1.147-5.679-2.786-.302.627-.647 1.284-1.06 1.937 1.327 1.629 3.291 2.849 6.739 2.849v3l6-4-6-4v3zm0-10v3l6-4-6-4v3c-5.834 0-7.436 3.482-8.85 6.556-1.343 2.921-2.504 5.444-7.15 5.444h-2v2h2c5.928 0 7.543-3.511 8.968-6.609 1.331-2.893 2.479-5.391 7.032-5.391z"
+            /></svg
+          >
+        </div>
       </button>
       <button on:click={previous} tabindex="-1" on:mousedown|preventDefault>
-        <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="parent-active-zoom"
+          height="24"
+          viewBox="0 0 24 24"
+          width="24"
+        >
           <path
             d="M7 6c.55 0 1 .45 1 1v10c0 .55-.45 1-1 1s-1-.45-1-1V7c0-.55.45-1 1-1zm3.66 6.82l5.77 4.07c.66.47 1.58-.01 1.58-.82V7.93c0-.81-.91-1.28-1.58-.82l-5.77 4.07c-.57.4-.57 1.24 0 1.64z"
           />
@@ -116,13 +129,25 @@
 
       <button class="play-pause" on:click={playPause} tabindex="-1" on:mousedown|preventDefault>
         {#if $paused}
-          <svg xmlns="http://www.w3.org/2000/svg" height="36" viewBox="0 0 24 24" width="36">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="parent-active-zoom"
+            height="36"
+            viewBox="0 0 24 24"
+            width="36"
+          >
             <path
               d="M8 6.82v10.36c0 .79.87 1.27 1.54.84l8.14-5.18c.62-.39.62-1.29 0-1.69L9.54 5.98C8.87 5.55 8 6.03 8 6.82z"
             />
           </svg>
         {:else}
-          <svg xmlns="http://www.w3.org/2000/svg" height="36" viewBox="0 0 24 24" width="36">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="parent-active-zoom"
+            height="36"
+            viewBox="0 0 24 24"
+            width="36"
+          >
             <path
               d="M8 19c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2s-2 .9-2 2v10c0 1.1.9 2 2 2zm6-12v10c0 1.1.9 2 2 2s2-.9 2-2V7c0-1.1-.9-2-2-2s-2 .9-2 2z"
             />
@@ -131,7 +156,13 @@
       </button>
 
       <button on:click={skipToNext} tabindex="-1" on:mousedown|preventDefault>
-        <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="parent-active-zoom"
+          height="24"
+          viewBox="0 0 24 24"
+          width="24"
+        >
           <path
             d="M7.58 16.89l5.77-4.07c.56-.4.56-1.24 0-1.63L7.58 7.11C6.91 6.65 6 7.12 6 7.93v8.14c0 .81.91 1.28 1.58.82zM16 7v10c0 .55.45 1 1 1s1-.45 1-1V7c0-.55-.45-1-1-1s-1 .45-1 1z"
           />
@@ -145,11 +176,18 @@
         on:mousedown|preventDefault
         on:click={() => ($repeat = !$repeat)}
       >
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="-8 -8 40 40"
-          ><path
-            d="M2 12c0 .999.381 1.902.989 2.604l-1.098.732-.587.392c-.814-1.025-1.304-2.318-1.304-3.728 0-3.313 2.687-6 6-6h9v-3l6 4-6 4v-3h-9c-2.206 0-4 1.794-4 4zm20.696-3.728l-.587.392-1.098.732c.608.702.989 1.605.989 2.604 0 2.206-1.795 4-4 4h-9v-3l-6 4 6 4v-3h9c3.313 0 6-2.687 6-6 0-1.41-.489-2.703-1.304-3.728z"
-          /></svg
-        >
+        <div class="parent-active-zoom">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="scale-y-105"
+            width="24"
+            height="24"
+            viewBox="-8 -8 40 40"
+            ><path
+              d="M2 12c0 .999.381 1.902.989 2.604l-1.098.732-.587.392c-.814-1.025-1.304-2.318-1.304-3.728 0-3.313 2.687-6 6-6h9v-3l6 4-6 4v-3h-9c-2.206 0-4 1.794-4 4zm20.696-3.728l-.587.392-1.098.732c.608.702.989 1.605.989 2.604 0 2.206-1.795 4-4 4h-9v-3l-6 4 6 4v-3h9c3.313 0 6-2.687 6-6 0-1.41-.489-2.703-1.304-3.728z"
+            /></svg
+          >
+        </div>
       </button>
     </div>
     <div class="time-bar">
@@ -178,7 +216,7 @@
     <button class="volume-icon" tabindex="-1" on:click={volume.toggle}>
       {#if $volume > 0.5}
         <svg
-          class="high"
+          class="high parent-active-zoom"
           xmlns="http://www.w3.org/2000/svg"
           height="24px"
           viewBox="0 0 24 24"
@@ -191,7 +229,7 @@
         </svg>
       {:else if $volume > 0}
         <svg
-          class="low"
+          class="low parent-active-zoom"
           xmlns="http://www.w3.org/2000/svg"
           height="24px"
           viewBox="0 0 24 24"
@@ -204,7 +242,7 @@
         </svg>
       {:else}
         <svg
-          class="mute"
+          class="mute parent-active-zoom"
           xmlns="http://www.w3.org/2000/svg"
           height="24px"
           viewBox="0 0 24 24"
@@ -234,13 +272,18 @@
       }}
     />
     <button
-      class="queue"
       tabindex="-1"
       on:mousedown|preventDefault
       on:click={toggleQueueVisibility}
       class:on={$queueVisible}
     >
-      <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        class="parent-active-zoom"
+        height="24px"
+        viewBox="0 0 24 24"
+        width="24px"
+      >
         <path
           d="M5 10h10c.55 0 1 .45 1 1s-.45 1-1 1H5c-.55 0-1-.45-1-1s.45-1 1-1zm0-4h10c.55 0 1 .45 1 1s-.45 1-1 1H5c-.55 0-1-.45-1-1s.45-1 1-1zm0 8h6c.55 0 1 .45 1 1s-.45 1-1 1H5c-.55 0-1-.45-1-1s.45-1 1-1zm9 .88v4.23c0 .39.42.63.76.43l3.53-2.12c.32-.19.32-.66 0-.86l-3.53-2.12c-.34-.19-.76.05-.76.44z"
         />
@@ -306,15 +349,6 @@
     outline: none
     border: none
     padding: 0px
-    opacity: 1
-    transition: 0.05s ease-out
-    &:active
-      opacity: 0.7
-      transform: scale(0.95)
-  button.shuffle svg
-      transform: scaleY(0.85)
-  button.repeat svg
-      transform: scaleY(1.05)
   button.side-controls
     margin: 0px 18px
     svg
@@ -369,9 +403,9 @@
     padding-right: 4px
     box-sizing: content-box
     .high
-      transform: translateX(4px)
+      translate: 4px
     .low
-      transform: translateX(2px)
+      translate: 2px
   input.volume
     width: 100px
     margin-left: 0px
