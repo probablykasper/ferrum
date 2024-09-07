@@ -22,6 +22,7 @@
   import { assertUnreachable, checkShortcut } from '@/lib/helpers'
   import type { TrackID } from 'ferrum-addon/addon'
   import { fly } from 'svelte/transition'
+  import VirtualListBlock from './VirtualListBlock.svelte'
 
   let objectUrls: string[] = []
 
@@ -32,257 +33,229 @@
   })
 
   let show_history = false
-  $: items = getQueue($queue, show_history)
-  $: up_next_index = $queue.past.length + ($queue.current ? 1 : 0)
+  // $: items = getQueue($queue, show_history)
+  // $: up_next_index = $queue.past.length + ($queue.current ? 1 : 0)
 
-  function getQueue(queue: Queue, show_history: boolean) {
-    // reset selection/dragging if queue gets updated
-    selection.clear()
-    draggedIndexes = []
+  // function getQueue(queue: Queue, show_history: boolean) {
+  //   // reset selection/dragging if queue gets updated
+  //   selection.clear()
+  //   draggedIndexes = []
 
-    const newItems: (number | string)[] = []
-    let i = 0
+  //   const newItems: (number | string)[] = []
+  //   let i = 0
 
-    if (queue.past.length) {
-      newItems.push('History')
-      if (show_history) {
-        for (const _ of queue.past) {
-          newItems.push(i)
-          i++
-        }
-      } else {
-        i += queue.past.length
-      }
-    }
-    if (queue.current) {
-      i += 1
-    }
+  //   if (queue.past.length) {
+  //     newItems.push('History')
+  //     if (show_history) {
+  //       for (const _ of queue.past) {
+  //         newItems.push(i)
+  //         i++
+  //       }
+  //     } else {
+  //       i += queue.past.length
+  //     }
+  //   }
+  //   if (queue.current) {
+  //     i += 1
+  //   }
 
-    if (queue.userQueue.length) {
-      newItems.push('Up Next')
-      for (const _ of queue.userQueue) {
-        newItems.push(i)
-        i++
-      }
-    }
+  //   if (queue.userQueue.length) {
+  //     newItems.push('Up Next')
+  //     for (const _ of queue.userQueue) {
+  //       newItems.push(i)
+  //       i++
+  //     }
+  //   }
 
-    if (queue.autoQueue.length) {
-      newItems.push('Autoplay')
-      for (const _ of queue.autoQueue) {
-        newItems.push(i)
-        i++
-      }
-    }
+  //   if (queue.autoQueue.length) {
+  //     newItems.push('Autoplay')
+  //     for (const _ of queue.autoQueue) {
+  //       newItems.push(i)
+  //       i++
+  //     }
+  //   }
 
-    if (newItems.length === 0) {
-      newItems.push('Up Next')
-    }
+  //   if (newItems.length === 0) {
+  //     newItems.push('Up Next')
+  //   }
 
-    return newItems
-  }
+  //   return newItems
+  // }
 
-  let virtualList: VirtualListItemed<(typeof items)[number]>
+  // const selection = newSelection({
+  //   getItemCount: () => getQueueLength(),
+  //   scrollToItem: (i) => {
+  //     let itemIndex = 0
+  //     while (itemIndex <= i) {
+  //       if (typeof items[itemIndex] === 'string') i++
+  //       itemIndex++
+  //     }
+  //     virtualList.scrollToItem(i)
+  //   },
+  //   async onContextMenu() {
+  //     const indexes = selection.getSelectedIndexes()
+  //     const current_array = $queue.current ? [$queue.current.item] : []
+  //     const allItems = [...$queue.past, ...current_array, ...$queue.userQueue, ...$queue.autoQueue]
+  //     const allIds = allItems.map((item) => item.id)
+  //     await showTrackMenu(allIds, indexes, undefined, true)
+  //   },
+  // })
 
-  const selection = newSelection({
-    getItemCount: () => getQueueLength(),
-    scrollToItem: (i) => {
-      let itemIndex = 0
-      while (itemIndex <= i) {
-        if (typeof items[itemIndex] === 'string') i++
-        itemIndex++
-      }
-      virtualList.scrollToItem(i)
-    },
-    async onContextMenu() {
-      const indexes = selection.getSelectedIndexes()
-      const current_array = $queue.current ? [$queue.current.item] : []
-      const allItems = [...$queue.past, ...current_array, ...$queue.userQueue, ...$queue.autoQueue]
-      const allIds = allItems.map((item) => item.id)
-      await showTrackMenu(allIds, indexes, undefined, true)
-    },
-  })
+  // function removeFromQueue() {
+  //   if ($selection.count >= 1) {
+  //     queue.removeIndexes(selection.getSelectedIndexes())
+  //   }
+  // }
+  // onDestroy(ipcListen('context.Remove from Queue', removeFromQueue))
 
-  function removeFromQueue() {
-    if ($selection.count >= 1) {
-      queue.removeIndexes(selection.getSelectedIndexes())
-    }
-  }
-  onDestroy(ipcListen('context.Remove from Queue', removeFromQueue))
+  // let queueElement: HTMLElement
+  // export let onTrackInfo: (allIds: TrackID[], index: number) => void
 
-  let queueElement: HTMLElement
-  export let onTrackInfo: (allIds: TrackID[], index: number) => void
+  // const trackActionUnlisten = ipcListen('selectedTracksAction', (_, action) => {
+  //   let firstIndex = selection.findFirst()
 
-  const trackActionUnlisten = ipcListen('selectedTracksAction', (_, action) => {
-    let firstIndex = selection.findFirst()
+  //   if (firstIndex === null || !queueElement.contains(document.activeElement)) {
+  //     return
+  //   }
+  //   if (action === 'Play Next') {
+  //     const indexes = selection.getSelectedIndexes()
+  //     const ids = indexes.map((i) => queue.getByQueueIndex(i).id)
+  //     prependToUserQueue(ids)
+  //   } else if (action === 'Add to Queue') {
+  //     const indexes = selection.getSelectedIndexes()
+  //     const ids = indexes.map((i) => queue.getByQueueIndex(i).id)
+  //     appendToUserQueue(ids)
+  //   } else if (action === 'Get Info') {
+  //     const allItems = [...$queue.userQueue, ...$queue.autoQueue]
+  //     const allIds = allItems.map((item) => item.id)
+  //     onTrackInfo(allIds, firstIndex)
+  //   } else if (action === 'revealTrackFile') {
+  //     const track = methods.getTrack(queue.getByQueueIndex(firstIndex).id)
+  //     ipcRenderer.invoke('revealTrackFile', paths.tracksDir, track.file)
+  //   } else if (action === 'Remove from Playlist') {
+  //     return
+  //   } else if (action === 'Delete from Library') {
+  //     return
+  //   } else {
+  //     assertUnreachable(action)
+  //   }
+  // })
+  // onDestroy(trackActionUnlisten)
 
-    if (firstIndex === null || !queueElement.contains(document.activeElement)) {
-      return
-    }
-    if (action === 'Play Next') {
-      const indexes = selection.getSelectedIndexes()
-      const ids = indexes.map((i) => queue.getByQueueIndex(i).id)
-      prependToUserQueue(ids)
-    } else if (action === 'Add to Queue') {
-      const indexes = selection.getSelectedIndexes()
-      const ids = indexes.map((i) => queue.getByQueueIndex(i).id)
-      appendToUserQueue(ids)
-    } else if (action === 'Get Info') {
-      const allItems = [...$queue.userQueue, ...$queue.autoQueue]
-      const allIds = allItems.map((item) => item.id)
-      onTrackInfo(allIds, firstIndex)
-    } else if (action === 'revealTrackFile') {
-      const track = methods.getTrack(queue.getByQueueIndex(firstIndex).id)
-      ipcRenderer.invoke('revealTrackFile', paths.tracksDir, track.file)
-    } else if (action === 'Remove from Playlist') {
-      return
-    } else if (action === 'Delete from Library') {
-      return
-    } else {
-      assertUnreachable(action)
-    }
-  })
-  onDestroy(trackActionUnlisten)
+  // let dragLine: HTMLElement
+  // let draggedIndexes: number[] = []
+  // function onDragStart(e: DragEvent) {
+  //   if (e.dataTransfer) {
+  //     draggedIndexes = []
+  //     for (let i = 0; i < $selection.list.length; i++) {
+  //       if ($selection.list[i]) {
+  //         draggedIndexes.push(i)
+  //       }
+  //     }
+  //     e.dataTransfer.effectAllowed = 'move'
+  //     if (draggedIndexes.length === 1) {
+  //       const track = methods.getTrack(getByQueueIndex(draggedIndexes[0]).id)
+  //       dragGhost.setInnerText(track.artist + ' - ' + track.name)
+  //     } else {
+  //       dragGhost.setInnerText(draggedIndexes.length + ' items')
+  //     }
+  //     dragged.tracks = {
+  //       ids: draggedIndexes.map((i) => getByQueueIndex(i).id),
+  //       queueIndexes: draggedIndexes,
+  //     }
+  //     e.dataTransfer.setDragImage(dragGhost.dragEl, 0, 0)
+  //     e.dataTransfer.setData('ferrum.tracks', '')
+  //   }
+  // }
+  // let dragToIndex: null | number = null
+  // let dragTopOfItem = false
+  // function onDragOver(e: DragEvent, index: number) {
+  //   if (e.currentTarget && e.dataTransfer?.types[0] === 'ferrum.tracks' && index >= up_next_index) {
+  //     e.preventDefault()
+  //     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
+  //     if (e.pageY < rect.bottom - rect.height / 2) {
+  //       dragLine.style.top = rect.top - 1 + 'px'
+  //       dragToIndex = index
+  //       dragTopOfItem = true
+  //     } else {
+  //       dragLine.style.top = rect.bottom - 1 + 'px'
+  //       dragToIndex = index + 1
+  //       dragTopOfItem = false
+  //     }
+  //   }
+  // }
+  // function dragEndHandler() {
+  //   dragToIndex = null
+  // }
+  // function dropHandler() {
+  //   if (dragToIndex === null) {
+  //     return
+  //   }
+  //   if (dragged.tracks) {
+  //     const newSelection = dragged.tracks.queueIndexes
+  //       ? moveIndexes(dragged.tracks.queueIndexes, dragToIndex, dragTopOfItem)
+  //       : insertIds(dragged.tracks.ids, dragToIndex, dragTopOfItem)
+  //     for (let i = newSelection.from; i <= newSelection.to; i++) {
+  //       selection.add(i)
+  //     }
+  //     dragToIndex = null
+  //   }
+  // }
 
-  let dragLine: HTMLElement
-  let draggedIndexes: number[] = []
-  function onDragStart(e: DragEvent) {
-    if (e.dataTransfer) {
-      draggedIndexes = []
-      for (let i = 0; i < $selection.list.length; i++) {
-        if ($selection.list[i]) {
-          draggedIndexes.push(i)
-        }
-      }
-      e.dataTransfer.effectAllowed = 'move'
-      if (draggedIndexes.length === 1) {
-        const track = methods.getTrack(getByQueueIndex(draggedIndexes[0]).id)
-        dragGhost.setInnerText(track.artist + ' - ' + track.name)
-      } else {
-        dragGhost.setInnerText(draggedIndexes.length + ' items')
-      }
-      dragged.tracks = {
-        ids: draggedIndexes.map((i) => getByQueueIndex(i).id),
-        queueIndexes: draggedIndexes,
-      }
-      e.dataTransfer.setDragImage(dragGhost.dragEl, 0, 0)
-      e.dataTransfer.setData('ferrum.tracks', '')
-    }
-  }
-  let dragToIndex: null | number = null
-  let dragTopOfItem = false
-  function onDragOver(e: DragEvent, index: number) {
-    if (e.currentTarget && e.dataTransfer?.types[0] === 'ferrum.tracks' && index >= up_next_index) {
-      e.preventDefault()
-      const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
-      if (e.pageY < rect.bottom - rect.height / 2) {
-        dragLine.style.top = rect.top - 1 + 'px'
-        dragToIndex = index
-        dragTopOfItem = true
-      } else {
-        dragLine.style.top = rect.bottom - 1 + 'px'
-        dragToIndex = index + 1
-        dragTopOfItem = false
-      }
-    }
-  }
-  function dragEndHandler() {
-    dragToIndex = null
-  }
-  function dropHandler() {
-    if (dragToIndex === null) {
-      return
-    }
-    if (dragged.tracks) {
-      const newSelection = dragged.tracks.queueIndexes
-        ? moveIndexes(dragged.tracks.queueIndexes, dragToIndex, dragTopOfItem)
-        : insertIds(dragged.tracks.ids, dragToIndex, dragTopOfItem)
-      for (let i = newSelection.from; i <= newSelection.to; i++) {
-        selection.add(i)
-      }
-      dragToIndex = null
-    }
-  }
+  // function keydown(e: KeyboardEvent) {
+  //   if (checkShortcut(e, 'Backspace') && $selection.count >= 1) {
+  //     e.preventDefault()
+  //     removeFromQueue()
+  //   } else {
+  //     selection.handleKeyDown(e)
+  //   }
+  // }
 
-  function keydown(e: KeyboardEvent) {
-    if (checkShortcut(e, 'Backspace') && $selection.count >= 1) {
-      e.preventDefault()
-      removeFromQueue()
-    } else {
-      selection.handleKeyDown(e)
-    }
-  }
-
-  $: if ($page && virtualList) {
-    virtualList.refresh()
-  }
+  let scroll_container: HTMLDivElement
 </script>
 
-<aside bind:this={queueElement} transition:fly={{ x: '100%', duration: 150, opacity: 1 }}>
+<aside transition:fly={{ x: '100%', duration: 150, opacity: 1 }}>
   <div class="shadow" />
-  <div class="content">
-    <VirtualListItemed
-      bind:this={virtualList}
-      {items}
-      getKey={(i) => {
-        if (typeof i === 'number') {
-          return getByQueueIndex(i).qId
-        } else {
-          return i
-        }
-      }}
-      itemHeight={54}
+  <div class="content" bind:this={scroll_container}>
+    <h4 class="row">History</h4>
+    <VirtualListBlock
+      items={$queue.past}
       let:item
-      on:keydown={keydown}
-      on:mousedown-self={selection.clear}
+      get_key={(i) => i.qId}
+      item_height={54}
+      {scroll_container}
     >
-      {#if item === 'History'}
-        <button
-          class="row history-button"
-          type="button"
-          on:click={() => {
-            show_history = !show_history
-          }}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            class="transition duration-75 ease-out"
-            class:rotate-90={show_history}
-            height="24px"
-            viewBox="0 0 24 24"
-            width="24px"
-            fill="#e8eaed"
-            ><path d="M0 0h24v24H0z" fill="none" /><path
-              d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"
-            /></svg
-          >
-          <h4>{item}</h4>
-        </button>
-      {:else if typeof item === 'string'}
-        <h4 class="row" on:dragover={() => (dragToIndex = null)}>{item}</h4>
-      {:else}
-        <!-- @const here to fix bugged type guard -->
-        {@const index = item}
-        <!-- svelte-ignore a11y-click-events-have-key-events -->
-        <!-- svelte-ignore a11y-interactive-supports-focus -->
-        <div
-          class="row"
-          role="row"
-          class:selected={$selection.list[item] === true}
-          on:mousedown={(e) => selection.handleMouseDown(e, index)}
-          on:contextmenu={(e) => selection.handleContextMenu(e, index)}
-          on:click={(e) => selection.handleClick(e, index)}
-          draggable="true"
-          on:dragstart={onDragStart}
-          on:dragover={(e) => onDragOver(e, index)}
-          on:drop={dropHandler}
-          on:dragleave={dragEndHandler}
-          on:dragend={dragEndHandler}
-        >
-          <QueueItemComponent id={getByQueueIndex(item).id} />
-        </div>
-      {/if}
-    </VirtualListItemed>
-    <div class="drag-line" class:show={dragToIndex !== null} bind:this={dragLine} />
+      <div class="row">
+        <QueueItemComponent id={item.id} />
+      </div>
+    </VirtualListBlock>
+
+    <h4 class="row">Up Next</h4>
+    <VirtualListBlock
+      items={$queue.userQueue}
+      let:item
+      get_key={(i) => i.qId}
+      item_height={54}
+      {scroll_container}
+    >
+      <div class="row">
+        <QueueItemComponent id={item.id} />
+      </div>
+    </VirtualListBlock>
+
+    <h4 class="row">Autoplay</h4>
+    <VirtualListBlock
+      items={$queue.autoQueue}
+      let:item
+      get_key={(i) => i.qId}
+      item_height={54}
+      {scroll_container}
+      id="autoplay"
+    >
+      <div class="row">
+        <QueueItemComponent id={item.id} />
+      </div>
+    </VirtualListBlock>
   </div>
 </aside>
 
