@@ -1,12 +1,14 @@
 <script lang="ts" generics="T">
   import { onDestroy } from 'svelte'
 
-  export let items: T[]
+  // eslint-disable-next-line no-undef
+  type X = T
+
+  export let items: X[]
   export let item_height: number
   export let scroll_container: HTMLElement
-  export let get_key: (item: T, i: number) => number | string
+  export let get_key: (item: X, i: number) => number | string
   export let buffer = 0
-  export let id = ''
 
   $: height = items.length * item_height
   $: buffer_height = buffer * item_height
