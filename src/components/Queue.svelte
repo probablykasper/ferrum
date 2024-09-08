@@ -160,9 +160,17 @@
       return
     }
     if (dragged.tracks) {
+      const to_boundary = drag_to_index === autoplay_index
+      const to_user_queue_bottom = to_boundary && !drag_top_of_item
+      const to_auto_queue_top = to_boundary && drag_top_of_item
+      const create_user_queue = to_auto_queue_top && $queue.userQueue.length === 0
+
+      const to_user_queue =
+        drag_to_index < autoplay_index || to_user_queue_bottom || create_user_queue
+
       const new_selection = dragged.tracks.queueIndexes
-        ? moveIndexes(dragged.tracks.queueIndexes, drag_to_index, drag_top_of_item)
-        : insertIds(dragged.tracks.ids, drag_to_index, drag_top_of_item)
+        ? moveIndexes(dragged.tracks.queueIndexes, drag_to_index, to_user_queue)
+        : insertIds(dragged.tracks.ids, drag_to_index, to_user_queue)
       for (let i = new_selection.from; i <= new_selection.to; i++) {
         selection.add(i)
       }

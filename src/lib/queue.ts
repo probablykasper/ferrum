@@ -155,12 +155,9 @@ export function appendToUserQueue(trackIds: TrackID[]) {
   })
 }
 
-export function moveIndexes(indexes: number[], newIndex: number, bias_up = false) {
+export function moveIndexes(indexes: number[], newIndex: number, to_user_queue: boolean) {
   const items: QueueItem[] = []
   queue.update((q) => {
-    const user_queue_index = q.past.length + Number(!!q.current)
-    const had_user_queue = q.userQueue.length > 0
-
     // Sort descending. We need to remove the last indexes first to not mess up the indexes
     for (const index of indexes.sort((a, b) => b - a)) {
       const removed_item = removeIndex(q, index)
@@ -173,29 +170,18 @@ export function moveIndexes(indexes: number[], newIndex: number, bias_up = false
         items.push(newQueueItem(getByQueueIndex(index).id))
       }
     }
-    const user_queue_got_removed = had_user_queue && q.userQueue.length === 0
-    // If the user is dragging down to the bottom of the user queue, enable bias_up
-    // to make sure the user queue gets re-added
-    if (!bias_up && user_queue_got_removed && newIndex === user_queue_index) {
-      bias_up = true
-    }
     return q
   })
   // We sorted the indexes descending, so now reverse them
-  return insertItems(items.reverse(), newIndex, bias_up)
+  return insertItems(items.reverse(), newIndex, to_user_queue)
 }
 
-function insertItems(items: QueueItem[], index: number, bias_up = false) {
+function insertItems(items: QueueItem[], index: number, to_user_queue: boolean) {
   queue.update((q) => {
     const user_queue_index = q.past.length + Number(!!q.current)
     index -= user_queue_index
 
-    const to_auto_queue_start = q.userQueue.length === 0 && bias_up
-    const create_user_queue = to_auto_queue_start && index === 0
-
-    const to_user_queue_end = index === q.userQueue.length && !bias_up
-
-    if (index < q.userQueue.length || create_user_queue || to_user_queue_end) {
+    if (index < q.userQueue.length || to_user_queue) {
       q.userQueue.splice(index, 0, ...items)
       return q
     }
