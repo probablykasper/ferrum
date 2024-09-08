@@ -32,8 +32,6 @@ export async function showTrackMenu(
 }
 
 ipcRenderer.on('context.Play Next', (e, ids: TrackID[]) => {
-  console.log('ctxpl')
-
   prependToUserQueue(ids)
 })
 ipcRenderer.on('context.Add to Queue', (e, ids: TrackID[]) => {
