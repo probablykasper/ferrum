@@ -190,9 +190,7 @@
   >
     {#if $queue.past.length || $queue.current}
       <div class="relative">
-        <div
-          class="sticky top-0 z-1 flex flex h-[40px] items-center border-y bg-[hsl(226,35%,11%)]/50 backdrop-blur-md"
-        >
+        <div class="sticky top-0 z-1 flex flex h-[40px] items-center bg-black/50 backdrop-blur-md">
           <button
             on:click={() => (show_history = !show_history)}
             class="group ml-1.5 flex h-full items-center pl-1 font-semibold"
@@ -274,7 +272,7 @@
     {#if $queue.userQueue.length || queue.getQueueLength() === 0}
       <div class="relative">
         <h4
-          class="sticky top-0 z-1 flex h-[40px] items-center border-y bg-[hsl(226,35%,11%)]/50 pl-7 font-semibold backdrop-blur-md"
+          class="sticky top-0 z-1 flex h-[40px] items-center bg-black/50 pl-7 font-semibold backdrop-blur-md"
         >
           Up Next
         </h4>
@@ -313,7 +311,7 @@
     {#if $queue.autoQueue.length}
       <div class="relative">
         <h4
-          class="sticky top-0 z-1 flex h-[40px] items-center border-y bg-[hsl(226,35%,11%)]/50 pl-7 font-semibold backdrop-blur-md"
+          class="sticky top-0 z-1 flex h-[40px] items-center bg-black/50 pl-7 font-semibold backdrop-blur-md"
         >
           Autoplay
         </h4>
