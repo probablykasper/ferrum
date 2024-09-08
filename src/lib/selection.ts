@@ -12,16 +12,18 @@ type Selection = {
   count: number
   lastAdded: number | null
   shiftAnchor: number | null
+  minimumIndex: number
 }
-function createEmpty() {
-  return <Selection>{
-    list: [],
-    count: 0,
-    lastAdded: null,
-    shiftAnchor: null,
-  }
+function clear(selection: Selection) {
+  selection.list = []
+  selection.count = 0
+  selection.lastAdded = null
+  selection.shiftAnchor = null
 }
 function addIndex(selection: Selection, index: number) {
+  if (index < selection.minimumIndex) {
+    return
+  }
   if (selection.list[index] !== true) {
     selection.list[index] = true
     selection.count++
@@ -29,6 +31,15 @@ function addIndex(selection: Selection, index: number) {
   selection.lastAdded = index
 }
 function addRange(selection: Selection, from: number, to: number) {
+  if (from < selection.minimumIndex) {
+    if (to < selection.minimumIndex) {
+      return
+    }
+    from = selection.minimumIndex
+  }
+  if (to < selection.minimumIndex) {
+    to = selection.minimumIndex
+  }
   if (from < to) {
     for (let i = from; i <= to; i++) {
       addIndex(selection, i)
@@ -99,9 +110,16 @@ type SelectOptions = {
   getItemCount: () => number
   scrollToItem: (index: number) => void
   onContextMenu: () => void
+  minimumIndex?: number
 }
 export function newSelection(options: SelectOptions) {
-  const store = getterWritable(createEmpty())
+  const store = getterWritable<Selection>({
+    list: [],
+    count: 0,
+    lastAdded: null,
+    shiftAnchor: null,
+    minimumIndex: options.minimumIndex || 0,
+  })
   let possibleRowClick = false
 
   function mouseDownSelect(e: MouseEvent, index: number) {
@@ -121,15 +139,25 @@ export function newSelection(options: SelectOptions) {
     /** Get first selected index */
     findFirst() {
       const selection = store.get()
-      for (let i = 0; i < selection.list.length; i++) {
+      for (let i = selection.minimumIndex; i < selection.list.length; i++) {
         if (selection.list[i] === true) return i
       }
       return null
     },
+    /* Indexes lower than this cannot be selected */
+    setMinimumIndex(index: number) {
+      store.update((selection) => {
+        selection.minimumIndex = index
+        if (index > 0) {
+          removeRange(selection, 0, index - 1)
+        }
+        return selection
+      })
+    },
     getSelectedIndexes(): number[] {
       const selection = store.get()
       const indexes = []
-      for (let i = 0; i < selection.list.length; i++) {
+      for (let i = selection.minimumIndex; i < selection.list.length; i++) {
         if (selection.list[i]) {
           indexes.push(i)
         }
@@ -158,8 +186,8 @@ export function newSelection(options: SelectOptions) {
           addIndex(selection, maxIndex)
         } else if (selection.lastAdded !== null) {
           const newIndex = selection.lastAdded - 1
-          selection = createEmpty()
-          addIndex(selection, Math.max(0, newIndex))
+          clear(selection)
+          addIndex(selection, Math.max(selection.minimumIndex, newIndex))
         }
         return selection
       })
@@ -171,10 +199,10 @@ export function newSelection(options: SelectOptions) {
     goForward(maxIndex: number) {
       store.update((selection) => {
         if (selection.count === 0) {
-          addIndex(selection, 0)
+          addIndex(selection, selection.minimumIndex)
         } else if (selection.lastAdded !== null) {
           const newIndex = selection.lastAdded + 1
-          selection = createEmpty()
+          clear(selection)
           addIndex(selection, Math.min(newIndex, maxIndex))
         }
         return selection
@@ -190,7 +218,7 @@ export function newSelection(options: SelectOptions) {
         }
         if (selection.lastAdded <= anchor) {
           // add prev to selection
-          for (let i = selection.lastAdded; i >= 0; i--) {
+          for (let i = selection.lastAdded; i >= selection.minimumIndex; i--) {
             if (selection.list[i] !== true) {
               addIndex(selection, i)
               return selection
@@ -257,7 +285,10 @@ export function newSelection(options: SelectOptions) {
       })
     },
     clear() {
-      store.set(createEmpty())
+      store.update((selection) => {
+        clear(selection)
+        return selection
+      })
     },
 
     handleMouseDown(e: MouseEvent, index: number) {
@@ -285,36 +316,41 @@ export function newSelection(options: SelectOptions) {
       possibleRowClick = false
     },
     handleKeyDown(e: KeyboardEvent) {
+      const itemCount = options.getItemCount()
+      const { minimumIndex } = store.get()
+      if (itemCount === 0 || itemCount < minimumIndex) {
+        return
+      }
       if (checkShortcut(e, 'Escape')) {
         selection.clear()
       } else if (checkShortcut(e, 'A', { cmdOrCtrl: true })) {
-        selection.add(0, options.getItemCount() - 1)
+        selection.add(minimumIndex, itemCount - 1)
       } else if (checkShortcut(e, 'ArrowUp')) {
-        selection.goBackward(options.getItemCount() - 1)
-        options.scrollToItem(store.get().lastAdded || 0)
+        selection.goBackward(itemCount - 1)
+        options.scrollToItem(store.get().lastAdded || minimumIndex)
       } else if (checkShortcut(e, 'ArrowUp', { shift: true })) {
         selection.shiftSelectBackward()
-        options.scrollToItem(store.get().lastAdded || 0)
+        options.scrollToItem(store.get().lastAdded || minimumIndex)
       } else if (checkShortcut(e, 'ArrowUp', { alt: true })) {
         selection.clear()
-        selection.add(0)
-        options.scrollToItem(0)
+        selection.add(minimumIndex)
+        options.scrollToItem(minimumIndex)
       } else if (checkShortcut(e, 'ArrowUp', { shift: true, alt: true })) {
-        selection.shiftSelectTo(0)
-        options.scrollToItem(store.get().lastAdded || 0)
+        selection.shiftSelectTo(minimumIndex)
+        options.scrollToItem(store.get().lastAdded || minimumIndex)
       } else if (checkShortcut(e, 'ArrowDown')) {
-        selection.goForward(options.getItemCount() - 1)
-        options.scrollToItem(store.get().lastAdded || 0)
+        selection.goForward(itemCount - 1)
+        options.scrollToItem(store.get().lastAdded || minimumIndex)
       } else if (checkShortcut(e, 'ArrowDown', { shift: true })) {
-        selection.shiftSelectForward(options.getItemCount() - 1)
-        options.scrollToItem(store.get().lastAdded || 0)
+        selection.shiftSelectForward(itemCount - 1)
+        options.scrollToItem(store.get().lastAdded || minimumIndex)
       } else if (checkShortcut(e, 'ArrowDown', { alt: true })) {
         selection.clear()
-        selection.add(options.getItemCount() - 1)
-        options.scrollToItem(store.get().lastAdded || 0)
+        selection.add(itemCount - 1)
+        options.scrollToItem(store.get().lastAdded || minimumIndex)
       } else if (checkShortcut(e, 'ArrowDown', { shift: true, alt: true })) {
-        selection.shiftSelectTo(options.getItemCount() - 1)
-        options.scrollToItem(store.get().lastAdded || 0)
+        selection.shiftSelectTo(itemCount - 1)
+        options.scrollToItem(store.get().lastAdded || minimumIndex)
       } else {
         return
       }
