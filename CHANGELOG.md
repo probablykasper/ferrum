@@ -8,6 +8,7 @@
 - Add queue panel slide-out transition
 - Fix dragging tracks to up next/autoplay queue boundary
 - Fix button edge not clickable due to zoom
+- Fix rearranging queue items not working when dragging the cover artwork
 - Make queue dragline stable during scroll
 
 ## 0.18.0 - 2024 Jun 7

@@ -29,7 +29,7 @@
     </svg>
   {:else}
     <img
-      class="cover"
+      class="cover pointer-events-none"
       class:invisible={success === null}
       src="trackimg:{filePath}"
       alt=""
