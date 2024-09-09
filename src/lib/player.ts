@@ -76,8 +76,15 @@ export const coverSrc = (() => {
   }
 })()
 
-audio.ontimeupdate = () => {
+function update_time() {
   currentTime.set(audio.currentTime)
+  if (!audio.paused) {
+    requestAnimationFrame(update_time)
+  }
+}
+
+audio.onplay = () => {
+  requestAnimationFrame(update_time)
 }
 
 audio.addEventListener('error', async (e) => {
