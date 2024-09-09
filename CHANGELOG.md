@@ -6,6 +6,7 @@
 - Add playback history to queue panel
 - Redesign queue panel
 - Add queue panel slide-out transition
+- Make time & volume sliders look ok
 - Fix dragging tracks to up next/autoplay queue boundary
 - Fix button edge not clickable due to zoom
 - Fix rearranging queue items not working when dragging the cover artwork
