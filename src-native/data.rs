@@ -59,6 +59,9 @@ impl Data {
     }
   }
   pub fn load(is_dev: bool, library_path: Option<String>) -> UniResult<Data> {
+    if is_dev {
+      println!("Starting in dev mode");
+    }
     let paths = if is_dev {
       let library_dir = match library_path {
         Some(path) => PathBuf::from(path),
