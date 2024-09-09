@@ -179,10 +179,10 @@
     <div class="time-bar">
       <small class="current-time">{getDuration($currentTime)}</small>
       <Slider
-        class="w-full"
+        class="mx-1.5 w-full"
         value={$currentTime / $duration || 0}
         max={1}
-        step={0.0001}
+        update_on_drag={false}
         on_apply={(value) => {
           seek(value * $duration)
         }}
@@ -233,7 +233,7 @@
         </svg>
       {/if}
     </button>
-    <Slider class="mr-1 w-[100px]" bind:value={$volume} min={0} max={1} step={0.01} />
+    <Slider class="mr-2 w-[110px]" bind:value={$volume} max={1} />
     <button
       tabindex="-1"
       on:mousedown|preventDefault
