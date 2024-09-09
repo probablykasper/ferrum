@@ -10,6 +10,7 @@ use napi::Result;
 use serde::Serialize;
 use std::env;
 use std::io::Write;
+use std::path::PathBuf;
 use std::time::Instant;
 
 pub struct Data {
@@ -57,13 +58,16 @@ impl Data {
       None => &self.open_playlist_track_ids,
     }
   }
-  pub fn load(is_dev: bool) -> UniResult<Data> {
+  pub fn load(is_dev: bool, library_path: Option<String>) -> UniResult<Data> {
     let paths = if is_dev {
-      let appdata_dir = env::current_dir()
-        .unwrap()
-        .join("src-native")
-        .join("appdata");
-      let library_dir = appdata_dir.join("Library");
+      let library_dir = match library_path {
+        Some(path) => PathBuf::from(path),
+        None => env::current_dir()
+          .unwrap()
+          .join("src-native")
+          .join("appdata")
+          .join("Library"),
+      };
       Paths {
         library_dir: library_dir.clone(),
         tracks_dir: library_dir.join("Tracks"),
@@ -73,8 +77,13 @@ impl Data {
           .join("space.kasper.ferrum.dev"),
       }
     } else {
-      let music_dir = dirs::audio_dir().ok_or("Music folder not found")?;
-      let library_dir = music_dir.join("Ferrum");
+      let library_dir = match library_path {
+        Some(path) => PathBuf::from(path),
+        None => {
+          let music_dir = dirs::audio_dir().ok_or("Music folder not found")?;
+          music_dir.join("Ferrum")
+        }
+      };
       Paths {
         library_dir: library_dir.clone(),
         tracks_dir: library_dir.join("Tracks"),

@@ -4,6 +4,7 @@ import addon from '../../ferrum-addon'
 
 window.addon = addon
 window.isDev = is.dev
+window.libraryPath = process.env.LIBRARY
 window.isMac = is.mac
 window.isWindows = is.windows
 
