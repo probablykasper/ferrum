@@ -66,6 +66,7 @@
   >
     <div class="pointer-events-none relative w-full rounded-full bg-gray-700" bind:this={bar}>
       <div class="w-full overflow-hidden rounded-full">
+        <!-- I tried the Web Animation API, but somehow that resulted in higher CPU usage -->
         <div
           class="relative -left-full h-1 w-full rounded-full bg-gray-300 transition-colors duration-100 will-change-transform group-hover:bg-[hsl(217,100%,60%)] group-active:bg-[hsl(217,100%,60%)]"
           style:translate="{(internal_value / max) * 100}%"
