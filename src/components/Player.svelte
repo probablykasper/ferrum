@@ -19,22 +19,8 @@
   import { showTrackMenu } from '@/lib/menus'
   import { dragged } from '@/lib/drag-drop'
   import * as dragGhost from './DragGhost.svelte'
+  import Slider from './Slider.svelte'
 
-  let sliderBeingDragged = false
-  const sliderSteps = 400
-  let sliderValue = 0
-  $: {
-    if (!sliderBeingDragged && $duration > 0) {
-      sliderValue = ($currentTime / $duration) * sliderSteps
-    }
-  }
-  function sliderMousedown() {
-    sliderBeingDragged = true
-  }
-  function sliderMouseup() {
-    sliderBeingDragged = false
-    seek((sliderValue / sliderSteps) * $duration || 0)
-  }
   async function playingContextMenu() {
     const playing = queue.getCurrent()
     if (playing) {
@@ -192,22 +178,14 @@
     </div>
     <div class="time-bar">
       <small class="current-time">{getDuration($currentTime)}</small>
-      <input
-        type="range"
-        tabindex="-1"
-        class="time border-none"
-        min="0"
-        max={sliderSteps}
-        bind:value={sliderValue}
-        on:focus={(e) => {
-          if (e.relatedTarget instanceof HTMLElement) {
-            e.relatedTarget.focus()
-          } else {
-            e.currentTarget.blur()
-          }
+      <Slider
+        class="w-full"
+        value={$currentTime / $duration || 0}
+        max={1}
+        step={0.0001}
+        on_apply={(value) => {
+          seek(value * $duration)
         }}
-        on:mousedown={sliderMousedown}
-        on:mouseup={sliderMouseup}
       />
       <small class="duration">{getDuration($duration)}</small>
     </div>
@@ -255,22 +233,7 @@
         </svg>
       {/if}
     </button>
-    <input
-      type="range"
-      tabindex="-1"
-      class="volume border-none"
-      min="0"
-      max="1"
-      step="0.01"
-      bind:value={$volume}
-      on:focus={(e) => {
-        if (e.relatedTarget instanceof HTMLElement) {
-          e.relatedTarget.focus()
-        } else {
-          e.currentTarget.blur()
-        }
-      }}
-    />
+    <Slider class="mr-1 w-[100px]" bind:value={$volume} min={0} max={1} step={0.01} />
     <button
       tabindex="-1"
       on:mousedown|preventDefault
@@ -372,30 +335,6 @@
       opacity: 0.5
       min-width: 40px
       font-family: 'Open Sans' // for monospace digits
-  input
-    -webkit-appearance: none
-    background: transparent
-    padding: 5px 4px
-    margin: 0px 4px
-    &:focus
-      outline: none
-    &::-webkit-slider-thumb
-      -webkit-appearance: none
-      margin-top: 2px
-      transform: translate(0px, -50%)
-      height: 10px
-      width: 10px
-      border-radius: 100px
-      background: #ffffff
-      box-shadow: 0px 0px 5px 1px rgba(0,0,0,0.5)
-    &::-webkit-slider-runnable-track
-      width: 100%
-      height: 4px
-      background: #5e5e5e
-      border-radius: 100px
-      position: relative
-  input.time
-    width: 100%
   .on svg
     fill: var(--icon-highlight-color)
   button.volume-icon
@@ -406,7 +345,4 @@
       translate: 4px
     .low
       translate: 2px
-  input.volume
-    width: 100px
-    margin-left: 0px
 </style>
