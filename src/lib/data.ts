@@ -5,12 +5,13 @@ import { selection as pageSelection } from './page'
 import { queue } from './queue'
 
 export const isDev = window.isDev
+export const libraryPath = window.libraryPath
 export const isMac = window.isMac
 export const isWindows = window.isWindows
 const innerAddon = window.addon
 export const ItunesImport = innerAddon.ItunesImport
 
-call((addon) => addon.load_data(isDev))
+call((addon) => addon.load_data(isDev, libraryPath))
 
 function getErrorMessage(err: unknown): string {
   if (typeof err === 'object' && err !== null) {

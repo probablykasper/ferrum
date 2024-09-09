@@ -29,6 +29,10 @@ pub fn load_library(paths: &Paths) -> UniResult<Library> {
     Ok(_) => {}
     Err(err) => throw!("Error ensuring folder exists: {}", err),
   };
+  println!(
+    "Loading library at path: {}",
+    paths.library_dir.to_string_lossy()
+  );
 
   let versioned_library = match File::open(&paths.library_json) {
     Ok(mut file) => {

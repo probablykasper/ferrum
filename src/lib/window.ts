@@ -15,6 +15,7 @@ declare global {
   interface Window {
     addon: typeof Addon
     isDev: boolean
+    libraryPath?: string
     isMac: boolean
     isWindows: boolean
     joinPaths: (...args: string[]) => string
