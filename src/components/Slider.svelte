@@ -1,9 +1,7 @@
 <script lang="ts">
   import type { HTMLBaseAttributes } from 'svelte/elements'
   export let value: number
-  export let min = 0
   export let max = 100
-  export let step: number | undefined = undefined
   export let update_on_drag = true
   export let on_apply: (value: number) => void = () => {}
   export let klass = ''
@@ -12,66 +10,73 @@
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   interface $$Props extends HTMLBaseAttributes {
     value: number
-    min?: number
     max?: number
     step?: number
     class?: string
+    update_on_drag?: boolean
     on_apply?: (value: number) => void
   }
 
-  let element: HTMLInputElement
+  let bar: HTMLDivElement
   let dragging = false
 
   let internal_value = value
-  $: if (element && (update_on_drag || !dragging)) {
-    internal_value = value
-    element.value = String(value)
+  $: if (update_on_drag || !dragging) {
+    // Only update if the difference is 0.5px+
+    const diff_px = Math.abs(internal_value - value) * bar?.clientWidth * devicePixelRatio
+    if (diff_px > 0.5) {
+      internal_value = value
+    } else if (!bar) {
+      internal_value = value
+    }
+  }
+
+  function apply(e: MouseEvent) {
+    const delta = e.clientX - bar.getBoundingClientRect().left
+    internal_value = Math.min(max, Math.max(0, (delta / bar.clientWidth) * max))
+    if (update_on_drag || !dragging) {
+      value = internal_value
+    }
   }
 </script>
 
+<svelte:window
+  on:mousemove={(e) => {
+    if (dragging) {
+      apply(e)
+    }
+  }}
+  on:mouseup={(e) => {
+    if (dragging) {
+      dragging = false
+      apply(e)
+      on_apply(value)
+    }
+  }}
+/>
+<!-- We use custom mouse events because updating an <input> value causes reflow -->
 <div class="slider{` ${klass}`.trimEnd()}" {...$$restProps}>
+  <!-- svelte-ignore a11y-no-static-element-interactions -->
   <div
-    class="group relative flex h-5 w-full items-center justify-center py-2 px-1"
-    style:--slider-value="{((min + internal_value) / max) * 100}%"
+    class="group flex h-5 w-full items-center justify-center py-2 px-1"
+    on:mousedown={(e) => {
+      apply(e)
+      dragging = true
+    }}
   >
-    <input
-      bind:this={element}
-      type="range"
-      value={internal_value}
-      {min}
-      {max}
-      {step}
-      class="px-inherit absolute h-5 w-full appearance-none rounded-full border-none bg-transparent px-[inherit]"
-      on:focus={(e) => {
-        if (e.relatedTarget instanceof HTMLElement) {
-          e.relatedTarget.focus()
-        } else {
-          e.currentTarget.blur()
-        }
-      }}
-      on:input={(e) => {
-        internal_value = Number(e.currentTarget.value)
-        if (update_on_drag) {
-          value = internal_value
-        }
-      }}
-      on:mousedown={() => (dragging = true)}
-      on:mouseup={(e) => {
-        dragging = false
-        value = Number(e.currentTarget.value)
-        on_apply(value)
-      }}
-    />
-    <div class="pointer-events-none relative w-full">
+    <div class="pointer-events-none relative w-full rounded-full bg-gray-700" bind:this={bar}>
       <div class="w-full overflow-hidden rounded-full">
         <div
-          class="relative -left-full h-1 w-full rounded-full rounded-full bg-gray-300 transition duration-100 will-change-transform group-hover:bg-[hsl(217,100%,60%)]"
-          style:translate="var(--slider-value)"
+          class="relative -left-full h-1 w-full rounded-full bg-gray-300 transition-colors duration-100 will-change-transform group-hover:bg-[hsl(217,100%,60%)] group-active:bg-[hsl(217,100%,60%)]"
+          style:translate="{(internal_value / max) * 100}%"
         ></div>
       </div>
-      <div class="absolute top-0 flex size-full items-center" style:translate="var(--slider-value)">
+      <div
+        class="absolute top-0 flex size-full items-center will-change-transform"
+        style:translate="{(internal_value / max) * 100}%"
+      >
         <div
-          class="thumb size-2.5 -translate-x-[50%] scale-[0.4] rounded-full bg-gray-300 opacity-0 shadow-md transition duration-75 group-hover:scale-100 group-hover:opacity-100"
+          class="thumb size-2.5 -translate-x-[50%] scale-[0.4] rounded-full bg-gray-300 opacity-0 transition duration-75 group-hover:scale-100 group-hover:opacity-100 group-active:scale-100 group-active:opacity-100"
         ></div>
       </div>
     </div>
@@ -86,16 +91,5 @@
   }
   .thumb {
     box-shadow: 0px 0px 5px 1px rgba(0, 0, 0, 0.5);
-  }
-  ::-webkit-slider-runnable-track {
-    background-color: var(--color-gray-700);
-    border-radius: 100px;
-    height: 4px;
-  }
-  input::-webkit-slider-thumb {
-    appearance: none;
-    opacity: 0;
-    width: 0px;
-    height: 0px;
   }
 </style>
