@@ -1,21 +1,21 @@
-import { get, writable } from 'svelte/store'
+import { get } from 'svelte/store'
 import { page } from './data'
 import { showTrackMenu } from './menus'
 import { newSelection } from './selection'
 
-export const scrollToIndex = writable(null as number | null)
-
-let main_area_el: HTMLElement | undefined
-export const main_area = {
-  focus() {
-    main_area_el?.focus()
-  },
+export const tracklist_actions = {
+  scroll_to_index(_index: number) {},
+  focus() {},
 }
-
 export const selection = newSelection({
-  getItemCount: () => get(page).length,
-  scrollToItem: (i) => scrollToIndex.set(i),
-  onContextMenu: async () => {
+  getItemCount() {
+    return get(page).length
+  },
+  // scrollToItem: scroll_to_index,
+  scrollToItem(i) {
+    tracklist_actions.scroll_to_index?.(i)
+  },
+  async onContextMenu() {
     const indexes = selection.getSelectedIndexes()
     const ids = page.getTrackIds()
     await showTrackMenu(ids, indexes, { editable: get(page).tracklist.type === 'playlist' })

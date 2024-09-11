@@ -6,7 +6,7 @@
   import { writable } from 'svelte/store'
   import { setContext, tick } from 'svelte'
   import { dragged } from '../lib/drag-drop'
-  import { main_area } from '@/lib/page'
+  import { tracklist_actions } from '@/lib/page'
 
   const special = {
     children: ['root'],
@@ -87,7 +87,7 @@
       }}
       on:keydown={(e) => {
         if (e.key === 'Escape') {
-          main_area.focus()
+          tracklist_actions.focus()
         }
       }}
     />
@@ -98,7 +98,7 @@
       on:keydown={(e) => {
         if (e.key === 'Escape') {
           e.preventDefault()
-          main_area.focus()
+          tracklist_actions.focus()
         } else if (e.key == 'Home' || e.key == 'End' || e.key == 'PageUp' || e.key == 'PageDown') {
           e.preventDefault()
         } else {

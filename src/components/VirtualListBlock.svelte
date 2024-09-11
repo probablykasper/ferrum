@@ -45,7 +45,11 @@
     }
   }
 
-  function refresh() {
+  export function refresh() {
+    if (!main_element || !scroll_container) {
+      return
+    }
+
     let element_top = main_element.offsetTop
     let offset_parent = main_element.offsetParent
     while (offset_parent !== scroll_container && offset_parent instanceof HTMLElement) {
@@ -81,7 +85,7 @@
     scroll_event_element?.removeEventListener('scroll', refresh)
   })
 
-  export function scroll_to_index(index: number, offset: number) {
+  export function scroll_to_index(index: number, offset = 0) {
     const dummy = document.createElement('div')
     dummy.style.height = item_height + 'px'
     dummy.style.position = 'absolute'

@@ -228,7 +228,7 @@
           <VirtualListBlock
             bind:this={history_list}
             items={$queue.past}
-            get_key={(i) => i.qId}
+            get_key={(item) => item.qId}
             item_height={54}
             scroll_container={queue_element}
             let:item
@@ -288,7 +288,7 @@
         <VirtualListBlock
           bind:this={up_next_list}
           items={$queue.userQueue}
-          get_key={(i) => i.qId}
+          get_key={(item) => item.qId}
           item_height={54}
           scroll_container={queue_element}
           let:item
@@ -327,7 +327,7 @@
         <VirtualListBlock
           bind:this={autoplay_list}
           items={$queue.autoQueue}
-          get_key={(i) => i.qId}
+          get_key={(item) => item.qId}
           item_height={54}
           scroll_container={queue_element}
           let:item

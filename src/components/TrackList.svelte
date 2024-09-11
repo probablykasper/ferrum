@@ -7,7 +7,6 @@
     paths,
     isMac,
   } from '../lib/data'
-  import VirtualList from './VirtualList.svelte'
   import { newPlaybackInstance, playingId } from '../lib/player'
   import {
     getDuration,
@@ -17,13 +16,14 @@
     assertUnreachable,
   } from '../lib/helpers'
   import { appendToUserQueue, prependToUserQueue, queueVisible } from '../lib/queue'
-  import { selection, scrollToIndex, main_area } from '../lib/page'
+  import { selection, tracklist_actions } from '../lib/page'
   import { ipcListen, ipcRenderer } from '../lib/window'
-  import { onDestroy } from 'svelte'
+  import { onDestroy, onMount } from 'svelte'
   import { dragged } from '../lib/drag-drop'
   import * as dragGhost from './DragGhost.svelte'
   import type { TrackID } from 'ferrum-addon/addon'
   import { modalCount } from './Modal.svelte'
+  import VirtualListBlock, { scroll_container_keydown } from './VirtualListBlock.svelte'
 
   export let onTrackInfo: (allIds: TrackID[], index: number) => void
 
@@ -61,10 +61,6 @@
   ipcRenderer.on('Group Album Tracks', (_, checked) => {
     page.set_group_album_tracks(checked)
   })
-
-  $: if ($scrollToIndex !== null) {
-    virtualList.scrollToItem($scrollToIndex)
-  }
 
   function doubleClick(e: MouseEvent, index: number) {
     if (e.button === 0 && checkMouseShortcut(e)) {
@@ -194,15 +190,21 @@
     }
   }
 
-  let virtualList: VirtualList<ReturnType<typeof getItem>>
+  let virtual_list: VirtualListBlock<number>
 
-  $: if (virtualList) {
-    main_area.focus = virtualList.focus
+  $: if ($page && virtual_list) {
+    virtual_list.refresh()
   }
 
-  $: if ($page && virtualList) {
-    virtualList.refresh()
-  }
+  let scroll_container: HTMLElement
+  onMount(() => {
+    tracklist_actions.scroll_to_index = (index) => {
+      virtual_list.scroll_to_index(index)
+    }
+    tracklist_actions.focus = () => {
+      scroll_container.focus()
+    }
+  })
 </script>
 
 <div
@@ -328,66 +330,77 @@
       <span>Year</span>
     </div>
   </div>
-  <VirtualList
-    {getItem}
-    itemHeight={24}
-    itemCount={$page.length}
-    bind:this={virtualList}
-    isMain={-1}
+  <!-- svelte-ignore a11y-no-noninteractive-tabindex -->
+  <!-- svelte-ignore a11y-no-static-element-interactions -->
+  <!-- svelte-ignore a11y-autofocus -->
+  <div
+    bind:this={scroll_container}
+    class="relative h-full overflow-y-auto outline-none"
     on:keydown={keydown}
-    on:mousedown-self={selection.clear}
-    let:item={track}
-    let:index
+    on:mousedown|self={selection.clear}
+    tabindex="0"
+    autofocus
+    on:keydown={scroll_container_keydown}
   >
-    {#if track !== null}
-      <!-- svelte-ignore a11y-click-events-have-key-events -->
-      <!-- svelte-ignore a11y-interactive-supports-focus -->
-      <div
-        class="row"
-        role="row"
-        on:dblclick={(e) => doubleClick(e, index)}
-        on:mousedown={(e) => selection.handleMouseDown(e, index)}
-        on:contextmenu={(e) => selection.handleContextMenu(e, index)}
-        on:click={(e) => selection.handleClick(e, index)}
-        draggable="true"
-        on:dragstart={onDragStart}
-        on:dragover={(e) => onDragOver(e, index)}
-        on:drop={dropHandler}
-        on:dragend={dragEndHandler}
-        class:odd={index % 2 === 0}
-        class:selected={$selection.list[index] === true}
-        class:playing={track.id === $playingId}
-      >
-        <div class="c index">
-          {#if track.id === $playingId}
-            <svg
-              class="playing-icon inline"
-              xmlns="http://www.w3.org/2000/svg"
-              height="24"
-              viewBox="0 0 24 24"
-              width="24"
-            >
-              <path d="M0 0h24v24H0z" fill="none" />
-              <path
-                d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"
-              />
-            </svg>
-          {:else}
-            {index + 1}
-          {/if}
+    <!-- Using `let:item={i}` instead of `let:i` fixes drag-and-drop -->
+    <VirtualListBlock
+      bind:this={virtual_list}
+      items={Array.from({ length: $page.length }).map((_, i) => i)}
+      item_height={24}
+      {scroll_container}
+      let:item={i}
+    >
+      {@const track = getItem(i)}
+      {#if track !== null}
+        <!-- svelte-ignore a11y-click-events-have-key-events -->
+        <!-- svelte-ignore a11y-interactive-supports-focus -->
+        <div
+          class="row"
+          role="row"
+          on:dblclick={(e) => doubleClick(e, i)}
+          on:mousedown={(e) => selection.handleMouseDown(e, i)}
+          on:contextmenu={(e) => selection.handleContextMenu(e, i)}
+          on:click={(e) => selection.handleClick(e, i)}
+          draggable="true"
+          on:dragstart={onDragStart}
+          on:dragover={(e) => onDragOver(e, i)}
+          on:drop={dropHandler}
+          on:dragend={dragEndHandler}
+          class:odd={i % 2 === 0}
+          class:selected={$selection.list[i] === true}
+          class:playing={track.id === $playingId}
+        >
+          <div class="c index">
+            {#if track.id === $playingId}
+              <svg
+                class="playing-icon inline"
+                xmlns="http://www.w3.org/2000/svg"
+                height="24"
+                viewBox="0 0 24 24"
+                width="24"
+              >
+                <path d="M0 0h24v24H0z" fill="none" />
+                <path
+                  d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"
+                />
+              </svg>
+            {:else}
+              {i + 1}
+            {/if}
+          </div>
+          <div class="c name">{track.name}</div>
+          <div class="c playCount">{track.playCount || ''}</div>
+          <div class="c duration">{track.duration ? getDuration(track.duration) : ''}</div>
+          <div class="c artist">{track.artist}</div>
+          <div class="c albumName">{track.albumName || ''}</div>
+          <div class="c comments">{track.comments || ''}</div>
+          <div class="c genre">{track.genre || ''}</div>
+          <div class="c dateAdded">{formatDate(track.dateAdded)}</div>
+          <div class="c year">{track.year || ''}</div>
         </div>
-        <div class="c name">{track.name}</div>
-        <div class="c playCount">{track.playCount || ''}</div>
-        <div class="c duration">{track.duration ? getDuration(track.duration) : ''}</div>
-        <div class="c artist">{track.artist}</div>
-        <div class="c albumName">{track.albumName || ''}</div>
-        <div class="c comments">{track.comments || ''}</div>
-        <div class="c genre">{track.genre || ''}</div>
-        <div class="c dateAdded">{formatDate(track.dateAdded)}</div>
-        <div class="c year">{track.year || ''}</div>
-      </div>
-    {/if}
-  </VirtualList>
+      {/if}
+    </VirtualListBlock>
+  </div>
   <div class="drag-line" class:show={dragToIndex !== null} bind:this={dragLine} />
 </div>
 
