@@ -8,7 +8,7 @@
     isMac,
   } from '../lib/data'
   import VirtualList from './VirtualList.svelte'
-  import { newPlaybackInstance, playingId } from '../lib/player'
+  import { newPlaybackInstance, playingId } from '../lib/player.svelte'
   import {
     getDuration,
     formatDate,

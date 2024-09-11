@@ -1,3 +1,5 @@
+<svelte:options runes />
+
 <script lang="ts">
   import {
     stopped,
@@ -12,7 +14,7 @@
     skipToNext,
     coverSrc,
     volume,
-  } from '../lib/player'
+  } from '../lib/player.svelte'
   import { getDuration } from '../lib/helpers'
   import { queueVisible, toggleQueueVisibility, queue, shuffle, repeat } from '../lib/queue'
   import { isDev, methods } from '../lib/data'
@@ -177,10 +179,10 @@
       </button>
     </div>
     <div class="time-bar">
-      <small class="current-time">{getDuration($currentTime)}</small>
+      <small class="current-time">{getDuration(currentTime.value)}</small>
       <Slider
         class="mx-1.5 w-full"
-        value={$currentTime / $duration || 0}
+        value={currentTime.value / $duration || 0}
         max={1}
         update_on_drag={false}
         on_apply={(value) => {

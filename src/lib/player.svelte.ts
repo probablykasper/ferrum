@@ -3,7 +3,7 @@ import type { Writable } from 'svelte/store'
 import { clamp } from './helpers'
 import quit from './quit'
 import { methods, paths } from './data'
-import type { Track, TrackID } from '../../ferrum-addon'
+import type { Track, TrackID } from '../../ferrum-addon/main'
 import { ipcRenderer, joinPaths } from './window'
 import { queue, setNewQueue, next as queueNext, prev as queuePrev } from './queue'
 
@@ -20,7 +20,18 @@ export const stopped = (() => {
   }
 })()
 export const paused = writable(true)
-export const currentTime = writable(0)
+function createNumState(default_value: number) {
+  let value = $state(default_value)
+  return {
+    get value() {
+      return value
+    },
+    set value(new_value: number) {
+      value = new_value
+    },
+  }
+}
+export let currentTime = createNumState(0)
 export const duration = writable(0)
 export const playingTrack: Writable<Track | null> = writable(null)
 export const playingId = derived(queue, () => {
@@ -77,7 +88,7 @@ export const coverSrc = (() => {
 })()
 
 function update_time() {
-  currentTime.set(audio.currentTime)
+  currentTime.value = audio.currentTime
   if (!audio.paused) {
     requestAnimationFrame(update_time)
   }
@@ -254,7 +265,7 @@ export function seek(to: number, fastSeek = false) {
   } else {
     audio.currentTime = newTime
   }
-  currentTime.set(newTime)
+  currentTime.value = newTime
 }
 
 if (navigator.mediaSession) {

@@ -1,34 +1,35 @@
 <script lang="ts">
-  import type { HTMLBaseAttributes } from 'svelte/elements'
-  export let value: number
-  export let max = 100
-  export let update_on_drag = true
-  export let on_apply: (value: number) => void = () => {}
-  export let klass = ''
-  export { klass as class }
-
-  interface $$Props extends HTMLBaseAttributes {
+  let {
+    value = $bindable(),
+    max = 100,
+    update_on_drag = true,
+    on_apply = () => {},
+    class: klass = '',
+    ...restProps
+  }: {
     value: number
     max?: number
     step?: number
     class?: string
     update_on_drag?: boolean
     on_apply?: (value: number) => void
-  }
+  } = $props()
 
   let bar: HTMLDivElement
   let dragging = false
 
-  let internal_value = value
-  $: if (update_on_drag || !dragging) {
-    // Only update if the difference is 0.5px+
-    const diff_px = Math.abs(internal_value - value) * bar?.clientWidth * devicePixelRatio
-    if (diff_px > 0.5) {
-      internal_value = value
-    } else if (!bar) {
-      internal_value = value
+  let internal_value = $state(value)
+  $effect(() => {
+    if (update_on_drag || !dragging) {
+      // Only update if the difference is 0.5px+
+      const diff_px = Math.abs(internal_value - value) * bar?.clientWidth * devicePixelRatio
+      if (diff_px > 0.5) {
+        internal_value = value
+      } else if (!bar) {
+        internal_value = value
+      }
     }
-  }
+  })
 
   function apply(e: MouseEvent) {
     const delta = e.clientX - bar.getBoundingClientRect().left
@@ -54,7 +55,7 @@
   }}
 />
 <!-- We use custom mouse events because updating an <input> value causes reflow -->
-<div class="slider{` ${klass}`.trimEnd()}" {...$$restProps}>
+<div class="slider{` ${klass}`.trimEnd()}" {...restProps}>
   <!-- svelte-ignore a11y-no-static-element-interactions -->
   <div
     class="group flex h-5 w-full items-center justify-center py-2 px-1"

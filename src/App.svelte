@@ -10,7 +10,7 @@
   import { queueVisible } from './lib/queue'
   import { ipcListen, ipcRenderer } from '@/lib/window'
   import { importTracks, type PlaylistInfo, methods } from './lib/data'
-  import { playPause } from './lib/player'
+  import { playPause } from './lib/player.svelte'
   import DragGhost from './components/DragGhost.svelte'
   import ItunesImport from './components/ItunesImport.svelte'
   import type { TrackID } from 'ferrum-addon/addon'
