@@ -1,3 +1,15 @@
+<script lang="ts" context="module">
+  export function scroll_container_keydown(e: KeyboardEvent & { currentTarget: HTMLElement }) {
+    let prevent = true
+    if (e.key === 'Home') e.currentTarget.scrollTop = 0
+    else if (e.key === 'End') e.currentTarget.scrollTop = e.currentTarget.scrollHeight
+    else if (e.key === 'PageUp') e.currentTarget.scrollTop -= e.currentTarget.clientHeight
+    else if (e.key === 'PageDown') e.currentTarget.scrollTop += e.currentTarget.clientHeight
+    else prevent = false
+    if (prevent) e.preventDefault()
+  }
+</script>
+
 <script lang="ts" generics="T">
   import { onDestroy } from 'svelte'
 

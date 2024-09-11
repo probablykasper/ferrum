@@ -21,7 +21,7 @@
   import { assertUnreachable, checkShortcut } from '@/lib/helpers'
   import type { TrackID } from 'ferrum-addon/addon'
   import { fly } from 'svelte/transition'
-  import VirtualListBlock from './VirtualListBlock.svelte'
+  import VirtualListBlock, { scroll_container_keydown } from './VirtualListBlock.svelte'
 
   let objectUrls: string[] = []
 
@@ -186,6 +186,7 @@
     bind:this={queue_element}
     class="content relative -mt-px border-l outline-none"
     tabindex="-1"
+    on:keydown={scroll_container_keydown}
     on:keydown={(e) => {
       if (checkShortcut(e, 'Backspace') && $selection.count >= 1) {
         e.preventDefault()
