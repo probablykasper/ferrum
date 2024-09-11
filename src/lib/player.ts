@@ -19,9 +19,21 @@ export const stopped = (() => {
     },
   }
 })()
-export const paused = writable(true)
-export const currentTime = writable(0)
-export const duration = writable(0)
+export const timeRecord = writable({
+  elapsed: 0,
+  at_timestamp: Date.now(),
+  paused: true,
+  duration: 0,
+})
+function updateTimeDetails() {
+  timeRecord.update((record) => {
+    record.elapsed = audio.currentTime
+    record.at_timestamp = Date.now()
+    record.paused = audio.paused
+    record.duration = audio.duration
+    return record
+  })
+}
 export const playingTrack: Writable<Track | null> = writable(null)
 export const playingId = derived(queue, () => {
   const currentId = queue.getCurrent()?.id
@@ -76,16 +88,9 @@ export const coverSrc = (() => {
   }
 })()
 
-function update_time() {
-  currentTime.set(audio.currentTime)
-  if (!audio.paused) {
-    requestAnimationFrame(update_time)
-  }
-}
-
-audio.onplay = () => {
-  requestAnimationFrame(update_time)
-}
+audio.onplay = updateTimeDetails
+audio.onpause = updateTimeDetails
+audio.ontimeupdate = updateTimeDetails
 
 audio.addEventListener('error', async (e) => {
   stop()
@@ -111,7 +116,7 @@ function getPlayTime() {
 
 function startPlayback() {
   audio.play()
-  paused.set(false)
+  updateTimeDetails()
   startTime = Date.now()
   if (mediaSession) mediaSession.playbackState = 'playing'
 }
@@ -141,9 +146,7 @@ audio.oncanplay = () => {
   }
 }
 
-audio.ondurationchange = () => {
-  duration.set(audio.duration)
-}
+audio.ondurationchange = updateTimeDetails
 
 /** Saves play time if needed */
 function resetAndSavePlayTime() {
@@ -157,7 +160,7 @@ function resetAndSavePlayTime() {
 function pausePlayback() {
   waitingToPlay = false
   audio.pause()
-  paused.set(true)
+  updateTimeDetails()
   resetAndSavePlayTime()
   if (mediaSession) mediaSession.playbackState = 'paused'
 }
@@ -192,7 +195,7 @@ export function reload() {
 export function stop() {
   waitingToPlay = false
   audio.pause()
-  paused.set(true)
+  updateTimeDetails()
   resetAndSavePlayTime()
   stopped.set(true)
   seek(0)
@@ -254,7 +257,7 @@ export function seek(to: number, fastSeek = false) {
   } else {
     audio.currentTime = newTime
   }
-  currentTime.set(newTime)
+  updateTimeDetails()
 }
 
 if (navigator.mediaSession) {

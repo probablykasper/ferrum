@@ -1,10 +1,7 @@
 <script lang="ts">
   import {
     stopped,
-    paused,
     playPause,
-    duration,
-    currentTime,
     seek,
     playingTrack,
     playingId,
@@ -12,6 +9,7 @@
     skipToNext,
     coverSrc,
     volume,
+    timeRecord,
   } from '../lib/player'
   import { getDuration } from '../lib/helpers'
   import { queueVisible, toggleQueueVisibility, queue, shuffle, repeat } from '../lib/queue'
@@ -114,7 +112,7 @@
       </button>
 
       <button class="play-pause" on:click={playPause} tabindex="-1" on:mousedown|preventDefault>
-        {#if $paused}
+        {#if $timeRecord.paused}
           <svg
             xmlns="http://www.w3.org/2000/svg"
             class="parent-active-zoom"
@@ -177,17 +175,18 @@
       </button>
     </div>
     <div class="time-bar">
-      <small class="current-time">{getDuration($currentTime)}</small>
+      <small class="current-time">{getDuration($timeRecord.elapsed)}</small>
       <Slider
         class="mx-1.5 w-full"
-        value={$currentTime / $duration || 0}
+        value={$timeRecord.elapsed / $timeRecord.duration || 0}
+        growth_rate={$timeRecord.paused ? 0 : 1 / $timeRecord.duration}
         max={1}
         update_on_drag={false}
-        on_apply={(value) => {
-          seek(value * $duration)
+        on_user_change={(value) => {
+          seek(value * $timeRecord.duration)
         }}
       />
-      <small class="duration">{getDuration($duration)}</small>
+      <small class="duration">{getDuration($timeRecord.duration)}</small>
     </div>
   </div>
   <div class="right">
