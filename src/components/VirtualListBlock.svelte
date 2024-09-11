@@ -6,8 +6,9 @@
 
   export let items: X[]
   export let item_height: number
+  /** Must be a positioned element, like `position: relative` */
   export let scroll_container: HTMLElement
-  export let get_key: (item: X, i: number) => number | string
+  export let get_key: (item: X, i: number) => number | string = (_, i) => i
   export let buffer = 0
 
   $: height = items.length * item_height
@@ -21,6 +22,15 @@
   $: {
     items, item_height, buffer
     if (scroll_container && main_element) refresh()
+  }
+
+  const resize_observer = new ResizeObserver(refresh)
+  $: observe(scroll_container)
+  function observe(scroll_container: HTMLElement | undefined) {
+    resize_observer.disconnect()
+    if (scroll_container) {
+      resize_observer.observe(scroll_container)
+    }
   }
 
   function refresh() {
