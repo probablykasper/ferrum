@@ -81,7 +81,7 @@
 <div class="slider{` ${klass}`.trimEnd()}" {...$$restProps}>
   <!-- svelte-ignore a11y-no-static-element-interactions -->
   <div
-    class="group flex h-5 w-full items-center justify-center py-2 px-1"
+    class="group flex h-5 w-full items-center justify-center overflow-hidden py-2 px-1"
     on:mousedown={(e) => {
       apply(e)
       dragging = true
