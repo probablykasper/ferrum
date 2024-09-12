@@ -214,20 +214,6 @@
   on:dragleave={() => (dragToIndex = null)}
   class:no-selection={$selection.count === 0}
 >
-  <div class="relative pt-4 px-5 pb-5">
-    <div class:dragbar={$modalCount === 0 && isMac} class:queue-visible={$queueVisible} />
-    <h3 class="title pb-0.5 text-[19px] leading-none">
-      {#if $page.tracklist.id === 'root'}
-        Songs
-      {:else if $page.tracklist.type !== 'special'}
-        {$page.tracklist.name}
-      {/if}
-    </h3>
-    <div class="text-[13px] leading-4 opacity-70">{$page.length} songs</div>
-    {#if 'description' in $page.tracklist && $page.tracklist.description !== ''}
-      <div class="mt-2.5 text-sm text-[13px] opacity-70">{$page.tracklist.description}</div>
-    {/if}
-  </div>
   <div class="row table-header" class:desc={$page.sortDesc} role="row">
     <!-- svelte-ignore a11y-interactive-supports-focus -->
     <!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -412,19 +398,6 @@
   :global(:focus)
     .selected
       background-color: hsla(var(--hue), 70%, 46%, 1)
-
-  .dragbar
-    -webkit-app-region: drag
-    position: absolute
-    height: 40px
-    width: 100%
-    top: 0px
-    left: 0px
-    &.queue-visible
-      width: calc(100% - var(--right-sidebar-width))
-  .title
-    margin: 0px
-    font-weight: 500
   .tracklist
     display: flex
     flex-direction: column

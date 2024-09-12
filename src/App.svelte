@@ -9,7 +9,7 @@
   import PlaylistInfoModal from './components/PlaylistInfo.svelte'
   import { queueVisible } from './lib/queue'
   import { ipcListen, ipcRenderer } from '@/lib/window'
-  import { importTracks, type PlaylistInfo, methods, page } from './lib/data'
+  import { importTracks, type PlaylistInfo, methods, page, isMac } from './lib/data'
   import { playPause } from './lib/player'
   import DragGhost from './components/DragGhost.svelte'
   import ItunesImport from './components/ItunesImport.svelte'
@@ -185,11 +185,31 @@
 >
   <div class="meat">
     <Sidebar />
-    {#if $page.viewAs === 0}
-      <TrackList {onTrackInfo} />
-    {:else}
-      <ArtistList />
-    {/if}
+    <div class="flex size-full min-w-0 flex-col">
+      <div class="relative pt-4 px-5 pb-5">
+        <div
+          class="absolute top-0 left-0 h-10 w-full"
+          class:dragbar={$modalCount === 0 && isMac}
+          class:queue-visible={$queueVisible}
+        />
+        <h3 class="m-0 pb-0.5 text-[19px] font-medium leading-none">
+          {#if $page.tracklist.id === 'root'}
+            Songs
+          {:else if $page.tracklist.type !== 'special'}
+            {$page.tracklist.name}
+          {/if}
+        </h3>
+        <div class="text-[13px] leading-4 opacity-70">{$page.length} songs</div>
+        {#if 'description' in $page.tracklist && $page.tracklist.description !== ''}
+          <div class="mt-2.5 text-sm text-[13px] opacity-70">{$page.tracklist.description}</div>
+        {/if}
+      </div>
+      {#if $page.viewAs === 0}
+        <TrackList {onTrackInfo} />
+      {:else}
+        <ArtistList />
+      {/if}
+    </div>
     {#if $queueVisible}
       <Queue {onTrackInfo} />
     {/if}
@@ -267,6 +287,10 @@
     height: 100%
     top: 0px
     left: 0px
+  .dragbar
+    -webkit-app-region: drag
+    &.queue-visible
+      width: calc(100% - var(--right-sidebar-width))
   .drag-overlay
     display: flex
     align-items: center
