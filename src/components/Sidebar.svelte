@@ -143,7 +143,13 @@
           (childId) => $trackListsDetailsMap[childId],
         )}
         on_open={(item) => {
-          if ($page.id !== item.id) page.openPlaylist(item.id, item.view_as ?? 0)
+          if ($page.id !== item.id) {
+            if (item.id === 'root') {
+              page.openPlaylist('root', item.view_as ?? special[special.length - 1].view_as)
+            } else {
+              page.openPlaylist(item.id, item.view_as ?? 0)
+            }
+          }
         }}
       />
     </nav>
