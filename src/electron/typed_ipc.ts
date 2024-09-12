@@ -119,6 +119,9 @@ type Events = {
       | 'Delete from Library',
   ) => void
 
+  'Select Next List': () => void
+  'Select Previous List': () => void
+
   'context.playlist.edit': (id: TrackID) => void
   'context.playlist.delete': (id: TrackID) => void
   'context.Remove from Queue': () => void

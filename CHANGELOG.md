@@ -6,6 +6,7 @@
 - Add playback history to queue panel
 - Redesign queue panel
 - Add queue panel slide-out transition
+- Add `Ctrl+Tab` and `Ctrl+Shift+Tab` to select next/previous playlist
 - Make time & volume sliders look ok
 - Fix dragging tracks to up next/autoplay queue boundary
 - Fix button edge not clickable due to zoom

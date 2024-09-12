@@ -2,9 +2,9 @@
   import SidebarItems, { type SidebarItemHandle } from './SidebarItems.svelte'
   import Filter from './Filter.svelte'
   import { isMac, trackListsDetailsMap, page, movePlaylist } from '../lib/data'
-  import { ipcRenderer } from '../lib/window'
+  import { ipcListen, ipcRenderer } from '../lib/window'
   import { writable } from 'svelte/store'
-  import { setContext, tick } from 'svelte'
+  import { onDestroy, setContext, tick } from 'svelte'
   import { dragged } from '../lib/drag-drop'
   import { tracklist_actions } from '@/lib/page'
 
@@ -13,6 +13,19 @@
   }
   let viewport: HTMLElement
   const itemHandle = setContext('itemHandle', writable(null as SidebarItemHandle | null))
+
+  onDestroy(
+    ipcListen('Select Previous List', () => {
+      console.log('Select Previous List')
+      $itemHandle?.handleKey(new KeyboardEvent('keydown', { key: 'ArrowUp' }))
+    }),
+  )
+  onDestroy(
+    ipcListen('Select Next List', () => {
+      console.log('Select Next List')
+      $itemHandle?.handleKey(new KeyboardEvent('keydown', { key: 'ArrowDown' }))
+    }),
+  )
 
   async function onContextMenu() {
     await ipcRenderer.invoke('showTracklistMenu', {

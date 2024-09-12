@@ -253,6 +253,23 @@ export function initMenuBar(app: App, mainWindow: BrowserWindow) {
     {
       label: 'Window',
       submenu: [
+        {
+          id: 'Select Next List',
+          label: 'Select Next List',
+          accelerator: 'Ctrl+Tab',
+          click: () => {
+            webContents.send('Select Next List')
+          },
+        },
+        {
+          id: 'Select Previous List',
+          label: 'Select Previous List',
+          accelerator: 'Ctrl+Shift+Tab',
+          click: () => {
+            webContents.send('Select Previous List')
+          },
+        },
+        { type: 'separator', visible: is.mac },
         { role: 'minimize' },
         { role: 'zoom' },
         { type: 'separator', visible: is.mac },
