@@ -498,6 +498,7 @@
       .dateAdded
         width: 130px
         min-width: 140px
+        font-variant-numeric: tabular-nums
       .year
         width: 0px
         min-width: 47px

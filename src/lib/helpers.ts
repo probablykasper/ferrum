@@ -16,18 +16,11 @@ export function formatDate(timestamp: number) {
   const monthText = (month < 10 ? '0' : '') + month
   const day = date.getDate()
   const dayText = (day < 10 ? '0' : '') + day
-  let hours = date.getHours()
-  const mins = date.getMinutes()
-  const minsText = (mins < 10 ? '0' : '') + mins
-  let ampm = 'AM'
-  if (hours > 11) {
-    hours -= 12
-    ampm = 'PM'
-  }
-  if (hours === 0) hours = 12
-  return (
-    date.getFullYear() + '/' + monthText + '/' + dayText + ' ' + hours + ':' + minsText + ' ' + ampm
-  )
+  const clock = date.toLocaleTimeString(undefined, {
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+  return date.getFullYear() + '/' + monthText + '/' + dayText + ' ' + clock
 }
 
 type ShortcutOptions = {
