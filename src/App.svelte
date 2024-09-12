@@ -16,6 +16,7 @@
   import type { TrackID } from 'ferrum-addon/addon'
   import { modalCount } from './components/Modal.svelte'
   import QuickNav from './components/QuickNav.svelte'
+  import { checkShortcut } from './lib/helpers'
 
   ipcRenderer.emit('appLoaded')
 
@@ -166,7 +167,21 @@
   <title>Ferrum</title>
 </svelte:head>
 
-<main on:dragenter|capture={dragEnterOrOver}>
+<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
+<main
+  on:dragenter|capture={dragEnterOrOver}
+  on:keydown={(e) => {
+    if (e.target) {
+      if (checkShortcut(e, 'ArrowUp', { cmdOrCtrl: true })) {
+        e.preventDefault()
+        ipcRenderer.invoke('volume_change', true)
+      } else if (checkShortcut(e, 'ArrowDown', { cmdOrCtrl: true })) {
+        e.preventDefault()
+        ipcRenderer.invoke('volume_change', false)
+      }
+    }
+  }}
+>
   <div class="meat">
     <Sidebar />
     <TrackList {onTrackInfo} />

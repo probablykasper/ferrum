@@ -150,6 +150,7 @@ type Commands = {
   revealTrackFile: (...paths: string[]) => void
   showTrackMenu: (options: ShowTrackMenuOptions) => void
   showTracklistMenu: (options: { id: string; isFolder: boolean; isRoot: boolean }) => void
+  volume_change: (up: boolean) => void
 
   'update:Shuffle': (checked: boolean) => void
   'update:Repeat': (checked: boolean) => void

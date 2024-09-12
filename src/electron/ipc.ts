@@ -14,15 +14,23 @@ ipcMain.handle('showMessageBox', async (e, attached, options) => {
 
 ipcMain.handle('showOpenDialog', async (e, attached, options) => {
   const window = BrowserWindow.fromWebContents(e.sender)
-  if (attached === true && window) {
+  if (attached && window) {
     return await dialog.showOpenDialog(window, options)
   } else {
     return await dialog.showOpenDialog(options)
   }
 })
 
-ipcMain.handle('revealTrackFile', async (e, ...paths) => {
+ipcMain.handle('revealTrackFile', async (_e, ...paths) => {
   shell.showItemInFolder(path.join(...paths))
+})
+
+ipcMain.handle('volume_change', async (_e, up) => {
+  if (up) {
+    Menu.getApplicationMenu()?.getMenuItemById('Volume Up')?.click()
+  } else {
+    Menu.getApplicationMenu()?.getMenuItemById('Volume Down')?.click()
+  }
 })
 
 ipcMain.handle('showTrackMenu', (e, options) => {

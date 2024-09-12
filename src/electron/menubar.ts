@@ -233,6 +233,7 @@ export function initMenuBar(app: App, mainWindow: BrowserWindow) {
         },
         { type: 'separator' },
         {
+          id: 'Volume Up',
           label: 'Volume Up',
           accelerator: 'CmdOrCtrl+Up',
           click: () => {
@@ -240,6 +241,7 @@ export function initMenuBar(app: App, mainWindow: BrowserWindow) {
           },
         },
         {
+          id: 'Volume Down',
           label: 'Volume Down',
           accelerator: 'CmdOrCtrl+Down',
           click: () => {
