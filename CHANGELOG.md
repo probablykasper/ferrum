@@ -8,6 +8,7 @@
 - Add queue panel slide-out transition
 - Add `Ctrl+Tab` and `Ctrl+Shift+Tab` to select next/previous playlist
 - Make time & volume sliders look ok
+- Small design updates to tracklist header & filter textbox
 - Fix dragging tracks to up next/autoplay queue boundary
 - Fix button edge not clickable due to zoom
 - Fix rearranging queue items not working when dragging the cover artwork

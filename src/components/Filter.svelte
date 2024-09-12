@@ -16,7 +16,7 @@
   on:keydown
   bind:this={filterInput}
   type="text"
-  class="search text-[13px] leading-none"
+  class="search rounded-[5px] text-[13px] leading-none"
   class:on={$filter}
   bind:value={$filter}
   placeholder="Filter"
@@ -28,12 +28,12 @@
     width: calc(100% - 15px*2)
     margin: auto
     font-family: inherit
-    padding: 5px 12px
+    padding: 5px 10px
     box-sizing: border-box
     color: inherit
     background-color: hsla(var(--hue), 68%, 90%, 0.08)
     outline: none
-    border: 1px solid rgba(255, 255, 255, 0.15)
+    border: 1px solid rgba(255, 255, 255, 0.1)
     &:focus
       background-color: hsla(var(--hue), 65%, 60%, 0.2)
       outline: 2px solid var(--accent-1)

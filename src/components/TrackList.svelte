@@ -214,7 +214,7 @@
   on:dragleave={() => (dragToIndex = null)}
   class:no-selection={$selection.count === 0}
 >
-  <div class="header">
+  <div class="relative pt-4 px-5 pb-5">
     <div class:dragbar={$modalCount === 0 && isMac} class:queue-visible={$queueVisible} />
     <h3 class="title pb-0.5 text-[19px] leading-none">
       {#if $page.tracklist.id === 'root'}
@@ -223,9 +223,9 @@
         {$page.tracklist.name}
       {/if}
     </h3>
-    <div class="info leading-none">{$page.length} songs</div>
+    <div class="text-[13px] leading-4 opacity-70">{$page.length} songs</div>
     {#if 'description' in $page.tracklist && $page.tracklist.description !== ''}
-      <div class="description">{$page.tracklist.description}</div>
+      <div class="mt-2.5 text-sm text-[13px] opacity-70">{$page.tracklist.description}</div>
     {/if}
   </div>
   <div class="row table-header" class:desc={$page.sortDesc} role="row">
@@ -413,12 +413,6 @@
     .selected
       background-color: hsla(var(--hue), 70%, 46%, 1)
 
-  .header
-    padding-left: 20px
-    padding-right: 20px
-    padding-top: 15px
-    margin-bottom: 20px
-    position: relative
   .dragbar
     -webkit-app-region: drag
     position: absolute
@@ -431,14 +425,6 @@
   .title
     margin: 0px
     font-weight: 500
-  .info
-    font-size: 13px
-    opacity: 0.7
-  .description
-    margin-top: 10px
-    font-size: 14px
-    opacity: 0.7
-
   .tracklist
     display: flex
     flex-direction: column
