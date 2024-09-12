@@ -318,14 +318,12 @@
   </div>
   <!-- svelte-ignore a11y-no-noninteractive-tabindex -->
   <!-- svelte-ignore a11y-no-static-element-interactions -->
-  <!-- svelte-ignore a11y-autofocus -->
   <div
     bind:this={scroll_container}
     class="relative h-full overflow-y-auto outline-none"
     on:keydown={keydown}
     on:mousedown|self={selection.clear}
     tabindex="0"
-    autofocus
     on:keydown={scroll_container_keydown}
   >
     <!-- Using `let:item={i}` instead of `let:i` fixes drag-and-drop -->

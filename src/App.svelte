@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onDestroy } from 'svelte'
+  import { onDestroy, onMount } from 'svelte'
   import { fade } from 'svelte/transition'
   import TrackList from './components/TrackList.svelte'
   import Player from './components/Player.svelte'
@@ -18,6 +18,7 @@
   import QuickNav from './components/QuickNav.svelte'
   import { checkShortcut } from './lib/helpers'
   import ArtistList from './components/ArtistList.svelte'
+  import { tracklist_actions } from './lib/page'
 
   ipcRenderer.emit('appLoaded')
 
@@ -161,6 +162,10 @@
       }
     }),
   )
+
+  onMount(() => {
+    tracklist_actions.focus()
+  })
 </script>
 
 <svelte:window on:keydown={keydown} />
