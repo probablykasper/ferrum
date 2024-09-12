@@ -8,9 +8,6 @@
   <a href="https://github.com/probablykasper/ferrum/releases"><b>Download for Mac, Windows or Linux</b></a>
 </p>
 
-## ⚠️ Warning
-Ferrum is in development and might get updates that no longer work with your library.
-
 <br/>
 
 ![Screenshot](assets/screenshot.png)
