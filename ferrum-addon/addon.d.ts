@@ -105,13 +105,18 @@ export interface Special {
 export const enum SpecialTrackListName {
   Root = 0
 }
-export declare function open_playlist(openPlaylistId: string): void
+export declare function open_playlist(openPlaylistId: string, viewAs?: ViewAs | undefined | null): void
 export declare function get_page_track(index: number): Track
 export declare function get_page_track_id(index: number): string
 export declare function refresh_page(): void
 export declare function get_page_track_ids(): Array<TrackID>
+export const enum ViewAs {
+  Songs = 0,
+  Artists = 1
+}
 export interface PageInfo {
   id: string
+  viewAs: ViewAs
   tracklist: TrackList
   sortKey: string
   sortDesc: boolean

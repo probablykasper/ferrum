@@ -8,21 +8,20 @@
   import { dragged } from '../lib/drag-drop'
   import { tracklist_actions } from '@/lib/page'
 
-  const special = {
-    children: ['root'],
-  }
+  const special = [
+    { id: 'root', name: 'Songs', kind: 'special', view_as: 0 },
+    { id: 'root', name: 'Artists', kind: 'special', view_as: 1 },
+  ]
   let viewport: HTMLElement
   const itemHandle = setContext('itemHandle', writable(null as SidebarItemHandle | null))
 
   onDestroy(
     ipcListen('Select Previous List', () => {
-      console.log('Select Previous List')
       $itemHandle?.handleKey(new KeyboardEvent('keydown', { key: 'ArrowUp' }))
     }),
   )
   onDestroy(
     ipcListen('Select Next List', () => {
-      console.log('Select Next List')
       $itemHandle?.handleKey(new KeyboardEvent('keydown', { key: 'ArrowDown' }))
     }),
   )
@@ -33,9 +32,6 @@
       isFolder: false,
       isRoot: true,
     })
-  }
-  function open(id: string) {
-    if ($page.id !== id) page.openPlaylist(id)
   }
 
   let rootDroppable = false
@@ -129,18 +125,26 @@
       <div class="focuser" tabindex="0" on:focus={focuser} />
       <div class="spacer" />
       <SidebarItems
-        trackList={special}
-        on:selectDown={() => {
+        parentId={null}
+        children={special}
+        on_open={(item) => {
+          page.openPlaylist('root', item.view_as ?? 0)
+        }}
+        on_select_down={() => {
           if ($trackListsDetailsMap.root.children && $trackListsDetailsMap.root.children[0]) {
-            open($trackListsDetailsMap.root.children[0])
+            page.openPlaylist($trackListsDetailsMap.root.children[0], 0)
           }
         }}
-        parentId={null}
       />
       <div class="spacer" />
       <SidebarItems
-        trackList={{ children: $trackListsDetailsMap['root'].children || [] }}
         parentId={$trackListsDetailsMap['root'].id}
+        children={($trackListsDetailsMap['root'].children || []).map(
+          (childId) => $trackListsDetailsMap[childId],
+        )}
+        on_open={(item) => {
+          if ($page.id !== item.id) page.openPlaylist(item.id, item.view_as ?? 0)
+        }}
       />
     </nav>
   </div>

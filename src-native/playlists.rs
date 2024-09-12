@@ -135,7 +135,7 @@ fn delete_track_list(data: &mut Data, id: String) -> Result<()> {
     data.library.trackLists.remove(id);
   }
   if ids.contains(&data.open_playlist_id) {
-    data.open_playlist("root".to_string())?;
+    data.open_playlist("root".to_string(), None)?;
   }
   Ok(())
 }

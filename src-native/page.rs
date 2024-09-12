@@ -11,9 +11,9 @@ use std::time::Instant;
 
 #[napi(js_name = "open_playlist")]
 #[allow(dead_code)]
-pub fn open_playlist(open_playlist_id: String, env: Env) -> Result<()> {
+pub fn open_playlist(open_playlist_id: String, view_as: Option<ViewAs>, env: Env) -> Result<()> {
   let data: &mut Data = get_data(&env)?;
-  data.open_playlist(open_playlist_id)
+  data.open_playlist(open_playlist_id, view_as)
 }
 
 #[napi(js_name = "get_page_track")]
@@ -97,9 +97,21 @@ pub fn get_track_ids(data: &Data) -> UniResult<Vec<TrackID>> {
   Ok(ids)
 }
 
+#[napi]
+pub enum ViewAs {
+  Songs,
+  Artists,
+}
+impl Default for ViewAs {
+  fn default() -> Self {
+    Self::Songs
+  }
+}
+
 #[napi(object)]
 pub struct PageInfo {
   pub id: String,
+  pub view_as: ViewAs,
   #[napi(ts_type = "TrackList")]
   pub tracklist: JsUnknown,
   pub sort_key: String,
@@ -115,6 +127,7 @@ pub fn get_page_info(env: Env) -> Result<PageInfo> {
 
   Ok(PageInfo {
     id: data.open_playlist_id.clone(),
+    view_as: data.view_as,
     tracklist: env.to_js_value(tracklist)?,
     sort_key: data.sort_key.clone(),
     sort_desc: data.sort_desc,

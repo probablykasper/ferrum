@@ -29,27 +29,21 @@
 </script>
 
 <script lang="ts">
-  import type { TrackListDetails } from '../../ferrum-addon'
+  import type { TrackListDetails, ViewAs } from '../../ferrum-addon'
   import { type Writable, writable } from 'svelte/store'
-  import { createEventDispatcher } from 'svelte'
   import { getContext } from 'svelte'
   import { dragged } from '../lib/drag-drop'
   import * as dragGhost from './DragGhost.svelte'
   import { ipcRenderer } from '@/lib/window'
   import { checkShortcut } from '@/lib/helpers'
 
-  export let parentId: string | null
   export let show = true
-  export let trackList: { children: string[] }
+  export let parentId: string | null
   export let preventDrop = false
+  export let children: (TrackListDetails & { view_as?: ViewAs })[]
 
   export let level = 0
-  $: childLists = trackList.children.map((childId) => {
-    return $trackListsDetailsMap[childId]
-  })
-  function open(id: string) {
-    if ($page.id !== id) page.openPlaylist(id)
-  }
+  export let on_open: (item: { id: string; view_as?: ViewAs }) => void
   async function tracklistContextMenu(id: string, isFolder: boolean) {
     await ipcRenderer.invoke('showTracklistMenu', { id, isFolder, isRoot: false })
   }
@@ -59,11 +53,11 @@
     return list.children && list.children.length > 0 && $shownFolders.has(id)
   }
 
-  const dispatch = createEventDispatcher<{ selectDown: null }>()
-  function selectFirst(in_id: string) {
-    const children = $trackListsDetailsMap[in_id].children
-    if (children && children[0]) {
-      open(children[0])
+  export let on_select_down = () => {}
+  function selectFirst(item: TrackListDetails) {
+    const child_id = item.children?.[0]
+    if (child_id) {
+      on_open($trackListsDetailsMap[child_id])
     }
   }
   function selectLast(in_id: string) {
@@ -71,31 +65,38 @@
     if (children && (hasShowingChildren(in_id) || in_id === 'root')) {
       selectLast(children[children.length - 1])
     } else {
-      open(in_id)
+      on_open($trackListsDetailsMap[in_id])
     }
   }
   function selectUp(i: number) {
-    const prevId = trackList.children[i - 1] || null
+    const prevId = children[i - 1]?.id || null
     if (i === 0 && parentId) {
-      open(parentId)
+      on_open({ id: parentId })
     } else if (prevId && hasShowingChildren(prevId)) {
       selectLast(prevId)
     } else if (prevId) {
-      open(prevId)
+      on_open({ id: prevId })
     }
   }
   function selectDown(i: number) {
-    if (hasShowingChildren(trackList.children[i])) {
-      selectFirst(trackList.children[i])
-    } else if (trackList.children[i + 1]) {
-      open(trackList.children[i + 1])
+    if (hasShowingChildren(children[i].id)) {
+      selectFirst(children[i])
+    } else if (children[i + 1]) {
+      console.trace()
+      on_open(children[i + 1])
     } else {
-      dispatch('selectDown')
+      on_select_down()
     }
   }
 
   export function handleKey(e: KeyboardEvent) {
-    const index = trackList.children.findIndex((id) => id === $page.tracklist.id)
+    const index = children.findIndex((child) => {
+      if (child.id === 'root') {
+        return child.id === $page.tracklist.id && child.view_as === $page.viewAs
+      } else {
+        return child.id === $page.tracklist.id
+      }
+    })
     if (index < 0) {
       return
     }
@@ -103,7 +104,7 @@
     if (checkShortcut(e, 'ArrowUp')) {
       selectUp(index)
     } else if (checkShortcut(e, 'ArrowUp', { alt: true })) {
-      open('root')
+      on_open({ id: 'root' })
     } else if (checkShortcut(e, 'ArrowDown', { alt: true })) {
       selectLast('root')
     } else if (checkShortcut(e, 'ArrowDown')) {
@@ -112,7 +113,7 @@
       if (selectedList.kind === 'folder' && $shownFolders.has(selectedList.id)) {
         hideFolder(selectedList.id)
       } else if (parentId) {
-        open(parentId)
+        on_open({ id: parentId })
       }
     } else if (checkShortcut(e, 'ArrowRight') && selectedList.kind === 'folder') {
       showFolder(selectedList.id)
@@ -121,7 +122,7 @@
     }
     e.preventDefault()
   }
-  $: if (trackList.children.includes($page.id)) {
+  $: if (!!children.find((child) => child.id === $page.id)) {
     const itemHandle = getContext<Writable<SidebarItemHandle | null>>('itemHandle')
     itemHandle.set({ handleKey })
   }
@@ -146,15 +147,15 @@
 </script>
 
 <div class="sub" class:show>
-  {#each childLists as childList, i}
-    {#if childList.kind === 'folder'}
+  {#each children as child_list, i}
+    {#if child_list.kind === 'folder'}
       <div
         class="item"
         style:padding-left={14 * level + 'px'}
-        class:active={$page.id === childList.id}
+        class:active={$page.id === child_list.id}
         draggable="true"
-        on:dragstart={(e) => onDragStart(e, childList)}
-        class:show={$shownFolders.has(childList.id)}
+        on:dragstart={(e) => onDragStart(e, child_list)}
+        class:show={$shownFolders.has(child_list.id)}
         class:droppable={dragPlaylistOntoIndex === i}
         role="none"
         on:drop={(e) => {
@@ -163,20 +164,20 @@
             e.dataTransfer?.types[0] === 'ferrum.playlist' &&
             dragged.playlist &&
             !preventDrop &&
-            dragged.playlist.id !== childList.id &&
-            childList.children !== undefined
+            dragged.playlist.id !== child_list.id &&
+            child_list.children !== undefined
           ) {
             movePlaylist(
               dragged.playlist.id,
               dragged.playlist.fromFolder,
-              childList.id,
-              Math.max(0, childList.children.length - 1),
+              child_list.id,
+              Math.max(0, child_list.children.length - 1),
             )
             dragPlaylistOntoIndex = null
           }
         }}
-        on:mousedown={() => open(childList.id)}
-        on:contextmenu={() => tracklistContextMenu(childList.id, true)}
+        on:mousedown={() => on_open(child_list)}
+        on:contextmenu={() => tracklistContextMenu(child_list.id, true)}
       >
         <!-- svelte-ignore a11y-click-events-have-key-events -->
         <!-- svelte-ignore a11y-interactive-supports-focus -->
@@ -186,10 +187,10 @@
           aria-label="Arrow button"
           on:mousedown|stopPropagation
           on:click={() => {
-            if ($shownFolders.has(childList.id)) {
-              hideFolder(childList.id)
+            if ($shownFolders.has(child_list.id)) {
+              hideFolder(child_list.id)
             } else {
-              showFolder(childList.id)
+              showFolder(child_list.id)
             }
           }}
           xmlns="http://www.w3.org/2000/svg"
@@ -209,7 +210,7 @@
               e.dataTransfer?.types[0] === 'ferrum.playlist' &&
               dragged.playlist &&
               !preventDrop &&
-              dragged.playlist.id !== childList.id
+              dragged.playlist.id !== child_list.id
             ) {
               dragPlaylistOntoIndex = i
               e.preventDefault()
@@ -219,24 +220,25 @@
             dragPlaylistOntoIndex = null
           }}
         >
-          {childList.name}
+          {child_list.name}
         </div>
       </div>
       <svelte:self
-        show={$shownFolders.has(childList.id)}
-        trackList={childList}
-        parentId={childList.id}
+        show={$shownFolders.has(child_list.id)}
+        parentId={child_list.id}
+        children={child_list.children?.map((childId) => $trackListsDetailsMap[childId]) || []}
         level={level + 1}
-        preventDrop={preventDrop || dragged.playlist?.id === childList.id}
-        on:selectDown={() => {
-          if (i < trackList.children.length - 1) {
-            open(trackList.children[i + 1])
+        preventDrop={preventDrop || dragged.playlist?.id === child_list.id}
+        {on_open}
+        on_select_down={() => {
+          if (i < children.length - 1) {
+            on_open(children[i + 1])
           } else {
-            dispatch('selectDown')
+            on_select_down()
           }
         }}
       />
-    {:else if childList.kind === 'playlist'}
+    {:else if child_list.kind === 'playlist'}
       <!-- svelte-ignore a11y-interactive-supports-focus -->
       <div
         class="item"
@@ -244,15 +246,15 @@
         aria-label="playlist"
         style:padding-left={14 * level + 'px'}
         draggable="true"
-        on:dragstart={(e) => onDragStart(e, childList)}
-        class:active={$page.id === childList.id}
-        on:mousedown={() => open(childList.id)}
+        on:dragstart={(e) => onDragStart(e, child_list)}
+        class:active={$page.id === child_list.id}
+        on:mousedown={() => on_open(child_list)}
         class:droppable={dragTrackOntoIndex === i}
         class:droppable-above={dragPlaylistOntoIndex === i && dropAbove}
         class:droppable-below={dragPlaylistOntoIndex === i && !dropAbove}
         on:drop={(e) => {
           if (e.currentTarget && e.dataTransfer?.types[0] === 'ferrum.tracks' && dragged.tracks) {
-            addTracksToPlaylist(childList.id, dragged.tracks.ids)
+            addTracksToPlaylist(child_list.id, dragged.tracks.ids)
             dragTrackOntoIndex = null
           } else if (
             e.currentTarget &&
@@ -272,7 +274,7 @@
             dragPlaylistOntoIndex = null
           }
         }}
-        on:contextmenu={() => tracklistContextMenu(childList.id, false)}
+        on:contextmenu={() => tracklistContextMenu(child_list.id, false)}
       >
         <div class="arrow" />
         <div
@@ -299,7 +301,7 @@
             dragPlaylistOntoIndex = null
           }}
         >
-          {childList.name}
+          {child_list.name}
         </div>
       </div>
     {:else}
@@ -308,16 +310,13 @@
         class="item"
         role="link"
         style:padding-left={14 * level + 'px'}
-        on:mousedown={() => open(childList.id)}
-        class:active={$page.id === childList.id}
+        on:mousedown={() => on_open(child_list)}
+        class:active={$page.id === child_list.id &&
+          child_list.name === ['Songs', 'Artists'][$page.viewAs]}
       >
         <div class="arrow" />
         <div class="text">
-          {#if childList.id === 'root'}
-            Songs
-          {:else}
-            {childList.name}
-          {/if}
+          {child_list.name}
         </div>
       </div>
     {/if}

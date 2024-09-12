@@ -1,6 +1,13 @@
 import { writable } from 'svelte/store'
 import { ipcRenderer } from '@/lib/window'
-import type { MsSinceUnixEpoch, TrackID, TrackList, TrackListID, TrackMd } from '../../ferrum-addon'
+import type {
+  MsSinceUnixEpoch,
+  TrackID,
+  TrackList,
+  TrackListID,
+  TrackMd,
+  ViewAs,
+} from '../../ferrum-addon'
 import { selection as pageSelection } from './page'
 import { queue } from './queue'
 
@@ -289,8 +296,8 @@ export const page = (() => {
     set,
     update,
     refreshIdsAndKeepSelection,
-    openPlaylist: (id: string) => {
-      call((data) => data.open_playlist(id))
+    openPlaylist: (id: string, view_as: ViewAs) => {
+      call((data) => data.open_playlist(id, view_as))
       refreshIdsAndKeepSelection()
       pageSelection.clear()
       filter.set('')
