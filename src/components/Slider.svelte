@@ -80,8 +80,9 @@
 <!-- We also don't use the Web Animation API, because somehow that had way higher CPU usage for me -->
 <div class="slider{` ${klass}`.trimEnd()}" {...$$restProps}>
   <!-- svelte-ignore a11y-no-static-element-interactions -->
+  <!-- Make sure it has enough padding for the thumb to not overflow  -->
   <div
-    class="group flex h-5 w-full items-center justify-center overflow-hidden py-2 px-1"
+    class="group flex h-5 w-full items-center justify-center overflow-hidden p-2"
     on:mousedown={(e) => {
       apply(e)
       dragging = true
