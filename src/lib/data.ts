@@ -296,29 +296,32 @@ export const page = (() => {
     set,
     update,
     refreshIdsAndKeepSelection,
-    openPlaylist: (id: string, view_as: ViewAs) => {
+    openPlaylist(id: string, view_as: ViewAs) {
       call((data) => data.open_playlist(id, view_as))
       refreshIdsAndKeepSelection()
       pageSelection.clear()
       filter.set('')
     },
-    sortBy: (key: string) => {
+    sortBy(key: string) {
       call((addon) => addon.sort(key, true))
       refreshIdsAndKeepSelection()
       pageSelection.clear()
     },
-    set_group_album_tracks: (value: boolean) => {
+    set_group_album_tracks(value: boolean) {
       call((addon) => addon.set_group_album_tracks(value))
       refreshIdsAndKeepSelection()
       pageSelection.clear()
     },
-    getTrack: (index: number) => {
+    get_artists() {
+      return call((addon) => addon.get_artists())
+    },
+    getTrack(index: number) {
       return call((addon) => addon.get_page_track(index))
     },
-    getTrackId: (index: number) => {
+    getTrackId(index: number) {
       return call((data) => data.get_page_track_id(index))
     },
-    getTrackIds: () => {
+    getTrackIds() {
       return call((data) => data.get_page_track_ids())
     },
     moveTracks: (indexes: number[], toIndex: number) => {

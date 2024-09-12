@@ -1,4 +1,4 @@
-use crate::artists::get_artists;
+use crate::artists::load_artists;
 use crate::library::{load_library, Paths};
 use crate::library_types::{Library, TrackID, TrackList, TrackListID};
 use crate::page::{get_track_ids, ViewAs};
@@ -103,7 +103,7 @@ impl Data {
 
     let loaded_library = load_library(&paths)?;
     let loaded_cache = SidebarView::load(&paths);
-    let artists = get_artists(&loaded_library);
+    let artists = load_artists(&loaded_library);
 
     let mut data = Data {
       is_dev,

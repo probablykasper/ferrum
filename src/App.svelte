@@ -9,7 +9,7 @@
   import PlaylistInfoModal from './components/PlaylistInfo.svelte'
   import { queueVisible } from './lib/queue'
   import { ipcListen, ipcRenderer } from '@/lib/window'
-  import { importTracks, type PlaylistInfo, methods } from './lib/data'
+  import { importTracks, type PlaylistInfo, methods, page } from './lib/data'
   import { playPause } from './lib/player'
   import DragGhost from './components/DragGhost.svelte'
   import ItunesImport from './components/ItunesImport.svelte'
@@ -17,6 +17,7 @@
   import { modalCount } from './components/Modal.svelte'
   import QuickNav from './components/QuickNav.svelte'
   import { checkShortcut } from './lib/helpers'
+  import ArtistList from './components/ArtistList.svelte'
 
   ipcRenderer.emit('appLoaded')
 
@@ -184,7 +185,11 @@
 >
   <div class="meat">
     <Sidebar />
-    <TrackList {onTrackInfo} />
+    {#if $page.viewAs === 0}
+      <TrackList {onTrackInfo} />
+    {:else}
+      <ArtistList />
+    {/if}
     {#if $queueVisible}
       <Queue {onTrackInfo} />
     {/if}
