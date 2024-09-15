@@ -1,12 +1,5 @@
 <script lang="ts">
-  import {
-    page,
-    removeFromOpenPlaylist,
-    filter,
-    deleteTracksInOpen,
-    paths,
-    isMac,
-  } from '../lib/data'
+  import { page, removeFromOpenPlaylist, filter, deleteTracksInOpen, paths } from '../lib/data'
   import { newPlaybackInstance, playingId } from '../lib/player'
   import {
     getDuration,
@@ -15,14 +8,13 @@
     checkShortcut,
     assertUnreachable,
   } from '../lib/helpers'
-  import { appendToUserQueue, prependToUserQueue, queueVisible } from '../lib/queue'
+  import { appendToUserQueue, prependToUserQueue } from '../lib/queue'
   import { selection, tracklist_actions } from '../lib/page'
   import { ipcListen, ipcRenderer } from '../lib/window'
   import { onDestroy, onMount } from 'svelte'
   import { dragged } from '../lib/drag-drop'
   import * as dragGhost from './DragGhost.svelte'
   import type { TrackID } from 'ferrum-addon/addon'
-  import { modalCount } from './Modal.svelte'
   import VirtualListBlock, { scroll_container_keydown } from './VirtualListBlock.svelte'
 
   export let onTrackInfo: (allIds: TrackID[], index: number) => void

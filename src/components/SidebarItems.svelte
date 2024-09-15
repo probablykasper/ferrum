@@ -122,7 +122,7 @@
     }
     e.preventDefault()
   }
-  $: if (!!children.find((child) => child.id === $page.id)) {
+  $: if (children.find((child) => child.id === $page.id)) {
     const itemHandle = getContext<Writable<SidebarItemHandle | null>>('itemHandle')
     itemHandle.set({ handleKey })
   }
