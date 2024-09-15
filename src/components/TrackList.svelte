@@ -205,7 +205,7 @@
 
 <div
 	bind:this={tracklist_element}
-	class="tracklist"
+	class="tracklist h-full"
 	role="table"
 	on:dragleave={() => (drag_to_index = null)}
 	class:no-selection={$selection.count === 0}
