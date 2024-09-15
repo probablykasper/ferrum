@@ -1,9 +1,9 @@
 import { dialog, Menu, shell, BrowserWindow } from 'electron'
-import { ipcMain } from './typed_ipc'
+import { ipc_main } from './typed_ipc'
 import path from 'path'
 import is from './is'
 
-ipcMain.handle('showMessageBox', async (e, attached, options) => {
+ipc_main.handle('showMessageBox', async (e, attached, options) => {
 	const window = BrowserWindow.fromWebContents(e.sender)
 	if (attached && window) {
 		return await dialog.showMessageBox(window, options)
@@ -12,7 +12,7 @@ ipcMain.handle('showMessageBox', async (e, attached, options) => {
 	}
 })
 
-ipcMain.handle('showOpenDialog', async (e, attached, options) => {
+ipc_main.handle('showOpenDialog', async (e, attached, options) => {
 	const window = BrowserWindow.fromWebContents(e.sender)
 	if (attached && window) {
 		return await dialog.showOpenDialog(window, options)
@@ -21,11 +21,11 @@ ipcMain.handle('showOpenDialog', async (e, attached, options) => {
 	}
 })
 
-ipcMain.handle('revealTrackFile', async (_e, ...paths) => {
+ipc_main.handle('revealTrackFile', async (_e, ...paths) => {
 	shell.showItemInFolder(path.join(...paths))
 })
 
-ipcMain.handle('volume_change', async (_e, up) => {
+ipc_main.handle('volume_change', async (_e, up) => {
 	if (up) {
 		Menu.getApplicationMenu()?.getMenuItemById('Volume Up')?.click()
 	} else {
@@ -33,10 +33,10 @@ ipcMain.handle('volume_change', async (_e, up) => {
 	}
 })
 
-ipcMain.handle('showTrackMenu', (e, options) => {
-	let queueMenu: Electron.MenuItemConstructorOptions[] = []
+ipc_main.handle('showTrackMenu', (e, options) => {
+	let queue_menu: Electron.MenuItemConstructorOptions[] = []
 	if (options.queue) {
-		queueMenu = [
+		queue_menu = [
 			{
 				label: 'Remove from Queue',
 				click: () => {
@@ -46,19 +46,19 @@ ipcMain.handle('showTrackMenu', (e, options) => {
 			{ type: 'separator' },
 		]
 	}
-	const selectedIds = options.selectedIndexes.map((i) => options.allIds[i])
+	const selected_ids = options.selectedIndexes.map((i) => options.allIds[i])
 	const menu = Menu.buildFromTemplate([
-		...queueMenu,
+		...queue_menu,
 		{
 			label: 'Play Next',
 			click: () => {
-				e.sender.send('context.Play Next', selectedIds)
+				e.sender.send('context.Play Next', selected_ids)
 			},
 		},
 		{
 			label: 'Add to Queue',
 			click: () => {
-				e.sender.send('context.Add to Queue', selectedIds)
+				e.sender.send('context.Add to Queue', selected_ids)
 			},
 		},
 		{
@@ -66,7 +66,7 @@ ipcMain.handle('showTrackMenu', (e, options) => {
 			submenu: options.lists.map((item) => {
 				return {
 					...item,
-					click: () => e.sender.send('context.Add to Playlist', item.id, selectedIds),
+					click: () => e.sender.send('context.Add to Playlist', item.id, selected_ids),
 				}
 			}),
 		},
@@ -84,7 +84,7 @@ ipcMain.handle('showTrackMenu', (e, options) => {
 				else if (is.windows) return 'Reveal in File Explorer'
 				else return 'Reveal in File Manager'
 			})(),
-			click: () => e.sender.send('context.revealTrackFile', selectedIds[0]),
+			click: () => e.sender.send('context.revealTrackFile', selected_ids[0]),
 		},
 		{ type: 'separator', visible: options.playlist?.editable === true },
 		{
@@ -96,8 +96,8 @@ ipcMain.handle('showTrackMenu', (e, options) => {
 	menu.popup()
 })
 
-ipcMain.handle('showTracklistMenu', (e, args) => {
-	const editMenu = [
+ipc_main.handle('showTracklistMenu', (e, args) => {
+	const edit_menu = [
 		{
 			label: 'Edit Details',
 			click: () => e.sender.send('context.playlist.edit', args.id),
@@ -107,7 +107,7 @@ ipcMain.handle('showTracklistMenu', (e, args) => {
 			click: () => e.sender.send('context.playlist.delete', args.id),
 		},
 	]
-	const newMenu = [
+	const new_menu = [
 		{
 			label: 'New Playlist',
 			click: () => e.sender.send('newPlaylist', args.id, false),
@@ -117,13 +117,13 @@ ipcMain.handle('showTracklistMenu', (e, args) => {
 			click: () => e.sender.send('newPlaylist', args.id, true),
 		},
 	]
-	let menuItems: Electron.MenuItemConstructorOptions[] = editMenu
+	let menu_items: Electron.MenuItemConstructorOptions[] = edit_menu
 	if (args.isRoot) {
-		menuItems = newMenu
+		menu_items = new_menu
 	} else if (args.isFolder) {
-		menuItems = [...editMenu, { type: 'separator' }, ...newMenu]
+		menu_items = [...edit_menu, { type: 'separator' }, ...new_menu]
 	}
 
-	const menu = Menu.buildFromTemplate(menuItems)
+	const menu = Menu.buildFromTemplate(menu_items)
 	menu.popup()
 })

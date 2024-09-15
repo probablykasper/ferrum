@@ -1,16 +1,16 @@
 <script lang="ts">
-	import { methods, paths, trackMetadataUpdated } from '@/lib/data'
+	import { methods, paths, track_metadata_updated } from '@/lib/data'
 	import { fade } from 'svelte/transition'
 	import type { Track } from '../../ferrum-addon'
-	import { joinPaths } from '@/lib/window'
+	import { join_paths } from '@/lib/window'
 
 	export let id: string
 
 	let track: Track
-	$: $trackMetadataUpdated, (track = methods.getTrack(id))
+	$: $track_metadata_updated, (track = methods.getTrack(id))
 	let success: boolean | null = null
 
-	$: filePath = joinPaths(paths.tracksDir, track.file)
+	$: filePath = join_paths(paths.tracksDir, track.file)
 </script>
 
 <div class="box">

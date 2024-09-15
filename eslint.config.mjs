@@ -32,24 +32,24 @@ export default [
 	},
 	{
 		rules: {
-			// '@typescript-eslint/naming-convention': [
-			// 	'error',
-			// 	{
-			// 		selector: 'variableLike',
-			// 		format: ['snake_case', 'UPPER_CASE'],
-			// 		leadingUnderscore: 'allow',
-			// 	},
-			// 	{
-			// 		selector: 'parameter',
-			// 		modifiers: ['destructured'],
-			// 		format: null,
-			// 	},
-			// 	{
-			// 		selector: 'variable',
-			// 		modifiers: ['destructured'],
-			// 		format: null,
-			// 	},
-			// ],
+			'@typescript-eslint/naming-convention': [
+				'error',
+				{
+					selector: 'variableLike',
+					format: ['snake_case', 'UPPER_CASE'],
+					leadingUnderscore: 'allow',
+				},
+				{
+					selector: 'parameter',
+					modifiers: ['destructured'],
+					format: null,
+				},
+				{
+					selector: 'variable',
+					modifiers: ['destructured'],
+					format: null,
+				},
+			],
 			'@typescript-eslint/no-unused-expressions': 'off',
 			'@typescript-eslint/no-unused-vars': [
 				'error',

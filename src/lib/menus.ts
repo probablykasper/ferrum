@@ -1,49 +1,49 @@
 import {
-	addTracksToPlaylist,
+	add_track_to_playlist,
 	methods,
 	paths,
-	removeFromOpenPlaylist,
-	trackListsDetailsMap,
+	remove_from_open_playlist,
+	track_lists_details_map,
 } from '@/lib/data'
-import { flattenChildLists } from '@/lib/helpers'
-import { ipcRenderer } from '@/lib/window'
+import { flatten_child_lists } from '@/lib/helpers'
+import { ipc_renderer } from '@/lib/window'
 import type { TrackID } from '../../ferrum-addon'
 import { get } from 'svelte/store'
-import { appendToUserQueue, prependToUserQueue } from './queue'
+import { append_to_user_queue, prepend_to_user_queue } from './queue'
 import type { ShowTrackMenuOptions } from '@/electron/typed_ipc'
 
-export async function showTrackMenu(
-	allIds: string[],
-	selectedIndexes: number[],
+export async function show_track_menu(
+	all_id: string[],
+	selected_indexes: number[],
 	playlist?: { editable: boolean },
 	queue = false,
 ) {
-	const trackLists = get(trackListsDetailsMap)
-	const flat = flattenChildLists(trackLists.root, trackLists, '')
+	const track_lists = get(track_lists_details_map)
+	const flat = flatten_child_lists(track_lists.root, track_lists, '')
 	const args: ShowTrackMenuOptions = {
-		allIds,
-		selectedIndexes,
+		allIds: all_id,
+		selectedIndexes: selected_indexes,
 		playlist,
 		queue,
 		lists: flat,
 	}
 
-	await ipcRenderer.invoke('showTrackMenu', args)
+	await ipc_renderer.invoke('showTrackMenu', args)
 }
 
-ipcRenderer.on('context.Play Next', (e, ids: TrackID[]) => {
-	prependToUserQueue(ids)
+ipc_renderer.on('context.Play Next', (e, ids: TrackID[]) => {
+	prepend_to_user_queue(ids)
 })
-ipcRenderer.on('context.Add to Queue', (e, ids: TrackID[]) => {
-	appendToUserQueue(ids)
+ipc_renderer.on('context.Add to Queue', (e, ids: TrackID[]) => {
+	append_to_user_queue(ids)
 })
-ipcRenderer.on('context.Add to Playlist', (e, id: TrackID, trackIds: TrackID[]) => {
-	addTracksToPlaylist(id, trackIds)
+ipc_renderer.on('context.Add to Playlist', (e, id: TrackID, track_ids: TrackID[]) => {
+	add_track_to_playlist(id, track_ids)
 })
-ipcRenderer.on('context.revealTrackFile', (e, id: TrackID) => {
+ipc_renderer.on('context.revealTrackFile', (e, id: TrackID) => {
 	const track = methods.getTrack(id)
-	ipcRenderer.invoke('revealTrackFile', paths.tracksDir, track.file)
+	ipc_renderer.invoke('revealTrackFile', paths.tracksDir, track.file)
 })
-ipcRenderer.on('context.Remove from Playlist', (e, indexes: number[]) => {
-	removeFromOpenPlaylist(indexes)
+ipc_renderer.on('context.Remove from Playlist', (e, indexes: number[]) => {
+	remove_from_open_playlist(indexes)
 })

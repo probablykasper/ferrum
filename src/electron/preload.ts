@@ -3,12 +3,12 @@ import is from './is'
 import addon from '../../ferrum-addon'
 
 window.addon = addon
-window.isDev = is.dev
-window.libraryPath = process.env.LIBRARY
-window.isMac = is.mac
-window.isWindows = is.windows
+window.is_dev = is.dev
+window.library_path = process.env.LIBRARY
+window.is_mac = is.mac
+window.is_windows = is.windows
 
-window.joinPaths = (...args) => {
-	const combinedPath = path.join(...args)
-	return combinedPath
+window.join_paths = (...args) => {
+	const combined_path = path.join(...args)
+	return combined_path
 }

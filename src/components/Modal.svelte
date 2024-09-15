@@ -1,30 +1,30 @@
 <script lang="ts" context="module">
 	import { writable } from 'svelte/store'
 
-	export const modalCount = writable(0)
+	export const modal_count = writable(0)
 </script>
 
 <script lang="ts">
 	import { onDestroy, onMount } from 'svelte'
-	import { checkShortcut } from '../lib/helpers'
+	import { check_shortcut } from '../lib/helpers'
 
-	export let onCancel: () => void
-	export let cancelOnEscape = false
+	export let on_cancel: () => void
+	export let cancel_on_escape = false
 	export let form: (() => void) | undefined = undefined
 	export let plain = false
 	$: tag = form === undefined ? 'div' : 'form'
 	export let title: string | null = null
-	let dialogEl: HTMLDialogElement
+	let dialog_el: HTMLDialogElement
 
-	$modalCount += 1
+	$modal_count += 1
 	onDestroy(() => {
-		$modalCount -= 1
+		$modal_count -= 1
 	})
 
 	onMount(() => {
-		dialogEl.showModal()
+		dialog_el.showModal()
 		return () => {
-			dialogEl.close()
+			dialog_el.close()
 		}
 	})
 
@@ -42,20 +42,20 @@
 <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
 <dialog
 	class="modal m-auto"
-	bind:this={dialogEl}
+	bind:this={dialog_el}
 	on:click|self={() => {
 		if (clickable) {
-			onCancel()
+			on_cancel()
 		}
 	}}
 	on:keydown
 	on:keydown={(e) => {
-		if (checkShortcut(e, 'Escape') && cancelOnEscape) {
-			onCancel()
+		if (check_shortcut(e, 'Escape') && cancel_on_escape) {
+			on_cancel()
 		}
 	}}
 	on:keydown|self={(e) => {
-		if (form && checkShortcut(e, 'Enter')) {
+		if (form && check_shortcut(e, 'Enter')) {
 			form()
 			e.preventDefault()
 		}

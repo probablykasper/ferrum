@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { onDestroy } from 'svelte'
-	import { checkShortcut } from '../lib/helpers'
-	import { ipcListen } from '@/lib/window'
+	import { check_shortcut } from '../lib/helpers'
+	import { ipc_listen } from '@/lib/window'
 	import fuzzysort from 'fuzzysort'
-	import { page, trackListsDetailsMap, view_as_artists, view_as_songs } from '@/lib/data'
+	import { page, track_lists_details_map, view_as_artists, view_as_songs } from '@/lib/data'
 	import type { TrackListDetails, ViewAs } from '../../ferrum-addon/addon'
 	import Modal from './Modal.svelte'
 	import { special_playlists_nav } from './Sidebar.svelte'
@@ -18,7 +18,7 @@
 	}
 	function get_playlists() {
 		const playlists: Result[] = special_playlists_nav
-		for (const playlist of Object.values($trackListsDetailsMap)) {
+		for (const playlist of Object.values($track_lists_details_map)) {
 			if (playlist.kind === 'playlist' || playlist.kind === 'folder') {
 				playlists.push(playlist)
 			}
@@ -28,47 +28,47 @@
 		return playlists
 	}
 
-	let filteredItems = fuzzysort.go(value, playlists, { key: 'name', all: true })
+	let filtered_items = fuzzysort.go(value, playlists, { key: 'name', all: true })
 	$: {
-		filteredItems = fuzzysort.go(value, playlists, { key: 'name', all: true })
-		clampIndex()
+		filtered_items = fuzzysort.go(value, playlists, { key: 'name', all: true })
+		clamp_index()
 	}
 
-	function selectInput(el: HTMLInputElement) {
+	function select_input(el: HTMLInputElement) {
 		el.select()
 	}
 
-	let selectedIndex = 0
+	let selected_index = 0
 
-	function clampIndex() {
-		selectedIndex = Math.max(0, Math.min(filteredItems.length - 1, selectedIndex))
+	function clamp_index() {
+		selected_index = Math.max(0, Math.min(filtered_items.length - 1, selected_index))
 	}
-	$: listItems, clampIndex()
-	let listItems: HTMLElement[] = []
+	$: list_items, clamp_index()
+	let list_items: HTMLElement[] = []
 
-	function handleKeydown(e: KeyboardEvent) {
+	function handle_keydown(e: KeyboardEvent) {
 		if (e.key === 'Tab') {
 			e.preventDefault()
-		} else if (checkShortcut(e, 'Escape')) {
+		} else if (check_shortcut(e, 'Escape')) {
 			show = false
 			value = ''
-		} else if (checkShortcut(e, 'Enter')) {
-			page.openPlaylist(
-				filteredItems[selectedIndex].obj.id,
-				filteredItems[selectedIndex].obj.view_as ?? view_as_songs,
+		} else if (check_shortcut(e, 'Enter')) {
+			page.open_playlist(
+				filtered_items[selected_index].obj.id,
+				filtered_items[selected_index].obj.view_as ?? view_as_songs,
 			)
 			show = false
-		} else if (checkShortcut(e, 'ArrowUp')) {
-			selectedIndex--
-			clampIndex()
-			listItems[selectedIndex].scrollIntoView({
+		} else if (check_shortcut(e, 'ArrowUp')) {
+			selected_index--
+			clamp_index()
+			list_items[selected_index].scrollIntoView({
 				block: 'nearest',
 			})
 			e.preventDefault()
-		} else if (checkShortcut(e, 'ArrowDown')) {
-			selectedIndex++
-			clampIndex()
-			listItems[selectedIndex].scrollIntoView({
+		} else if (check_shortcut(e, 'ArrowDown')) {
+			selected_index++
+			clamp_index()
+			list_items[selected_index].scrollIntoView({
 				block: 'nearest',
 			})
 			e.preventDefault()
@@ -76,7 +76,7 @@
 	}
 
 	onDestroy(
-		ipcListen('ToggleQuickNav', () => {
+		ipc_listen('ToggleQuickNav', () => {
 			show = !show
 		}),
 	)
@@ -85,27 +85,27 @@
 {#if show}
 	<Modal
 		plain
-		onCancel={() => {
+		on_cancel={() => {
 			show = false
 		}}
 	>
 		<input
 			type="text"
 			bind:value
-			on:keydown={handleKeydown}
+			on:keydown={handle_keydown}
 			placeholder="Search for a playlist..."
-			use:selectInput
+			use:select_input
 		/>
 		<div class="items-container">
-			{#each filteredItems as item, i}
+			{#each filtered_items as item, i}
 				<button
-					bind:this={listItems[i]}
+					bind:this={list_items[i]}
 					type="button"
 					on:click={() => {
-						page.openPlaylist(item.obj.id, item.obj.view_as ?? view_as_songs)
+						page.open_playlist(item.obj.id, item.obj.view_as ?? view_as_songs)
 						show = false
 					}}
-					class:selected={selectedIndex === i}
+					class:selected={selected_index === i}
 				>
 					{#if item.obj.kind === 'folder'}
 						<svg

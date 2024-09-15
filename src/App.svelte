@@ -7,134 +7,134 @@
 	import Queue from './components/Queue.svelte'
 	import TrackInfo, { type TrackInfoList } from './components/TrackInfo.svelte'
 	import PlaylistInfoModal from './components/PlaylistInfo.svelte'
-	import { queueVisible } from './lib/queue'
-	import { ipcListen, ipcRenderer } from '@/lib/window'
+	import { queue_visible } from './lib/queue'
+	import { ipc_listen, ipc_renderer } from '@/lib/window'
 	import {
-		importTracks,
+		import_tracks,
 		type PlaylistInfo,
 		methods,
 		page,
-		isMac,
+		is_mac,
 		view_as_songs,
 		view_as_artists,
 	} from './lib/data'
-	import { playPause } from './lib/player'
+	import { play_pause } from './lib/player'
 	import DragGhost from './components/DragGhost.svelte'
 	import ItunesImport from './components/ItunesImport.svelte'
 	import type { TrackID } from 'ferrum-addon/addon'
-	import { modalCount } from './components/Modal.svelte'
+	import { modal_count } from './components/Modal.svelte'
 	import QuickNav from './components/QuickNav.svelte'
-	import { checkShortcut } from './lib/helpers'
+	import { check_shortcut } from './lib/helpers'
 	import ArtistList from './components/ArtistList.svelte'
 	import { tracklist_actions } from './lib/page'
 
-	ipcRenderer.emit('appLoaded')
+	ipc_renderer.emit('appLoaded')
 
-	async function openImportDialog() {
-		if ($modalCount !== 0) {
+	async function open_import_dialog() {
+		if ($modal_count !== 0) {
 			return
 		}
-		let result = await ipcRenderer.invoke('showOpenDialog', false, {
+		let result = await ipc_renderer.invoke('showOpenDialog', false, {
 			properties: ['openFile', 'multiSelections'],
 			filters: [{ name: 'Audio', extensions: ['mp3', 'm4a', 'opus'] }],
 		})
 		if (!result.canceled && result.filePaths.length >= 1) {
-			importTracks(result.filePaths)
+			import_tracks(result.filePaths)
 		}
 	}
-	ipcRenderer.on('import', openImportDialog)
+	ipc_renderer.on('import', open_import_dialog)
 	onDestroy(() => {
-		ipcRenderer.removeListener('import', openImportDialog)
+		ipc_renderer.removeListener('import', open_import_dialog)
 	})
 
-	function toggleQueue() {
-		$queueVisible = !$queueVisible
+	function toggle_queue() {
+		$queue_visible = !$queue_visible
 	}
-	$: ipcRenderer.invoke('update:Show Queue', $queueVisible)
-	ipcRenderer.on('Show Queue', toggleQueue)
+	$: ipc_renderer.invoke('update:Show Queue', $queue_visible)
+	ipc_renderer.on('Show Queue', toggle_queue)
 	onDestroy(() => {
-		ipcRenderer.removeListener('Show Queue', toggleQueue)
+		ipc_renderer.removeListener('Show Queue', toggle_queue)
 	})
 
 	let droppable = false
-	const allowedMimes = ['audio/mpeg', 'audio/x-m4a', 'audio/ogg'] // mp3, m4a
-	function getFilePaths(e: DragEvent): string[] {
+	const allowed_mimes = ['audio/mpeg', 'audio/x-m4a', 'audio/ogg'] // mp3, m4a
+	function get_file_paths(e: DragEvent): string[] {
 		if (!e.dataTransfer) return []
-		let validPaths: string[] = []
+		let valid_paths: string[] = []
 		for (let i = 0; i < e.dataTransfer.files.length; i++) {
 			const file = e.dataTransfer.files[i]
-			if (allowedMimes.includes(file.type)) {
-				validPaths.push(file.path)
+			if (allowed_mimes.includes(file.type)) {
+				valid_paths.push(file.path)
 			}
 		}
-		return validPaths
+		return valid_paths
 	}
-	function hasFiles(e: DragEvent): boolean {
+	function has_files(e: DragEvent): boolean {
 		if (!e.dataTransfer) return false
 		for (let i = 0; i < e.dataTransfer.items.length; i++) {
 			const item = e.dataTransfer.items[i]
-			if (item.kind === 'file' && allowedMimes.includes(item.type)) {
+			if (item.kind === 'file' && allowed_mimes.includes(item.type)) {
 				return true
 			}
 		}
 		return false
 	}
-	function dragEnterOrOver(e: DragEvent) {
-		droppable = hasFiles(e)
+	function drag_enter_or_over(e: DragEvent) {
+		droppable = has_files(e)
 		if (droppable) {
 			e.preventDefault()
 		}
 	}
-	function dragLeave() {
+	function drag_leave() {
 		droppable = false
 	}
 	function drop(e: DragEvent) {
 		e.preventDefault()
 		droppable = false
-		const validPaths = getFilePaths(e)
+		const valid_paths = get_file_paths(e)
 		const paths = []
-		for (const path of validPaths) {
+		for (const path of valid_paths) {
 			paths.push(path)
 		}
-		importTracks(paths)
+		import_tracks(paths)
 	}
 	function keydown(e: KeyboardEvent) {
 		let el = e.target as HTMLAudioElement
 		if (el && el.tagName !== 'INPUT' && el.tagName !== 'TEXTAREA') {
 			if (e.key === ' ') {
 				e.preventDefault()
-				playPause()
+				play_pause()
 			}
 		}
 	}
 
-	let showItunesImport = false
+	let show_itunes_import = false
 	onDestroy(
-		ipcListen('itunesImport', () => {
-			if ($modalCount === 0) {
-				showItunesImport = true
+		ipc_listen('itunesImport', () => {
+			if ($modal_count === 0) {
+				show_itunes_import = true
 			}
 		}),
 	)
 
-	let trackInfoList: TrackInfoList | null = null
-	function onTrackInfo(ids: TrackID[], trackIndex: number) {
-		if ($modalCount === 0) {
-			trackInfoList = { ids, index: trackIndex }
+	let track_info_list: TrackInfoList | null = null
+	function on_track_info(ids: TrackID[], track_index: number) {
+		if ($modal_count === 0) {
+			track_info_list = { ids, index: track_index }
 		}
 	}
 	onDestroy(
-		ipcListen('context.Get Info', (_, ids: TrackID[], trackIndex: number) => {
-			onTrackInfo(ids, trackIndex)
+		ipc_listen('context.Get Info', (_, ids: TrackID[], track_index: number) => {
+			on_track_info(ids, track_index)
 		}),
 	)
 
-	let playlistInfo: PlaylistInfo | null = null
+	let playlist_info: PlaylistInfo | null = null
 	onDestroy(
-		ipcListen('context.playlist.edit', (_, id) => {
+		ipc_listen('context.playlist.edit', (_, id) => {
 			const list = methods.getTrackList(id)
-			if (list.type !== 'special' && $modalCount === 0) {
-				playlistInfo = {
+			if (list.type !== 'special' && $modal_count === 0) {
+				playlist_info = {
 					name: list.name,
 					description: list.description || '',
 					isFolder: list.type === 'folder',
@@ -145,9 +145,9 @@
 		}),
 	)
 	onDestroy(
-		ipcListen('context.playlist.delete', async (_, id) => {
+		ipc_listen('context.playlist.delete', async (_, id) => {
 			const list = methods.getTrackList(id)
-			const result = await ipcRenderer.invoke('showMessageBox', false, {
+			const result = await ipc_renderer.invoke('showMessageBox', false, {
 				type: 'info',
 				message: `Delete the ${list.type} "${list.name}"?`,
 				detail: list.type === 'folder' ? 'This will also delete all playlists inside.' : '',
@@ -160,11 +160,11 @@
 		}),
 	)
 	onDestroy(
-		ipcListen('newPlaylist', (_, id, isFolder) => {
-			playlistInfo = {
+		ipc_listen('newPlaylist', (_, id, is_folder) => {
+			playlist_info = {
 				name: '',
 				description: '',
-				isFolder: isFolder,
+				isFolder: is_folder,
 				id: id,
 				editMode: false,
 			}
@@ -183,15 +183,15 @@
 
 <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
 <main
-	on:dragenter|capture={dragEnterOrOver}
+	on:dragenter|capture={drag_enter_or_over}
 	on:keydown={(e) => {
 		if (e.target) {
-			if (checkShortcut(e, 'ArrowUp', { cmdOrCtrl: true })) {
+			if (check_shortcut(e, 'ArrowUp', { cmd_or_ctrl: true })) {
 				e.preventDefault()
-				ipcRenderer.invoke('volume_change', true)
-			} else if (checkShortcut(e, 'ArrowDown', { cmdOrCtrl: true })) {
+				ipc_renderer.invoke('volume_change', true)
+			} else if (check_shortcut(e, 'ArrowDown', { cmd_or_ctrl: true })) {
 				e.preventDefault()
-				ipcRenderer.invoke('volume_change', false)
+				ipc_renderer.invoke('volume_change', false)
 			}
 		}
 	}}
@@ -202,8 +202,8 @@
 			<div class="relative pt-4 px-5 pb-5">
 				<div
 					class="absolute top-0 left-0 h-10 w-full"
-					class:dragbar={$modalCount === 0 && isMac}
-					class:queue-visible={$queueVisible}
+					class:dragbar={$modal_count === 0 && is_mac}
+					class:queue-visible={$queue_visible}
 				/>
 				<h3 class="m-0 pb-0.5 text-[19px] font-medium leading-none">
 					{#if $page.tracklist.id === 'root'}
@@ -226,13 +226,13 @@
 				{/if}
 			</div>
 			{#if $page.viewAs === 0}
-				<TrackList {onTrackInfo} />
+				<TrackList {on_track_info} />
 			{:else}
 				<ArtistList />
 			{/if}
 		</div>
-		{#if $queueVisible}
-			<Queue {onTrackInfo} />
+		{#if $queue_visible}
+			<Queue {on_track_info} />
 		{/if}
 	</div>
 	<Player />
@@ -243,9 +243,9 @@
 		</div>
 		<div
 			class="dropzone"
-			on:dragleave={dragLeave}
+			on:dragleave={drag_leave}
 			on:drop={drop}
-			on:dragover={dragEnterOrOver}
+			on:dragover={drag_enter_or_over}
 			role="dialog"
 			aria-label="Drop files to import"
 			aria-dropeffect="copy"
@@ -253,14 +253,14 @@
 	{/if}
 </main>
 
-{#if trackInfoList}
-	<TrackInfo currentList={trackInfoList} cancel={() => (trackInfoList = null)} />
+{#if track_info_list}
+	<TrackInfo current_list={track_info_list} cancel={() => (track_info_list = null)} />
 {/if}
-{#if playlistInfo}
-	<PlaylistInfoModal info={playlistInfo} cancel={() => (playlistInfo = null)} />
+{#if playlist_info}
+	<PlaylistInfoModal info={playlist_info} cancel={() => (playlist_info = null)} />
 {/if}
-{#if showItunesImport}
-	<ItunesImport cancel={() => (showItunesImport = false)} />
+{#if show_itunes_import}
+	<ItunesImport cancel={() => (show_itunes_import = false)} />
 {/if}
 <QuickNav />
 

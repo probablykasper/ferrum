@@ -1,11 +1,11 @@
 type DraggedTracks = {
 	ids: string[]
-	playlistIndexes?: number[]
-	queueIndexes?: number[]
+	playlist_indexes?: number[]
+	queue_indexes?: number[]
 }
 type DraggedPlaylist = {
 	id: string
-	fromFolder: string
+	from_folder: string
 	level: number
 }
 

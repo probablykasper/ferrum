@@ -1,57 +1,57 @@
 <script lang="ts">
 	import {
 		stopped,
-		playPause,
+		play_pause,
 		seek,
-		playingTrack,
-		playingId,
+		playing_track,
+		playing_id,
 		previous,
-		skipToNext,
-		coverSrc,
+		skip_to_next,
+		cover_src,
 		volume,
-		timeRecord,
+		time_record,
 	} from '../lib/player'
-	import { getDuration } from '../lib/helpers'
-	import { queueVisible, toggleQueueVisibility, queue, shuffle, repeat } from '../lib/queue'
-	import { isDev, methods } from '../lib/data'
-	import { showTrackMenu } from '@/lib/menus'
+	import { get_duration } from '../lib/helpers'
+	import { queue_visible, toggle_queue_visibility, queue, shuffle, repeat } from '../lib/queue'
+	import { is_dev, methods } from '../lib/data'
+	import { show_track_menu } from '@/lib/menus'
 	import { dragged } from '@/lib/drag-drop'
 	import * as dragGhost from './DragGhost.svelte'
 	import Slider from './Slider.svelte'
 
-	async function playingContextMenu() {
+	async function playing_context_menu() {
 		const playing = queue.getCurrent()
 		if (playing) {
-			await showTrackMenu([playing.id], [0])
+			await show_track_menu([playing.id], [0])
 		}
 	}
 
-	function dragStart(e: DragEvent) {
-		if (e.dataTransfer && $playingId) {
+	function drag_start(e: DragEvent) {
+		if (e.dataTransfer && $playing_id) {
 			e.dataTransfer.effectAllowed = 'move'
-			const track = methods.getTrack($playingId)
-			dragGhost.setInnerText(track.artist + ' - ' + track.name)
+			const track = methods.getTrack($playing_id)
+			dragGhost.set_inner_text(track.artist + ' - ' + track.name)
 			dragged.tracks = {
-				ids: [$playingId],
+				ids: [$playing_id],
 			}
-			e.dataTransfer.setDragImage(dragGhost.dragEl, 0, 0)
+			e.dataTransfer.setDragImage(dragGhost.drag_el, 0, 0)
 			e.dataTransfer.setData('ferrum.tracks', '')
 		}
 	}
 </script>
 
-<div class="player" class:stopped={$stopped} class:dev={isDev}>
+<div class="player" class:stopped={$stopped} class:dev={is_dev}>
 	<div class="left">
-		{#if !$stopped && $playingTrack}
+		{#if !$stopped && $playing_track}
 			<div
 				class="cover"
 				role="none"
-				on:contextmenu={playingContextMenu}
-				on:dragstart={dragStart}
+				on:contextmenu={playing_context_menu}
+				on:dragstart={drag_start}
 				draggable="true"
 			>
-				{#if $coverSrc}
-					<img src={$coverSrc} alt="" draggable="false" />
+				{#if $cover_src}
+					<img src={$cover_src} alt="" draggable="false" />
 				{:else}
 					<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
 						<path
@@ -61,16 +61,16 @@
 				{/if}
 			</div>
 			<div
-				on:contextmenu={playingContextMenu}
-				on:dragstart={dragStart}
+				on:contextmenu={playing_context_menu}
+				on:dragstart={drag_start}
 				draggable="true"
 				role="none"
 			>
 				<div class="name">
-					{$playingTrack.name}
+					{$playing_track.name}
 				</div>
 				<div class="artist">
-					{$playingTrack.artist}
+					{$playing_track.artist}
 				</div>
 			</div>
 		{/if}
@@ -111,8 +111,8 @@
 				</svg>
 			</button>
 
-			<button class="play-pause" on:click={playPause} tabindex="-1" on:mousedown|preventDefault>
-				{#if $timeRecord.paused}
+			<button class="play-pause" on:click={play_pause} tabindex="-1" on:mousedown|preventDefault>
+				{#if $time_record.paused}
 					<svg
 						xmlns="http://www.w3.org/2000/svg"
 						class="parent-active-zoom"
@@ -139,7 +139,7 @@
 				{/if}
 			</button>
 
-			<button on:click={skipToNext} tabindex="-1" on:mousedown|preventDefault>
+			<button on:click={skip_to_next} tabindex="-1" on:mousedown|preventDefault>
 				<svg
 					xmlns="http://www.w3.org/2000/svg"
 					class="parent-active-zoom"
@@ -175,18 +175,18 @@
 			</button>
 		</div>
 		<div class="time-bar">
-			<small class="current-time">{getDuration($timeRecord.elapsed)}</small>
+			<small class="current-time">{get_duration($time_record.elapsed)}</small>
 			<Slider
 				class="mx-1.5 w-full"
-				value={$timeRecord.elapsed / $timeRecord.duration || 0}
-				growth_rate={$timeRecord.paused ? 0 : 1 / $timeRecord.duration}
+				value={$time_record.elapsed / $time_record.duration || 0}
+				growth_rate={$time_record.paused ? 0 : 1 / $time_record.duration}
 				max={1}
 				update_on_drag={false}
 				on_user_change={(value) => {
-					seek(value * $timeRecord.duration)
+					seek(value * $time_record.duration)
 				}}
 			/>
-			<small class="duration">{getDuration($timeRecord.duration)}</small>
+			<small class="duration">{get_duration($time_record.duration)}</small>
 		</div>
 	</div>
 	<div class="right">
@@ -236,8 +236,8 @@
 		<button
 			tabindex="-1"
 			on:mousedown|preventDefault
-			on:click={toggleQueueVisibility}
-			class:on={$queueVisible}
+			on:click={toggle_queue_visibility}
+			class:on={$queue_visible}
 		>
 			<svg
 				xmlns="http://www.w3.org/2000/svg"

@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { checkShortcut } from '../lib/helpers'
-	import { newPlaylist, type PlaylistInfo, updatePlaylist } from '../lib/data'
+	import { check_shortcut } from '../lib/helpers'
+	import { new_playlist, type PlaylistInfo, update_playlist } from '../lib/data'
 	import Modal from './Modal.svelte'
 	import Button from './Button.svelte'
 
@@ -14,25 +14,25 @@
 
 	function save() {
 		if (info.editMode) {
-			updatePlaylist(info.id, info.name, info.description)
+			update_playlist(info.id, info.name, info.description)
 		} else {
-			newPlaylist(info)
+			new_playlist(info)
 		}
 		cancel()
 	}
 
-	function formKeydown(e: KeyboardEvent) {
-		if (checkShortcut(e, 'enter', { cmdOrCtrl: true })) {
+	function form_keydown(e: KeyboardEvent) {
+		if (check_shortcut(e, 'enter', { cmd_or_ctrl: true })) {
 			save()
 		}
 	}
 </script>
 
 <Modal
-	onCancel={cancel}
-	cancelOnEscape
+	on_cancel={cancel}
+	cancel_on_escape
 	form={save}
-	on:keydown={formKeydown}
+	on:keydown={form_keydown}
 	title={(info.editMode ? 'Edit' : 'New') + ' Playlist' + (info.isFolder ? ' Folder' : '')}
 >
 	<main>

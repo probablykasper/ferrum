@@ -1,26 +1,26 @@
 <script lang="ts" context="module">
 	import {
-		trackListsDetailsMap,
+		track_lists_details_map,
 		page,
 		methods,
-		addTracksToPlaylist,
-		movePlaylist,
+		add_track_to_playlist,
+		move_playlist,
 	} from '../lib/data'
 
 	export type SidebarItemHandle = {
 		handleKey(e: KeyboardEvent): void
 	}
 
-	let shownFolders = writable(new Set(methods.shownPlaylistFolders()))
-	function showFolder(id: string) {
-		shownFolders.update((folders) => {
+	let shown_folders = writable(new Set(methods.shownPlaylistFolders()))
+	function show_folder(id: string) {
+		shown_folders.update((folders) => {
 			folders.add(id)
 			return folders
 		})
 		methods.viewFolderSetShow(id, true)
 	}
-	function hideFolder(id: string) {
-		shownFolders.update((folders) => {
+	function hide_folder(id: string) {
+		shown_folders.update((folders) => {
 			folders.delete(id)
 			return folders
 		})
@@ -34,53 +34,53 @@
 	import { getContext } from 'svelte'
 	import { dragged } from '../lib/drag-drop'
 	import * as dragGhost from './DragGhost.svelte'
-	import { ipcRenderer } from '@/lib/window'
-	import { checkShortcut } from '@/lib/helpers'
+	import { ipc_renderer } from '@/lib/window'
+	import { check_shortcut } from '@/lib/helpers'
 
 	export let show = true
-	export let parentId: string | null
-	export let preventDrop = false
+	export let parent_id: string | null
+	export let prevent_drop = false
 	export let children: (TrackListDetails & { view_as?: ViewAs })[]
 
 	export let level = 0
 	export let on_open: (item: { id: string; view_as?: ViewAs }) => void
-	async function tracklistContextMenu(id: string, isFolder: boolean) {
-		await ipcRenderer.invoke('showTracklistMenu', { id, isFolder, isRoot: false })
+	async function tracklist_context_menu(id: string, is_folder: boolean) {
+		await ipc_renderer.invoke('showTracklistMenu', { id, isFolder: is_folder, isRoot: false })
 	}
 
-	function hasShowingChildren(id: string) {
-		const list = $trackListsDetailsMap[id]
-		return list.children && list.children.length > 0 && $shownFolders.has(id)
+	function has_showing_children(id: string) {
+		const list = $track_lists_details_map[id]
+		return list.children && list.children.length > 0 && $shown_folders.has(id)
 	}
 
 	export let on_select_down = () => {}
-	function selectFirst(item: TrackListDetails) {
+	function select_first(item: TrackListDetails) {
 		const child_id = item.children?.[0]
 		if (child_id) {
-			on_open($trackListsDetailsMap[child_id])
+			on_open($track_lists_details_map[child_id])
 		}
 	}
-	function selectLast(in_id: string) {
-		const children = $trackListsDetailsMap[in_id].children
-		if (children && (hasShowingChildren(in_id) || in_id === 'root')) {
-			selectLast(children[children.length - 1])
+	function select_last(in_id: string) {
+		const children = $track_lists_details_map[in_id].children
+		if (children && (has_showing_children(in_id) || in_id === 'root')) {
+			select_last(children[children.length - 1])
 		} else {
-			on_open($trackListsDetailsMap[in_id])
+			on_open($track_lists_details_map[in_id])
 		}
 	}
-	function selectUp(i: number) {
-		const prevId = children[i - 1]?.id || null
-		if (i === 0 && parentId) {
-			on_open({ id: parentId })
-		} else if (prevId && hasShowingChildren(prevId)) {
-			selectLast(prevId)
-		} else if (prevId) {
-			on_open({ id: prevId })
+	function select_up(i: number) {
+		const prev_id = children[i - 1]?.id || null
+		if (i === 0 && parent_id) {
+			on_open({ id: parent_id })
+		} else if (prev_id && has_showing_children(prev_id)) {
+			select_last(prev_id)
+		} else if (prev_id) {
+			on_open({ id: prev_id })
 		}
 	}
-	function selectDown(i: number) {
-		if (hasShowingChildren(children[i].id)) {
-			selectFirst(children[i])
+	function select_down(i: number) {
+		if (has_showing_children(children[i].id)) {
+			select_first(children[i])
 		} else if (children[i + 1]) {
 			console.trace()
 			on_open(children[i + 1])
@@ -89,7 +89,7 @@
 		}
 	}
 
-	export function handleKey(e: KeyboardEvent) {
+	export function handle_key(e: KeyboardEvent) {
 		const index = children.findIndex((child) => {
 			if (child.id === 'root') {
 				return child.id === $page.tracklist.id && child.view_as === $page.viewAs
@@ -100,47 +100,47 @@
 		if (index < 0) {
 			return
 		}
-		const selectedList = $trackListsDetailsMap[$page.tracklist.id]
-		if (checkShortcut(e, 'ArrowUp')) {
-			selectUp(index)
-		} else if (checkShortcut(e, 'ArrowUp', { alt: true })) {
+		const selected_list = $track_lists_details_map[$page.tracklist.id]
+		if (check_shortcut(e, 'ArrowUp')) {
+			select_up(index)
+		} else if (check_shortcut(e, 'ArrowUp', { alt: true })) {
 			on_open({ id: 'root' })
-		} else if (checkShortcut(e, 'ArrowDown', { alt: true })) {
-			selectLast('root')
-		} else if (checkShortcut(e, 'ArrowDown')) {
-			selectDown(index)
-		} else if (checkShortcut(e, 'ArrowLeft')) {
-			if (selectedList.kind === 'folder' && $shownFolders.has(selectedList.id)) {
-				hideFolder(selectedList.id)
-			} else if (parentId) {
-				on_open({ id: parentId })
+		} else if (check_shortcut(e, 'ArrowDown', { alt: true })) {
+			select_last('root')
+		} else if (check_shortcut(e, 'ArrowDown')) {
+			select_down(index)
+		} else if (check_shortcut(e, 'ArrowLeft')) {
+			if (selected_list.kind === 'folder' && $shown_folders.has(selected_list.id)) {
+				hide_folder(selected_list.id)
+			} else if (parent_id) {
+				on_open({ id: parent_id })
 			}
-		} else if (checkShortcut(e, 'ArrowRight') && selectedList.kind === 'folder') {
-			showFolder(selectedList.id)
+		} else if (check_shortcut(e, 'ArrowRight') && selected_list.kind === 'folder') {
+			show_folder(selected_list.id)
 		} else {
 			return
 		}
 		e.preventDefault()
 	}
 	$: if (children.find((child) => child.id === $page.id)) {
-		const itemHandle = getContext<Writable<SidebarItemHandle | null>>('itemHandle')
-		itemHandle.set({ handleKey })
+		const item_handle = getContext<Writable<SidebarItemHandle | null>>('itemHandle')
+		item_handle.set({ handleKey: handle_key })
 	}
 
-	let dragTrackOntoIndex = null as number | null
-	let dropAbove = false
-	let dragPlaylistOntoIndex = null as number | null
+	let drag_track_onto_index = null as number | null
+	let drop_above = false
+	let drag_playlist_onto_index = null as number | null
 
-	function onDragStart(e: DragEvent, tracklist: TrackListDetails) {
-		if (e.dataTransfer && tracklist.kind !== 'special' && parentId) {
+	function on_drag_start(e: DragEvent, tracklist: TrackListDetails) {
+		if (e.dataTransfer && tracklist.kind !== 'special' && parent_id) {
 			e.dataTransfer.effectAllowed = 'move'
-			dragGhost.setInnerText(tracklist.name)
+			dragGhost.set_inner_text(tracklist.name)
 			dragged.playlist = {
 				id: tracklist.id,
-				fromFolder: parentId,
+				from_folder: parent_id,
 				level,
 			}
-			e.dataTransfer.setDragImage(dragGhost.dragEl, 0, 0)
+			e.dataTransfer.setDragImage(dragGhost.drag_el, 0, 0)
 			e.dataTransfer.setData('ferrum.playlist', '')
 		}
 	}
@@ -154,30 +154,30 @@
 				style:padding-left={14 * level + 'px'}
 				class:active={$page.id === child_list.id}
 				draggable="true"
-				on:dragstart={(e) => onDragStart(e, child_list)}
-				class:show={$shownFolders.has(child_list.id)}
-				class:droppable={dragPlaylistOntoIndex === i}
+				on:dragstart={(e) => on_drag_start(e, child_list)}
+				class:show={$shown_folders.has(child_list.id)}
+				class:droppable={drag_playlist_onto_index === i}
 				role="none"
 				on:drop={(e) => {
 					if (
 						e.currentTarget &&
 						e.dataTransfer?.types[0] === 'ferrum.playlist' &&
 						dragged.playlist &&
-						!preventDrop &&
+						!prevent_drop &&
 						dragged.playlist.id !== child_list.id &&
 						child_list.children !== undefined
 					) {
-						movePlaylist(
+						move_playlist(
 							dragged.playlist.id,
-							dragged.playlist.fromFolder,
+							dragged.playlist.from_folder,
 							child_list.id,
 							Math.max(0, child_list.children.length - 1),
 						)
-						dragPlaylistOntoIndex = null
+						drag_playlist_onto_index = null
 					}
 				}}
 				on:mousedown={() => on_open(child_list)}
-				on:contextmenu={() => tracklistContextMenu(child_list.id, true)}
+				on:contextmenu={() => tracklist_context_menu(child_list.id, true)}
 			>
 				<!-- svelte-ignore a11y-click-events-have-key-events -->
 				<!-- svelte-ignore a11y-interactive-supports-focus -->
@@ -187,10 +187,10 @@
 					aria-label="Arrow button"
 					on:mousedown|stopPropagation
 					on:click={() => {
-						if ($shownFolders.has(child_list.id)) {
-							hideFolder(child_list.id)
+						if ($shown_folders.has(child_list.id)) {
+							hide_folder(child_list.id)
 						} else {
-							showFolder(child_list.id)
+							show_folder(child_list.id)
 						}
 					}}
 					xmlns="http://www.w3.org/2000/svg"
@@ -209,26 +209,26 @@
 							e.currentTarget &&
 							e.dataTransfer?.types[0] === 'ferrum.playlist' &&
 							dragged.playlist &&
-							!preventDrop &&
+							!prevent_drop &&
 							dragged.playlist.id !== child_list.id
 						) {
-							dragPlaylistOntoIndex = i
+							drag_playlist_onto_index = i
 							e.preventDefault()
 						}
 					}}
 					on:dragleave|self={() => {
-						dragPlaylistOntoIndex = null
+						drag_playlist_onto_index = null
 					}}
 				>
 					{child_list.name}
 				</div>
 			</div>
 			<svelte:self
-				show={$shownFolders.has(child_list.id)}
+				show={$shown_folders.has(child_list.id)}
 				parentId={child_list.id}
-				children={child_list.children?.map((childId) => $trackListsDetailsMap[childId]) || []}
+				children={child_list.children?.map((child_id) => $track_lists_details_map[child_id]) || []}
 				level={level + 1}
-				preventDrop={preventDrop || dragged.playlist?.id === child_list.id}
+				preventDrop={prevent_drop || dragged.playlist?.id === child_list.id}
 				{on_open}
 				on_select_down={() => {
 					if (i < children.length - 1) {
@@ -246,35 +246,35 @@
 				aria-label="playlist"
 				style:padding-left={14 * level + 'px'}
 				draggable="true"
-				on:dragstart={(e) => onDragStart(e, child_list)}
+				on:dragstart={(e) => on_drag_start(e, child_list)}
 				class:active={$page.id === child_list.id}
 				on:mousedown={() => on_open(child_list)}
-				class:droppable={dragTrackOntoIndex === i}
-				class:droppable-above={dragPlaylistOntoIndex === i && dropAbove}
-				class:droppable-below={dragPlaylistOntoIndex === i && !dropAbove}
+				class:droppable={drag_track_onto_index === i}
+				class:droppable-above={drag_playlist_onto_index === i && drop_above}
+				class:droppable-below={drag_playlist_onto_index === i && !drop_above}
 				on:drop={(e) => {
 					if (e.currentTarget && e.dataTransfer?.types[0] === 'ferrum.tracks' && dragged.tracks) {
-						addTracksToPlaylist(child_list.id, dragged.tracks.ids)
-						dragTrackOntoIndex = null
+						add_track_to_playlist(child_list.id, dragged.tracks.ids)
+						drag_track_onto_index = null
 					} else if (
 						e.currentTarget &&
 						e.dataTransfer?.types[0] === 'ferrum.playlist' &&
 						dragged.playlist &&
-						!preventDrop &&
-						parentId !== null
+						!prevent_drop &&
+						parent_id !== null
 					) {
 						const rect = e.currentTarget.getBoundingClientRect()
-						dropAbove = e.pageY < rect.bottom - rect.height / 2
-						movePlaylist(
+						drop_above = e.pageY < rect.bottom - rect.height / 2
+						move_playlist(
 							dragged.playlist.id,
-							dragged.playlist.fromFolder,
-							parentId,
-							dropAbove ? i : i + 1,
+							dragged.playlist.from_folder,
+							parent_id,
+							drop_above ? i : i + 1,
 						)
-						dragPlaylistOntoIndex = null
+						drag_playlist_onto_index = null
 					}
 				}}
-				on:contextmenu={() => tracklistContextMenu(child_list.id, false)}
+				on:contextmenu={() => tracklist_context_menu(child_list.id, false)}
 			>
 				<div class="arrow" />
 				<div
@@ -282,23 +282,23 @@
 					role="link"
 					on:dragover={(e) => {
 						if (e.currentTarget && e.dataTransfer?.types[0] === 'ferrum.tracks' && dragged.tracks) {
-							dragTrackOntoIndex = i
+							drag_track_onto_index = i
 							e.preventDefault()
 						} else if (
 							e.currentTarget &&
 							e.dataTransfer?.types[0] === 'ferrum.playlist' &&
 							dragged.playlist &&
-							!preventDrop
+							!prevent_drop
 						) {
-							dragPlaylistOntoIndex = i
+							drag_playlist_onto_index = i
 							e.preventDefault()
 							const rect = e.currentTarget.getBoundingClientRect()
-							dropAbove = e.pageY < rect.bottom - rect.height / 2
+							drop_above = e.pageY < rect.bottom - rect.height / 2
 						}
 					}}
 					on:dragleave|self={() => {
-						dragTrackOntoIndex = null
-						dragPlaylistOntoIndex = null
+						drag_track_onto_index = null
+						drag_playlist_onto_index = null
 					}}
 				>
 					{child_list.name}

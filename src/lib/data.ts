@@ -1,5 +1,5 @@
 import { writable } from 'svelte/store'
-import { ipcRenderer } from '@/lib/window'
+import { ipc_renderer } from '@/lib/window'
 import type {
 	MsSinceUnixEpoch,
 	TrackID,
@@ -11,19 +11,20 @@ import type {
 import { selection as pageSelection } from './page'
 import { queue } from './queue'
 
-export const isDev = window.isDev
-export const libraryPath = window.libraryPath
-export const isMac = window.isMac
-export const isWindows = window.isWindows
-const innerAddon = window.addon
-export const ItunesImport = innerAddon.ItunesImport
+export const is_dev = window.is_dev
+export const library_path = window.library_path
+export const is_mac = window.is_mac
+export const is_windws = window.is_windows
+const inner_addon = window.addon
+// eslint-disable-next-line @typescript-eslint/naming-convention
+export const ItunesImport = inner_addon.ItunesImport
 
-call((addon) => addon.load_data(isDev, libraryPath))
+call((addon) => addon.load_data(is_dev, library_path))
 
 export const view_as_songs: ViewAs.Songs = 0
 export const view_as_artists: ViewAs.Artists = 1
 
-function getErrorMessage(err: unknown): string {
+function get_error_message(err: unknown): string {
 	if (typeof err === 'object' && err !== null) {
 		const obj = err as { [key: string]: unknown }
 		if (obj.message) {
@@ -34,7 +35,7 @@ function getErrorMessage(err: unknown): string {
 	}
 	return 'No reason or code provided'
 }
-function getErrorStack(err: unknown): string {
+function get_error_stack(err: unknown): string {
 	if (typeof err === 'object' && err !== null) {
 		const obj = err as { [key: string]: unknown }
 		if (obj.stack) {
@@ -43,20 +44,20 @@ function getErrorStack(err: unknown): string {
 	}
 	return ''
 }
-function errorPopup(err: unknown) {
-	ipcRenderer.invoke('showMessageBox', false, {
+function error_popup(err: unknown) {
+	ipc_renderer.invoke('showMessageBox', false, {
 		type: 'error',
-		message: getErrorMessage(err),
-		detail: getErrorStack(err),
+		message: get_error_message(err),
+		detail: get_error_stack(err),
 	})
 }
 
-export function call<T, P extends T | Promise<T>>(cb: (addon: typeof innerAddon) => P): P {
+export function call<T, P extends T | Promise<T>>(cb: (addon: typeof inner_addon) => P): P {
 	try {
-		const result = cb(innerAddon)
+		const result = cb(inner_addon)
 		if (result instanceof Promise) {
 			return result.catch((err) => {
-				errorPopup(err)
+				error_popup(err)
 				throw err
 			}) as P
 		} else {
@@ -65,12 +66,12 @@ export function call<T, P extends T | Promise<T>>(cb: (addon: typeof innerAddon)
 	} catch (err) {
 		console.log('errorPopup')
 
-		errorPopup(err)
+		error_popup(err)
 		throw err
 	}
 }
 
-export const trackListsDetailsMap = (() => {
+export const track_lists_details_map = (() => {
 	const initial = call((addon) => addon.get_track_lists_details())
 
 	const { subscribe, set } = writable(initial)
@@ -81,17 +82,17 @@ export const trackListsDetailsMap = (() => {
 		},
 	}
 })()
-export async function addTracksToPlaylist(
-	playlistId: TrackListID,
-	trackIds: TrackID[],
-	checkDuplicates = true,
+export async function add_track_to_playlist(
+	playlist_id: TrackListID,
+	track_ids: TrackID[],
+	check_duplicates = true,
 ) {
-	if (checkDuplicates) {
-		const filteredIds = call((addon) => addon.playlist_filter_duplicates(playlistId, trackIds))
-		const duplicates = trackIds.length - filteredIds.length
+	if (check_duplicates) {
+		const filtered_ids = call((addon) => addon.playlist_filter_duplicates(playlist_id, track_ids))
+		const duplicates = track_ids.length - filtered_ids.length
 
 		if (duplicates > 0) {
-			const result = await ipcRenderer.invoke('showMessageBox', false, {
+			const result = await ipc_renderer.invoke('showMessageBox', false, {
 				type: 'question',
 				message: 'Already added',
 				detail:
@@ -104,27 +105,27 @@ export async function addTracksToPlaylist(
 			if (result.response === 1) {
 				return
 			} else if (result.response === 2) {
-				trackIds = filteredIds
+				track_ids = filtered_ids
 			}
 		}
 	}
-	if (trackIds.length >= 1) {
-		call((addon) => addon.add_tracks_to_playlist(playlistId, trackIds))
-		if (page.get().tracklist.id === playlistId) {
-			page.refreshIdsAndKeepSelection()
+	if (track_ids.length >= 1) {
+		call((addon) => addon.add_tracks_to_playlist(playlist_id, track_ids))
+		if (page.get().tracklist.id === playlist_id) {
+			page.refresh_ids_and_keep_selection()
 		}
 		methods.save()
 	}
 }
-export function removeFromOpenPlaylist(indexes: number[]) {
+export function remove_from_open_playlist(indexes: number[]) {
 	call((addon) => addon.remove_from_open_playlist(indexes))
-	page.refreshIdsAndKeepSelection()
+	page.refresh_ids_and_keep_selection()
 	pageSelection.clear()
 	methods.save()
 }
-export function deleteTracksInOpen(indexes: number[]) {
+export function delete_tracks_in_open(indexes: number[]) {
 	call((addon) => addon.delete_tracks_in_open(indexes))
-	page.refreshIdsAndKeepSelection()
+	page.refresh_ids_and_keep_selection()
 	pageSelection.clear()
 	queue.removeDeleted()
 	methods.save()
@@ -137,50 +138,50 @@ export type PlaylistInfo = {
 	id: string
 	editMode: boolean
 }
-export function newPlaylist(info: PlaylistInfo) {
+export function new_playlist(info: PlaylistInfo) {
 	call((addon) => addon.new_playlist(info.name, info.description, info.isFolder, info.id))
-	trackListsDetailsMap.refresh()
+	track_lists_details_map.refresh()
 	methods.save()
 }
-export function updatePlaylist(id: string, name: string, description: string) {
+export function update_playlist(id: string, name: string, description: string) {
 	call((addon) => addon.update_playlist(id, name, description))
-	trackListsDetailsMap.refresh()
-	page.refreshIdsAndKeepSelection()
+	track_lists_details_map.refresh()
+	page.refresh_ids_and_keep_selection()
 	methods.save()
 }
-export function movePlaylist(
+export function move_playlist(
 	id: TrackListID,
-	fromParent: TrackListID,
-	toParent: TrackListID,
-	toIndex: number,
+	from_parent: TrackListID,
+	to_parent: TrackListID,
+	to_index: number,
 ) {
-	call((addon) => addon.move_playlist(id, fromParent, toParent, toIndex))
-	trackListsDetailsMap.refresh()
+	call((addon) => addon.move_playlist(id, from_parent, to_parent, to_index))
+	track_lists_details_map.refresh()
 	methods.save()
 }
 
 export const paths = call((addon) => addon.get_paths())
 
-export async function importTracks(paths: string[]) {
-	let errState = null
+export async function import_tracks(paths: string[]) {
+	let err_state = null
 	const now = Date.now()
 	for (const path of paths) {
 		try {
-			innerAddon.import_file(path, now)
+			inner_addon.import_file(path, now)
 		} catch (err) {
-			if (errState === 'skip') continue
-			const result = await ipcRenderer.invoke('showMessageBox', false, {
+			if (err_state === 'skip') continue
+			const result = await ipc_renderer.invoke('showMessageBox', false, {
 				type: 'error',
 				message: 'Error importing track ' + path,
-				detail: getErrorMessage(err),
-				buttons: errState ? ['OK', 'Skip all errors'] : ['OK'],
+				detail: get_error_message(err),
+				buttons: err_state ? ['OK', 'Skip all errors'] : ['OK'],
 				defaultId: 0,
 			})
-			if (result.response === 1) errState = 'skip'
-			else errState = 'skippable'
+			if (result.response === 1) err_state = 'skip'
+			else err_state = 'skippable'
 		}
 	}
-	page.refreshIdsAndKeepSelection()
+	page.refresh_ids_and_keep_selection()
 	pageSelection.clear()
 	methods.save()
 }
@@ -200,9 +201,9 @@ export const methods = {
 	},
 	deleteTrackList: (id: TrackListID) => {
 		call((data) => data.delete_track_list(id))
-		page.refreshIdsAndKeepSelection()
+		page.refresh_ids_and_keep_selection()
 		pageSelection.clear()
-		trackListsDetailsMap.refresh()
+		track_lists_details_map.refresh()
 		methods.save()
 	},
 	save: () => {
@@ -210,29 +211,29 @@ export const methods = {
 	},
 	addPlay: (id: TrackID) => {
 		call((data) => data.add_play(id))
-		page.refreshIdsAndKeepSelection()
+		page.refresh_ids_and_keep_selection()
 		methods.save()
 	},
 	addSkip: (id: TrackID) => {
 		call((data) => data.add_skip(id))
-		page.refreshIdsAndKeepSelection()
+		page.refresh_ids_and_keep_selection()
 		methods.save()
 	},
-	addPlayTime: (id: TrackID, startTime: MsSinceUnixEpoch, durationMs: number) => {
-		call((data) => data.add_play_time(id, startTime, durationMs))
-		page.refreshIdsAndKeepSelection()
+	addPlayTime: (id: TrackID, start_time: MsSinceUnixEpoch, duration_ms: number) => {
+		call((data) => data.add_play_time(id, start_time, duration_ms))
+		page.refresh_ids_and_keep_selection()
 		methods.save()
 	},
 	readCoverAsync(id: TrackID, index: number) {
-		return innerAddon.read_cover_async(id, index).catch((error) => {
+		return inner_addon.read_cover_async(id, index).catch((error) => {
 			console.log('Could not read cover', error)
 			throw error
 		})
 	},
 	updateTrackInfo: (id: TrackID, md: TrackMd) => {
 		call((data) => data.update_track_info(id, md))
-		trackMetadataUpdated.emit()
-		page.refreshIdsAndKeepSelection()
+		track_metadata_updated.emit()
+		page.refresh_ids_and_keep_selection()
 		methods.save()
 	},
 	loadTags: (id: TrackID) => {
@@ -271,7 +272,7 @@ export const filter = (() => {
 	}
 })()
 
-function createRefreshStore() {
+function create_refresh_store() {
 	const store = writable(0)
 	return {
 		subscribe: store.subscribe,
@@ -280,14 +281,14 @@ function createRefreshStore() {
 		},
 	}
 }
-export const trackMetadataUpdated = createRefreshStore()
+export const track_metadata_updated = create_refresh_store()
 
 export const page = (() => {
 	function get() {
 		const info = call((addon) => addon.get_page_info())
 		return info
 	}
-	function refreshIdsAndKeepSelection() {
+	function refresh_ids_and_keep_selection() {
 		call((addon) => addon.refresh_page())
 		set(get())
 	}
@@ -298,41 +299,41 @@ export const page = (() => {
 		get,
 		set,
 		update,
-		refreshIdsAndKeepSelection,
-		openPlaylist(id: string, view_as: ViewAs) {
+		refresh_ids_and_keep_selection: refresh_ids_and_keep_selection,
+		open_playlist(id: string, view_as: ViewAs) {
 			call((data) => data.open_playlist(id, view_as))
-			refreshIdsAndKeepSelection()
+			refresh_ids_and_keep_selection()
 			pageSelection.clear()
 			filter.set('')
 		},
-		sortBy(key: string) {
+		sort_by(key: string) {
 			call((addon) => addon.sort(key, true))
-			refreshIdsAndKeepSelection()
+			refresh_ids_and_keep_selection()
 			pageSelection.clear()
 		},
 		set_group_album_tracks(value: boolean) {
 			call((addon) => addon.set_group_album_tracks(value))
-			refreshIdsAndKeepSelection()
+			refresh_ids_and_keep_selection()
 			pageSelection.clear()
 		},
 		get_artists() {
 			return call((addon) => addon.get_artists())
 		},
-		getTrack(index: number) {
+		get_track(index: number) {
 			return call((addon) => addon.get_page_track(index))
 		},
-		getTrackId(index: number) {
+		get_track_id(index: number) {
 			return call((data) => data.get_page_track_id(index))
 		},
-		getTrackIds() {
+		get_track_ids() {
 			return call((data) => data.get_page_track_ids())
 		},
-		moveTracks: (indexes: number[], toIndex: number) => {
-			const newSelection = call((data) => data.move_tracks(indexes, toIndex))
+		move_tracks: (indexes: number[], to_index: number) => {
+			const new_selection = call((data) => data.move_tracks(indexes, to_index))
 			call((data) => data.refresh_page())
-			refreshIdsAndKeepSelection()
+			refresh_ids_and_keep_selection()
 			pageSelection.clear()
-			for (let i = newSelection.from; i <= newSelection.to; i++) {
+			for (let i = new_selection.from; i <= new_selection.to; i++) {
 				pageSelection.add(i)
 			}
 			methods.save()

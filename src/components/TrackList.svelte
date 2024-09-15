@@ -1,93 +1,99 @@
 <script lang="ts">
-	import { page, removeFromOpenPlaylist, filter, deleteTracksInOpen, paths } from '../lib/data'
-	import { newPlaybackInstance, playingId } from '../lib/player'
 	import {
-		getDuration,
-		formatDate,
-		checkMouseShortcut,
-		checkShortcut,
-		assertUnreachable,
+		page,
+		remove_from_open_playlist,
+		filter,
+		delete_tracks_in_open,
+		paths,
+	} from '../lib/data'
+	import { new_playback_instance, playing_id } from '../lib/player'
+	import {
+		get_duration,
+		format_date,
+		check_mouse_shortcut,
+		check_shortcut,
+		assert_unreachable,
 	} from '../lib/helpers'
-	import { appendToUserQueue, prependToUserQueue } from '../lib/queue'
+	import { append_to_user_queue, prepend_to_user_queue } from '../lib/queue'
 	import { selection, tracklist_actions } from '../lib/page'
-	import { ipcListen, ipcRenderer } from '../lib/window'
+	import { ipc_listen, ipc_renderer } from '../lib/window'
 	import { onDestroy, onMount } from 'svelte'
 	import { dragged } from '../lib/drag-drop'
 	import * as dragGhost from './DragGhost.svelte'
 	import type { TrackID } from 'ferrum-addon/addon'
 	import VirtualListBlock, { scroll_container_keydown } from './VirtualListBlock.svelte'
 
-	export let onTrackInfo: (allIds: TrackID[], index: number) => void
+	export let on_track_info: (allIds: TrackID[], index: number) => void
 
-	let tracklistElement: HTMLDivElement
+	let tracklist_element: HTMLDivElement
 
-	const trackActionUnlisten = ipcListen('selectedTracksAction', (_, action) => {
-		let firstIndex = selection.findFirst()
-		if (firstIndex === null || !tracklistElement.contains(document.activeElement)) {
+	const track_action_unlisten = ipc_listen('selectedTracksAction', (_, action) => {
+		let first_index = selection.findFirst()
+		if (first_index === null || !tracklist_element.contains(document.activeElement)) {
 			return
 		}
 		if (action === 'Play Next') {
-			const ids = selection.getSelectedIndexes().map((i) => page.getTrackId(i))
-			prependToUserQueue(ids)
+			const ids = selection.getSelectedIndexes().map((i) => page.get_track_id(i))
+			prepend_to_user_queue(ids)
 		} else if (action === 'Add to Queue') {
-			const ids = selection.getSelectedIndexes().map((i) => page.getTrackId(i))
-			appendToUserQueue(ids)
+			const ids = selection.getSelectedIndexes().map((i) => page.get_track_id(i))
+			append_to_user_queue(ids)
 		} else if (action === 'Get Info') {
-			onTrackInfo(page.getTrackIds(), firstIndex)
+			on_track_info(page.get_track_ids(), first_index)
 		} else if (action === 'revealTrackFile') {
-			const track = page.getTrack(firstIndex)
-			ipcRenderer.invoke('revealTrackFile', paths.tracksDir, track.file)
+			const track = page.get_track(first_index)
+			ipc_renderer.invoke('revealTrackFile', paths.tracksDir, track.file)
 		} else if (action === 'Remove from Playlist') {
-			removeFromOpenPlaylist(selection.getSelectedIndexes())
+			remove_from_open_playlist(selection.getSelectedIndexes())
 		} else if (action === 'Delete from Library') {
-			deleteIndexes(selection.getSelectedIndexes())
+			delete_indexes(selection.getSelectedIndexes())
 		} else {
-			assertUnreachable(action)
+			assert_unreachable(action)
 		}
 	})
-	onDestroy(trackActionUnlisten)
+	onDestroy(track_action_unlisten)
 
-	const sortBy = page.sortBy
+	const sort_by = page.sort_by
 	$: sortKey = $page.sortKey
 
-	ipcRenderer.on('Group Album Tracks', (_, checked) => {
+	ipc_renderer.on('Group Album Tracks', (_, checked) => {
 		page.set_group_album_tracks(checked)
 	})
 
-	function doubleClick(e: MouseEvent, index: number) {
-		if (e.button === 0 && checkMouseShortcut(e)) {
-			playRow(index)
+	function double_click(e: MouseEvent, index: number) {
+		if (e.button === 0 && check_mouse_shortcut(e)) {
+			play_row(index)
 		}
 	}
-	async function deleteIndexes(indexes: number[]) {
+	async function delete_indexes(indexes: number[]) {
 		const s = $selection.count > 1 ? 's' : ''
-		const result = await ipcRenderer.invoke('showMessageBox', false, {
+		const result = await ipc_renderer.invoke('showMessageBox', false, {
 			type: 'info',
 			message: `Delete ${$selection.count} song${s} from library?`,
 			buttons: [`Delete Song${s}`, 'Cancel'],
 			defaultId: 0,
 		})
 		if (result.response === 0) {
-			deleteTracksInOpen(indexes)
+			delete_tracks_in_open(indexes)
 		}
 	}
 	async function keydown(e: KeyboardEvent) {
-		if (checkShortcut(e, 'Enter')) {
-			let firstIndex = selection.findFirst()
-			if (firstIndex !== null) {
-				playRow(firstIndex)
-			} else if (!$playingId) {
-				playRow(0)
+		if (check_shortcut(e, 'Enter')) {
+			let first_index = selection.findFirst()
+			if (first_index !== null) {
+				play_row(first_index)
+			} else if (!$playing_id) {
+				play_row(0)
 			}
 		} else if (
-			checkShortcut(e, 'Backspace') &&
+			check_shortcut(e, 'Backspace') &&
 			$selection.count > 0 &&
 			!$filter &&
 			$page.tracklist.type === 'playlist'
 		) {
 			e.preventDefault()
 			const s = $selection.count > 1 ? 's' : ''
-			const result = ipcRenderer.invoke('showMessageBox', false, {
+			const result = ipc_renderer.invoke('showMessageBox', false, {
 				type: 'info',
 				message: `Remove ${$selection.count} song${s} from the list?`,
 				buttons: ['Remove Song' + s, 'Cancel'],
@@ -95,11 +101,11 @@
 			})
 			const indexes = selection.getSelectedIndexes()
 			if ((await result).response === 0) {
-				removeFromOpenPlaylist(indexes)
+				remove_from_open_playlist(indexes)
 			}
-		} else if (checkShortcut(e, 'Backspace', { cmdOrCtrl: true }) && $selection.count > 0) {
+		} else if (check_shortcut(e, 'Backspace', { cmd_or_ctrl: true }) && $selection.count > 0) {
 			e.preventDefault()
-			deleteIndexes(selection.getSelectedIndexes())
+			delete_indexes(selection.getSelectedIndexes())
 		} else {
 			selection.handleKeyDown(e)
 			return
@@ -107,76 +113,76 @@
 		e.preventDefault()
 	}
 
-	function playRow(index: number) {
-		newPlaybackInstance(page.getTrackIds(), index)
+	function play_row(index: number) {
+		new_playback_instance(page.get_track_ids(), index)
 	}
 
-	let dragLine: HTMLElement
-	let dragIndexes: number[] = []
-	function onDragStart(e: DragEvent) {
+	let drag_line: HTMLElement
+	let drag_indexes: number[] = []
+	function on_drag_start(e: DragEvent) {
 		if (e.dataTransfer) {
-			dragIndexes = []
+			drag_indexes = []
 			for (let i = 0; i < $selection.list.length; i++) {
 				if ($selection.list[i]) {
-					dragIndexes.push(i)
+					drag_indexes.push(i)
 				}
 			}
 			e.dataTransfer.effectAllowed = 'move'
-			if (dragIndexes.length === 1) {
-				const track = page.getTrack(dragIndexes[0])
-				dragGhost.setInnerText(track.artist + ' - ' + track.name)
+			if (drag_indexes.length === 1) {
+				const track = page.get_track(drag_indexes[0])
+				dragGhost.set_inner_text(track.artist + ' - ' + track.name)
 			} else {
-				dragGhost.setInnerText(dragIndexes.length + ' items')
+				dragGhost.set_inner_text(drag_indexes.length + ' items')
 			}
 			dragged.tracks = {
-				ids: dragIndexes.map((i) => page.getTrackId(i)),
-				playlistIndexes: dragIndexes,
+				ids: drag_indexes.map((i) => page.get_track_id(i)),
+				playlist_indexes: drag_indexes,
 			}
-			e.dataTransfer.setDragImage(dragGhost.dragEl, 0, 0)
+			e.dataTransfer.setDragImage(dragGhost.drag_el, 0, 0)
 			e.dataTransfer.setData('ferrum.tracks', '')
 		}
 	}
-	let dragToIndex: null | number = null
-	function onDragOver(e: DragEvent, index: number) {
+	let drag_to_index: null | number = null
+	function on_drag_over(e: DragEvent, index: number) {
 		if (
 			!$page.sortDesc ||
 			$page.sortKey !== 'index' ||
 			$filter ||
 			$page.tracklist.type !== 'playlist'
 		) {
-			dragToIndex = null
+			drag_to_index = null
 			return
 		}
 		if (
-			dragged.tracks?.playlistIndexes &&
+			dragged.tracks?.playlist_indexes &&
 			e.currentTarget &&
 			e.dataTransfer?.types[0] === 'ferrum.tracks'
 		) {
 			e.preventDefault()
 			const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
 			if (e.pageY < rect.bottom - rect.height / 2) {
-				dragLine.style.top = rect.top - 1 + 'px'
-				dragToIndex = index
+				drag_line.style.top = rect.top - 1 + 'px'
+				drag_to_index = index
 			} else {
-				dragLine.style.top = rect.bottom - 1 + 'px'
-				dragToIndex = index + 1
+				drag_line.style.top = rect.bottom - 1 + 'px'
+				drag_to_index = index + 1
 			}
 		}
 	}
-	async function dropHandler() {
-		if (dragToIndex !== null) {
-			page.moveTracks(dragIndexes, dragToIndex)
-			dragToIndex = null
+	async function drop_handler() {
+		if (drag_to_index !== null) {
+			page.move_tracks(drag_indexes, drag_to_index)
+			drag_to_index = null
 		}
 	}
-	function dragEndHandler() {
-		dragToIndex = null
+	function drag_end_handler() {
+		drag_to_index = null
 	}
 
-	function getItem(index: number) {
+	function get_item(index: number) {
 		try {
-			const track = page.getTrack(index)
-			return { ...track, id: page.getTrackId(index) }
+			const track = page.get_track(index)
+			return { ...track, id: page.get_track_id(index) }
 		} catch (_) {
 			return null
 		}
@@ -200,10 +206,10 @@
 </script>
 
 <div
-	bind:this={tracklistElement}
+	bind:this={tracklist_element}
 	class="tracklist"
 	role="table"
-	on:dragleave={() => (dragToIndex = null)}
+	on:dragleave={() => (drag_to_index = null)}
 	class:no-selection={$selection.count === 0}
 >
 	<div
@@ -216,7 +222,7 @@
 		<div
 			class="c index"
 			class:sort={sortKey === 'index'}
-			on:click={() => sortBy('index')}
+			on:click={() => sort_by('index')}
 			role="button"
 		>
 			<span>#</span>
@@ -226,7 +232,7 @@
 		<div
 			class="c name"
 			class:sort={sortKey === 'name'}
-			on:click={() => sortBy('name')}
+			on:click={() => sort_by('name')}
 			role="button"
 		>
 			<span>Name</span>
@@ -236,7 +242,7 @@
 		<div
 			class="c playCount"
 			class:sort={sortKey === 'playCount'}
-			on:click={() => sortBy('playCount')}
+			on:click={() => sort_by('playCount')}
 			role="button"
 		>
 			<span>Plays</span>
@@ -246,7 +252,7 @@
 		<div
 			class="c duration"
 			class:sort={sortKey === 'duration'}
-			on:click={() => sortBy('duration')}
+			on:click={() => sort_by('duration')}
 			role="button"
 		>
 			<span>Time</span>
@@ -256,7 +262,7 @@
 		<div
 			class="c artist"
 			class:sort={sortKey === 'artist'}
-			on:click={() => sortBy('artist')}
+			on:click={() => sort_by('artist')}
 			role="button"
 		>
 			<span>Artist</span>
@@ -266,7 +272,7 @@
 		<div
 			class="c albumName"
 			class:sort={sortKey === 'albumName'}
-			on:click={() => sortBy('albumName')}
+			on:click={() => sort_by('albumName')}
 			role="button"
 		>
 			<span>Album</span>
@@ -276,7 +282,7 @@
 		<div
 			class="c comments"
 			class:sort={sortKey === 'comments'}
-			on:click={() => sortBy('comments')}
+			on:click={() => sort_by('comments')}
 			role="button"
 		>
 			<span>Comments</span>
@@ -286,7 +292,7 @@
 		<div
 			class="c genre"
 			class:sort={sortKey === 'genre'}
-			on:click={() => sortBy('genre')}
+			on:click={() => sort_by('genre')}
 			role="button"
 		>
 			<span>Genre</span>
@@ -296,7 +302,7 @@
 		<div
 			class="c dateAdded"
 			class:sort={sortKey === 'dateAdded'}
-			on:click={() => sortBy('dateAdded')}
+			on:click={() => sort_by('dateAdded')}
 			role="button"
 		>
 			<span>Date Added</span>
@@ -306,7 +312,7 @@
 		<div
 			class="c year"
 			class:sort={sortKey === 'year'}
-			on:click={() => sortBy('year')}
+			on:click={() => sort_by('year')}
 			role="button"
 		>
 			<span>Year</span>
@@ -330,28 +336,28 @@
 			{scroll_container}
 			let:item={i}
 		>
-			{@const track = getItem(i)}
+			{@const track = get_item(i)}
 			{#if track !== null}
 				<!-- svelte-ignore a11y-click-events-have-key-events -->
 				<!-- svelte-ignore a11y-interactive-supports-focus -->
 				<div
 					class="row"
 					role="row"
-					on:dblclick={(e) => doubleClick(e, i)}
+					on:dblclick={(e) => double_click(e, i)}
 					on:mousedown={(e) => selection.handleMouseDown(e, i)}
 					on:contextmenu={(e) => selection.handleContextMenu(e, i)}
 					on:click={(e) => selection.handleClick(e, i)}
 					draggable="true"
-					on:dragstart={onDragStart}
-					on:dragover={(e) => onDragOver(e, i)}
-					on:drop={dropHandler}
-					on:dragend={dragEndHandler}
+					on:dragstart={on_drag_start}
+					on:dragover={(e) => on_drag_over(e, i)}
+					on:drop={drop_handler}
+					on:dragend={drag_end_handler}
 					class:odd={i % 2 === 0}
 					class:selected={$selection.list[i] === true}
-					class:playing={track.id === $playingId}
+					class:playing={track.id === $playing_id}
 				>
 					<div class="c index">
-						{#if track.id === $playingId}
+						{#if track.id === $playing_id}
 							<svg
 								class="playing-icon inline"
 								xmlns="http://www.w3.org/2000/svg"
@@ -370,18 +376,18 @@
 					</div>
 					<div class="c name">{track.name}</div>
 					<div class="c playCount">{track.playCount || ''}</div>
-					<div class="c duration">{track.duration ? getDuration(track.duration) : ''}</div>
+					<div class="c duration">{track.duration ? get_duration(track.duration) : ''}</div>
 					<div class="c artist">{track.artist}</div>
 					<div class="c albumName">{track.albumName || ''}</div>
 					<div class="c comments">{track.comments || ''}</div>
 					<div class="c genre">{track.genre || ''}</div>
-					<div class="c dateAdded">{formatDate(track.dateAdded)}</div>
+					<div class="c dateAdded">{format_date(track.dateAdded)}</div>
 					<div class="c year">{track.year || ''}</div>
 				</div>
 			{/if}
 		</VirtualListBlock>
 	</div>
-	<div class="drag-line" class:show={dragToIndex !== null} bind:this={dragLine} />
+	<div class="drag-line" class:show={drag_to_index !== null} bind:this={drag_line} />
 </div>
 
 <style lang="sass">

@@ -1,12 +1,12 @@
-import { ipcRenderer } from './window'
+import { ipc_renderer } from './window'
 
-let unfinishedTasks = 0
-export function notReady() {
-	unfinishedTasks++
+let unfinished_tasks = 0
+export function not_ready() {
+	unfinished_tasks++
 }
 export function ready() {
-	unfinishedTasks--
-	tryToQuit()
+	unfinished_tasks--
+	try_to_quit()
 }
 
 type Callback = () => void | Promise<void>
@@ -14,24 +14,24 @@ interface Handlers {
 	[key: string]: Callback
 }
 const handlers: Handlers = {}
-function setHandler(name: string, callback: Callback) {
+function set_handler(name: string, callback: Callback) {
 	handlers[name] = callback
 }
 
-export default { notReady, ready, setHandler }
+export default { notReady: not_ready, ready, setHandler: set_handler }
 
-function tryToQuit() {
-	if (unfinishedTasks === 0) {
-		ipcRenderer.send('readyToQuit')
+function try_to_quit() {
+	if (unfinished_tasks === 0) {
+		ipc_renderer.send('readyToQuit')
 	}
 }
 
-notReady()
-ipcRenderer.on('gonnaQuit', async function () {
+not_ready()
+ipc_renderer.on('gonnaQuit', async function () {
 	for (const key of Object.keys(handlers)) {
 		const handler = handlers[key]
-		const asyncHandler = await Promise.resolve(handler)
-		await asyncHandler()
+		const async_handler = await Promise.resolve(handler)
+		await async_handler()
 	}
 	ready()
 })

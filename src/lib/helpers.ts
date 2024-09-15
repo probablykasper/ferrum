@@ -1,41 +1,41 @@
 import { type Updater, type Writable, writable } from 'svelte/store'
 import type { TrackListDetails } from '../../ferrum-addon'
 
-export function getDuration(dur: number) {
+export function get_duration(dur: number) {
 	dur = Math.round(dur)
 	const secs = dur % 60
-	let secsText = String(secs)
-	if (secs < 10) secsText = '0' + secs
+	let secs_text = String(secs)
+	if (secs < 10) secs_text = '0' + secs
 	const mins = (dur - secs) / 60
-	return mins + ':' + secsText
+	return mins + ':' + secs_text
 }
 
-export function formatDate(timestamp: number) {
+export function format_date(timestamp: number) {
 	const date = new Date(timestamp)
 	const month = date.getMonth() + 1
-	const monthText = (month < 10 ? '0' : '') + month
+	const month_text = (month < 10 ? '0' : '') + month
 	const day = date.getDate()
-	const dayText = (day < 10 ? '0' : '') + day
+	const day_text = (day < 10 ? '0' : '') + day
 	const clock = date.toLocaleTimeString(undefined, {
 		hour: '2-digit',
 		minute: '2-digit',
 	})
-	return date.getFullYear() + '/' + monthText + '/' + dayText + ' ' + clock
+	return date.getFullYear() + '/' + month_text + '/' + day_text + ' ' + clock
 }
 
 type ShortcutOptions = {
 	shift?: boolean
 	alt?: boolean
-	cmdOrCtrl?: boolean
+	cmd_or_ctrl?: boolean
 }
-const isMac = navigator.userAgent.indexOf('Mac') != -1
+const is_mac = navigator.userAgent.indexOf('Mac') != -1
 
-function checkModifiers(e: KeyboardEvent | MouseEvent, options: ShortcutOptions) {
+function check_modifiers(e: KeyboardEvent | MouseEvent, options: ShortcutOptions) {
 	const target = {
 		shift: options.shift || false,
 		alt: options.alt || false,
-		ctrl: (!isMac && options.cmdOrCtrl) || false,
-		meta: (isMac && options.cmdOrCtrl) || false,
+		ctrl: (!is_mac && options.cmd_or_ctrl) || false,
+		meta: (is_mac && options.cmd_or_ctrl) || false,
 	}
 
 	const pressed = {
@@ -45,22 +45,22 @@ function checkModifiers(e: KeyboardEvent | MouseEvent, options: ShortcutOptions)
 		meta: !!e.metaKey,
 	}
 
-	const ignoreCtrl = isMac && e instanceof MouseEvent
+	const ignore_ctrl = is_mac && e instanceof MouseEvent
 
 	return (
 		pressed.shift === target.shift &&
 		pressed.alt === target.alt &&
-		(pressed.ctrl === target.ctrl || ignoreCtrl) &&
+		(pressed.ctrl === target.ctrl || ignore_ctrl) &&
 		pressed.meta === target.meta
 	)
 }
 
-export function checkShortcut(e: KeyboardEvent, key: string, options: ShortcutOptions = {}) {
+export function check_shortcut(e: KeyboardEvent, key: string, options: ShortcutOptions = {}) {
 	if (e.key.toUpperCase() !== key.toUpperCase()) return false
-	return checkModifiers(e, options)
+	return check_modifiers(e, options)
 }
-export function checkMouseShortcut(e: MouseEvent, options: ShortcutOptions = {}) {
-	return checkModifiers(e, options)
+export function check_mouse_shortcut(e: MouseEvent, options: ShortcutOptions = {}) {
+	return check_modifiers(e, options)
 }
 
 export function clamp(min: number, max: number, value: number) {
@@ -70,27 +70,27 @@ export function clamp(min: number, max: number, value: number) {
 }
 
 type FlattenedListMenuItem = { label: string; enabled: boolean; id: string }
-export function flattenChildLists(
-	trackList: TrackListDetails,
-	trackLists: Record<string, TrackListDetails>,
-	indentPrefix: string,
+export function flatten_child_lists(
+	track_list: TrackListDetails,
+	track_lists: Record<string, TrackListDetails>,
+	indent_prefix: string,
 ) {
 	let flat: FlattenedListMenuItem[] = []
-	for (const childListId of trackList.children || []) {
-		const childList = trackLists[childListId]
-		if (childList.kind === 'folder') {
-			const childFlat = flattenChildLists(childList, trackLists, indentPrefix + '   ')
+	for (const child_list_id of track_list.children || []) {
+		const child_list = track_lists[child_list_id]
+		if (child_list.kind === 'folder') {
+			const child_flat = flatten_child_lists(child_list, track_lists, indent_prefix + '   ')
 			flat.push({
-				label: indentPrefix + childList.name,
+				label: indent_prefix + child_list.name,
 				enabled: false,
-				id: childList.id,
+				id: child_list.id,
 			})
-			flat = flat.concat(childFlat)
-		} else if (childList.kind === 'playlist') {
+			flat = flat.concat(child_flat)
+		} else if (child_list.kind === 'playlist') {
 			flat.push({
-				label: indentPrefix + childList.name,
+				label: indent_prefix + child_list.name,
 				enabled: true,
-				id: childList.id,
+				id: child_list.id,
 			})
 		}
 	}
@@ -98,13 +98,13 @@ export function flattenChildLists(
 }
 
 type GetterWritable<T> = Writable<T> & { get(): T }
-export function getterWritable<T>(value: T): GetterWritable<T> {
+export function getter_writable<T>(value: T): GetterWritable<T> {
 	const { subscribe, set } = writable(value)
 	return {
 		subscribe: subscribe,
-		set(newValue: T) {
-			value = newValue
-			set(newValue)
+		set(new_value: T) {
+			value = new_value
+			set(new_value)
 		},
 		update(updater: Updater<T>) {
 			value = updater(value)
@@ -114,6 +114,6 @@ export function getterWritable<T>(value: T): GetterWritable<T> {
 	}
 }
 
-export function assertUnreachable(x: never) {
+export function assert_unreachable(x: never) {
 	console.error('Unreachable reached', x)
 }

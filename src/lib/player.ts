@@ -4,29 +4,29 @@ import { clamp } from './helpers'
 import quit from './quit'
 import { methods, paths } from './data'
 import type { Track, TrackID } from '../../ferrum-addon'
-import { ipcRenderer, joinPaths } from './window'
-import { queue, setNewQueue, next as queueNext, prev as queuePrev } from './queue'
+import { ipc_renderer, join_paths } from './window'
+import { queue, set_new_queue, next as queueNext, prev as queuePrev } from './queue'
 
 const audio = new Audio()
-let isStopped = true
+let is_stopped = true
 export const stopped = (() => {
 	const { subscribe, set } = writable(true)
 	return {
 		subscribe,
 		set: (value: boolean) => {
-			isStopped = value
+			is_stopped = value
 			set(value)
 		},
 	}
 })()
-export const timeRecord = writable({
+export const time_record = writable({
 	elapsed: 0,
 	at_timestamp: Date.now(),
 	paused: true,
 	duration: 0,
 })
-function updateTimeDetails() {
-	timeRecord.update((record) => {
+function update_time_details() {
+	time_record.update((record) => {
 		record.elapsed = audio.currentTime
 		record.at_timestamp = Date.now()
 		record.paused = audio.paused
@@ -34,25 +34,25 @@ function updateTimeDetails() {
 		return record
 	})
 }
-export const playingTrack: Writable<Track | null> = writable(null)
-export const playingId = derived(queue, () => {
-	const currentId = queue.getCurrent()?.id
-	if (currentId) {
-		coverSrc.newFromTrackId(currentId)
+export const playing_track: Writable<Track | null> = writable(null)
+export const playing_id = derived(queue, () => {
+	const current_id = queue.getCurrent()?.id
+	if (current_id) {
+		cover_src.newFromTrackId(current_id)
 	}
-	return currentId
+	return current_id
 })
-let waitingToPlay = false
-const mediaSession = navigator.mediaSession
+let waiting_to_play = false
+const media_session = navigator.mediaSession
 
 export const volume = (() => {
-	let lastVolume = 1
+	let last_volume = 1
 	const store = writable(1)
 	audio.addEventListener('volumechange', () => {
 		store.set(audio.volume)
 	})
 	function set(value: number) {
-		lastVolume = audio.volume
+		last_volume = audio.volume
 		audio.volume = clamp(0, 1, value)
 		store.set(clamp(0, 1, value))
 	}
@@ -60,19 +60,19 @@ export const volume = (() => {
 		set,
 		toggle() {
 			if (audio.volume > 0) set(0)
-			else set(lastVolume || 1)
+			else set(last_volume || 1)
 		},
 		subscribe: store.subscribe,
 	}
 })()
-ipcRenderer.on('volumeUp', () => {
+ipc_renderer.on('volumeUp', () => {
 	volume.set(audio.volume + 0.05)
 })
-ipcRenderer.on('volumeDown', () => {
+ipc_renderer.on('volumeDown', () => {
 	volume.set(audio.volume - 0.05)
 })
 
-export const coverSrc = (() => {
+export const cover_src = (() => {
 	const { set, subscribe }: Writable<string | null> = writable(null)
 	return {
 		async newFromTrackId(id: TrackID) {
@@ -88,9 +88,9 @@ export const coverSrc = (() => {
 	}
 })()
 
-audio.onplay = updateTimeDetails
-audio.onpause = updateTimeDetails
-audio.ontimeupdate = updateTimeDetails
+audio.onplay = update_time_details
+audio.onpause = update_time_details
+audio.ontimeupdate = update_time_details
 
 audio.addEventListener('error', async (e) => {
 	stop()
@@ -106,29 +106,29 @@ audio.addEventListener('error', async (e) => {
 			}
 		}
 	}
-	await ipcRenderer.invoke('showMessageBox', false, { type: 'error', message, detail })
+	await ipc_renderer.invoke('showMessageBox', false, { type: 'error', message, detail })
 })
 
-let startTime = Date.now()
-function getPlayTime() {
-	return Date.now() - (startTime ?? Date.now())
+let start_time = Date.now()
+function set_play_time() {
+	return Date.now() - (start_time ?? Date.now())
 }
 
-function startPlayback() {
+function start_playback() {
 	audio.play()
-	updateTimeDetails()
-	startTime = Date.now()
-	if (mediaSession) mediaSession.playbackState = 'playing'
+	update_time_details()
+	start_time = Date.now()
+	if (media_session) media_session.playbackState = 'playing'
 }
 
-function setPlayingFile(id: TrackID, paused = false) {
+function set_playing_file(id: TrackID, paused = false) {
 	const track = methods.getTrack(id)
-	const fileUrl = 'track:' + joinPaths(paths.tracksDir, track.file)
-	waitingToPlay = !paused
-	audio.src = fileUrl
-	playingTrack.set(track)
-	if (mediaSession) {
-		mediaSession.metadata = new MediaMetadata({
+	const file_url = 'track:' + join_paths(paths.tracksDir, track.file)
+	waiting_to_play = !paused
+	audio.src = file_url
+	playing_track.set(track)
+	if (media_session) {
+		media_session.metadata = new MediaMetadata({
 			title: track.name,
 			artist: track.artist,
 			album: track.albumName || '',
@@ -138,70 +138,70 @@ function setPlayingFile(id: TrackID, paused = false) {
 }
 
 audio.oncanplay = () => {
-	if (waitingToPlay) {
-		waitingToPlay = false
-		startPlayback()
-		startTime = Date.now()
+	if (waiting_to_play) {
+		waiting_to_play = false
+		start_playback()
+		start_time = Date.now()
 		stopped.set(false)
 	}
 }
 
-audio.ondurationchange = updateTimeDetails
+audio.ondurationchange = update_time_details
 
 /** Saves play time if needed */
-function resetAndSavePlayTime() {
-	const currentId = queue.getCurrent()?.id
-	if (getPlayTime() >= 1000 && currentId) {
-		methods.addPlayTime(currentId, startTime, getPlayTime())
+function reset_and_save_play_time() {
+	const current_id = queue.getCurrent()?.id
+	if (set_play_time() >= 1000 && current_id) {
+		methods.addPlayTime(current_id, start_time, set_play_time())
 	}
-	startTime = Date.now()
+	start_time = Date.now()
 }
 
-function pausePlayback() {
-	waitingToPlay = false
+function pause_playback() {
+	waiting_to_play = false
 	audio.pause()
-	updateTimeDetails()
-	resetAndSavePlayTime()
-	if (mediaSession) mediaSession.playbackState = 'paused'
+	update_time_details()
+	reset_and_save_play_time()
+	if (media_session) media_session.playbackState = 'paused'
 }
 
-export function newPlaybackInstance(newQueue: TrackID[], index: number) {
-	if (!isStopped) pausePlayback()
-	setNewQueue(newQueue, index)
+export function new_playback_instance(new_queue: TrackID[], index: number) {
+	if (!is_stopped) pause_playback()
+	set_new_queue(new_queue, index)
 	const current = queue.getCurrent()
 	if (current) {
-		setPlayingFile(current.id)
+		set_playing_file(current.id)
 	}
 }
 
-export function playPause() {
-	if (isStopped) return
-	else if (audio.paused) startPlayback()
-	else pausePlayback()
+export function play_pause() {
+	if (is_stopped) return
+	else if (audio.paused) start_playback()
+	else pause_playback()
 }
 
 export function reload() {
 	const id = queue.getCurrent()?.id
-	const wasPaused = audio.paused
-	if (id && !isStopped) {
-		const currentTime = audio.currentTime
+	const was_paused = audio.paused
+	if (id && !is_stopped) {
+		const current_time = audio.currentTime
 		audio.src = ''
 		audio.load()
-		setPlayingFile(id, wasPaused)
-		audio.currentTime = currentTime
+		set_playing_file(id, was_paused)
+		audio.currentTime = current_time
 	}
 }
 
 export function stop() {
-	waitingToPlay = false
+	waiting_to_play = false
 	audio.pause()
-	updateTimeDetails()
-	resetAndSavePlayTime()
+	update_time_details()
+	reset_and_save_play_time()
 	stopped.set(true)
 	seek(0)
-	if (mediaSession) {
-		mediaSession.playbackState = 'none'
-		mediaSession.metadata = null
+	if (media_session) {
+		media_session.playbackState = 'none'
+		media_session.metadata = null
 	}
 }
 
@@ -213,36 +213,36 @@ audio.onended = () => {
 	next(false)
 }
 
-export function skipToNext() {
+export function skip_to_next() {
 	next(true)
 }
 
 function next(skip: boolean) {
-	const currentId = queue.getCurrent()?.id
-	if (currentId) {
+	const current_id = queue.getCurrent()?.id
+	if (current_id) {
 		if (skip) {
-			methods.addSkip(currentId)
+			methods.addSkip(current_id)
 		} else {
-			methods.addPlay(currentId)
+			methods.addPlay(current_id)
 		}
-		resetAndSavePlayTime()
+		reset_and_save_play_time()
 		queueNext()
-		const newCurrentId = queue.getCurrent()?.id
-		if (newCurrentId) {
-			setPlayingFile(newCurrentId)
+		const new_current_id = queue.getCurrent()?.id
+		if (new_current_id) {
+			set_playing_file(new_current_id)
 		} else {
 			stop()
 		}
 	}
 }
 export function previous() {
-	const currentId = queue.getCurrent()?.id
-	if (currentId) {
-		resetAndSavePlayTime()
+	const current_id = queue.getCurrent()?.id
+	if (current_id) {
+		reset_and_save_play_time()
 		queuePrev()
-		const newCurrentId = queue.getCurrent()?.id
-		if (newCurrentId) {
-			setPlayingFile(newCurrentId)
+		const new_current_id = queue.getCurrent()?.id
+		if (new_current_id) {
+			set_playing_file(new_current_id)
 		} else {
 			// this should never happen because the first track will play again
 			stop()
@@ -250,37 +250,37 @@ export function previous() {
 	}
 }
 
-export function seek(to: number, fastSeek = false) {
-	const newTime = Math.min(to, audio.duration || 0)
-	if (fastSeek && audio.fastSeek) {
+export function seek(to: number, fast_seek = false) {
+	const new_time = Math.min(to, audio.duration || 0)
+	if (fast_seek && audio.fastSeek) {
 		audio.fastSeek(to)
 	} else {
-		audio.currentTime = newTime
+		audio.currentTime = new_time
 	}
-	updateTimeDetails()
+	update_time_details()
 }
 
 if (navigator.mediaSession) {
-	const mediaSession = navigator.mediaSession
-	mediaSession.setActionHandler('play', startPlayback)
-	mediaSession.setActionHandler('pause', pausePlayback)
-	mediaSession.setActionHandler('stop', stop)
-	mediaSession.setActionHandler('seekbackward', (details) => {
+	const media_sesison = navigator.mediaSession
+	media_sesison.setActionHandler('play', start_playback)
+	media_sesison.setActionHandler('pause', pause_playback)
+	media_sesison.setActionHandler('stop', stop)
+	media_sesison.setActionHandler('seekbackward', (details) => {
 		seek(audio.currentTime - (details.seekOffset || 5))
 	})
-	mediaSession.setActionHandler('seekforward', (details) => {
+	media_sesison.setActionHandler('seekforward', (details) => {
 		seek(audio.currentTime + (details.seekOffset || 5))
 	})
-	mediaSession.setActionHandler('seekto', (details) => {
+	media_sesison.setActionHandler('seekto', (details) => {
 		if (details.seekTime && details.fastSeek) {
 			seek(details.seekTime, details.fastSeek)
 		}
 	})
-	mediaSession.setActionHandler('previoustrack', previous)
-	mediaSession.setActionHandler('nexttrack', skipToNext)
+	media_sesison.setActionHandler('previoustrack', previous)
+	media_sesison.setActionHandler('nexttrack', skip_to_next)
 }
 
-ipcRenderer.on('playPause', playPause)
-ipcRenderer.on('Next', skipToNext)
-ipcRenderer.on('Previous', previous)
-ipcRenderer.on('Stop', stop)
+ipc_renderer.on('playPause', play_pause)
+ipc_renderer.on('Next', skip_to_next)
+ipc_renderer.on('Previous', previous)
+ipc_renderer.on('Stop', stop)

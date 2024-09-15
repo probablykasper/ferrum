@@ -164,7 +164,7 @@ export type IpcMain = TypedIpcMain<Events, Commands>
 export type IpcRenderer = TypedIpcRenderer<Events, Commands>
 export type WebContents = TypedWebContents<Events>
 
-export const ipcMain = electronIpcMain as IpcMain
+export const ipc_main = electronIpcMain as IpcMain
 
 interface TypedIpcFunctions<IpcEvents extends InputMap> extends ElectronIpcRenderer {
 	ipcListen<K extends keyof IpcEvents>(

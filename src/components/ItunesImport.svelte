@@ -1,56 +1,56 @@
 <script lang="ts">
-	import { ItunesImport, paths, call, methods, page, trackListsDetailsMap } from '@/lib/data'
-	import { ipcRenderer } from '@/lib/window'
+	import { ItunesImport, paths, call, methods, page, track_lists_details_map } from '@/lib/data'
+	import { ipc_renderer } from '@/lib/window'
 	import type { ImportStatus } from 'ferrum-addon/addon'
 	import Button from './Button.svelte'
 	import Modal from './Modal.svelte'
 	import { selection as pageSelection } from '@/lib/page'
 
 	export let cancel: () => void
-	let itunesImport = ItunesImport.new()
+	let itunes_import = ItunesImport.new()
 
 	type Stage = 'select' | 'fileSelect' | 'scanning' | ImportStatus
 	let stage: Stage = 'select'
 
-	function cancelHandler() {
+	function cancel_handler() {
 		if (stage === 'fileSelect' || stage === 'scanning') {
 			return
 		}
 		cancel()
 	}
 
-	async function selectFile() {
+	async function select_file() {
 		stage = 'fileSelect'
-		const open = await ipcRenderer.invoke('showOpenDialog', true, {
+		const open = await ipc_renderer.invoke('showOpenDialog', true, {
 			properties: ['openFile'],
 			filters: [{ name: 'iTunes Library File', extensions: ['xml'] }],
 		})
 		if (!open.canceled && open.filePaths[0]) {
 			stage = 'scanning'
-			const filePath = open.filePaths[0]
-			stage = await call(() => itunesImport.start(filePath, paths.tracksDir))
+			const file_path = open.filePaths[0]
+			stage = await call(() => itunes_import.start(file_path, paths.tracksDir))
 		} else {
 			stage = 'select'
 		}
 	}
 	async function finish() {
-		itunesImport.finish()
+		itunes_import.finish()
 		methods.save()
-		page.refreshIdsAndKeepSelection()
+		page.refresh_ids_and_keep_selection()
 		pageSelection.clear()
-		trackListsDetailsMap.refresh()
+		track_lists_details_map.refresh()
 		cancel()
 	}
 	async function submit() {
 		if (stage === 'select') {
-			selectFile()
+			select_file()
 		} else if (typeof stage === 'object' && 'tracksCount' in stage) {
 			finish()
 		}
 	}
 </script>
 
-<Modal onCancel={cancelHandler} cancelOnEscape form={submit} title="Import iTunes Library">
+<Modal on_cancel={cancel_handler} cancel_on_escape form={submit} title="Import iTunes Library">
 	<main>
 		{#if stage === 'select' || stage === 'fileSelect'}
 			<p>
@@ -74,7 +74,7 @@
 				<li>View options</li>
 			</ul>
 			<div class="buttons">
-				<Button secondary on:click={cancelHandler}>Cancel</Button>
+				<Button secondary on:click={cancel_handler}>Cancel</Button>
 				<Button type="submit">Select File</Button>
 			</div>
 		{:else if stage === 'scanning'}
@@ -96,7 +96,7 @@
 				<li>Tracks: {stage.tracksCount}</li>
 			</ul>
 			<div class="buttons">
-				<Button secondary on:click={cancelHandler}>Cancel</Button>
+				<Button secondary on:click={cancel_handler}>Cancel</Button>
 				<Button type="submit">Continue</Button>
 			</div>
 		{/if}

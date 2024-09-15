@@ -8,94 +8,94 @@
 <script lang="ts">
 	import SidebarItems, { type SidebarItemHandle } from './SidebarItems.svelte'
 	import Filter from './Filter.svelte'
-	import { isMac, trackListsDetailsMap, page, movePlaylist, view_as_songs } from '../lib/data'
-	import { ipcListen, ipcRenderer } from '../lib/window'
+	import { is_mac, track_lists_details_map, page, move_playlist, view_as_songs } from '../lib/data'
+	import { ipc_listen, ipc_renderer } from '../lib/window'
 	import { writable } from 'svelte/store'
 	import { onDestroy, setContext, tick } from 'svelte'
 	import { dragged } from '../lib/drag-drop'
 	import { tracklist_actions } from '@/lib/page'
 
 	let viewport: HTMLElement
-	const itemHandle = setContext('itemHandle', writable(null as SidebarItemHandle | null))
+	const item_handle = setContext('itemHandle', writable(null as SidebarItemHandle | null))
 
 	onDestroy(
-		ipcListen('Select Previous List', () => {
-			$itemHandle?.handleKey(new KeyboardEvent('keydown', { key: 'ArrowUp' }))
+		ipc_listen('Select Previous List', () => {
+			$item_handle?.handleKey(new KeyboardEvent('keydown', { key: 'ArrowUp' }))
 		}),
 	)
 	onDestroy(
-		ipcListen('Select Next List', () => {
-			$itemHandle?.handleKey(new KeyboardEvent('keydown', { key: 'ArrowDown' }))
+		ipc_listen('Select Next List', () => {
+			$item_handle?.handleKey(new KeyboardEvent('keydown', { key: 'ArrowDown' }))
 		}),
 	)
 
-	async function onContextMenu() {
-		await ipcRenderer.invoke('showTracklistMenu', {
+	async function on_context_menu() {
+		await ipc_renderer.invoke('showTracklistMenu', {
 			id: 'root',
 			isFolder: false,
 			isRoot: true,
 		})
 	}
 
-	let rootDroppable = false
+	let root_droppable = false
 	function dragover(e: DragEvent) {
 		if (e.currentTarget && e.dataTransfer?.types[0] === 'ferrum.playlist') {
-			rootDroppable = true
+			root_droppable = true
 			e.preventDefault()
 		}
 	}
 	function dragleave() {
-		rootDroppable = false
+		root_droppable = false
 	}
 	function drop(e: DragEvent) {
 		if (e.currentTarget && e.dataTransfer?.types[0] === 'ferrum.playlist' && dragged.playlist) {
-			const root = $trackListsDetailsMap['root']
+			const root = $track_lists_details_map['root']
 			if (!root.children) {
 				return
 			}
-			movePlaylist(dragged.playlist.id, dragged.playlist.fromFolder, 'root', root.children.length)
-			rootDroppable = false
+			move_playlist(dragged.playlist.id, dragged.playlist.from_folder, 'root', root.children.length)
+			root_droppable = false
 		}
 	}
 
-	let contentElement: HTMLDivElement
+	let content_element: HTMLDivElement
 
-	$: pageId = $page.id
-	$: pageId, scrollToActive()
-	async function scrollToActive() {
+	$: page_id = $page.id
+	$: page_id, scroll_to_active()
+	async function scroll_to_active() {
 		await tick()
-		const active = contentElement?.querySelector('.active')
+		const active = content_element?.querySelector('.active')
 		if (active instanceof HTMLElement) {
 			const top = active.offsetTop
-			if (contentElement.scrollTop > top) {
-				contentElement.scrollTop = top
+			if (content_element.scrollTop > top) {
+				content_element.scrollTop = top
 			} else if (
-				contentElement.scrollTop + contentElement.clientHeight <
+				content_element.scrollTop + content_element.clientHeight <
 				top + active.clientHeight
 			) {
-				contentElement.scrollTop = top + active.clientHeight - contentElement.clientHeight
+				content_element.scrollTop = top + active.clientHeight - content_element.clientHeight
 			}
 		}
 	}
 
 	/** Prevent focus weirdness */
 	function focuser() {
-		const scrollTop = contentElement.scrollTop
+		const scroll_top = content_element.scrollTop
 		viewport.focus()
-		contentElement.scrollTop = scrollTop
-		scrollToActive()
+		content_element.scrollTop = scroll_top
+		scroll_to_active()
 	}
 </script>
 
 <!-- NOTE: aside is used as css selector in SidebarItems -->
 <aside on:mousedown|self|preventDefault role="none">
-	{#if isMac}
+	{#if is_mac}
 		<div class="titlebar" on:mousedown|self|preventDefault role="none" />
 	{/if}
-	<div class="content" bind:this={contentElement}>
+	<div class="content" bind:this={content_element}>
 		<Filter
 			on:focus={() => {
-				contentElement.scrollTop = 0
+				content_element.scrollTop = 0
 			}}
 			on:keydown={(e) => {
 				if (e.key === 'Escape') {
@@ -114,12 +114,12 @@
 				} else if (e.key == 'Home' || e.key == 'End' || e.key == 'PageUp' || e.key == 'PageDown') {
 					e.preventDefault()
 				} else {
-					$itemHandle?.handleKey(e)
+					$item_handle?.handleKey(e)
 				}
 			}}
 			bind:this={viewport}
-			class:droppable={rootDroppable}
-			on:contextmenu|self={onContextMenu}
+			class:droppable={root_droppable}
+			on:contextmenu|self={on_context_menu}
 			on:dragover|self={dragover}
 			on:dragleave|self={dragleave}
 			on:drop|self={drop}
@@ -128,32 +128,32 @@
 			<div class="focuser" tabindex="0" on:focus={focuser} />
 			<div class="spacer" />
 			<SidebarItems
-				parentId={null}
+				parent_id={null}
 				children={special_playlists_nav}
 				on_open={(item) => {
-					page.openPlaylist('root', item.view_as ?? view_as_songs)
+					page.open_playlist('root', item.view_as ?? view_as_songs)
 				}}
 				on_select_down={() => {
-					if ($trackListsDetailsMap.root.children && $trackListsDetailsMap.root.children[0]) {
-						page.openPlaylist($trackListsDetailsMap.root.children[0], view_as_songs)
+					if ($track_lists_details_map.root.children && $track_lists_details_map.root.children[0]) {
+						page.open_playlist($track_lists_details_map.root.children[0], view_as_songs)
 					}
 				}}
 			/>
 			<div class="spacer" />
 			<SidebarItems
-				parentId={$trackListsDetailsMap['root'].id}
-				children={($trackListsDetailsMap['root'].children || []).map(
-					(childId) => $trackListsDetailsMap[childId],
+				parent_id={$track_lists_details_map['root'].id}
+				children={($track_lists_details_map['root'].children || []).map(
+					(child_id) => $track_lists_details_map[child_id],
 				)}
 				on_open={(item) => {
 					if ($page.id !== item.id) {
 						if (item.id === 'root') {
-							page.openPlaylist(
+							page.open_playlist(
 								'root',
 								item.view_as ?? special_playlists_nav[special_playlists_nav.length - 1].view_as,
 							)
 						} else {
-							page.openPlaylist(item.id, item.view_as ?? view_as_songs)
+							page.open_playlist(item.id, item.view_as ?? view_as_songs)
 						}
 					}
 				}}

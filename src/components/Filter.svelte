@@ -1,12 +1,12 @@
 <script lang="ts">
 	import { onDestroy } from 'svelte'
 	import { filter } from '../lib/data'
-	import { ipcListen } from '../lib/window'
+	import { ipc_listen } from '../lib/window'
 
-	let filterInput: HTMLInputElement
+	let filter_input: HTMLInputElement
 	onDestroy(
-		ipcListen('filter', () => {
-			filterInput.select()
+		ipc_listen('filter', () => {
+			filter_input.select()
 		}),
 	)
 </script>
@@ -14,7 +14,7 @@
 <input
 	on:focus
 	on:keydown
-	bind:this={filterInput}
+	bind:this={filter_input}
 	type="text"
 	class="search rounded-[5px] text-[13px] leading-none"
 	class:on={$filter}

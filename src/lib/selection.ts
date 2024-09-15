@@ -1,4 +1,4 @@
-import { checkMouseShortcut, checkShortcut, getterWritable } from './helpers'
+import { check_mouse_shortcut, check_shortcut, getter_writable } from './helpers'
 
 /**
  * The selection object.
@@ -20,7 +20,7 @@ function clear(selection: Selection) {
 	selection.lastAdded = null
 	selection.shiftAnchor = null
 }
-function addIndex(selection: Selection, index: number) {
+function add_index(selection: Selection, index: number) {
 	if (index < selection.minimumIndex) {
 		return
 	}
@@ -30,7 +30,7 @@ function addIndex(selection: Selection, index: number) {
 	}
 	selection.lastAdded = index
 }
-function addRange(selection: Selection, from: number, to: number) {
+function add_range(selection: Selection, from: number, to: number) {
 	if (from < selection.minimumIndex) {
 		if (to < selection.minimumIndex) {
 			return
@@ -42,11 +42,11 @@ function addRange(selection: Selection, from: number, to: number) {
 	}
 	if (from < to) {
 		for (let i = from; i <= to; i++) {
-			addIndex(selection, i)
+			add_index(selection, i)
 		}
 	} else {
 		for (let i = from; i >= to; i--) {
-			addIndex(selection, i)
+			add_index(selection, i)
 		}
 	}
 }
@@ -55,7 +55,7 @@ function remove(selection: Selection, index: number) {
 	selection.list[index] = false
 	selection.count--
 }
-function removeRange(selection: Selection, from: number, to: number) {
+function remove_range(selection: Selection, from: number, to: number) {
 	if (from < to) {
 		for (let i = from; i <= to; i++) {
 			remove(selection, i)
@@ -67,69 +67,69 @@ function removeRange(selection: Selection, from: number, to: number) {
 	}
 }
 
-function getShiftAnchor(selection: Selection) {
+function get_shift_anchor(selection: Selection) {
 	if (selection.shiftAnchor !== null) return selection.shiftAnchor
 	else return selection.lastAdded
 }
 
-function selectTo(selection: Selection, toIndex: number) {
-	const anchor = getShiftAnchor(selection)
-	const lastAdded = selection.lastAdded
-	if (lastAdded === null || anchor === null) {
+function select_to(selection: Selection, to_index: number) {
+	const anchor = get_shift_anchor(selection)
+	const last_added = selection.lastAdded
+	if (last_added === null || anchor === null) {
 		return selection
 	}
-	if (anchor < toIndex) {
-		if (toIndex < lastAdded) {
+	if (anchor < to_index) {
+		if (to_index < last_added) {
 			// new shift selection is closer to anchor
-			removeRange(selection, toIndex + 1, lastAdded)
-		} else if (lastAdded < anchor) {
+			remove_range(selection, to_index + 1, last_added)
+		} else if (last_added < anchor) {
 			// new shift selection is on the other side of anchor
-			removeRange(selection, anchor - 1, lastAdded)
-			addRange(selection, anchor, toIndex)
+			remove_range(selection, anchor - 1, last_added)
+			add_range(selection, anchor, to_index)
 		} else {
-			addRange(selection, lastAdded, toIndex)
+			add_range(selection, last_added, to_index)
 		}
-		selection.lastAdded = toIndex
+		selection.lastAdded = to_index
 	} else {
-		if (toIndex > lastAdded) {
+		if (to_index > last_added) {
 			// new shift selection is closer to anchor
-			removeRange(selection, toIndex - 1, lastAdded)
-		} else if (lastAdded > anchor) {
+			remove_range(selection, to_index - 1, last_added)
+		} else if (last_added > anchor) {
 			// new shift selection is on the other side of anchor
-			removeRange(selection, anchor + 1, lastAdded)
-			addRange(selection, anchor, toIndex)
+			remove_range(selection, anchor + 1, last_added)
+			add_range(selection, anchor, to_index)
 		} else {
-			addRange(selection, lastAdded, toIndex)
+			add_range(selection, last_added, to_index)
 		}
-		selection.lastAdded = toIndex
+		selection.lastAdded = to_index
 	}
 	selection.shiftAnchor = anchor
 }
 
 type SelectOptions = {
-	getItemCount: () => number
-	scrollToItem: (index: number) => void
-	onContextMenu: () => void
-	minimumIndex?: number
+	get_item_count: () => number
+	scroll_to_item: (index: number) => void
+	on_context_menu: () => void
+	minimum_index?: number
 }
-export function newSelection(options: SelectOptions) {
-	const store = getterWritable<Selection>({
+export function new_selection(options: SelectOptions) {
+	const store = getter_writable<Selection>({
 		list: [],
 		count: 0,
 		lastAdded: null,
 		shiftAnchor: null,
-		minimumIndex: options.minimumIndex || 0,
+		minimumIndex: options.minimum_index || 0,
 	})
-	let possibleRowClick = false
+	let possible_row_click = false
 
-	function mouseDownSelect(e: MouseEvent, index: number) {
-		const isSelected = store.get().list[index]
-		if (checkMouseShortcut(e) && !isSelected) {
+	function mouse_down_select(e: MouseEvent, index: number) {
+		const is_selected = store.get().list[index]
+		if (check_mouse_shortcut(e) && !is_selected) {
 			selection.clear()
 			selection.add(index)
-		} else if (checkMouseShortcut(e, { cmdOrCtrl: true }) && !isSelected) {
+		} else if (check_mouse_shortcut(e, { cmd_or_ctrl: true }) && !is_selected) {
 			selection.add(index)
-		} else if (checkMouseShortcut(e, { shift: true })) {
+		} else if (check_mouse_shortcut(e, { shift: true })) {
 			selection.shiftSelectTo(index)
 		}
 	}
@@ -149,7 +149,7 @@ export function newSelection(options: SelectOptions) {
 			store.update((selection) => {
 				selection.minimumIndex = index
 				if (index > 0) {
-					removeRange(selection, 0, index - 1)
+					remove_range(selection, 0, index - 1)
 				}
 				return selection
 			})
@@ -165,12 +165,12 @@ export function newSelection(options: SelectOptions) {
 			return indexes
 		},
 		/** Add an index to the selection */
-		add(fromIndex: number, toIndex?: number) {
+		add(from_index: number, to_index?: number) {
 			store.update((selection) => {
-				if (toIndex === undefined) {
-					addIndex(selection, fromIndex)
+				if (to_index === undefined) {
+					add_index(selection, from_index)
 				} else {
-					addRange(selection, fromIndex, toIndex)
+					add_range(selection, from_index, to_index)
 				}
 				selection.shiftAnchor = null
 				return selection
@@ -180,14 +180,14 @@ export function newSelection(options: SelectOptions) {
 		 * Replace selection with the previous index.
 		 * - `maxIndex`: The max index that can be selected.
 		 */
-		goBackward(maxIndex: number) {
+		goBackward(max_index: number) {
 			store.update((selection) => {
 				if (selection.count === 0) {
-					addIndex(selection, maxIndex)
+					add_index(selection, max_index)
 				} else if (selection.lastAdded !== null) {
-					const newIndex = selection.lastAdded - 1
+					const new_index = selection.lastAdded - 1
 					clear(selection)
-					addIndex(selection, Math.max(selection.minimumIndex, newIndex))
+					add_index(selection, Math.max(selection.minimumIndex, new_index))
 				}
 				return selection
 			})
@@ -196,14 +196,14 @@ export function newSelection(options: SelectOptions) {
 		 * Replace selection with the next index.
 		 * - `maxIndex`: The max index that can be selected.
 		 */
-		goForward(maxIndex: number) {
+		goForward(max_index: number) {
 			store.update((selection) => {
 				if (selection.count === 0) {
-					addIndex(selection, selection.minimumIndex)
+					add_index(selection, selection.minimumIndex)
 				} else if (selection.lastAdded !== null) {
-					const newIndex = selection.lastAdded + 1
+					const new_index = selection.lastAdded + 1
 					clear(selection)
-					addIndex(selection, Math.min(newIndex, maxIndex))
+					add_index(selection, Math.min(new_index, max_index))
 				}
 				return selection
 			})
@@ -211,7 +211,7 @@ export function newSelection(options: SelectOptions) {
 		/** Expand or shrink selection backwards (shift+up) */
 		shiftSelectBackward() {
 			store.update((selection) => {
-				const anchor = getShiftAnchor(selection)
+				const anchor = get_shift_anchor(selection)
 				selection.shiftAnchor = anchor
 				if (anchor === null || selection.lastAdded === null) {
 					return selection
@@ -220,7 +220,7 @@ export function newSelection(options: SelectOptions) {
 					// add prev to selection
 					for (let i = selection.lastAdded; i >= selection.minimumIndex; i--) {
 						if (selection.list[i] !== true) {
-							addIndex(selection, i)
+							add_index(selection, i)
 							return selection
 						}
 					}
@@ -236,18 +236,18 @@ export function newSelection(options: SelectOptions) {
 		 * Expand or shrink selection forwards (shift+down).
 		 * - `maxIndex`: The maximum index to expand to
 		 */
-		shiftSelectForward(maxIndex: number) {
+		shiftSelectForward(max_index: number) {
 			store.update((selection) => {
-				const anchor = getShiftAnchor(selection)
+				const anchor = get_shift_anchor(selection)
 				selection.shiftAnchor = anchor
 				if (anchor === null || selection.lastAdded === null) {
 					return selection
 				}
 				if (selection.lastAdded >= anchor) {
 					// add next to selection
-					for (let i = selection.lastAdded; i <= maxIndex; i++) {
+					for (let i = selection.lastAdded; i <= max_index; i++) {
 						if (selection.list[i] !== true) {
-							addIndex(selection, i)
+							add_index(selection, i)
 							return selection
 						}
 					}
@@ -264,9 +264,9 @@ export function newSelection(options: SelectOptions) {
 		 * Selects in either upwards or downwards order.
 		 * Selects only `toIndex` if there's no existing selection.
 		 */
-		shiftSelectTo(toIndex: number) {
+		shiftSelectTo(to_index: number) {
 			store.update((selection) => {
-				selectTo(selection, toIndex)
+				select_to(selection, to_index)
 				return selection
 			})
 		},
@@ -278,7 +278,7 @@ export function newSelection(options: SelectOptions) {
 					}
 					remove(selection, index)
 				} else {
-					addIndex(selection, index)
+					add_index(selection, index)
 				}
 				selection.shiftAnchor = null
 				return selection
@@ -296,61 +296,61 @@ export function newSelection(options: SelectOptions) {
 				return
 			}
 			if (store.get().list[index]) {
-				possibleRowClick = true
+				possible_row_click = true
 			}
-			mouseDownSelect(e, index)
+			mouse_down_select(e, index)
 		},
 		handleContextMenu(e: MouseEvent, index: number) {
-			mouseDownSelect(e, index)
-			options.onContextMenu()
+			mouse_down_select(e, index)
+			options.on_context_menu()
 		},
 		handleClick(e: MouseEvent, index: number) {
-			if (possibleRowClick && e.button === 0) {
-				if (checkMouseShortcut(e)) {
+			if (possible_row_click && e.button === 0) {
+				if (check_mouse_shortcut(e)) {
 					selection.clear()
 					selection.add(index)
-				} else if (checkMouseShortcut(e, { cmdOrCtrl: true })) {
+				} else if (check_mouse_shortcut(e, { cmd_or_ctrl: true })) {
 					selection.toggle(index)
 				}
 			}
-			possibleRowClick = false
+			possible_row_click = false
 		},
 		handleKeyDown(e: KeyboardEvent) {
-			const itemCount = options.getItemCount()
+			const item_count = options.get_item_count()
 			const { minimumIndex } = store.get()
-			if (itemCount === 0 || itemCount < minimumIndex) {
+			if (item_count === 0 || item_count < minimumIndex) {
 				return
 			}
-			if (checkShortcut(e, 'Escape')) {
+			if (check_shortcut(e, 'Escape')) {
 				selection.clear()
-			} else if (checkShortcut(e, 'A', { cmdOrCtrl: true })) {
-				selection.add(minimumIndex, itemCount - 1)
-			} else if (checkShortcut(e, 'ArrowUp')) {
-				selection.goBackward(itemCount - 1)
-				options.scrollToItem(store.get().lastAdded || minimumIndex)
-			} else if (checkShortcut(e, 'ArrowUp', { shift: true })) {
+			} else if (check_shortcut(e, 'A', { cmd_or_ctrl: true })) {
+				selection.add(minimumIndex, item_count - 1)
+			} else if (check_shortcut(e, 'ArrowUp')) {
+				selection.goBackward(item_count - 1)
+				options.scroll_to_item(store.get().lastAdded || minimumIndex)
+			} else if (check_shortcut(e, 'ArrowUp', { shift: true })) {
 				selection.shiftSelectBackward()
-				options.scrollToItem(store.get().lastAdded || minimumIndex)
-			} else if (checkShortcut(e, 'ArrowUp', { alt: true })) {
+				options.scroll_to_item(store.get().lastAdded || minimumIndex)
+			} else if (check_shortcut(e, 'ArrowUp', { alt: true })) {
 				selection.clear()
 				selection.add(minimumIndex)
-				options.scrollToItem(minimumIndex)
-			} else if (checkShortcut(e, 'ArrowUp', { shift: true, alt: true })) {
+				options.scroll_to_item(minimumIndex)
+			} else if (check_shortcut(e, 'ArrowUp', { shift: true, alt: true })) {
 				selection.shiftSelectTo(minimumIndex)
-				options.scrollToItem(store.get().lastAdded || minimumIndex)
-			} else if (checkShortcut(e, 'ArrowDown')) {
-				selection.goForward(itemCount - 1)
-				options.scrollToItem(store.get().lastAdded || minimumIndex)
-			} else if (checkShortcut(e, 'ArrowDown', { shift: true })) {
-				selection.shiftSelectForward(itemCount - 1)
-				options.scrollToItem(store.get().lastAdded || minimumIndex)
-			} else if (checkShortcut(e, 'ArrowDown', { alt: true })) {
+				options.scroll_to_item(store.get().lastAdded || minimumIndex)
+			} else if (check_shortcut(e, 'ArrowDown')) {
+				selection.goForward(item_count - 1)
+				options.scroll_to_item(store.get().lastAdded || minimumIndex)
+			} else if (check_shortcut(e, 'ArrowDown', { shift: true })) {
+				selection.shiftSelectForward(item_count - 1)
+				options.scroll_to_item(store.get().lastAdded || minimumIndex)
+			} else if (check_shortcut(e, 'ArrowDown', { alt: true })) {
 				selection.clear()
-				selection.add(itemCount - 1)
-				options.scrollToItem(store.get().lastAdded || minimumIndex)
-			} else if (checkShortcut(e, 'ArrowDown', { shift: true, alt: true })) {
-				selection.shiftSelectTo(itemCount - 1)
-				options.scrollToItem(store.get().lastAdded || minimumIndex)
+				selection.add(item_count - 1)
+				options.scroll_to_item(store.get().lastAdded || minimumIndex)
+			} else if (check_shortcut(e, 'ArrowDown', { shift: true, alt: true })) {
+				selection.shiftSelectTo(item_count - 1)
+				options.scroll_to_item(store.get().lastAdded || minimumIndex)
 			} else {
 				return
 			}

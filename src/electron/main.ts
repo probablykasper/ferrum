@@ -4,12 +4,12 @@ import addon from '../../ferrum-addon'
 
 if (is.dev) app.setName('Ferrum Dev')
 
-import { initMenuBar } from './menubar'
-import { initMediaKeys } from './shortcuts'
+import { init_menu_bar } from './menubar'
+import { init_media_keys } from './shortcuts'
 import('./ipc')
 import path from 'path'
 
-async function errHandler(msg: string, error: Error) {
+async function err_handler(msg: string, error: Error) {
 	app.whenReady().then(() => {
 		dialog.showMessageBoxSync({
 			type: 'error',
@@ -17,34 +17,34 @@ async function errHandler(msg: string, error: Error) {
 			detail: error.stack,
 			title: 'Error',
 		})
-		errHandler(msg, error)
+		err_handler(msg, error)
 	})
 }
 process.on('uncaughtException', (error) => {
-	errHandler('Unhandled Error', error)
+	err_handler('Unhandled Error', error)
 })
 process.on('unhandledRejection', (error: Error) => {
-	errHandler('Unhandled Promise Rejection', error)
+	err_handler('Unhandled Promise Rejection', error)
 })
 
-const appData = app.getPath('appData')
+const app_data = app.getPath('appData')
 if (is.dev) {
-	const electronDataPath = path.join(appData, 'space.kasper.ferrum.dev', 'Electron Data')
-	app.setPath('userData', electronDataPath)
+	const electron_data_path = path.join(app_data, 'space.kasper.ferrum.dev', 'Electron Data')
+	app.setPath('userData', electron_data_path)
 } else {
-	const electronDataPath = path.join(appData, 'space.kasper.ferrum', 'Electron Data')
-	app.setPath('userData', electronDataPath)
+	const electron_data_path = path.join(app_data, 'space.kasper.ferrum', 'Electron Data')
+	app.setPath('userData', electron_data_path)
 }
 
 let quitting = false
-let appLoaded = false
+let app_loaded = false
 
 app.on('window-all-closed', () => {
 	app.quit()
 })
 
 app.whenReady().then(async () => {
-	let mainWindow: BrowserWindow | null = new BrowserWindow({
+	let main_window: BrowserWindow | null = new BrowserWindow({
 		width: 1305,
 		height: 1000,
 		minWidth: 850,
@@ -60,7 +60,7 @@ app.whenReady().then(async () => {
 	})
 
 	if (!is.dev) {
-		await initMediaKeys(mainWindow)
+		await init_media_keys(main_window)
 	}
 
 	protocol.registerFileProtocol('track', (request, callback) => {
@@ -92,47 +92,47 @@ app.whenReady().then(async () => {
 		})
 	})
 
-	if (is.dev) mainWindow.loadURL(process.env.VITE_DEV_SERVER_URL || 'missing')
-	else mainWindow.loadFile(path.resolve(__dirname, '../web/index.html'))
+	if (is.dev) main_window.loadURL(process.env.VITE_DEV_SERVER_URL || 'missing')
+	else main_window.loadFile(path.resolve(__dirname, '../web/index.html'))
 
-	if (is.dev) mainWindow.webContents.openDevTools()
+	if (is.dev) main_window.webContents.openDevTools()
 
-	mainWindow.once('ready-to-show', () => {
-		mainWindow?.show()
+	main_window.once('ready-to-show', () => {
+		main_window?.show()
 	})
 
-	mainWindow.on('close', (e) => {
+	main_window.on('close', (e) => {
 		if (!quitting) {
 			e.preventDefault()
 			app.hide()
 		}
 	})
-	mainWindow.on('closed', () => {
-		mainWindow = null
+	main_window.on('closed', () => {
+		main_window = null
 	})
 	ipcMain.once('appLoaded', () => {
-		appLoaded = true
+		app_loaded = true
 	})
 
 	// doesn't fire on Windows :(
 	app.on('before-quit', () => {
-		if (appLoaded) {
-			mainWindow?.webContents.send('gonnaQuit')
+		if (app_loaded) {
+			main_window?.webContents.send('gonnaQuit')
 			ipcMain.once('readyToQuit', () => {
 				quitting = true
-				mainWindow?.close()
+				main_window?.close()
 			})
 		} else {
 			quitting = true
-			mainWindow?.close()
+			main_window?.close()
 		}
 	})
 
 	app.on('activate', () => {
-		if (mainWindow !== null) {
-			mainWindow.show()
+		if (main_window !== null) {
+			main_window.show()
 		}
 	})
 
-	initMenuBar(app, mainWindow)
+	init_menu_bar(app, main_window)
 })

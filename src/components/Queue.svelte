@@ -1,32 +1,32 @@
 <script lang="ts">
 	import {
-		appendToUserQueue,
-		getByQueueIndex,
-		getQueueLength,
-		insertIds,
-		moveIndexes,
-		prependToUserQueue,
+		append_to_user_queue,
+		get_by_queue_index,
+		get_queue_length,
+		insert_ids,
+		move_indexes,
+		prepend_to_user_queue,
 		queue,
 		type QueueItem,
 	} from '../lib/queue'
 	import { paths } from '../lib/data'
 	import { onDestroy } from 'svelte'
 	import QueueItemComponent from './QueueItem.svelte'
-	import { newSelection } from '@/lib/selection'
-	import { showTrackMenu } from '@/lib/menus'
+	import { new_selection } from '@/lib/selection'
+	import { show_track_menu } from '@/lib/menus'
 	import { dragged } from '@/lib/drag-drop'
 	import { methods } from '@/lib/data'
 	import * as dragGhost from './DragGhost.svelte'
-	import { ipcListen, ipcRenderer } from '@/lib/window'
-	import { assertUnreachable, checkShortcut } from '@/lib/helpers'
+	import { ipc_listen, ipc_renderer } from '@/lib/window'
+	import { assert_unreachable, check_shortcut } from '@/lib/helpers'
 	import type { TrackID } from 'ferrum-addon/addon'
 	import { fly } from 'svelte/transition'
 	import VirtualListBlock, { scroll_container_keydown } from './VirtualListBlock.svelte'
 
-	let objectUrls: string[] = []
+	let object_urls: string[] = []
 
 	onDestroy(() => {
-		for (let url of objectUrls) {
+		for (let url of object_urls) {
 			URL.revokeObjectURL(url)
 		}
 	})
@@ -34,15 +34,15 @@
 	let show_history = false
 	$: current_index = $queue.past.length
 	$: up_next_index = current_index + Number(!!$queue.current)
-	$: autoplay_index = up_next_index + $queue.userQueue.length
+	$: autoplay_index = up_next_index + $queue.user_queue.length
 
 	let history_list: VirtualListBlock<QueueItem>
 	let up_next_list: VirtualListBlock<QueueItem>
 	let autoplay_list: VirtualListBlock<QueueItem>
 
-	const selection = newSelection({
-		getItemCount: () => getQueueLength(),
-		scrollToItem: (i) => {
+	const selection = new_selection({
+		get_item_count: () => get_queue_length(),
+		scroll_to_item: (i) => {
 			if (i < $queue.past.length) {
 				return history_list.scroll_to_index(i, 40)
 			}
@@ -51,18 +51,23 @@
 				return history_list.scroll_to_index(i, 40)
 			}
 			i -= Number(!!$queue.current)
-			if (i < $queue.userQueue.length) {
+			if (i < $queue.user_queue.length) {
 				return up_next_list.scroll_to_index(i, 40)
 			}
-			i -= $queue.userQueue.length
+			i -= $queue.user_queue.length
 			autoplay_list.scroll_to_index(i, 40)
 		},
-		async onContextMenu() {
+		async on_context_menu() {
 			const indexes = selection.getSelectedIndexes()
 			const current_array = $queue.current ? [$queue.current.item] : []
-			const allItems = [...$queue.past, ...current_array, ...$queue.userQueue, ...$queue.autoQueue]
-			const allIds = allItems.map((item) => item.id)
-			await showTrackMenu(allIds, indexes, undefined, true)
+			const all_items = [
+				...$queue.past,
+				...current_array,
+				...$queue.user_queue,
+				...$queue.auto_queue,
+			]
+			const all_ids = all_items.map((item) => item.id)
+			await show_track_menu(all_ids, indexes, undefined, true)
 		},
 	})
 	$: selection.setMinimumIndex(show_history ? 0 : up_next_index)
@@ -74,12 +79,12 @@
 			queue.removeIndexes(selection.getSelectedIndexes())
 		}
 	}
-	onDestroy(ipcListen('context.Remove from Queue', remove_from_queue))
+	onDestroy(ipc_listen('context.Remove from Queue', remove_from_queue))
 
 	let queue_element: HTMLElement
-	export let onTrackInfo: (allIds: TrackID[], index: number) => void
+	export let on_track_info: (allIds: TrackID[], index: number) => void
 
-	const track_action_unlisten = ipcListen('selectedTracksAction', (_, action) => {
+	const track_action_unlisten = ipc_listen('selectedTracksAction', (_, action) => {
 		let first_index = selection.findFirst()
 
 		if (first_index === null || !queue_element.contains(document.activeElement)) {
@@ -88,31 +93,31 @@
 		if (action === 'Play Next') {
 			const indexes = selection.getSelectedIndexes()
 			const ids = indexes.map((i) => queue.getByQueueIndex(i).id)
-			prependToUserQueue(ids)
+			prepend_to_user_queue(ids)
 		} else if (action === 'Add to Queue') {
 			const indexes = selection.getSelectedIndexes()
 			const ids = indexes.map((i) => queue.getByQueueIndex(i).id)
-			appendToUserQueue(ids)
+			append_to_user_queue(ids)
 		} else if (action === 'Get Info') {
-			const all_items = [...$queue.userQueue, ...$queue.autoQueue]
+			const all_items = [...$queue.user_queue, ...$queue.auto_queue]
 			const all_ids = all_items.map((item) => item.id)
-			onTrackInfo(all_ids, first_index)
+			on_track_info(all_ids, first_index)
 		} else if (action === 'revealTrackFile') {
 			const track = methods.getTrack(queue.getByQueueIndex(first_index).id)
-			ipcRenderer.invoke('revealTrackFile', paths.tracksDir, track.file)
+			ipc_renderer.invoke('revealTrackFile', paths.tracksDir, track.file)
 		} else if (action === 'Remove from Playlist') {
 			return
 		} else if (action === 'Delete from Library') {
 			return
 		} else {
-			assertUnreachable(action)
+			assert_unreachable(action)
 		}
 	})
 	onDestroy(track_action_unlisten)
 
 	let drag_line: HTMLElement
 	let dagged_indexes: number[] = []
-	function onDragStart(e: DragEvent) {
+	function on_drag_start(e: DragEvent) {
 		if (e.dataTransfer) {
 			dagged_indexes = []
 			for (let i = 0; i < $selection.list.length; i++) {
@@ -122,16 +127,16 @@
 			}
 			e.dataTransfer.effectAllowed = 'move'
 			if (dagged_indexes.length === 1) {
-				const track = methods.getTrack(getByQueueIndex(dagged_indexes[0]).id)
-				dragGhost.setInnerText(track.artist + ' - ' + track.name)
+				const track = methods.getTrack(get_by_queue_index(dagged_indexes[0]).id)
+				dragGhost.set_inner_text(track.artist + ' - ' + track.name)
 			} else {
-				dragGhost.setInnerText(dagged_indexes.length + ' items')
+				dragGhost.set_inner_text(dagged_indexes.length + ' items')
 			}
 			dragged.tracks = {
-				ids: dagged_indexes.map((i) => getByQueueIndex(i).id),
-				queueIndexes: dagged_indexes,
+				ids: dagged_indexes.map((i) => get_by_queue_index(i).id),
+				queue_indexes: dagged_indexes,
 			}
-			e.dataTransfer.setDragImage(dragGhost.dragEl, 0, 0)
+			e.dataTransfer.setDragImage(dragGhost.drag_el, 0, 0)
 			e.dataTransfer.setData('ferrum.tracks', '')
 		}
 	}
@@ -163,14 +168,14 @@
 			const to_boundary = drag_to_index === autoplay_index
 			const to_user_queue_bottom = to_boundary && !drag_top_of_item
 			const to_auto_queue_top = to_boundary && drag_top_of_item
-			const create_user_queue = to_auto_queue_top && $queue.userQueue.length === 0
+			const create_user_queue = to_auto_queue_top && $queue.user_queue.length === 0
 
 			const to_user_queue =
 				drag_to_index < autoplay_index || to_user_queue_bottom || create_user_queue
 
-			const new_selection = dragged.tracks.queueIndexes
-				? moveIndexes(dragged.tracks.queueIndexes, drag_to_index, to_user_queue)
-				: insertIds(dragged.tracks.ids, drag_to_index, to_user_queue)
+			const new_selection = dragged.tracks.queue_indexes
+				? move_indexes(dragged.tracks.queue_indexes, drag_to_index, to_user_queue)
+				: insert_ids(dragged.tracks.ids, drag_to_index, to_user_queue)
 			for (let i = new_selection.from; i <= new_selection.to; i++) {
 				selection.add(i)
 			}
@@ -188,7 +193,7 @@
 		tabindex="-1"
 		on:keydown={scroll_container_keydown}
 		on:keydown={(e) => {
-			if (checkShortcut(e, 'Backspace') && $selection.count >= 1) {
+			if (check_shortcut(e, 'Backspace') && $selection.count >= 1) {
 				e.preventDefault()
 				remove_from_queue()
 			} else {
@@ -244,7 +249,7 @@
 							on:contextmenu={(e) => selection.handleContextMenu(e, qi)}
 							on:click={(e) => selection.handleClick(e, qi)}
 							draggable="true"
-							on:dragstart={onDragStart}
+							on:dragstart={on_drag_start}
 							on:dragover={(e) => on_drag_over(e, qi)}
 							on:drop={drop_handler}
 							on:dragleave={drag_end_handler}
@@ -265,7 +270,7 @@
 							on:contextmenu={(e) => selection.handleContextMenu(e, qi)}
 							on:click={(e) => selection.handleClick(e, qi)}
 							draggable="true"
-							on:dragstart={onDragStart}
+							on:dragstart={on_drag_start}
 							on:dragover={(e) => on_drag_over(e, qi)}
 							on:drop={drop_handler}
 							on:dragleave={drag_end_handler}
@@ -278,7 +283,7 @@
 			</div>
 		{/if}
 
-		{#if $queue.userQueue.length || queue.getQueueLength() === 0}
+		{#if $queue.user_queue.length || queue.getQueueLength() === 0}
 			<div class="relative">
 				<h4
 					class="sticky top-0 z-1 flex h-[40px] items-center bg-black/50 pl-7 font-semibold backdrop-blur-md"
@@ -287,7 +292,7 @@
 				</h4>
 				<VirtualListBlock
 					bind:this={up_next_list}
-					items={$queue.userQueue}
+					items={$queue.user_queue}
 					get_key={(item) => item.qId}
 					item_height={54}
 					scroll_container={queue_element}
@@ -305,7 +310,7 @@
 						on:contextmenu={(e) => selection.handleContextMenu(e, qi)}
 						on:click={(e) => selection.handleClick(e, qi)}
 						draggable="true"
-						on:dragstart={onDragStart}
+						on:dragstart={on_drag_start}
 						on:dragover={(e) => on_drag_over(e, qi)}
 						on:drop={drop_handler}
 						on:dragleave={drag_end_handler}
@@ -317,7 +322,7 @@
 			</div>
 		{/if}
 
-		{#if $queue.autoQueue.length}
+		{#if $queue.auto_queue.length}
 			<div class="relative">
 				<h4
 					class="sticky top-0 z-1 flex h-[40px] items-center bg-black/50 pl-7 font-semibold backdrop-blur-md"
@@ -326,7 +331,7 @@
 				</h4>
 				<VirtualListBlock
 					bind:this={autoplay_list}
-					items={$queue.autoQueue}
+					items={$queue.auto_queue}
 					get_key={(item) => item.qId}
 					item_height={54}
 					scroll_container={queue_element}
@@ -344,7 +349,7 @@
 						on:contextmenu={(e) => selection.handleContextMenu(e, qi)}
 						on:click={(e) => selection.handleClick(e, qi)}
 						draggable="true"
-						on:dragstart={onDragStart}
+						on:dragstart={on_drag_start}
 						on:dragover={(e) => on_drag_over(e, qi)}
 						on:drop={drop_handler}
 						on:dragleave={drag_end_handler}

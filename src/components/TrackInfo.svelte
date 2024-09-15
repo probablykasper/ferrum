@@ -7,15 +7,15 @@
 
 <script lang="ts">
 	import Modal from './Modal.svelte'
-	import { checkShortcut } from '@/lib/helpers'
+	import { check_shortcut } from '@/lib/helpers'
 	import Button from './Button.svelte'
 	import { methods } from '@/lib/data'
 	import type { Track, TrackID } from '../../ferrum-addon'
-	import { ipcRenderer } from '@/lib/window'
-	import { playingId, reload } from '@/lib/player'
+	import { ipc_renderer } from '@/lib/window'
+	import { playing_id, reload } from '@/lib/player'
 	import { onDestroy, tick } from 'svelte'
 
-	export let currentList: TrackInfoList
+	export let current_list: TrackInfoList
 	export let cancel: () => void
 	let id: TrackID
 	let track: Track
@@ -28,29 +28,29 @@
 	/** Undefined when loading, null when no image exists */
 	let image: ImageStuff | null | undefined
 
-	$: openIndex(currentList)
-	function openIndex(list: TrackInfoList) {
+	$: open_index(current_list)
+	function open_index(list: TrackInfoList) {
 		id = list.ids[list.index]
 		track = methods.getTrack(list.ids[list.index])
 		methods.loadTags(list.ids[list.index])
-		loadImage(0)
+		load_image(0)
 	}
-	async function loadImage(index: number) {
+	async function load_image(index: number) {
 		if (image) {
 			URL.revokeObjectURL(image.objectUrl)
 		}
 		image = undefined
 		await tick()
-		const imageInfo = methods.getImage(index)
+		const image_info = methods.getImage(index)
 
-		if (imageInfo === null) {
+		if (image_info === null) {
 			image = null
 		} else {
 			image = {
-				index: imageInfo.index,
-				totalImages: imageInfo.totalImages,
-				mimeType: imageInfo.mimeType,
-				objectUrl: URL.createObjectURL(new Blob([imageInfo.data], {})),
+				index: image_info.index,
+				totalImages: image_info.totalImages,
+				mimeType: image_info.mimeType,
+				objectUrl: URL.createObjectURL(new Blob([image_info.data], {})),
 			}
 		}
 	}
@@ -60,105 +60,105 @@
 		}
 	})
 
-	function openPrev() {
-		if (currentList.index > 0) {
-			currentList.index -= 1
+	function open_prev() {
+		if (current_list.index > 0) {
+			current_list.index -= 1
 		}
 	}
-	function openNext() {
-		if (currentList.index + 1 < currentList.ids.length) {
-			currentList.index += 1
+	function open_next() {
+		if (current_list.index + 1 < current_list.ids.length) {
+			current_list.index += 1
 		}
 	}
 
-	function uintFilter(value: string) {
+	function uint_filter(value: string) {
 		return value.replace(/[^0-9]*/g, '')
 	}
-	function toString(value: unknown) {
+	function to_string(value: unknown) {
 		return String(value).replace(/\0/g, '') // remove NULL bytes
 	}
 
-	let imageEdited = false
+	let image_edited = false
 	let name = ''
 	let artist = ''
-	let albumName = ''
-	let albumArtist = ''
+	let album_name = ''
+	let album_artist = ''
 	let composer = ''
 	let grouping = ''
 	let genre = ''
 	let year = ''
-	$: year = uintFilter(year)
-	let trackNum = ''
-	let trackCount = ''
-	let discNum = ''
-	let discCount = ''
+	$: year = uint_filter(year)
+	let track_num = ''
+	let track_count = ''
+	let disc_num = ''
+	let disc_count = ''
 	let bpm = ''
 	let compilation = false
 	let rating = 0
 	let liked = false
-	let playCount = 0
+	let play_count = 0
 	let comments = ''
-	function setInfo(track: Track) {
-		imageEdited = false
+	function set_info(track: Track) {
+		image_edited = false
 		name = track.name
 		artist = track.artist
-		albumName = track.albumName || ''
-		albumArtist = track.albumArtist || ''
+		album_name = track.albumName || ''
+		album_artist = track.albumArtist || ''
 		composer = track.composer || ''
 		grouping = track.grouping || ''
 		genre = track.genre || ''
-		year = toString(track.year || '')
-		trackNum = toString(track.trackNum || '')
-		trackCount = toString(track.trackCount || '')
-		discNum = toString(track.discNum || '')
-		discCount = toString(track.discCount || '')
-		bpm = toString(track.bpm || '')
+		year = to_string(track.year || '')
+		track_num = to_string(track.trackNum || '')
+		track_count = to_string(track.trackCount || '')
+		disc_num = to_string(track.discNum || '')
+		disc_count = to_string(track.discCount || '')
+		bpm = to_string(track.bpm || '')
 		compilation = track.compilation || false
 		rating = track.rating || 0
 		liked = track.liked || false
-		playCount = track.playCount || 0
-		comments = toString(track.comments || '')
+		play_count = track.playCount || 0
+		comments = to_string(track.comments || '')
 	}
-	$: if (track) setInfo(track)
+	$: if (track) set_info(track)
 
-	function isEdited() {
-		const isUnedited =
-			!imageEdited &&
+	function is_edited() {
+		const is_unedited =
+			!image_edited &&
 			name === track.name &&
 			artist === track.artist &&
-			albumName === (track.albumName || '') &&
-			albumArtist === (track.albumArtist || '') &&
+			album_name === (track.albumName || '') &&
+			album_artist === (track.albumArtist || '') &&
 			composer === (track.composer || '') &&
 			grouping === (track.grouping || '') &&
 			genre === (track.genre || '') &&
-			year === toString(track.year || '') &&
-			trackNum === toString(track.trackNum || '') &&
-			trackCount === toString(track.trackCount || '') &&
-			discNum === toString(track.discNum || '') &&
-			discCount === toString(track.discCount || '') &&
-			bpm === toString(track.bpm || '') &&
+			year === to_string(track.year || '') &&
+			track_num === to_string(track.trackNum || '') &&
+			track_count === to_string(track.trackCount || '') &&
+			disc_num === to_string(track.discNum || '') &&
+			disc_count === to_string(track.discCount || '') &&
+			bpm === to_string(track.bpm || '') &&
 			compilation === (track.compilation || false) &&
 			rating === (track.rating || 0) &&
 			liked === (track.liked || false) &&
-			playCount === (track.playCount || 0) &&
-			comments === toString(track.comments || '')
-		return !isUnedited
+			play_count === (track.playCount || 0) &&
+			comments === to_string(track.comments || '')
+		return !is_unedited
 	}
-	function save(hideAfter = true) {
-		if (isEdited()) {
+	function save(hide_after = true) {
+		if (is_edited()) {
 			methods.updateTrackInfo(id, {
 				name,
 				artist,
-				albumName,
-				albumArtist,
+				albumName: album_name,
+				albumArtist: album_artist,
 				composer,
 				grouping,
 				genre,
 				year,
-				trackNum,
-				trackCount,
-				discNum,
-				discCount,
+				trackNum: track_num,
+				trackCount: track_count,
+				discNum: disc_num,
+				discCount: disc_count,
 				bpm,
 				// compilation,
 				// rating,
@@ -166,11 +166,11 @@
 				// playCount,
 				comments,
 			})
-			if (id === $playingId) {
+			if (id === $playing_id) {
 				reload()
 			}
 		}
-		if (hideAfter) {
+		if (hide_after) {
 			cancel()
 		}
 	}
@@ -178,121 +178,121 @@
 		return v.length >= 3
 	}
 	function keydown(e: KeyboardEvent) {
-		if (checkShortcut(e, '[', { cmdOrCtrl: true })) {
+		if (check_shortcut(e, '[', { cmd_or_ctrl: true })) {
 			save(false)
-			openPrev()
-		} else if (checkShortcut(e, ']', { cmdOrCtrl: true })) {
+			open_prev()
+		} else if (check_shortcut(e, ']', { cmd_or_ctrl: true })) {
 			save(false)
-			openNext()
+			open_next()
 		}
 	}
-	function keydownNoneSelected(e: KeyboardEvent) {
-		if (checkShortcut(e, 'Enter')) {
+	function keydown_none_selected(e: KeyboardEvent) {
+		if (check_shortcut(e, 'Enter')) {
 			save()
 		}
 	}
 
-	function prevImage() {
+	function prev_image() {
 		if (image && image.index >= 1) {
-			loadImage(image.index - 1)
+			load_image(image.index - 1)
 		}
 	}
-	function nextImage() {
+	function next_image() {
 		if (image && image.index < image.totalImages - 1) {
-			loadImage(image.index + 1)
+			load_image(image.index + 1)
 		}
 	}
 
 	let droppable = false
-	const allowedMimes = ['image/jpeg', 'image/png']
-	function getFilePath(e: DragEvent): string | null {
-		if (e.dataTransfer && hasFile(e)) {
+	const allowed_mimes = ['image/jpeg', 'image/png']
+	function get_file_path(e: DragEvent): string | null {
+		if (e.dataTransfer && has_file(e)) {
 			for (let i = 0; i < e.dataTransfer.files.length; i++) {
 				const file = e.dataTransfer.files[i]
-				if (allowedMimes.includes(file.type)) {
+				if (allowed_mimes.includes(file.type)) {
 					return file.path
 				}
 			}
 		}
 		return null
 	}
-	function hasFile(e: DragEvent): boolean {
+	function has_file(e: DragEvent): boolean {
 		if (!e.dataTransfer) return false
 		let count = 0
 		for (let i = 0; i < e.dataTransfer.items.length; i++) {
 			const item = e.dataTransfer.items[i]
-			if (item.kind === 'file' && allowedMimes.includes(item.type)) {
+			if (item.kind === 'file' && allowed_mimes.includes(item.type)) {
 				count++
 			}
 		}
 		return count === 1
 	}
-	function dragEnterOrOver(e: DragEvent) {
+	function drag_enter_or_over(e: DragEvent) {
 		e.preventDefault()
-		droppable = hasFile(e)
+		droppable = has_file(e)
 	}
-	function dragLeave(e: DragEvent) {
+	function drag_leave(e: DragEvent) {
 		e.preventDefault()
 		droppable = false
 	}
 	function drop(e: DragEvent) {
 		e.preventDefault()
 		droppable = false
-		const path = getFilePath(e)
+		const path = get_file_path(e)
 		if (path !== null) {
 			methods.setImage(image?.index || 0, path)
-			imageEdited = true
-			loadImage(image?.index || 0)
+			image_edited = true
+			load_image(image?.index || 0)
 		}
 	}
-	function coverKeydown(e: KeyboardEvent) {
-		if (checkShortcut(e, 'Backspace') && image) {
+	function cover_keydown(e: KeyboardEvent) {
+		if (check_shortcut(e, 'Backspace') && image) {
 			methods.removeImage(image.index)
-			imageEdited = true
+			image_edited = true
 			if (image.index < image.totalImages - 1) {
-				loadImage(image.index)
+				load_image(image.index)
 			} else {
-				loadImage(Math.max(0, image.index - 1))
+				load_image(Math.max(0, image.index - 1))
 			}
-		} else if (checkShortcut(e, ' ')) {
-			pickCover()
-		} else if (checkShortcut(e, 'ArrowLeft')) {
-			prevImage()
-		} else if (checkShortcut(e, 'ArrowRight')) {
-			nextImage()
+		} else if (check_shortcut(e, ' ')) {
+			pick_cover()
+		} else if (check_shortcut(e, 'ArrowLeft')) {
+			prev_image()
+		} else if (check_shortcut(e, 'ArrowRight')) {
+			next_image()
 		} else {
-			keydownNoneSelected(e)
+			keydown_none_selected(e)
 		}
 	}
-	async function pickCover() {
-		let result = await ipcRenderer.invoke('showOpenDialog', false, {
+	async function pick_cover() {
+		let result = await ipc_renderer.invoke('showOpenDialog', false, {
 			properties: ['openFile'],
 			filters: [{ name: 'Images', extensions: ['jpg', 'jpeg', 'png'] }],
 		})
 		if (!result.canceled && result.filePaths.length === 1) {
-			replaceCover(result.filePaths[0])
+			replace_cover(result.filePaths[0])
 		}
 	}
-	function replaceCover(filePath: string) {
-		methods.setImage(image?.index || 0, filePath)
-		imageEdited = true
-		loadImage(image?.index || 0)
+	function replace_cover(file_path: string) {
+		methods.setImage(image?.index || 0, file_path)
+		image_edited = true
+		load_image(image?.index || 0)
 	}
-	function replaceCoverData(data: ArrayBuffer, mimeType: string) {
-		methods.setImageData(image?.index || 0, data, mimeType)
-		imageEdited = true
-		loadImage(image?.index || 0)
+	function replace_cover_data(data: ArrayBuffer, mime_type: string) {
+		methods.setImageData(image?.index || 0, data, mime_type)
+		image_edited = true
+		load_image(image?.index || 0)
 	}
-	function coverPaste(e: ClipboardEvent) {
+	function cover_paste(e: ClipboardEvent) {
 		if (e.clipboardData && e.clipboardData.files.length === 1) {
 			const file = e.clipboardData.files[0]
-			if (allowedMimes.includes(file.type) && file.path !== '' && file.path) {
-				replaceCover(file.path)
-			} else if (allowedMimes.includes(file.type)) {
+			if (allowed_mimes.includes(file.type) && file.path !== '' && file.path) {
+				replace_cover(file.path)
+			} else if (allowed_mimes.includes(file.type)) {
 				const reader = new FileReader()
 				reader.onload = (e) => {
 					if (e.target?.result && e.target.result instanceof ArrayBuffer) {
-						replaceCoverData(e.target.result, file.type)
+						replace_cover_data(e.target.result, file.type)
 					}
 				}
 				reader.readAsArrayBuffer(file)
@@ -302,26 +302,26 @@
 </script>
 
 <svelte:window on:keydown={keydown} />
-<svelte:body on:keydown|self={keydownNoneSelected} on:paste={coverPaste} />
-<Modal onCancel={cancel} cancelOnEscape form={save}>
+<svelte:body on:keydown|self={keydown_none_selected} on:paste={cover_paste} />
+<Modal on_cancel={cancel} cancel_on_escape form={save}>
 	<main class="modal">
 		<div class="header" class:has-subtitle={image && image.totalImages >= 2}>
 			<div
 				class="cover-area"
 				class:droppable
 				tabindex="0"
-				on:keydown={coverKeydown}
+				on:keydown={cover_keydown}
 				role="button"
 				aria-label="Cover artwork"
 			>
 				<!-- svelte-ignore a11y-no-static-element-interactions -->
 				<div
 					class="cover"
-					on:dragenter={dragEnterOrOver}
-					on:dragover={dragEnterOrOver}
-					on:dragleave={dragLeave}
+					on:dragenter={drag_enter_or_over}
+					on:dragover={drag_enter_or_over}
+					on:dragleave={drag_leave}
 					on:drop={drop}
-					on:dblclick={pickCover}
+					on:dblclick={pick_cover}
 				>
 					{#if image}
 						<img class="outline-element" alt="" src={image.objectUrl} />
@@ -342,12 +342,12 @@
 					{/if}
 				</div>
 				{#if image && image.totalImages >= 2}
-					{@const imageIndex = image.index}
+					{@const image_index = image.index}
 					<div class="cover-subtitle">
-						<div class="arrow" class:unclickable={imageIndex <= 0}>
+						<div class="arrow" class:unclickable={image_index <= 0}>
 							<!-- svelte-ignore a11y-click-events-have-key-events -->
 							<svg
-								on:click={prevImage}
+								on:click={prev_image}
 								tabindex="-1"
 								role="button"
 								aria-label="Previous image"
@@ -368,10 +368,10 @@
 						<div class="subtitle-text">
 							{image.index + 1} / {image.totalImages}
 						</div>
-						<div class="arrow" class:unclickable={imageIndex >= image.totalImages - 1}>
+						<div class="arrow" class:unclickable={image_index >= image.totalImages - 1}>
 							<!-- svelte-ignore a11y-click-events-have-key-events -->
 							<svg
-								on:click={nextImage}
+								on:click={next_image}
 								tabindex="-1"
 								role="button"
 								aria-label="Next image"
@@ -409,11 +409,11 @@
 		</div>
 		<div class="row">
 			<div class="label">Album</div>
-			<input type="text" bind:value={albumName} />
+			<input type="text" bind:value={album_name} />
 		</div>
 		<div class="row">
 			<div class="label">Album artist</div>
-			<input type="text" bind:value={albumArtist} />
+			<input type="text" bind:value={album_artist} />
 		</div>
 		<div class="row">
 			<div class="label">Composer</div>
@@ -433,15 +433,15 @@
 		</div>
 		<div class="row num">
 			<div class="label">Track</div>
-			<input class="num" type="text" bind:value={trackNum} class:big={big(trackNum)} />
+			<input class="num" type="text" bind:value={track_num} class:big={big(track_num)} />
 			<div class="midtext">of</div>
-			<input class="num" type="text" bind:value={trackCount} class:big={big(trackCount)} />
+			<input class="num" type="text" bind:value={track_count} class:big={big(track_count)} />
 		</div>
 		<div class="row num">
 			<div class="label">Disc number</div>
-			<input class="num" type="text" bind:value={discNum} class:big={big(discNum)} />
+			<input class="num" type="text" bind:value={disc_num} class:big={big(disc_num)} />
 			<div class="midtext">of</div>
-			<input class="num" type="text" bind:value={discCount} class:big={big(discCount)} />
+			<input class="num" type="text" bind:value={disc_count} class:big={big(disc_count)} />
 		</div>
 		<div class="row">
 			<div class="label">Compilation</div>
@@ -457,7 +457,7 @@
 		</div>
 		<div class="row">
 			<div class="label">Play count</div>
-			<p>{playCount}</p>
+			<p>{play_count}</p>
 		</div>
 		<div class="row">
 			<div class="label">Comments</div>
