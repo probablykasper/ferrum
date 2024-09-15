@@ -6,12 +6,18 @@
   $: artists = fuzzysort.go($filter, all_artists, { all: true })
 </script>
 
-<div class="size-full overflow-y-auto p-3">
+<div class="w-full border-b border-b-slate-500/30">
+  <p class="px-3">(Work in progress)</p>
+</div>
+
+<div class="size-full overflow-y-auto text-sm">
   {#each artists as artist}
-    {#if artist.target}
-      <p class="block py-1">{artist.target}</p>
-    {:else}
-      <p class="block py-1 text-current">Unknown Artist</p>
-    {/if}
+    <p class="block py-1 px-3 text-current">
+      {#if artist.target}
+        {artist.target}
+      {:else}
+        Unknown Artist
+      {/if}
+    </p>
   {/each}
 </div>

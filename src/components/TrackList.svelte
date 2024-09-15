@@ -206,7 +206,11 @@
   on:dragleave={() => (dragToIndex = null)}
   class:no-selection={$selection.count === 0}
 >
-  <div class="row table-header" class:desc={$page.sortDesc} role="row">
+  <div
+    class="row table-header border-b border-b-slate-500/30"
+    class:desc={$page.sortDesc}
+    role="row"
+  >
     <!-- svelte-ignore a11y-interactive-supports-focus -->
     <!-- svelte-ignore a11y-click-events-have-key-events -->
     <div
