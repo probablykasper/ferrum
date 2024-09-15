@@ -5,13 +5,15 @@ import { new_selection } from './selection'
 
 export const tracklist_actions = {
 	scroll_to_index(_index: number) {},
-	focus() {},
+	focus() {
+		const el = document.querySelector('.main-focus-element')
+		if (el instanceof HTMLElement) el.focus()
+	},
 }
 export const selection = new_selection({
 	get_item_count() {
 		return get(page).length
 	},
-	// scrollToItem: scroll_to_index,
 	scroll_to_item(i) {
 		tracklist_actions.scroll_to_index?.(i)
 	},

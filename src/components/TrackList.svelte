@@ -194,12 +194,7 @@
 
 	let scroll_container: HTMLElement
 	onMount(() => {
-		tracklist_actions.scroll_to_index = (index) => {
-			virtual_list.scroll_to_index(index)
-		}
-		tracklist_actions.focus = () => {
-			scroll_container.focus()
-		}
+		tracklist_actions.scroll_to_index = virtual_list.scroll_to_index
 	})
 </script>
 
@@ -320,7 +315,7 @@
 	<!-- svelte-ignore a11y-no-static-element-interactions -->
 	<div
 		bind:this={scroll_container}
-		class="relative h-full overflow-y-auto outline-none"
+		class="main-focus-element relative h-full overflow-y-auto outline-none"
 		on:keydown={keydown}
 		on:mousedown|self={selection.clear}
 		tabindex="0"
