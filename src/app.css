@@ -1,33 +1,33 @@
 @import 'tailwindcss';
 
 input:focus-visible {
-  outline: none;
+	outline: none;
 }
 
 @theme {
-  --default-transition-timing-function: cubic-bezier(0.33, 1, 0.68, 1); /* cubic-out */
-  --color-background: hsl(0, 0%, 100%);
-  --color-foreground: black;
-  --color-edges: hsla(215, 16%, 47%, 0.6);
+	--default-transition-timing-function: cubic-bezier(0.33, 1, 0.68, 1); /* cubic-out */
+	--color-background: hsl(0, 0%, 100%);
+	--color-foreground: black;
+	--color-edges: hsla(215, 16%, 47%, 0.6);
 }
 @media (prefers-color-scheme: dark) {
-  :root {
-    --color-background: hsl(120, 11%, 7%);
-    --color-foreground: white;
-  }
+	:root {
+		--color-background: hsl(120, 11%, 7%);
+		--color-foreground: white;
+	}
 }
 
 @layer base {
-  * {
-    border-color: #333333;
-  }
+	* {
+		border-color: #333333;
+	}
 }
 
 @layer utilities {
-  .parent-active-zoom {
-    @apply transition duration-[50ms];
-  }
-  :active > .parent-active-zoom {
-    @apply scale-95 opacity-70;
-  }
+	.parent-active-zoom {
+		@apply transition duration-[50ms];
+	}
+	:active > .parent-active-zoom {
+		@apply scale-95 opacity-70;
+	}
 }

@@ -1,140 +1,140 @@
 <script lang="ts">
-  import { ItunesImport, paths, call, methods, page, trackListsDetailsMap } from '@/lib/data'
-  import { ipcRenderer } from '@/lib/window'
-  import type { ImportStatus } from 'ferrum-addon/addon'
-  import Button from './Button.svelte'
-  import Modal from './Modal.svelte'
-  import { selection as pageSelection } from '@/lib/page'
+	import { ItunesImport, paths, call, methods, page, trackListsDetailsMap } from '@/lib/data'
+	import { ipcRenderer } from '@/lib/window'
+	import type { ImportStatus } from 'ferrum-addon/addon'
+	import Button from './Button.svelte'
+	import Modal from './Modal.svelte'
+	import { selection as pageSelection } from '@/lib/page'
 
-  export let cancel: () => void
-  let itunesImport = ItunesImport.new()
+	export let cancel: () => void
+	let itunesImport = ItunesImport.new()
 
-  type Stage = 'select' | 'fileSelect' | 'scanning' | ImportStatus
-  let stage: Stage = 'select'
+	type Stage = 'select' | 'fileSelect' | 'scanning' | ImportStatus
+	let stage: Stage = 'select'
 
-  function cancelHandler() {
-    if (stage === 'fileSelect' || stage === 'scanning') {
-      return
-    }
-    cancel()
-  }
+	function cancelHandler() {
+		if (stage === 'fileSelect' || stage === 'scanning') {
+			return
+		}
+		cancel()
+	}
 
-  async function selectFile() {
-    stage = 'fileSelect'
-    const open = await ipcRenderer.invoke('showOpenDialog', true, {
-      properties: ['openFile'],
-      filters: [{ name: 'iTunes Library File', extensions: ['xml'] }],
-    })
-    if (!open.canceled && open.filePaths[0]) {
-      stage = 'scanning'
-      const filePath = open.filePaths[0]
-      stage = await call(() => itunesImport.start(filePath, paths.tracksDir))
-    } else {
-      stage = 'select'
-    }
-  }
-  async function finish() {
-    itunesImport.finish()
-    methods.save()
-    page.refreshIdsAndKeepSelection()
-    pageSelection.clear()
-    trackListsDetailsMap.refresh()
-    cancel()
-  }
-  async function submit() {
-    if (stage === 'select') {
-      selectFile()
-    } else if (typeof stage === 'object' && 'tracksCount' in stage) {
-      finish()
-    }
-  }
+	async function selectFile() {
+		stage = 'fileSelect'
+		const open = await ipcRenderer.invoke('showOpenDialog', true, {
+			properties: ['openFile'],
+			filters: [{ name: 'iTunes Library File', extensions: ['xml'] }],
+		})
+		if (!open.canceled && open.filePaths[0]) {
+			stage = 'scanning'
+			const filePath = open.filePaths[0]
+			stage = await call(() => itunesImport.start(filePath, paths.tracksDir))
+		} else {
+			stage = 'select'
+		}
+	}
+	async function finish() {
+		itunesImport.finish()
+		methods.save()
+		page.refreshIdsAndKeepSelection()
+		pageSelection.clear()
+		trackListsDetailsMap.refresh()
+		cancel()
+	}
+	async function submit() {
+		if (stage === 'select') {
+			selectFile()
+		} else if (typeof stage === 'object' && 'tracksCount' in stage) {
+			finish()
+		}
+	}
 </script>
 
 <Modal onCancel={cancelHandler} cancelOnEscape form={submit} title="Import iTunes Library">
-  <main>
-    {#if stage === 'select' || stage === 'fileSelect'}
-      <p>
-        Select an iTunes <strong>Library.xml</strong> file. To get that file, open iTunes and click
-        on
-        <strong>File > Library > Export Library...</strong>
-      </p>
-      <p>
-        All your tracks need to be downloaded for this to work. If you have tracks from iTunes
-        Store/Apple Music, it might not work.
-      </p>
-      <p>The following will not be imported:</p>
-      <ul>
-        <li>
-          Lyrics, Equalizer, Skip when shuffling, Remember playback position, Start time, Stop time
-        </li>
-        <li>Album ratings, album likes and album dislikes</li>
-        <li>The following track metadata:</li>
-        <li>Music videos, podcasts, audiobooks, voice memos etc.</li>
-        <li>Smart playlists, Genius playlists and Genius Mix playlists</li>
-        <li>View options</li>
-      </ul>
-      <div class="buttons">
-        <Button secondary on:click={cancelHandler}>Cancel</Button>
-        <Button type="submit">Select File</Button>
-      </div>
-    {:else if stage === 'scanning'}
-      Scanning...
-    {:else if 'tracksCount' in stage}
-      {#if stage.errors.length > 0}
-        <div class="error-box">
-          <h4>{stage.errors.length} Errors</h4>
-          {#each stage.errors as error}
-            <p>{error}</p>
-          {/each}
-        </div>
-        <p>The following will be imported:</p>
-      {:else}
-        <p>Success, no errors! The following will be imported:</p>
-      {/if}
-      <ul>
-        <li>Playlists: {stage.playlistsCount}</li>
-        <li>Tracks: {stage.tracksCount}</li>
-      </ul>
-      <div class="buttons">
-        <Button secondary on:click={cancelHandler}>Cancel</Button>
-        <Button type="submit">Continue</Button>
-      </div>
-    {/if}
-  </main>
+	<main>
+		{#if stage === 'select' || stage === 'fileSelect'}
+			<p>
+				Select an iTunes <strong>Library.xml</strong> file. To get that file, open iTunes and click
+				on
+				<strong>File > Library > Export Library...</strong>
+			</p>
+			<p>
+				All your tracks need to be downloaded for this to work. If you have tracks from iTunes
+				Store/Apple Music, it might not work.
+			</p>
+			<p>The following will not be imported:</p>
+			<ul>
+				<li>
+					Lyrics, Equalizer, Skip when shuffling, Remember playback position, Start time, Stop time
+				</li>
+				<li>Album ratings, album likes and album dislikes</li>
+				<li>The following track metadata:</li>
+				<li>Music videos, podcasts, audiobooks, voice memos etc.</li>
+				<li>Smart playlists, Genius playlists and Genius Mix playlists</li>
+				<li>View options</li>
+			</ul>
+			<div class="buttons">
+				<Button secondary on:click={cancelHandler}>Cancel</Button>
+				<Button type="submit">Select File</Button>
+			</div>
+		{:else if stage === 'scanning'}
+			Scanning...
+		{:else if 'tracksCount' in stage}
+			{#if stage.errors.length > 0}
+				<div class="error-box">
+					<h4>{stage.errors.length} Errors</h4>
+					{#each stage.errors as error}
+						<p>{error}</p>
+					{/each}
+				</div>
+				<p>The following will be imported:</p>
+			{:else}
+				<p>Success, no errors! The following will be imported:</p>
+			{/if}
+			<ul>
+				<li>Playlists: {stage.playlistsCount}</li>
+				<li>Tracks: {stage.tracksCount}</li>
+			</ul>
+			<div class="buttons">
+				<Button secondary on:click={cancelHandler}>Cancel</Button>
+				<Button type="submit">Continue</Button>
+			</div>
+		{/if}
+	</main>
 </Modal>
 
 <style lang="sass">
-  main
-    width: 530px
-    line-height: 1.5
-    display: flex
-    flex-direction: column
-  p, ul
-    font-size: 0.95rem
-    margin-top: 0px
-  h4
-    margin-block: 1em
-  strong
-    font-weight: normal
-    background-color: hsl(0, 0%, 100%, 0.1)
-    border: 1px solid hsl(0, 0%, 100%, 0.05)
-    padding: 0.05em 0.25em
-    border-radius: 3px
-  .error-box
-    background-color: hsla(0, 100%, 49%, 0.2)
-    border: 1px solid hsl(0, 100%, 49%)
-    border-radius: 5px
-    padding: 0px 10px
-    max-height: 500px
-    overflow-y: scroll
-    margin-bottom: 15px
-  @media screen and (max-height: 800px)
-    .error-box
-      max-height: calc(100vh - 280px)
-  @media screen and (max-height: 400px)
-    .error-box
-      max-height: 150px
-  .buttons
-    display: flex
-    justify-content: flex-end
+	main
+		width: 530px
+		line-height: 1.5
+		display: flex
+		flex-direction: column
+	p, ul
+		font-size: 0.95rem
+		margin-top: 0px
+	h4
+		margin-block: 1em
+	strong
+		font-weight: normal
+		background-color: hsl(0, 0%, 100%, 0.1)
+		border: 1px solid hsl(0, 0%, 100%, 0.05)
+		padding: 0.05em 0.25em
+		border-radius: 3px
+	.error-box
+		background-color: hsla(0, 100%, 49%, 0.2)
+		border: 1px solid hsl(0, 100%, 49%)
+		border-radius: 5px
+		padding: 0px 10px
+		max-height: 500px
+		overflow-y: scroll
+		margin-bottom: 15px
+	@media screen and (max-height: 800px)
+		.error-box
+			max-height: calc(100vh - 280px)
+	@media screen and (max-height: 400px)
+		.error-box
+			max-height: 150px
+	.buttons
+		display: flex
+		justify-content: flex-end
 </style>

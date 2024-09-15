@@ -1,11 +1,11 @@
 <div align="center">
-  <img src="assets/Logo%201024.png" width="80">
+	<img src="assets/Logo%201024.png" width="80">
 </div>
 <h3 align="center">Ferrum</h3>
 <p align="center">
-  Music library and player
-  <br/>
-  <a href="https://github.com/probablykasper/ferrum/releases"><b>Download for Mac, Windows or Linux</b></a>
+	Music library and player
+	<br/>
+	<a href="https://github.com/probablykasper/ferrum/releases"><b>Download for Mac, Windows or Linux</b></a>
 </p>
 
 <br/>

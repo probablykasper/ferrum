@@ -9,6 +9,6 @@ window.isMac = is.mac
 window.isWindows = is.windows
 
 window.joinPaths = (...args) => {
-  const combinedPath = path.join(...args)
-  return combinedPath
+	const combinedPath = path.join(...args)
+	return combinedPath
 }

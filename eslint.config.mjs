@@ -6,59 +6,59 @@ import globals from 'globals'
 
 /** @type {import('eslint').Linter.FlatConfig[]} */
 export default [
-  js.configs.recommended,
-  ...ts.configs.recommended,
-  ...svelte.configs['flat/recommended'],
-  prettier,
-  ...svelte.configs['flat/prettier'],
-  {
-    languageOptions: {
-      globals: {
-        ...globals.browser,
-        ...globals.node,
-      },
-    },
-  },
-  {
-    files: ['**/*.svelte'],
-    languageOptions: {
-      parserOptions: {
-        parser: ts.parser,
-      },
-    },
-  },
-  {
-    ignores: ['build/', '.svelte-kit/', 'dist/'],
-  },
-  {
-    rules: {
-      // '@typescript-eslint/naming-convention': [
-      // 	'error',
-      // 	{
-      // 		selector: 'variableLike',
-      // 		format: ['snake_case', 'UPPER_CASE'],
-      // 		leadingUnderscore: 'allow',
-      // 	},
-      // 	{
-      // 		selector: 'parameter',
-      // 		modifiers: ['destructured'],
-      // 		format: null,
-      // 	},
-      // 	{
-      // 		selector: 'variable',
-      // 		modifiers: ['destructured'],
-      // 		format: null,
-      // 	},
-      // ],
-      '@typescript-eslint/no-unused-expressions': 'off',
-      '@typescript-eslint/no-unused-vars': [
-        'error',
-        {
-          caughtErrorsIgnorePattern: '^_',
-          argsIgnorePattern: '^_',
-          varsIgnorePattern: '^_',
-        },
-      ],
-    },
-  },
+	js.configs.recommended,
+	...ts.configs.recommended,
+	...svelte.configs['flat/recommended'],
+	prettier,
+	...svelte.configs['flat/prettier'],
+	{
+		languageOptions: {
+			globals: {
+				...globals.browser,
+				...globals.node,
+			},
+		},
+	},
+	{
+		files: ['**/*.svelte'],
+		languageOptions: {
+			parserOptions: {
+				parser: ts.parser,
+			},
+		},
+	},
+	{
+		ignores: ['build/', '.svelte-kit/', 'dist/'],
+	},
+	{
+		rules: {
+			// '@typescript-eslint/naming-convention': [
+			// 	'error',
+			// 	{
+			// 		selector: 'variableLike',
+			// 		format: ['snake_case', 'UPPER_CASE'],
+			// 		leadingUnderscore: 'allow',
+			// 	},
+			// 	{
+			// 		selector: 'parameter',
+			// 		modifiers: ['destructured'],
+			// 		format: null,
+			// 	},
+			// 	{
+			// 		selector: 'variable',
+			// 		modifiers: ['destructured'],
+			// 		format: null,
+			// 	},
+			// ],
+			'@typescript-eslint/no-unused-expressions': 'off',
+			'@typescript-eslint/no-unused-vars': [
+				'error',
+				{
+					caughtErrorsIgnorePattern: '^_',
+					argsIgnorePattern: '^_',
+					varsIgnorePattern: '^_',
+				},
+			],
+		},
+	},
 ]

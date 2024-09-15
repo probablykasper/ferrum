@@ -1,106 +1,107 @@
 {
-  "name": "ferrum",
-  "private": true,
-  "productName": "Ferrum",
-  "author": "kasper.space",
-  "description": "Music library app",
-  "version": "0.18.0",
-  "repository": "https://github.com/probablykasper/ferrum",
-  "scripts": {
-    "dev": "npm run napi:dev && vite",
-    "dev-release": "npm run napi && vite",
-    "napi": "napi build ferrum-addon --dts addon.d.ts --release",
-    "napi:dev": "napi build ferrum-addon --dts addon.d.ts",
-    "build": "npm run napi && npm run build:web && electron-builder",
-    "build:web": "vite build",
-    "electron-builder": "electron-builder",
-    "lint": "svelte-check --tsconfig ./tsconfig.json && eslint src && prettier --check src",
-    "format": "eslint --fix src && prettier --write src",
-    "check": "npm run lint && cargo check"
-  },
-  "build": {
-    "appId": "space.kasper.ferrum",
-    "productName": "Ferrum",
-    "artifactName": "${productName}-v${version}-${os}-${arch}.${ext}",
-    "mac": {
-      "category": "public.app-category.music",
-      "icon": "assets/icon.icns",
-      "target": [
-        "dmg"
-      ],
-      "darkModeSupport": true,
-      "identity": null,
-      "electronLanguages": null
-    },
-    "linux": {
-      "category": "Audio",
-      "icon": "assets/icon.icns",
-      "maintainer": "kasper.space <example@example.com>",
-      "target": [
-        "deb",
-        "rpm"
-      ]
-    },
-    "win": {
-      "icon": "assets/icon.ico",
-      "target": [
-        "nsis"
-      ]
-    },
-    "files": [
-      "build/web",
-      "build/electron",
-      "ferrum-addon/addon.node"
-    ],
-    "directories": {
-      "buildResources": "build_resources",
-      "output": "build/app"
-    }
-  },
-  "main": "build/electron/main.js",
-  "napi": {
-    "name": "addon"
-  },
-  "devDependencies": {
-    "@napi-rs/cli": "^2.18.4",
-    "@sveltejs/vite-plugin-svelte": "^3.1.2",
-    "@tailwindcss/vite": "4.0.0-alpha.23",
-    "@tsconfig/svelte": "^5.0.4",
-    "concurrently": "^8.2.2",
-    "electron": "^28.3.3",
-    "electron-builder": "^25.0.5",
-    "eslint": "^9.10.0",
-    "eslint-config-prettier": "^9.1.0",
-    "eslint-plugin-svelte": "^2.43.0",
-    "fuzzysort": "^3.0.2",
-    "prettier": "^3.3.3",
-    "prettier-plugin-svelte": "^3.2.6",
-    "prettier-plugin-tailwindcss": "^0.6.6",
-    "sass": "^1.78.0",
-    "svelte": "^4.2.19",
-    "svelte-check": "^4.0.1",
-    "svelte-preprocess": "^6.0.2",
-    "tailwindcss": "4.0.0-alpha.23",
-    "typescript": "~5.5.4",
-    "typescript-eslint": "^8.4.0",
-    "vite": "^5.4.3",
-    "vite-plugin-electron": "^0.28.7"
-  },
-  "prettier": {
-    "printWidth": 100,
-    "semi": false,
-    "singleQuote": true,
-    "plugins": [
-      "prettier-plugin-svelte",
-      "prettier-plugin-tailwindcss"
-    ],
-    "overrides": [
-      {
-        "files": "*.svelte",
-        "options": {
-          "parser": "svelte"
-        }
-      }
-    ]
-  }
+	"name": "ferrum",
+	"private": true,
+	"productName": "Ferrum",
+	"author": "kasper.space",
+	"description": "Music library app",
+	"version": "0.18.0",
+	"repository": "https://github.com/probablykasper/ferrum",
+	"scripts": {
+		"dev": "npm run napi:dev && vite",
+		"dev-release": "npm run napi && vite",
+		"napi": "napi build ferrum-addon --dts addon.d.ts --release",
+		"napi:dev": "napi build ferrum-addon --dts addon.d.ts",
+		"build": "npm run napi && npm run build:web && electron-builder",
+		"build:web": "vite build",
+		"electron-builder": "electron-builder",
+		"lint": "svelte-check --tsconfig ./tsconfig.json && eslint src && prettier --check src",
+		"format": "eslint --fix src && prettier --write src",
+		"check": "npm run lint && cargo check"
+	},
+	"build": {
+		"appId": "space.kasper.ferrum",
+		"productName": "Ferrum",
+		"artifactName": "${productName}-v${version}-${os}-${arch}.${ext}",
+		"mac": {
+			"category": "public.app-category.music",
+			"icon": "assets/icon.icns",
+			"target": [
+				"dmg"
+			],
+			"darkModeSupport": true,
+			"identity": null,
+			"electronLanguages": null
+		},
+		"linux": {
+			"category": "Audio",
+			"icon": "assets/icon.icns",
+			"maintainer": "kasper.space <example@example.com>",
+			"target": [
+				"deb",
+				"rpm"
+			]
+		},
+		"win": {
+			"icon": "assets/icon.ico",
+			"target": [
+				"nsis"
+			]
+		},
+		"files": [
+			"build/web",
+			"build/electron",
+			"ferrum-addon/addon.node"
+		],
+		"directories": {
+			"buildResources": "build_resources",
+			"output": "build/app"
+		}
+	},
+	"main": "build/electron/main.js",
+	"napi": {
+		"name": "addon"
+	},
+	"devDependencies": {
+		"@napi-rs/cli": "^2.18.4",
+		"@sveltejs/vite-plugin-svelte": "^3.1.2",
+		"@tailwindcss/vite": "4.0.0-alpha.23",
+		"@tsconfig/svelte": "^5.0.4",
+		"concurrently": "^8.2.2",
+		"electron": "^28.3.3",
+		"electron-builder": "^25.0.5",
+		"eslint": "^9.10.0",
+		"eslint-config-prettier": "^9.1.0",
+		"eslint-plugin-svelte": "^2.43.0",
+		"fuzzysort": "^3.0.2",
+		"prettier": "^3.3.3",
+		"prettier-plugin-svelte": "^3.2.6",
+		"prettier-plugin-tailwindcss": "^0.6.6",
+		"sass": "^1.78.0",
+		"svelte": "^4.2.19",
+		"svelte-check": "^4.0.1",
+		"svelte-preprocess": "^6.0.2",
+		"tailwindcss": "4.0.0-alpha.23",
+		"typescript": "~5.5.4",
+		"typescript-eslint": "^8.4.0",
+		"vite": "^5.4.3",
+		"vite-plugin-electron": "^0.28.7"
+	},
+	"prettier": {
+		"useTabs": true,
+		"printWidth": 100,
+		"semi": false,
+		"singleQuote": true,
+		"plugins": [
+			"prettier-plugin-svelte",
+			"prettier-plugin-tailwindcss"
+		],
+		"overrides": [
+			{
+				"files": "*.svelte",
+				"options": {
+					"parser": "svelte"
+				}
+			}
+		]
+	}
 }

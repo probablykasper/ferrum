@@ -1,332 +1,332 @@
 <script lang="ts">
-  import { onDestroy, onMount } from 'svelte'
-  import { fade } from 'svelte/transition'
-  import TrackList from './components/TrackList.svelte'
-  import Player from './components/Player.svelte'
-  import Sidebar from './components/Sidebar.svelte'
-  import Queue from './components/Queue.svelte'
-  import TrackInfo, { type TrackInfoList } from './components/TrackInfo.svelte'
-  import PlaylistInfoModal from './components/PlaylistInfo.svelte'
-  import { queueVisible } from './lib/queue'
-  import { ipcListen, ipcRenderer } from '@/lib/window'
-  import {
-    importTracks,
-    type PlaylistInfo,
-    methods,
-    page,
-    isMac,
-    view_as_songs,
-    view_as_artists,
-  } from './lib/data'
-  import { playPause } from './lib/player'
-  import DragGhost from './components/DragGhost.svelte'
-  import ItunesImport from './components/ItunesImport.svelte'
-  import type { TrackID } from 'ferrum-addon/addon'
-  import { modalCount } from './components/Modal.svelte'
-  import QuickNav from './components/QuickNav.svelte'
-  import { checkShortcut } from './lib/helpers'
-  import ArtistList from './components/ArtistList.svelte'
-  import { tracklist_actions } from './lib/page'
+	import { onDestroy, onMount } from 'svelte'
+	import { fade } from 'svelte/transition'
+	import TrackList from './components/TrackList.svelte'
+	import Player from './components/Player.svelte'
+	import Sidebar from './components/Sidebar.svelte'
+	import Queue from './components/Queue.svelte'
+	import TrackInfo, { type TrackInfoList } from './components/TrackInfo.svelte'
+	import PlaylistInfoModal from './components/PlaylistInfo.svelte'
+	import { queueVisible } from './lib/queue'
+	import { ipcListen, ipcRenderer } from '@/lib/window'
+	import {
+		importTracks,
+		type PlaylistInfo,
+		methods,
+		page,
+		isMac,
+		view_as_songs,
+		view_as_artists,
+	} from './lib/data'
+	import { playPause } from './lib/player'
+	import DragGhost from './components/DragGhost.svelte'
+	import ItunesImport from './components/ItunesImport.svelte'
+	import type { TrackID } from 'ferrum-addon/addon'
+	import { modalCount } from './components/Modal.svelte'
+	import QuickNav from './components/QuickNav.svelte'
+	import { checkShortcut } from './lib/helpers'
+	import ArtistList from './components/ArtistList.svelte'
+	import { tracklist_actions } from './lib/page'
 
-  ipcRenderer.emit('appLoaded')
+	ipcRenderer.emit('appLoaded')
 
-  async function openImportDialog() {
-    if ($modalCount !== 0) {
-      return
-    }
-    let result = await ipcRenderer.invoke('showOpenDialog', false, {
-      properties: ['openFile', 'multiSelections'],
-      filters: [{ name: 'Audio', extensions: ['mp3', 'm4a', 'opus'] }],
-    })
-    if (!result.canceled && result.filePaths.length >= 1) {
-      importTracks(result.filePaths)
-    }
-  }
-  ipcRenderer.on('import', openImportDialog)
-  onDestroy(() => {
-    ipcRenderer.removeListener('import', openImportDialog)
-  })
+	async function openImportDialog() {
+		if ($modalCount !== 0) {
+			return
+		}
+		let result = await ipcRenderer.invoke('showOpenDialog', false, {
+			properties: ['openFile', 'multiSelections'],
+			filters: [{ name: 'Audio', extensions: ['mp3', 'm4a', 'opus'] }],
+		})
+		if (!result.canceled && result.filePaths.length >= 1) {
+			importTracks(result.filePaths)
+		}
+	}
+	ipcRenderer.on('import', openImportDialog)
+	onDestroy(() => {
+		ipcRenderer.removeListener('import', openImportDialog)
+	})
 
-  function toggleQueue() {
-    $queueVisible = !$queueVisible
-  }
-  $: ipcRenderer.invoke('update:Show Queue', $queueVisible)
-  ipcRenderer.on('Show Queue', toggleQueue)
-  onDestroy(() => {
-    ipcRenderer.removeListener('Show Queue', toggleQueue)
-  })
+	function toggleQueue() {
+		$queueVisible = !$queueVisible
+	}
+	$: ipcRenderer.invoke('update:Show Queue', $queueVisible)
+	ipcRenderer.on('Show Queue', toggleQueue)
+	onDestroy(() => {
+		ipcRenderer.removeListener('Show Queue', toggleQueue)
+	})
 
-  let droppable = false
-  const allowedMimes = ['audio/mpeg', 'audio/x-m4a', 'audio/ogg'] // mp3, m4a
-  function getFilePaths(e: DragEvent): string[] {
-    if (!e.dataTransfer) return []
-    let validPaths: string[] = []
-    for (let i = 0; i < e.dataTransfer.files.length; i++) {
-      const file = e.dataTransfer.files[i]
-      if (allowedMimes.includes(file.type)) {
-        validPaths.push(file.path)
-      }
-    }
-    return validPaths
-  }
-  function hasFiles(e: DragEvent): boolean {
-    if (!e.dataTransfer) return false
-    for (let i = 0; i < e.dataTransfer.items.length; i++) {
-      const item = e.dataTransfer.items[i]
-      if (item.kind === 'file' && allowedMimes.includes(item.type)) {
-        return true
-      }
-    }
-    return false
-  }
-  function dragEnterOrOver(e: DragEvent) {
-    droppable = hasFiles(e)
-    if (droppable) {
-      e.preventDefault()
-    }
-  }
-  function dragLeave() {
-    droppable = false
-  }
-  function drop(e: DragEvent) {
-    e.preventDefault()
-    droppable = false
-    const validPaths = getFilePaths(e)
-    const paths = []
-    for (const path of validPaths) {
-      paths.push(path)
-    }
-    importTracks(paths)
-  }
-  function keydown(e: KeyboardEvent) {
-    let el = e.target as HTMLAudioElement
-    if (el && el.tagName !== 'INPUT' && el.tagName !== 'TEXTAREA') {
-      if (e.key === ' ') {
-        e.preventDefault()
-        playPause()
-      }
-    }
-  }
+	let droppable = false
+	const allowedMimes = ['audio/mpeg', 'audio/x-m4a', 'audio/ogg'] // mp3, m4a
+	function getFilePaths(e: DragEvent): string[] {
+		if (!e.dataTransfer) return []
+		let validPaths: string[] = []
+		for (let i = 0; i < e.dataTransfer.files.length; i++) {
+			const file = e.dataTransfer.files[i]
+			if (allowedMimes.includes(file.type)) {
+				validPaths.push(file.path)
+			}
+		}
+		return validPaths
+	}
+	function hasFiles(e: DragEvent): boolean {
+		if (!e.dataTransfer) return false
+		for (let i = 0; i < e.dataTransfer.items.length; i++) {
+			const item = e.dataTransfer.items[i]
+			if (item.kind === 'file' && allowedMimes.includes(item.type)) {
+				return true
+			}
+		}
+		return false
+	}
+	function dragEnterOrOver(e: DragEvent) {
+		droppable = hasFiles(e)
+		if (droppable) {
+			e.preventDefault()
+		}
+	}
+	function dragLeave() {
+		droppable = false
+	}
+	function drop(e: DragEvent) {
+		e.preventDefault()
+		droppable = false
+		const validPaths = getFilePaths(e)
+		const paths = []
+		for (const path of validPaths) {
+			paths.push(path)
+		}
+		importTracks(paths)
+	}
+	function keydown(e: KeyboardEvent) {
+		let el = e.target as HTMLAudioElement
+		if (el && el.tagName !== 'INPUT' && el.tagName !== 'TEXTAREA') {
+			if (e.key === ' ') {
+				e.preventDefault()
+				playPause()
+			}
+		}
+	}
 
-  let showItunesImport = false
-  onDestroy(
-    ipcListen('itunesImport', () => {
-      if ($modalCount === 0) {
-        showItunesImport = true
-      }
-    }),
-  )
+	let showItunesImport = false
+	onDestroy(
+		ipcListen('itunesImport', () => {
+			if ($modalCount === 0) {
+				showItunesImport = true
+			}
+		}),
+	)
 
-  let trackInfoList: TrackInfoList | null = null
-  function onTrackInfo(ids: TrackID[], trackIndex: number) {
-    if ($modalCount === 0) {
-      trackInfoList = { ids, index: trackIndex }
-    }
-  }
-  onDestroy(
-    ipcListen('context.Get Info', (_, ids: TrackID[], trackIndex: number) => {
-      onTrackInfo(ids, trackIndex)
-    }),
-  )
+	let trackInfoList: TrackInfoList | null = null
+	function onTrackInfo(ids: TrackID[], trackIndex: number) {
+		if ($modalCount === 0) {
+			trackInfoList = { ids, index: trackIndex }
+		}
+	}
+	onDestroy(
+		ipcListen('context.Get Info', (_, ids: TrackID[], trackIndex: number) => {
+			onTrackInfo(ids, trackIndex)
+		}),
+	)
 
-  let playlistInfo: PlaylistInfo | null = null
-  onDestroy(
-    ipcListen('context.playlist.edit', (_, id) => {
-      const list = methods.getTrackList(id)
-      if (list.type !== 'special' && $modalCount === 0) {
-        playlistInfo = {
-          name: list.name,
-          description: list.description || '',
-          isFolder: list.type === 'folder',
-          id: list.id,
-          editMode: true,
-        }
-      }
-    }),
-  )
-  onDestroy(
-    ipcListen('context.playlist.delete', async (_, id) => {
-      const list = methods.getTrackList(id)
-      const result = await ipcRenderer.invoke('showMessageBox', false, {
-        type: 'info',
-        message: `Delete the ${list.type} "${list.name}"?`,
-        detail: list.type === 'folder' ? 'This will also delete all playlists inside.' : '',
-        buttons: [`Delete`, 'Cancel'],
-        defaultId: 0,
-      })
-      if (result.response === 0) {
-        methods.deleteTrackList(id)
-      }
-    }),
-  )
-  onDestroy(
-    ipcListen('newPlaylist', (_, id, isFolder) => {
-      playlistInfo = {
-        name: '',
-        description: '',
-        isFolder: isFolder,
-        id: id,
-        editMode: false,
-      }
-    }),
-  )
+	let playlistInfo: PlaylistInfo | null = null
+	onDestroy(
+		ipcListen('context.playlist.edit', (_, id) => {
+			const list = methods.getTrackList(id)
+			if (list.type !== 'special' && $modalCount === 0) {
+				playlistInfo = {
+					name: list.name,
+					description: list.description || '',
+					isFolder: list.type === 'folder',
+					id: list.id,
+					editMode: true,
+				}
+			}
+		}),
+	)
+	onDestroy(
+		ipcListen('context.playlist.delete', async (_, id) => {
+			const list = methods.getTrackList(id)
+			const result = await ipcRenderer.invoke('showMessageBox', false, {
+				type: 'info',
+				message: `Delete the ${list.type} "${list.name}"?`,
+				detail: list.type === 'folder' ? 'This will also delete all playlists inside.' : '',
+				buttons: [`Delete`, 'Cancel'],
+				defaultId: 0,
+			})
+			if (result.response === 0) {
+				methods.deleteTrackList(id)
+			}
+		}),
+	)
+	onDestroy(
+		ipcListen('newPlaylist', (_, id, isFolder) => {
+			playlistInfo = {
+				name: '',
+				description: '',
+				isFolder: isFolder,
+				id: id,
+				editMode: false,
+			}
+		}),
+	)
 
-  onMount(() => {
-    tracklist_actions.focus()
-  })
+	onMount(() => {
+		tracklist_actions.focus()
+	})
 </script>
 
 <svelte:window on:keydown={keydown} />
 <svelte:head>
-  <title>Ferrum</title>
+	<title>Ferrum</title>
 </svelte:head>
 
 <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
 <main
-  on:dragenter|capture={dragEnterOrOver}
-  on:keydown={(e) => {
-    if (e.target) {
-      if (checkShortcut(e, 'ArrowUp', { cmdOrCtrl: true })) {
-        e.preventDefault()
-        ipcRenderer.invoke('volume_change', true)
-      } else if (checkShortcut(e, 'ArrowDown', { cmdOrCtrl: true })) {
-        e.preventDefault()
-        ipcRenderer.invoke('volume_change', false)
-      }
-    }
-  }}
+	on:dragenter|capture={dragEnterOrOver}
+	on:keydown={(e) => {
+		if (e.target) {
+			if (checkShortcut(e, 'ArrowUp', { cmdOrCtrl: true })) {
+				e.preventDefault()
+				ipcRenderer.invoke('volume_change', true)
+			} else if (checkShortcut(e, 'ArrowDown', { cmdOrCtrl: true })) {
+				e.preventDefault()
+				ipcRenderer.invoke('volume_change', false)
+			}
+		}
+	}}
 >
-  <div class="meat">
-    <Sidebar />
-    <div class="flex size-full min-w-0 flex-col">
-      <div class="relative pt-4 px-5 pb-5">
-        <div
-          class="absolute top-0 left-0 h-10 w-full"
-          class:dragbar={$modalCount === 0 && isMac}
-          class:queue-visible={$queueVisible}
-        />
-        <h3 class="m-0 pb-0.5 text-[19px] font-medium leading-none">
-          {#if $page.tracklist.id === 'root'}
-            {#if $page.viewAs === view_as_songs}
-              Songs
-              <div class="text-[13px] leading-4 opacity-70">{$page.length} songs</div>
-            {:else if $page.viewAs === view_as_artists}
-              Artists
-              <div class="text-[13px] leading-4 opacity-70">
-                {page.get_artists().length} artists
-              </div>
-            {/if}
-          {:else if $page.tracklist.type !== 'special'}
-            {$page.tracklist.name}
-            <div class="text-[13px] leading-4 opacity-70">{$page.length} songs</div>
-          {/if}
-        </h3>
-        {#if 'description' in $page.tracklist && $page.tracklist.description !== ''}
-          <div class="mt-2.5 text-sm text-[13px] opacity-70">{$page.tracklist.description}</div>
-        {/if}
-      </div>
-      {#if $page.viewAs === 0}
-        <TrackList {onTrackInfo} />
-      {:else}
-        <ArtistList />
-      {/if}
-    </div>
-    {#if $queueVisible}
-      <Queue {onTrackInfo} />
-    {/if}
-  </div>
-  <Player />
-  {#if droppable}
-    <!-- if the overlay is always visible, it's not possible to scroll while dragging tracks -->
-    <div class="drag-overlay" transition:fade={{ duration: 100 }}>
-      <h1>Drop files to import</h1>
-    </div>
-    <div
-      class="dropzone"
-      on:dragleave={dragLeave}
-      on:drop={drop}
-      on:dragover={dragEnterOrOver}
-      role="dialog"
-      aria-label="Drop files to import"
-      aria-dropeffect="copy"
-    />
-  {/if}
+	<div class="meat">
+		<Sidebar />
+		<div class="flex size-full min-w-0 flex-col">
+			<div class="relative pt-4 px-5 pb-5">
+				<div
+					class="absolute top-0 left-0 h-10 w-full"
+					class:dragbar={$modalCount === 0 && isMac}
+					class:queue-visible={$queueVisible}
+				/>
+				<h3 class="m-0 pb-0.5 text-[19px] font-medium leading-none">
+					{#if $page.tracklist.id === 'root'}
+						{#if $page.viewAs === view_as_songs}
+							Songs
+							<div class="text-[13px] leading-4 opacity-70">{$page.length} songs</div>
+						{:else if $page.viewAs === view_as_artists}
+							Artists
+							<div class="text-[13px] leading-4 opacity-70">
+								{page.get_artists().length} artists
+							</div>
+						{/if}
+					{:else if $page.tracklist.type !== 'special'}
+						{$page.tracklist.name}
+						<div class="text-[13px] leading-4 opacity-70">{$page.length} songs</div>
+					{/if}
+				</h3>
+				{#if 'description' in $page.tracklist && $page.tracklist.description !== ''}
+					<div class="mt-2.5 text-sm text-[13px] opacity-70">{$page.tracklist.description}</div>
+				{/if}
+			</div>
+			{#if $page.viewAs === 0}
+				<TrackList {onTrackInfo} />
+			{:else}
+				<ArtistList />
+			{/if}
+		</div>
+		{#if $queueVisible}
+			<Queue {onTrackInfo} />
+		{/if}
+	</div>
+	<Player />
+	{#if droppable}
+		<!-- if the overlay is always visible, it's not possible to scroll while dragging tracks -->
+		<div class="drag-overlay" transition:fade={{ duration: 100 }}>
+			<h1>Drop files to import</h1>
+		</div>
+		<div
+			class="dropzone"
+			on:dragleave={dragLeave}
+			on:drop={drop}
+			on:dragover={dragEnterOrOver}
+			role="dialog"
+			aria-label="Drop files to import"
+			aria-dropeffect="copy"
+		/>
+	{/if}
 </main>
 
 {#if trackInfoList}
-  <TrackInfo currentList={trackInfoList} cancel={() => (trackInfoList = null)} />
+	<TrackInfo currentList={trackInfoList} cancel={() => (trackInfoList = null)} />
 {/if}
 {#if playlistInfo}
-  <PlaylistInfoModal info={playlistInfo} cancel={() => (playlistInfo = null)} />
+	<PlaylistInfoModal info={playlistInfo} cancel={() => (playlistInfo = null)} />
 {/if}
 {#if showItunesImport}
-  <ItunesImport cancel={() => (showItunesImport = false)} />
+	<ItunesImport cancel={() => (showItunesImport = false)} />
 {/if}
 <QuickNav />
 
 <DragGhost />
 
 <style lang="sass">
-  :global(:root)
-    --cubic-out: cubic-bezier(0.33, 1, 0.68, 1)
-    --player-bg-color: #17181c
-    --text-color: #e6e6e6
-    --drag-bg-color: #1e1f24
-    --drag-line-color: #0083f5
-    --empty-cover-bg-color: #2b2c31
-    --empty-cover-color: #45464a
-    --border-color: #333333
-    --accent-1: #2e5be0
-    --accent-2: #103fcb
-    --icon-color: #e6e6e6
-    --icon-highlight-color: #00ffff
-    --titlebar-height: 22px
-    --hue: 225
-    --right-sidebar-width: 250px
-  :global(html), :global(body)
-    background-color: #0D1115
-    height: 100%
-    color-scheme: dark
-  :global(body)
-    position: relative
-    width: 100%
-    margin: 0
-    box-sizing: border-box
-    background-image: linear-gradient(150deg, hsl(var(--hue), 60%, 10%), hsl(var(--hue), 20%, 6%))
-    color: var(--text-color)
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif
-    user-select: none
-  :global(h1), :global(h2), :global(h3)
-    font-weight: 400
-    margin: 0px
-  :global(h4), :global(h5), :global(h6)
-    font-weight: 600
-    margin: 0px
-  .dropzone, .drag-overlay
-    position: fixed
-    width: 100%
-    height: 100%
-    top: 0px
-    left: 0px
-  .dragbar
-    -webkit-app-region: drag
-    &.queue-visible
-      width: calc(100% - var(--right-sidebar-width))
-  .drag-overlay
-    display: flex
-    align-items: center
-    justify-content: center
-    background-color: rgba(#10161e, 0.9)
-    transition: all 100ms ease-in-out
-  main
-    height: 100%
-    max-height: 100%
-    display: flex
-    flex-direction: column
-  .meat
-    position: relative
-    height: 0px
-    display: flex
-    flex-direction: row
-    flex-grow: 1
+	:global(:root)
+		--cubic-out: cubic-bezier(0.33, 1, 0.68, 1)
+		--player-bg-color: #17181c
+		--text-color: #e6e6e6
+		--drag-bg-color: #1e1f24
+		--drag-line-color: #0083f5
+		--empty-cover-bg-color: #2b2c31
+		--empty-cover-color: #45464a
+		--border-color: #333333
+		--accent-1: #2e5be0
+		--accent-2: #103fcb
+		--icon-color: #e6e6e6
+		--icon-highlight-color: #00ffff
+		--titlebar-height: 22px
+		--hue: 225
+		--right-sidebar-width: 250px
+	:global(html), :global(body)
+		background-color: #0D1115
+		height: 100%
+		color-scheme: dark
+	:global(body)
+		position: relative
+		width: 100%
+		margin: 0
+		box-sizing: border-box
+		background-image: linear-gradient(150deg, hsl(var(--hue), 60%, 10%), hsl(var(--hue), 20%, 6%))
+		color: var(--text-color)
+		font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif
+		user-select: none
+	:global(h1), :global(h2), :global(h3)
+		font-weight: 400
+		margin: 0px
+	:global(h4), :global(h5), :global(h6)
+		font-weight: 600
+		margin: 0px
+	.dropzone, .drag-overlay
+		position: fixed
+		width: 100%
+		height: 100%
+		top: 0px
+		left: 0px
+	.dragbar
+		-webkit-app-region: drag
+		&.queue-visible
+			width: calc(100% - var(--right-sidebar-width))
+	.drag-overlay
+		display: flex
+		align-items: center
+		justify-content: center
+		background-color: rgba(#10161e, 0.9)
+		transition: all 100ms ease-in-out
+	main
+		height: 100%
+		max-height: 100%
+		display: flex
+		flex-direction: column
+	.meat
+		position: relative
+		height: 0px
+		display: flex
+		flex-direction: row
+		flex-grow: 1
 </style>
