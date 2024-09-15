@@ -103,10 +103,16 @@
 				}
 			}}
 		/>
+		<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
 		<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
 		<nav
 			class="items"
 			tabindex="-1"
+			on:mousedown|preventDefault={() => {
+				if (document.activeElement === document.body) {
+					tracklist_actions.focus()
+				}
+			}}
 			on:keydown={(e) => {
 				if (e.key === 'Escape') {
 					e.preventDefault()
@@ -131,7 +137,9 @@
 				parent_id={null}
 				children={special_playlists_nav}
 				on_open={(item) => {
-					page.open_playlist('root', item.view_as ?? view_as_songs)
+					if ($page.id !== item.id || $page.viewAs !== item.view_as) {
+						page.open_playlist('root', item.view_as ?? view_as_songs)
+					}
 				}}
 				on_select_down={() => {
 					if ($track_lists_details_map.root.children && $track_lists_details_map.root.children[0]) {

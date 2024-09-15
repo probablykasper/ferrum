@@ -82,7 +82,6 @@
 		if (has_showing_children(children[i].id)) {
 			select_first(children[i])
 		} else if (children[i + 1]) {
-			console.trace()
 			on_open(children[i + 1])
 		} else {
 			on_select_down()
@@ -150,7 +149,7 @@
 	{#each children as child_list, i}
 		{#if child_list.kind === 'folder'}
 			<div
-				class="item"
+				class="item rounded-r-[5px]"
 				style:padding-left={14 * level + 'px'}
 				class:active={$page.id === child_list.id}
 				draggable="true"
@@ -241,7 +240,7 @@
 		{:else if child_list.kind === 'playlist'}
 			<!-- svelte-ignore a11y-interactive-supports-focus -->
 			<div
-				class="item"
+				class="item rounded-r-[5px]"
 				role="button"
 				aria-label="playlist"
 				style:padding-left={14 * level + 'px'}
@@ -307,7 +306,7 @@
 		{:else}
 			<!-- svelte-ignore a11y-interactive-supports-focus -->
 			<div
-				class="item"
+				class="item rounded-r-[5px]"
 				role="link"
 				style:padding-left={14 * level + 'px'}
 				on:mousedown={() => on_open(child_list)}
@@ -325,16 +324,13 @@
 
 <style lang="sass">
 	.item.active
-		// box-shadow: inset 2px 0px 0px 0px hsl(var(--hue), 70%, 60%)
-		// background: linear-gradient(90deg, hsl(var(--hue), 35%, 25%) 30%, transparent)
-		box-shadow: inset 2px 0px 0px 0px hsl(var(--hue), 30%, 60%)
-		background-image: linear-gradient(90deg, hsl(var(--hue), 20%, 25%) 30%, transparent 66.6666%)
+		box-shadow: inset 2px 0px 0px 0px hsl(var(--hue), 70%, 60%)
+		background-image: linear-gradient(90deg, hsl(var(--hue), 45%, 30%) 30%, transparent 66.6666%)
 		background-position: 0% 0%
 	:global(aside :focus)
 		.active
 			box-shadow: inset 2px 0px 0px 0px hsl(var(--hue), 70%, 60%)
-			background-image: linear-gradient(90deg, hsl(var(--hue), 45%, 30%) 30%, transparent 66.6666%)
-			background-position: 0% 0%
+			background-image: linear-gradient(90deg, hsl(var(--hue), 70%, 46%) 30%, transparent 66.6666%)
 	.item
 		display: flex
 		align-items: center
