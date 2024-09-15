@@ -1,17 +1,20 @@
+<script lang="ts" context="module">
+  export const special_playlists_nav = [
+    { id: 'root', name: 'Songs', kind: 'special', view_as: 0 },
+    { id: 'root', name: 'Artists', kind: 'special', view_as: 1 },
+  ]
+</script>
+
 <script lang="ts">
   import SidebarItems, { type SidebarItemHandle } from './SidebarItems.svelte'
   import Filter from './Filter.svelte'
-  import { isMac, trackListsDetailsMap, page, movePlaylist } from '../lib/data'
+  import { isMac, trackListsDetailsMap, page, movePlaylist, view_as_songs } from '../lib/data'
   import { ipcListen, ipcRenderer } from '../lib/window'
   import { writable } from 'svelte/store'
   import { onDestroy, setContext, tick } from 'svelte'
   import { dragged } from '../lib/drag-drop'
   import { tracklist_actions } from '@/lib/page'
 
-  const special = [
-    { id: 'root', name: 'Songs', kind: 'special', view_as: 0 },
-    { id: 'root', name: 'Artists', kind: 'special', view_as: 1 },
-  ]
   let viewport: HTMLElement
   const itemHandle = setContext('itemHandle', writable(null as SidebarItemHandle | null))
 
@@ -126,13 +129,13 @@
       <div class="spacer" />
       <SidebarItems
         parentId={null}
-        children={special}
+        children={special_playlists_nav}
         on_open={(item) => {
-          page.openPlaylist('root', item.view_as ?? 0)
+          page.openPlaylist('root', item.view_as ?? view_as_songs)
         }}
         on_select_down={() => {
           if ($trackListsDetailsMap.root.children && $trackListsDetailsMap.root.children[0]) {
-            page.openPlaylist($trackListsDetailsMap.root.children[0], 0)
+            page.openPlaylist($trackListsDetailsMap.root.children[0], view_as_songs)
           }
         }}
       />
@@ -145,9 +148,12 @@
         on_open={(item) => {
           if ($page.id !== item.id) {
             if (item.id === 'root') {
-              page.openPlaylist('root', item.view_as ?? special[special.length - 1].view_as)
+              page.openPlaylist(
+                'root',
+                item.view_as ?? special_playlists_nav[special_playlists_nav.length - 1].view_as,
+              )
             } else {
-              page.openPlaylist(item.id, item.view_as ?? 0)
+              page.openPlaylist(item.id, item.view_as ?? view_as_songs)
             }
           }
         }}

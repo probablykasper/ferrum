@@ -20,6 +20,9 @@ export const ItunesImport = innerAddon.ItunesImport
 
 call((addon) => addon.load_data(isDev, libraryPath))
 
+export const view_as_songs: ViewAs.Songs = 0
+export const view_as_artists: ViewAs.Artists = 1
+
 function getErrorMessage(err: unknown): string {
   if (typeof err === 'object' && err !== null) {
     const obj = err as { [key: string]: unknown }

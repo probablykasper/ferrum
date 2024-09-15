@@ -3,15 +3,29 @@
   import { checkShortcut } from '../lib/helpers'
   import { ipcListen } from '@/lib/window'
   import fuzzysort from 'fuzzysort'
-  import { page, trackListsDetailsMap } from '@/lib/data'
-  import type { TrackListDetails } from '../../ferrum-addon/addon'
+  import { page, trackListsDetailsMap, view_as_artists, view_as_songs } from '@/lib/data'
+  import type { TrackListDetails, ViewAs } from '../../ferrum-addon/addon'
   import Modal from './Modal.svelte'
+  import { special_playlists_nav } from './Sidebar.svelte'
+
+  type Result = TrackListDetails & { view_as?: ViewAs }
 
   let value = ''
-  let playlists: TrackListDetails[] = []
+  let playlists: Result[] = []
   let show = false
   $: if (show) {
-    playlists = Object.values($trackListsDetailsMap).sort((a, b) => a.name.localeCompare(b.name))
+    playlists = get_playlists()
+  }
+  function get_playlists() {
+    const playlists: Result[] = special_playlists_nav
+    for (const playlist of Object.values($trackListsDetailsMap)) {
+      if (playlist.kind === 'playlist' || playlist.kind === 'folder') {
+        playlists.push(playlist)
+      }
+    }
+    playlists.push({ id: 'root', name: 'Songs', kind: 'special', view_as: view_as_songs })
+    playlists.push({ id: 'root', name: 'Artists', kind: 'special', view_as: view_as_artists })
+    return playlists
   }
 
   let filteredItems = fuzzysort.go(value, playlists, { key: 'name', all: true })
@@ -39,7 +53,10 @@
       show = false
       value = ''
     } else if (checkShortcut(e, 'Enter')) {
-      page.openPlaylist(filteredItems[selectedIndex].obj.id)
+      page.openPlaylist(
+        filteredItems[selectedIndex].obj.id,
+        filteredItems[selectedIndex].obj.view_as ?? view_as_songs,
+      )
       show = false
     } else if (checkShortcut(e, 'ArrowUp')) {
       selectedIndex--
@@ -85,7 +102,7 @@
           bind:this={listItems[i]}
           type="button"
           on:click={() => {
-            page.openPlaylist(item.obj.id)
+            page.openPlaylist(item.obj.id, item.obj.view_as ?? view_as_songs)
             show = false
           }}
           class:selected={selectedIndex === i}
