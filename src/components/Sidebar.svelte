@@ -1,28 +1,30 @@
+<script lang="ts" context="module">
+  export const special_playlists_nav = [
+    { id: 'root', name: 'Songs', kind: 'special', view_as: 0 },
+    { id: 'root', name: 'Artists', kind: 'special', view_as: 1 },
+  ]
+</script>
+
 <script lang="ts">
   import SidebarItems, { type SidebarItemHandle } from './SidebarItems.svelte'
   import Filter from './Filter.svelte'
-  import { isMac, trackListsDetailsMap, page, movePlaylist } from '../lib/data'
+  import { isMac, trackListsDetailsMap, page, movePlaylist, view_as_songs } from '../lib/data'
   import { ipcListen, ipcRenderer } from '../lib/window'
   import { writable } from 'svelte/store'
   import { onDestroy, setContext, tick } from 'svelte'
   import { dragged } from '../lib/drag-drop'
   import { tracklist_actions } from '@/lib/page'
 
-  const special = {
-    children: ['root'],
-  }
   let viewport: HTMLElement
   const itemHandle = setContext('itemHandle', writable(null as SidebarItemHandle | null))
 
   onDestroy(
     ipcListen('Select Previous List', () => {
-      console.log('Select Previous List')
       $itemHandle?.handleKey(new KeyboardEvent('keydown', { key: 'ArrowUp' }))
     }),
   )
   onDestroy(
     ipcListen('Select Next List', () => {
-      console.log('Select Next List')
       $itemHandle?.handleKey(new KeyboardEvent('keydown', { key: 'ArrowDown' }))
     }),
   )
@@ -33,9 +35,6 @@
       isFolder: false,
       isRoot: true,
     })
-  }
-  function open(id: string) {
-    if ($page.id !== id) page.openPlaylist(id)
   }
 
   let rootDroppable = false
@@ -129,18 +128,35 @@
       <div class="focuser" tabindex="0" on:focus={focuser} />
       <div class="spacer" />
       <SidebarItems
-        trackList={special}
-        on:selectDown={() => {
+        parentId={null}
+        children={special_playlists_nav}
+        on_open={(item) => {
+          page.openPlaylist('root', item.view_as ?? view_as_songs)
+        }}
+        on_select_down={() => {
           if ($trackListsDetailsMap.root.children && $trackListsDetailsMap.root.children[0]) {
-            open($trackListsDetailsMap.root.children[0])
+            page.openPlaylist($trackListsDetailsMap.root.children[0], view_as_songs)
           }
         }}
-        parentId={null}
       />
       <div class="spacer" />
       <SidebarItems
-        trackList={{ children: $trackListsDetailsMap['root'].children || [] }}
         parentId={$trackListsDetailsMap['root'].id}
+        children={($trackListsDetailsMap['root'].children || []).map(
+          (childId) => $trackListsDetailsMap[childId],
+        )}
+        on_open={(item) => {
+          if ($page.id !== item.id) {
+            if (item.id === 'root') {
+              page.openPlaylist(
+                'root',
+                item.view_as ?? special_playlists_nav[special_playlists_nav.length - 1].view_as,
+              )
+            } else {
+              page.openPlaylist(item.id, item.view_as ?? view_as_songs)
+            }
+          }
+        }}
       />
     </nav>
   </div>

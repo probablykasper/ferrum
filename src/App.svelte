@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onDestroy } from 'svelte'
+  import { onDestroy, onMount } from 'svelte'
   import { fade } from 'svelte/transition'
   import TrackList from './components/TrackList.svelte'
   import Player from './components/Player.svelte'
@@ -9,7 +9,15 @@
   import PlaylistInfoModal from './components/PlaylistInfo.svelte'
   import { queueVisible } from './lib/queue'
   import { ipcListen, ipcRenderer } from '@/lib/window'
-  import { importTracks, type PlaylistInfo, methods } from './lib/data'
+  import {
+    importTracks,
+    type PlaylistInfo,
+    methods,
+    page,
+    isMac,
+    view_as_songs,
+    view_as_artists,
+  } from './lib/data'
   import { playPause } from './lib/player'
   import DragGhost from './components/DragGhost.svelte'
   import ItunesImport from './components/ItunesImport.svelte'
@@ -17,6 +25,8 @@
   import { modalCount } from './components/Modal.svelte'
   import QuickNav from './components/QuickNav.svelte'
   import { checkShortcut } from './lib/helpers'
+  import ArtistList from './components/ArtistList.svelte'
+  import { tracklist_actions } from './lib/page'
 
   ipcRenderer.emit('appLoaded')
 
@@ -160,6 +170,10 @@
       }
     }),
   )
+
+  onMount(() => {
+    tracklist_actions.focus()
+  })
 </script>
 
 <svelte:window on:keydown={keydown} />
@@ -184,7 +198,39 @@
 >
   <div class="meat">
     <Sidebar />
-    <TrackList {onTrackInfo} />
+    <div class="flex size-full min-w-0 flex-col">
+      <div class="relative pt-4 px-5 pb-5">
+        <div
+          class="absolute top-0 left-0 h-10 w-full"
+          class:dragbar={$modalCount === 0 && isMac}
+          class:queue-visible={$queueVisible}
+        />
+        <h3 class="m-0 pb-0.5 text-[19px] font-medium leading-none">
+          {#if $page.tracklist.id === 'root'}
+            {#if $page.viewAs === view_as_songs}
+              Songs
+              <div class="text-[13px] leading-4 opacity-70">{$page.length} songs</div>
+            {:else if $page.viewAs === view_as_artists}
+              Artists
+              <div class="text-[13px] leading-4 opacity-70">
+                {page.get_artists().length} artists
+              </div>
+            {/if}
+          {:else if $page.tracklist.type !== 'special'}
+            {$page.tracklist.name}
+            <div class="text-[13px] leading-4 opacity-70">{$page.length} songs</div>
+          {/if}
+        </h3>
+        {#if 'description' in $page.tracklist && $page.tracklist.description !== ''}
+          <div class="mt-2.5 text-sm text-[13px] opacity-70">{$page.tracklist.description}</div>
+        {/if}
+      </div>
+      {#if $page.viewAs === 0}
+        <TrackList {onTrackInfo} />
+      {:else}
+        <ArtistList />
+      {/if}
+    </div>
     {#if $queueVisible}
       <Queue {onTrackInfo} />
     {/if}
@@ -262,6 +308,10 @@
     height: 100%
     top: 0px
     left: 0px
+  .dragbar
+    -webkit-app-region: drag
+    &.queue-visible
+      width: calc(100% - var(--right-sidebar-width))
   .drag-overlay
     display: flex
     align-items: center

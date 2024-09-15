@@ -1,6 +1,13 @@
 import { writable } from 'svelte/store'
 import { ipcRenderer } from '@/lib/window'
-import type { MsSinceUnixEpoch, TrackID, TrackList, TrackListID, TrackMd } from '../../ferrum-addon'
+import type {
+  MsSinceUnixEpoch,
+  TrackID,
+  TrackList,
+  TrackListID,
+  TrackMd,
+  ViewAs,
+} from '../../ferrum-addon'
 import { selection as pageSelection } from './page'
 import { queue } from './queue'
 
@@ -12,6 +19,9 @@ const innerAddon = window.addon
 export const ItunesImport = innerAddon.ItunesImport
 
 call((addon) => addon.load_data(isDev, libraryPath))
+
+export const view_as_songs: ViewAs.Songs = 0
+export const view_as_artists: ViewAs.Artists = 1
 
 function getErrorMessage(err: unknown): string {
   if (typeof err === 'object' && err !== null) {
@@ -289,29 +299,32 @@ export const page = (() => {
     set,
     update,
     refreshIdsAndKeepSelection,
-    openPlaylist: (id: string) => {
-      call((data) => data.open_playlist(id))
+    openPlaylist(id: string, view_as: ViewAs) {
+      call((data) => data.open_playlist(id, view_as))
       refreshIdsAndKeepSelection()
       pageSelection.clear()
       filter.set('')
     },
-    sortBy: (key: string) => {
+    sortBy(key: string) {
       call((addon) => addon.sort(key, true))
       refreshIdsAndKeepSelection()
       pageSelection.clear()
     },
-    set_group_album_tracks: (value: boolean) => {
+    set_group_album_tracks(value: boolean) {
       call((addon) => addon.set_group_album_tracks(value))
       refreshIdsAndKeepSelection()
       pageSelection.clear()
     },
-    getTrack: (index: number) => {
+    get_artists() {
+      return call((addon) => addon.get_artists())
+    },
+    getTrack(index: number) {
       return call((addon) => addon.get_page_track(index))
     },
-    getTrackId: (index: number) => {
+    getTrackId(index: number) {
       return call((data) => data.get_page_track_id(index))
     },
-    getTrackIds: () => {
+    getTrackIds() {
       return call((data) => data.get_page_track_ids())
     },
     moveTracks: (indexes: number[], toIndex: number) => {

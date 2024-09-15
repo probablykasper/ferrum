@@ -20,6 +20,7 @@ macro_rules! throw {
 #[macro_use]
 extern crate napi_derive;
 
+mod artists;
 mod data;
 mod data_js;
 mod filter;

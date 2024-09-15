@@ -1,6 +1,7 @@
+use crate::artists::load_artists;
 use crate::library::{load_library, Paths};
 use crate::library_types::{Library, TrackID, TrackList, TrackListID};
-use crate::page::get_track_ids;
+use crate::page::{get_track_ids, ViewAs};
 use crate::sidebar_view::SidebarView;
 use crate::sort::sort;
 use crate::tracks::Tag;
@@ -8,6 +9,7 @@ use crate::{page, UniResult};
 use atomicwrites::{AllowOverwrite, AtomicFile};
 use napi::Result;
 use serde::Serialize;
+use std::collections::HashSet;
 use std::env;
 use std::io::Write;
 use std::path::PathBuf;
@@ -23,12 +25,14 @@ pub struct Data {
   /// The visible tracks on the current page
   pub page_track_ids: Option<Vec<TrackID>>,
   pub open_playlist_id: TrackListID,
+  pub view_as: ViewAs,
   pub filter: String,
   pub sort_key: String,
   pub sort_desc: bool,
   pub group_album_tracks: bool,
   /// Current tag being edited
   pub current_tag: Option<Tag>,
+  pub artists: HashSet<String>,
 }
 
 impl Data {
@@ -99,14 +103,17 @@ impl Data {
 
     let loaded_library = load_library(&paths)?;
     let loaded_cache = SidebarView::load(&paths);
+    let artists = load_artists(&loaded_library);
 
     let mut data = Data {
       is_dev,
       paths,
       library: loaded_library,
+      artists,
       view_cache: loaded_cache,
       open_playlist_id: "root".to_string(),
       open_playlist_track_ids: vec![],
+      view_as: ViewAs::Songs,
       page_track_ids: None,
       filter: "".to_string(),
       sort_key: "index".to_string(),
@@ -118,8 +125,9 @@ impl Data {
     sort(&mut data, "dateAdded", true)?;
     return Ok(data);
   }
-  pub fn open_playlist(&mut self, playlist_id: TrackID) -> Result<()> {
+  pub fn open_playlist(&mut self, playlist_id: TrackID, view_as: Option<ViewAs>) -> Result<()> {
     self.open_playlist_id = playlist_id;
+    self.view_as = view_as.unwrap_or_default();
     self.open_playlist_track_ids = get_track_ids(self)?;
     self.page_track_ids = None;
     match self.library.get_tracklist(&self.open_playlist_id)? {

@@ -1,12 +1,5 @@
 <script lang="ts">
-  import {
-    page,
-    removeFromOpenPlaylist,
-    filter,
-    deleteTracksInOpen,
-    paths,
-    isMac,
-  } from '../lib/data'
+  import { page, removeFromOpenPlaylist, filter, deleteTracksInOpen, paths } from '../lib/data'
   import { newPlaybackInstance, playingId } from '../lib/player'
   import {
     getDuration,
@@ -15,14 +8,13 @@
     checkShortcut,
     assertUnreachable,
   } from '../lib/helpers'
-  import { appendToUserQueue, prependToUserQueue, queueVisible } from '../lib/queue'
+  import { appendToUserQueue, prependToUserQueue } from '../lib/queue'
   import { selection, tracklist_actions } from '../lib/page'
   import { ipcListen, ipcRenderer } from '../lib/window'
   import { onDestroy, onMount } from 'svelte'
   import { dragged } from '../lib/drag-drop'
   import * as dragGhost from './DragGhost.svelte'
   import type { TrackID } from 'ferrum-addon/addon'
-  import { modalCount } from './Modal.svelte'
   import VirtualListBlock, { scroll_container_keydown } from './VirtualListBlock.svelte'
 
   export let onTrackInfo: (allIds: TrackID[], index: number) => void
@@ -214,21 +206,11 @@
   on:dragleave={() => (dragToIndex = null)}
   class:no-selection={$selection.count === 0}
 >
-  <div class="relative pt-4 px-5 pb-5">
-    <div class:dragbar={$modalCount === 0 && isMac} class:queue-visible={$queueVisible} />
-    <h3 class="title pb-0.5 text-[19px] leading-none">
-      {#if $page.tracklist.id === 'root'}
-        Songs
-      {:else if $page.tracklist.type !== 'special'}
-        {$page.tracklist.name}
-      {/if}
-    </h3>
-    <div class="text-[13px] leading-4 opacity-70">{$page.length} songs</div>
-    {#if 'description' in $page.tracklist && $page.tracklist.description !== ''}
-      <div class="mt-2.5 text-sm text-[13px] opacity-70">{$page.tracklist.description}</div>
-    {/if}
-  </div>
-  <div class="row table-header" class:desc={$page.sortDesc} role="row">
+  <div
+    class="row table-header border-b border-b-slate-500/30"
+    class:desc={$page.sortDesc}
+    role="row"
+  >
     <!-- svelte-ignore a11y-interactive-supports-focus -->
     <!-- svelte-ignore a11y-click-events-have-key-events -->
     <div
@@ -332,14 +314,12 @@
   </div>
   <!-- svelte-ignore a11y-no-noninteractive-tabindex -->
   <!-- svelte-ignore a11y-no-static-element-interactions -->
-  <!-- svelte-ignore a11y-autofocus -->
   <div
     bind:this={scroll_container}
     class="relative h-full overflow-y-auto outline-none"
     on:keydown={keydown}
     on:mousedown|self={selection.clear}
     tabindex="0"
-    autofocus
     on:keydown={scroll_container_keydown}
   >
     <!-- Using `let:item={i}` instead of `let:i` fixes drag-and-drop -->
@@ -412,19 +392,6 @@
   :global(:focus)
     .selected
       background-color: hsla(var(--hue), 70%, 46%, 1)
-
-  .dragbar
-    -webkit-app-region: drag
-    position: absolute
-    height: 40px
-    width: 100%
-    top: 0px
-    left: 0px
-    &.queue-visible
-      width: calc(100% - var(--right-sidebar-width))
-  .title
-    margin: 0px
-    font-weight: 500
   .tracklist
     display: flex
     flex-direction: column
