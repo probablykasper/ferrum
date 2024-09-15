@@ -20,10 +20,8 @@
 	import { onDestroy, onMount } from 'svelte'
 	import { dragged } from '../lib/drag-drop'
 	import * as dragGhost from './DragGhost.svelte'
-	import type { TrackID } from 'ferrum-addon/addon'
 	import VirtualListBlock, { scroll_container_keydown } from './VirtualListBlock.svelte'
-
-	export let on_track_info: (allIds: TrackID[], index: number) => void
+	import { open_track_info } from './TrackInfo.svelte'
 
 	let tracklist_element: HTMLDivElement
 
@@ -39,7 +37,7 @@
 			const ids = selection.getSelectedIndexes().map((i) => page.get_track_id(i))
 			append_to_user_queue(ids)
 		} else if (action === 'Get Info') {
-			on_track_info(page.get_track_ids(), first_index)
+			open_track_info(page.get_track_ids(), first_index)
 		} else if (action === 'revealTrackFile') {
 			const track = page.get_track(first_index)
 			ipc_renderer.invoke('revealTrackFile', paths.tracksDir, track.file)

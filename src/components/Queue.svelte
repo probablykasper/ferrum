@@ -19,9 +19,9 @@
 	import * as dragGhost from './DragGhost.svelte'
 	import { ipc_listen, ipc_renderer } from '@/lib/window'
 	import { assert_unreachable, check_shortcut } from '@/lib/helpers'
-	import type { TrackID } from 'ferrum-addon/addon'
 	import { fly } from 'svelte/transition'
 	import VirtualListBlock, { scroll_container_keydown } from './VirtualListBlock.svelte'
+	import { open_track_info } from './TrackInfo.svelte'
 
 	let object_urls: string[] = []
 
@@ -82,7 +82,6 @@
 	onDestroy(ipc_listen('context.Remove from Queue', remove_from_queue))
 
 	let queue_element: HTMLElement
-	export let on_track_info: (allIds: TrackID[], index: number) => void
 
 	const track_action_unlisten = ipc_listen('selectedTracksAction', (_, action) => {
 		let first_index = selection.findFirst()
@@ -101,7 +100,7 @@
 		} else if (action === 'Get Info') {
 			const all_items = [...$queue.user_queue, ...$queue.auto_queue]
 			const all_ids = all_items.map((item) => item.id)
-			on_track_info(all_ids, first_index)
+			open_track_info(all_ids, first_index)
 		} else if (action === 'revealTrackFile') {
 			const track = methods.getTrack(queue.getByQueueIndex(first_index).id)
 			ipc_renderer.invoke('revealTrackFile', paths.tracksDir, track.file)

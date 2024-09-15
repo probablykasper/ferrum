@@ -5,7 +5,7 @@
 	import Player from './components/Player.svelte'
 	import Sidebar from './components/Sidebar.svelte'
 	import Queue from './components/Queue.svelte'
-	import TrackInfo, { type TrackInfoList } from './components/TrackInfo.svelte'
+	import TrackInfo from './components/TrackInfo.svelte'
 	import PlaylistInfoModal from './components/PlaylistInfo.svelte'
 	import { queue_visible } from './lib/queue'
 	import { ipc_listen, ipc_renderer } from '@/lib/window'
@@ -21,7 +21,6 @@
 	import { play_pause } from './lib/player'
 	import DragGhost from './components/DragGhost.svelte'
 	import ItunesImport from './components/ItunesImport.svelte'
-	import type { TrackID } from 'ferrum-addon/addon'
 	import { modal_count } from './components/Modal.svelte'
 	import QuickNav from './components/QuickNav.svelte'
 	import { check_shortcut } from './lib/helpers'
@@ -114,18 +113,6 @@
 			if ($modal_count === 0) {
 				show_itunes_import = true
 			}
-		}),
-	)
-
-	let track_info_list: TrackInfoList | null = null
-	function on_track_info(ids: TrackID[], track_index: number) {
-		if ($modal_count === 0) {
-			track_info_list = { ids, index: track_index }
-		}
-	}
-	onDestroy(
-		ipc_listen('context.Get Info', (_, ids: TrackID[], track_index: number) => {
-			on_track_info(ids, track_index)
 		}),
 	)
 
@@ -226,13 +213,13 @@
 				{/if}
 			</div>
 			{#if $page.viewAs === 0}
-				<TrackList {on_track_info} />
+				<TrackList />
 			{:else}
 				<ArtistList />
 			{/if}
 		</div>
 		{#if $queue_visible}
-			<Queue {on_track_info} />
+			<Queue />
 		{/if}
 	</div>
 	<Player />
@@ -253,9 +240,7 @@
 	{/if}
 </main>
 
-{#if track_info_list}
-	<TrackInfo current_list={track_info_list} cancel={() => (track_info_list = null)} />
-{/if}
+<TrackInfo />
 {#if playlist_info}
 	<PlaylistInfoModal info={playlist_info} cancel={() => (playlist_info = null)} />
 {/if}
