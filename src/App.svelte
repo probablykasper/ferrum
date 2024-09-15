@@ -9,7 +9,15 @@
   import PlaylistInfoModal from './components/PlaylistInfo.svelte'
   import { queueVisible } from './lib/queue'
   import { ipcListen, ipcRenderer } from '@/lib/window'
-  import { importTracks, type PlaylistInfo, methods, page, isMac } from './lib/data'
+  import {
+    importTracks,
+    type PlaylistInfo,
+    methods,
+    page,
+    isMac,
+    view_as_songs,
+    view_as_artists,
+  } from './lib/data'
   import { playPause } from './lib/player'
   import DragGhost from './components/DragGhost.svelte'
   import ItunesImport from './components/ItunesImport.svelte'
@@ -199,12 +207,20 @@
         />
         <h3 class="m-0 pb-0.5 text-[19px] font-medium leading-none">
           {#if $page.tracklist.id === 'root'}
-            Songs
+            {#if $page.viewAs === view_as_songs}
+              Songs
+              <div class="text-[13px] leading-4 opacity-70">{$page.length} songs</div>
+            {:else if $page.viewAs === view_as_artists}
+              Artists
+              <div class="text-[13px] leading-4 opacity-70">
+                {page.get_artists().length} artists
+              </div>
+            {/if}
           {:else if $page.tracklist.type !== 'special'}
             {$page.tracklist.name}
+            <div class="text-[13px] leading-4 opacity-70">{$page.length} songs</div>
           {/if}
         </h3>
-        <div class="text-[13px] leading-4 opacity-70">{$page.length} songs</div>
         {#if 'description' in $page.tracklist && $page.tracklist.description !== ''}
           <div class="mt-2.5 text-sm text-[13px] opacity-70">{$page.tracklist.description}</div>
         {/if}

@@ -21,5 +21,7 @@ pub fn load_artists(library: &Library) -> HashSet<String> {
 #[allow(dead_code)]
 pub fn get_artists(env: Env) -> Result<Vec<String>> {
   let data: &mut Data = get_data(&env)?;
-  Ok(data.artists.clone().into_iter().collect())
+  let mut artists: Vec<String> = data.artists.clone().into_iter().collect();
+  artists.sort();
+  Ok(artists)
 }

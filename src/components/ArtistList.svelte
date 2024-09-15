@@ -1,11 +1,17 @@
 <script lang="ts">
-  import { page } from '@/lib/data'
+  import { filter, page } from '@/lib/data'
+  import fuzzysort from 'fuzzysort'
 
-  $: artists = page.get_artists()
+  $: all_artists = page.get_artists()
+  $: artists = fuzzysort.go($filter, all_artists, { all: true })
 </script>
 
-<div class="size-full overflow-y-auto">
+<div class="size-full overflow-y-auto p-3">
   {#each artists as artist}
-    <p class="block">{artist}</p>
+    {#if artist.target}
+      <p class="block py-1">{artist.target}</p>
+    {:else}
+      <p class="block py-1 text-current">Unknown Artist</p>
+    {/if}
   {/each}
 </div>
