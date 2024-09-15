@@ -224,10 +224,10 @@
 			</div>
 			<svelte:self
 				show={$shown_folders.has(child_list.id)}
-				parentId={child_list.id}
+				parent_id={child_list.id}
 				children={child_list.children?.map((child_id) => $track_lists_details_map[child_id]) || []}
 				level={level + 1}
-				preventDrop={prevent_drop || dragged.playlist?.id === child_list.id}
+				prevent_drop={prevent_drop || dragged.playlist?.id === child_list.id}
 				{on_open}
 				on_select_down={() => {
 					if (i < children.length - 1) {
