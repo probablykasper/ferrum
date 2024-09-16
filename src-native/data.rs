@@ -62,7 +62,11 @@ impl Data {
 			None => &self.open_playlist_track_ids,
 		}
 	}
-	pub fn load(is_dev: bool, library_path: Option<String>) -> UniResult<Data> {
+	pub fn load(
+		is_dev: bool,
+		local_data_path: Option<String>,
+		library_path: Option<String>,
+	) -> UniResult<Data> {
 		if is_dev {
 			println!("Starting in dev mode");
 		}
@@ -79,9 +83,14 @@ impl Data {
 				library_dir: library_dir.clone(),
 				tracks_dir: library_dir.join("Tracks"),
 				library_json: library_dir.join("Library.json"),
-				local_data_dir: dirs::data_local_dir()
-					.ok_or("Local data folder not found")?
-					.join("space.kasper.ferrum.dev"),
+				local_data_dir: match local_data_path {
+					Some(path) => PathBuf::from(path),
+					None => env::current_dir()
+						.unwrap()
+						.join("src-native")
+						.join("appdata")
+						.join("local_data"),
+				},
 			}
 		} else {
 			let library_dir = match library_path {
@@ -95,9 +104,12 @@ impl Data {
 				library_dir: library_dir.clone(),
 				tracks_dir: library_dir.join("Tracks"),
 				library_json: library_dir.join("Library.json"),
-				local_data_dir: dirs::data_local_dir()
-					.ok_or("Local data folder not found")?
-					.join("space.kasper.ferrum"),
+				local_data_dir: match local_data_path {
+					Some(path) => PathBuf::from(path),
+					None => dirs::data_local_dir()
+						.ok_or("Local data folder not found")?
+						.join("space.kasper.ferrum"),
+				},
 			}
 		};
 

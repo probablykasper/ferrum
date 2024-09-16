@@ -15,6 +15,7 @@ declare global {
 	interface Window {
 		addon: typeof Addon
 		is_dev: boolean
+		local_data_path?: string
 		library_path?: string
 		is_mac: boolean
 		is_windows: boolean

@@ -8,8 +8,13 @@ pub fn get_data(env: &Env) -> Result<&mut Data> {
 
 #[napi(js_name = "load_data")]
 #[allow(dead_code)]
-pub fn load_data(is_dev: bool, library_path: Option<String>, env: Env) -> Result<()> {
-	let data = Data::load(is_dev, library_path)?;
+pub fn load_data(
+	is_dev: bool,
+	local_data_path: Option<String>,
+	library_path: Option<String>,
+	env: Env,
+) -> Result<()> {
+	let data = Data::load(is_dev, local_data_path, library_path)?;
 	env.set_instance_data(data, 0, |_ctx| {})?;
 	return Ok(());
 }
