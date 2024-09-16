@@ -14,6 +14,7 @@
 		"build": "npm run napi && npm run build:web && electron-builder",
 		"build:web": "vite build",
 		"electron-builder": "electron-builder",
+		"preview": "LOCAL_DATA=./src-native/appdata/local_data LIBRARY=./src-native/appdata/Library ./build/app/mac/Ferrum.app/Contents/MacOS/Ferrum",
 		"lint": "svelte-check --tsconfig ./tsconfig.json && eslint src && prettier --check src",
 		"format": "eslint --fix src && prettier --write src",
 		"check": "npm run lint && cargo check"

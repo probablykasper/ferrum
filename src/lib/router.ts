@@ -2,10 +2,14 @@ import { writable } from 'svelte/store'
 
 export const url = writable(new URL(window.location.href))
 
-export function navigate(to_url: string) {
+export function navigate(to_url: string, options: { replace?: boolean } = {}) {
 	const new_url = new URL(to_url, window.location.href)
 	if (new_url.href !== window.location.href) {
-		window.history.pushState({}, '', new_url)
+		if (options.replace) {
+			window.history.replaceState({}, '', new_url)
+		} else {
+			window.history.pushState({}, '', new_url)
+		}
 		url.set(new_url)
 	}
 }

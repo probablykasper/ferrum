@@ -1,4 +1,4 @@
-import { app, ipcMain, session, BrowserWindow, dialog, protocol } from 'electron'
+import { app, ipcMain, session, BrowserWindow, dialog, protocol, net } from 'electron'
 import is from './is'
 import addon from '../../ferrum-addon'
 
@@ -8,6 +8,7 @@ import { init_menu_bar } from './menubar'
 import { init_media_keys } from './shortcuts'
 import('./ipc')
 import path from 'path'
+import url from 'url'
 
 async function err_handler(msg: string, error: Error) {
 	app.whenReady().then(() => {
@@ -95,8 +96,36 @@ app.whenReady().then(async () => {
 		})
 	})
 
-	if (is.dev) main_window.loadURL(process.env.VITE_DEV_SERVER_URL || 'missing')
-	else main_window.loadFile(path.resolve(__dirname, '../web/index.html'))
+	const vite_dev_server_url = process.env.VITE_DEV_SERVER_URL ?? ''
+	if (is.dev && !vite_dev_server_url) {
+		throw new Error('VITE_DEV_SERVER_URL missing')
+	}
+
+	const web_folder = path.join(path.dirname(__dirname), 'web')
+
+	protocol.handle('app', (request) => {
+		const accepts_html =
+			request.headers
+				.get('accept')
+				?.split(',')
+				.map((mime_type) => mime_type.trim())
+				.includes('text/html') ?? false
+
+		if (request.method === 'GET' && accepts_html) {
+			const html_path = url.pathToFileURL(path.join(web_folder, 'index.html')).toString()
+			return net.fetch(html_path)
+		}
+
+		const file_path = request.url.slice('app:'.length)
+		const file_url = url.pathToFileURL(path.join(web_folder, file_path)).toString()
+		return net.fetch(file_url)
+	})
+
+	if (is.dev) {
+		main_window.loadURL(new URL(vite_dev_server_url).origin + '/playlist/root')
+	} else {
+		main_window.loadURL('app:/playlist/root')
+	}
 
 	if (is.dev) main_window.webContents.openDevTools()
 

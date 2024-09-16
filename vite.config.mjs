@@ -5,6 +5,7 @@ import electron from 'vite-plugin-electron'
 import tailwindcss from '@tailwindcss/vite'
 
 export default defineConfig({
+	base: '/',
 	clearScreen: false,
 	resolve: {
 		alias: {

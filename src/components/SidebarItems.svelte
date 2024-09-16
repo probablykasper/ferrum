@@ -306,7 +306,6 @@
 				</div>
 			</a>
 		{:else}
-			<!-- svelte-ignore a11y-interactive-supports-focus -->
 			<a
 				href="/playlist/{child_list.id}"
 				tabindex="-1"

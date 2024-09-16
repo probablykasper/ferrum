@@ -28,6 +28,7 @@
 	import { tracklist_actions } from './lib/page'
 	import './lib/router'
 	import Route from './lib/Route.svelte'
+	import { navigate } from './lib/router'
 
 	ipc_renderer.emit('appLoaded')
 
