@@ -26,6 +26,8 @@
 	import { check_shortcut } from './lib/helpers'
 	import ArtistList from './components/ArtistList.svelte'
 	import { tracklist_actions } from './lib/page'
+	import './lib/router'
+	import Route from './lib/Route.svelte'
 
 	ipc_renderer.emit('appLoaded')
 
@@ -212,11 +214,8 @@
 					<div class="mt-2.5 text-sm text-[13px] opacity-70">{$page.tracklist.description}</div>
 				{/if}
 			</div>
-			{#if $page.viewAs === 0}
-				<TrackList />
-			{:else}
-				<ArtistList />
-			{/if}
+			<Route route="/playlist/:playlist_id" component={TrackList} />
+			<Route route="/artists" component={ArtistList} />
 		</div>
 		{#if $queue_visible}
 			<Queue />

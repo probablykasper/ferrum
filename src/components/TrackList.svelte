@@ -5,6 +5,7 @@
 		filter,
 		delete_tracks_in_open,
 		paths,
+		view_as_songs,
 	} from '../lib/data'
 	import { new_playback_instance, playing_id } from '../lib/player'
 	import {
@@ -24,6 +25,9 @@
 	import { open_track_info } from './TrackInfo.svelte'
 
 	let tracklist_element: HTMLDivElement
+	export let params: { playlist_id: string }
+
+	$: page.open_playlist(params.playlist_id, view_as_songs)
 
 	const track_action_unlisten = ipc_listen('selectedTracksAction', (_, action) => {
 		let first_index = selection.findFirst()

@@ -1,19 +1,20 @@
 <script lang="ts" context="module">
 	export const special_playlists_nav = [
-		{ id: 'root', name: 'Songs', kind: 'special', view_as: 0 },
-		{ id: 'root', name: 'Artists', kind: 'special', view_as: 1 },
+		{ id: 'root', name: 'Songs', kind: 'special', path: '/playlist/root' },
+		{ id: 'root', name: 'Artists', kind: 'special', path: '/artists' },
 	]
 </script>
 
 <script lang="ts">
 	import SidebarItems, { type SidebarItemHandle } from './SidebarItems.svelte'
 	import Filter from './Filter.svelte'
-	import { is_mac, track_lists_details_map, page, move_playlist, view_as_songs } from '../lib/data'
+	import { is_mac, track_lists_details_map, page, move_playlist } from '../lib/data'
 	import { ipc_listen, ipc_renderer } from '../lib/window'
 	import { writable } from 'svelte/store'
 	import { onDestroy, setContext, tick } from 'svelte'
 	import { dragged } from '../lib/drag-drop'
 	import { tracklist_actions } from '@/lib/page'
+	import { navigate } from '@/lib/router'
 
 	let viewport: HTMLElement
 	const item_handle = setContext('itemHandle', writable(null as SidebarItemHandle | null))
@@ -134,37 +135,21 @@
 			<div class="focuser" tabindex="0" on:focus={focuser} />
 			<div class="spacer" />
 			<SidebarItems
-				parent_id={null}
+				parent_path={null}
 				children={special_playlists_nav}
-				on_open={(item) => {
-					if ($page.id !== item.id || $page.viewAs !== item.view_as) {
-						page.open_playlist('root', item.view_as ?? view_as_songs)
-					}
-				}}
 				on_select_down={() => {
 					if ($track_lists_details_map.root.children && $track_lists_details_map.root.children[0]) {
-						page.open_playlist($track_lists_details_map.root.children[0], view_as_songs)
+						navigate('/playlist/' + $track_lists_details_map.root.children[0])
 					}
 				}}
 			/>
 			<div class="spacer" />
 			<SidebarItems
-				parent_id={$track_lists_details_map['root'].id}
-				children={($track_lists_details_map['root'].children || []).map(
-					(child_id) => $track_lists_details_map[child_id],
-				)}
-				on_open={(item) => {
-					if ($page.id !== item.id) {
-						if (item.id === 'root') {
-							page.open_playlist(
-								'root',
-								item.view_as ?? special_playlists_nav[special_playlists_nav.length - 1].view_as,
-							)
-						} else {
-							page.open_playlist(item.id, item.view_as ?? view_as_songs)
-						}
-					}
-				}}
+				parent_path="/artists"
+				children={($track_lists_details_map['root'].children || []).map((child_id) => ({
+					path: '/playlist/' + child_id,
+					...$track_lists_details_map[child_id],
+				}))}
 			/>
 		</nav>
 	</div>

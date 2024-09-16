@@ -21,6 +21,9 @@ input:focus-visible {
 	* {
 		border-color: #333333;
 	}
+	a {
+		cursor: default;
+	}
 }
 
 @layer utilities {

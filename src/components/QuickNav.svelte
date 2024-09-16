@@ -7,8 +7,9 @@
 	import type { TrackListDetails, ViewAs } from '../../ferrum-addon/addon'
 	import Modal from './Modal.svelte'
 	import { special_playlists_nav } from './Sidebar.svelte'
+	import { navigate } from '@/lib/router'
 
-	type Result = TrackListDetails & { view_as?: ViewAs }
+	type Result = TrackListDetails & { path?: string }
 
 	let value = ''
 	let playlists: Result[] = []
@@ -23,8 +24,7 @@
 				playlists.push(playlist)
 			}
 		}
-		playlists.push({ id: 'root', name: 'Songs', kind: 'special', view_as: view_as_songs })
-		playlists.push({ id: 'root', name: 'Artists', kind: 'special', view_as: view_as_artists })
+		playlists.push(...special_playlists_nav)
 		return playlists
 	}
 
@@ -53,10 +53,7 @@
 			show = false
 			value = ''
 		} else if (check_shortcut(e, 'Enter')) {
-			page.open_playlist(
-				filtered_items[selected_index].obj.id,
-				filtered_items[selected_index].obj.view_as ?? view_as_songs,
-			)
+			navigate('/playlist/' + filtered_items[selected_index].obj.id)
 			show = false
 		} else if (check_shortcut(e, 'ArrowUp')) {
 			selected_index--
@@ -102,7 +99,7 @@
 					bind:this={list_items[i]}
 					type="button"
 					on:click={() => {
-						page.open_playlist(item.obj.id, item.obj.view_as ?? view_as_songs)
+						navigate(item.obj.path ?? '/playlist/' + item.obj.id)
 						show = false
 					}}
 					class:selected={selected_index === i}

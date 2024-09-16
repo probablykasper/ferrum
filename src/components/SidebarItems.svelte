@@ -29,21 +29,22 @@
 </script>
 
 <script lang="ts">
-	import type { TrackListDetails, ViewAs } from '../../ferrum-addon'
+	import type { TrackListDetails } from '../../ferrum-addon'
 	import { type Writable, writable } from 'svelte/store'
 	import { getContext } from 'svelte'
 	import { dragged } from '../lib/drag-drop'
 	import * as dragGhost from './DragGhost.svelte'
 	import { ipc_renderer } from '@/lib/window'
 	import { check_shortcut } from '@/lib/helpers'
+	import { navigate, url } from '@/lib/router'
 
 	export let show = true
-	export let parent_id: string | null
+	export let parent_path: string | null
 	export let prevent_drop = false
-	export let children: (TrackListDetails & { view_as?: ViewAs })[]
+	type Child = TrackListDetails & { path: string }
+	export let children: Child[]
 
 	export let level = 0
-	export let on_open: (item: { id: string; view_as?: ViewAs }) => void
 	async function tracklist_context_menu(id: string, is_folder: boolean) {
 		await ipc_renderer.invoke('showTracklistMenu', { id, isFolder: is_folder, isRoot: false })
 	}
@@ -54,10 +55,10 @@
 	}
 
 	export let on_select_down = () => {}
-	function select_first(item: TrackListDetails) {
+	function select_first(item: Child) {
 		const child_id = item.children?.[0]
 		if (child_id) {
-			on_open($track_lists_details_map[child_id])
+			navigate('/playlist/' + $track_lists_details_map[child_id].id)
 		}
 	}
 	function select_last(in_id: string) {
@@ -65,24 +66,24 @@
 		if (children && (has_showing_children(in_id) || in_id === 'root')) {
 			select_last(children[children.length - 1])
 		} else {
-			on_open($track_lists_details_map[in_id])
+			navigate('/playlist/' + $track_lists_details_map[in_id].id)
 		}
 	}
 	function select_up(i: number) {
-		const prev_id = children[i - 1]?.id || null
-		if (i === 0 && parent_id) {
-			on_open({ id: parent_id })
-		} else if (prev_id && has_showing_children(prev_id)) {
-			select_last(prev_id)
-		} else if (prev_id) {
-			on_open({ id: prev_id })
+		const prev = children[i - 1] || null
+		if (i === 0 && parent_path) {
+			navigate(parent_path)
+		} else if (prev && has_showing_children(prev.id)) {
+			select_last(prev.id)
+		} else if (prev) {
+			navigate(prev.path)
 		}
 	}
 	function select_down(i: number) {
 		if (has_showing_children(children[i].id)) {
 			select_first(children[i])
 		} else if (children[i + 1]) {
-			on_open(children[i + 1])
+			navigate(children[i + 1].path)
 		} else {
 			on_select_down()
 		}
@@ -90,20 +91,17 @@
 
 	export function handle_key(e: KeyboardEvent) {
 		const index = children.findIndex((child) => {
-			if (child.id === 'root') {
-				return child.id === $page.tracklist.id && child.view_as === $page.viewAs
-			} else {
-				return child.id === $page.tracklist.id
-			}
+			return child.path === $url.pathname
 		})
 		if (index < 0) {
 			return
 		}
+
 		const selected_list = $track_lists_details_map[$page.tracklist.id]
 		if (check_shortcut(e, 'ArrowUp')) {
 			select_up(index)
 		} else if (check_shortcut(e, 'ArrowUp', { alt: true })) {
-			on_open({ id: 'root' })
+			navigate('/playlist/root')
 		} else if (check_shortcut(e, 'ArrowDown', { alt: true })) {
 			select_last('root')
 		} else if (check_shortcut(e, 'ArrowDown')) {
@@ -111,8 +109,8 @@
 		} else if (check_shortcut(e, 'ArrowLeft')) {
 			if (selected_list.kind === 'folder' && $shown_folders.has(selected_list.id)) {
 				hide_folder(selected_list.id)
-			} else if (parent_id) {
-				on_open({ id: parent_id })
+			} else if (parent_path) {
+				navigate(parent_path)
 			}
 		} else if (check_shortcut(e, 'ArrowRight') && selected_list.kind === 'folder') {
 			show_folder(selected_list.id)
@@ -121,7 +119,7 @@
 		}
 		e.preventDefault()
 	}
-	$: if (children.find((child) => child.id === $page.id)) {
+	$: if (children.find((child) => child.path === $url.pathname)) {
 		const item_handle = getContext<Writable<SidebarItemHandle | null>>('itemHandle')
 		item_handle.set({ handleKey: handle_key })
 	}
@@ -131,12 +129,12 @@
 	let drag_playlist_onto_index = null as number | null
 
 	function on_drag_start(e: DragEvent, tracklist: TrackListDetails) {
-		if (e.dataTransfer && tracklist.kind !== 'special' && parent_id) {
+		if (e.dataTransfer && tracklist.kind !== 'special' && parent_path) {
 			e.dataTransfer.effectAllowed = 'move'
 			dragGhost.set_inner_text(tracklist.name)
 			dragged.playlist = {
 				id: tracklist.id,
-				from_folder: parent_id,
+				from_folder: parent_path,
 				level,
 			}
 			e.dataTransfer.setDragImage(dragGhost.drag_el, 0, 0)
@@ -148,15 +146,16 @@
 <div class="sub" class:show>
 	{#each children as child_list, i}
 		{#if child_list.kind === 'folder'}
-			<div
+			<a
+				href="/playlist/{child_list.id}"
+				tabindex="-1"
 				class="item rounded-r-[5px]"
 				style:padding-left={14 * level + 'px'}
-				class:active={$page.id === child_list.id}
+				class:active={child_list.path === $url.pathname}
 				draggable="true"
 				on:dragstart={(e) => on_drag_start(e, child_list)}
 				class:show={$shown_folders.has(child_list.id)}
 				class:droppable={drag_playlist_onto_index === i}
-				role="none"
 				on:drop={(e) => {
 					if (
 						e.currentTarget &&
@@ -175,7 +174,7 @@
 						drag_playlist_onto_index = null
 					}
 				}}
-				on:mousedown={() => on_open(child_list)}
+				on:mousedown={() => navigate(child_list.path)}
 				on:contextmenu={() => tracklist_context_menu(child_list.id, true)}
 			>
 				<!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -221,17 +220,19 @@
 				>
 					{child_list.name}
 				</div>
-			</div>
+			</a>
 			<svelte:self
 				show={$shown_folders.has(child_list.id)}
-				parent_id={child_list.id}
-				children={child_list.children?.map((child_id) => $track_lists_details_map[child_id]) || []}
+				parent_path={child_list.path}
+				children={child_list.children?.map((child_id) => ({
+					path: '/playlist/' + child_id,
+					...$track_lists_details_map[child_id],
+				})) || []}
 				level={level + 1}
 				prevent_drop={prevent_drop || dragged.playlist?.id === child_list.id}
-				{on_open}
 				on_select_down={() => {
 					if (i < children.length - 1) {
-						on_open(children[i + 1])
+						navigate(children[i + 1].path)
 					} else {
 						on_select_down()
 					}
@@ -239,15 +240,16 @@
 			/>
 		{:else if child_list.kind === 'playlist'}
 			<!-- svelte-ignore a11y-interactive-supports-focus -->
-			<div
+			<a
+				href="/playlist/{child_list.id}"
+				tabindex="-1"
 				class="item rounded-r-[5px]"
-				role="button"
 				aria-label="playlist"
 				style:padding-left={14 * level + 'px'}
 				draggable="true"
 				on:dragstart={(e) => on_drag_start(e, child_list)}
-				class:active={$page.id === child_list.id}
-				on:mousedown={() => on_open(child_list)}
+				class:active={child_list.path === $url.pathname}
+				on:mousedown={() => navigate(child_list.path)}
 				class:droppable={drag_track_onto_index === i}
 				class:droppable-above={drag_playlist_onto_index === i && drop_above}
 				class:droppable-below={drag_playlist_onto_index === i && !drop_above}
@@ -260,14 +262,14 @@
 						e.dataTransfer?.types[0] === 'ferrum.playlist' &&
 						dragged.playlist &&
 						!prevent_drop &&
-						parent_id !== null
+						parent_path !== null
 					) {
 						const rect = e.currentTarget.getBoundingClientRect()
 						drop_above = e.pageY < rect.bottom - rect.height / 2
 						move_playlist(
 							dragged.playlist.id,
 							dragged.playlist.from_folder,
-							parent_id,
+							parent_path,
 							drop_above ? i : i + 1,
 						)
 						drag_playlist_onto_index = null
@@ -302,22 +304,22 @@
 				>
 					{child_list.name}
 				</div>
-			</div>
+			</a>
 		{:else}
 			<!-- svelte-ignore a11y-interactive-supports-focus -->
-			<div
+			<a
+				href="/playlist/{child_list.id}"
+				tabindex="-1"
 				class="item rounded-r-[5px]"
-				role="link"
 				style:padding-left={14 * level + 'px'}
-				on:mousedown={() => on_open(child_list)}
-				class:active={$page.id === child_list.id &&
-					child_list.name === ['Songs', 'Artists'][$page.viewAs]}
+				on:mousedown={() => navigate(child_list.path)}
+				class:active={child_list.path === $url.pathname}
 			>
 				<div class="arrow" />
 				<div class="text">
 					{child_list.name}
 				</div>
-			</div>
+			</a>
 		{/if}
 	{/each}
 </div>
