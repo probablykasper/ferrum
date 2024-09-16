@@ -98,7 +98,12 @@
 			const ids = indexes.map((i) => queue.getByQueueIndex(i).id)
 			append_to_user_queue(ids)
 		} else if (action === 'Get Info') {
-			const all_items = [...$queue.user_queue, ...$queue.auto_queue]
+			const all_items = [
+				...$queue.past,
+				...($queue.current ? [$queue.current.item] : []),
+				...$queue.user_queue,
+				...$queue.auto_queue,
+			]
 			const all_ids = all_items.map((item) => item.id)
 			open_track_info(all_ids, first_index)
 		} else if (action === 'revealTrackFile') {
