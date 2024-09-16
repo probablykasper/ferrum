@@ -4,13 +4,17 @@
 		index: number
 	}
 
-	const current_list = writable<TrackInfoList | null>(null)
+	export const current_list = writable<TrackInfoList | null>(null)
 
 	export function open_track_info(ids: TrackID[], index: number) {
 		if (get(modal_count) === 0) {
 			current_list.set({ ids, index })
 		}
 	}
+
+	ipc_listen('context.Get Info', (_, ids: TrackID[], track_index: number) => {
+		open_track_info(ids, track_index)
+	})
 </script>
 
 <script lang="ts">
@@ -23,12 +27,6 @@
 	import { onDestroy, tick } from 'svelte'
 	import { get, writable } from 'svelte/store'
 	import Modal, { modal_count } from './Modal.svelte'
-
-	onDestroy(
-		ipc_listen('context.Get Info', (_, ids: TrackID[], track_index: number) => {
-			open_track_info(ids, track_index)
-		}),
-	)
 
 	function cancel() {
 		current_list.set(null)
@@ -319,175 +317,173 @@
 
 <svelte:window on:keydown={keydown} />
 <svelte:body on:keydown|self={keydown_none_selected} on:paste={cover_paste} />
-{#if $current_list}
-	<Modal on_cancel={cancel} cancel_on_escape form={save}>
-		<main class="modal">
-			<div class="header" class:has-subtitle={image && image.totalImages >= 2}>
+<Modal on_cancel={cancel} cancel_on_escape form={save}>
+	<main class="modal">
+		<div class="header" class:has-subtitle={image && image.totalImages >= 2}>
+			<div
+				class="cover-area"
+				class:droppable
+				tabindex="0"
+				on:keydown={cover_keydown}
+				role="button"
+				aria-label="Cover artwork"
+			>
+				<!-- svelte-ignore a11y-no-static-element-interactions -->
 				<div
-					class="cover-area"
-					class:droppable
-					tabindex="0"
-					on:keydown={cover_keydown}
-					role="button"
-					aria-label="Cover artwork"
+					class="cover"
+					on:dragenter={drag_enter_or_over}
+					on:dragover={drag_enter_or_over}
+					on:dragleave={drag_leave}
+					on:drop={drop}
+					on:dblclick={pick_cover}
 				>
-					<!-- svelte-ignore a11y-no-static-element-interactions -->
-					<div
-						class="cover"
-						on:dragenter={drag_enter_or_over}
-						on:dragover={drag_enter_or_over}
-						on:dragleave={drag_leave}
-						on:drop={drop}
-						on:dblclick={pick_cover}
-					>
-						{#if image}
-							<img class="outline-element" alt="" src={image.objectUrl} />
-						{:else if image === null}
-							<svg
-								class="cover-svg outline-element"
-								xmlns="http://www.w3.org/2000/svg"
-								width="8"
-								height="8"
-								viewBox="0 0 24 24"
-							>
-								<path
-									d="M23 0l-15.996 3.585v13.04c-2.979-.589-6.004 1.671-6.004 4.154 0 2.137 1.671 3.221 3.485 3.221 2.155 0 4.512-1.528 4.515-4.638v-10.9l12-2.459v8.624c-2.975-.587-6 1.664-6 4.141 0 2.143 1.715 3.232 3.521 3.232 2.14 0 4.476-1.526 4.479-4.636v-17.364z"
-								/>
-							</svg>
-						{:else}
-							<!-- empty when loading -->
-						{/if}
-					</div>
-					{#if image && image.totalImages >= 2}
-						{@const image_index = image.index}
-						<div class="cover-subtitle">
-							<div class="arrow" class:unclickable={image_index <= 0}>
-								<!-- svelte-ignore a11y-click-events-have-key-events -->
-								<svg
-									on:click={prev_image}
-									tabindex="-1"
-									role="button"
-									aria-label="Previous image"
-									clip-rule="evenodd"
-									fill-rule="evenodd"
-									stroke-linejoin="round"
-									stroke-miterlimit="2"
-									width="18"
-									height="18"
-									fill="currentColor"
-									viewBox="0 0 24 24"
-									xmlns="http://www.w3.org/2000/svg"
-									><path
-										d="m13.789 7.155c.141-.108.3-.157.456-.157.389 0 .755.306.755.749v8.501c0 .445-.367.75-.755.75-.157 0-.316-.05-.457-.159-1.554-1.203-4.199-3.252-5.498-4.258-.184-.142-.29-.36-.29-.592 0-.23.107-.449.291-.591 1.299-1.002 3.945-3.044 5.498-4.243z"
-									/></svg
-								>
-							</div>
-							<div class="subtitle-text">
-								{image.index + 1} / {image.totalImages}
-							</div>
-							<div class="arrow" class:unclickable={image_index >= image.totalImages - 1}>
-								<!-- svelte-ignore a11y-click-events-have-key-events -->
-								<svg
-									on:click={next_image}
-									tabindex="-1"
-									role="button"
-									aria-label="Next image"
-									clip-rule="evenodd"
-									fill-rule="evenodd"
-									stroke-linejoin="round"
-									stroke-miterlimit="2"
-									width="18"
-									height="18"
-									fill="currentColor"
-									viewBox="0 0 24 24"
-									xmlns="http://www.w3.org/2000/svg"
-									><path
-										d="m10.211 7.155c-.141-.108-.3-.157-.456-.157-.389 0-.755.306-.755.749v8.501c0 .445.367.75.755.75.157 0 .316-.05.457-.159 1.554-1.203 4.199-3.252 5.498-4.258.184-.142.29-.36.29-.592 0-.23-.107-.449-.291-.591-1.299-1.002-3.945-3.044-5.498-4.243z"
-									/></svg
-								>
-							</div>
-						</div>
+					{#if image}
+						<img class="outline-element" alt="" src={image.objectUrl} />
+					{:else if image === null}
+						<svg
+							class="cover-svg outline-element"
+							xmlns="http://www.w3.org/2000/svg"
+							width="8"
+							height="8"
+							viewBox="0 0 24 24"
+						>
+							<path
+								d="M23 0l-15.996 3.585v13.04c-2.979-.589-6.004 1.671-6.004 4.154 0 2.137 1.671 3.221 3.485 3.221 2.155 0 4.512-1.528 4.515-4.638v-10.9l12-2.459v8.624c-2.975-.587-6 1.664-6 4.141 0 2.143 1.715 3.232 3.521 3.232 2.14 0 4.476-1.526 4.479-4.636v-17.364z"
+							/>
+						</svg>
+					{:else}
+						<!-- empty when loading -->
 					{/if}
 				</div>
-				<div class="text">
-					<div class="name">{name}</div>
-					<div class="artist">{artist}</div>
-				</div>
+				{#if image && image.totalImages >= 2}
+					{@const image_index = image.index}
+					<div class="cover-subtitle">
+						<div class="arrow" class:unclickable={image_index <= 0}>
+							<!-- svelte-ignore a11y-click-events-have-key-events -->
+							<svg
+								on:click={prev_image}
+								tabindex="-1"
+								role="button"
+								aria-label="Previous image"
+								clip-rule="evenodd"
+								fill-rule="evenodd"
+								stroke-linejoin="round"
+								stroke-miterlimit="2"
+								width="18"
+								height="18"
+								fill="currentColor"
+								viewBox="0 0 24 24"
+								xmlns="http://www.w3.org/2000/svg"
+								><path
+									d="m13.789 7.155c.141-.108.3-.157.456-.157.389 0 .755.306.755.749v8.501c0 .445-.367.75-.755.75-.157 0-.316-.05-.457-.159-1.554-1.203-4.199-3.252-5.498-4.258-.184-.142-.29-.36-.29-.592 0-.23.107-.449.291-.591 1.299-1.002 3.945-3.044 5.498-4.243z"
+								/></svg
+							>
+						</div>
+						<div class="subtitle-text">
+							{image.index + 1} / {image.totalImages}
+						</div>
+						<div class="arrow" class:unclickable={image_index >= image.totalImages - 1}>
+							<!-- svelte-ignore a11y-click-events-have-key-events -->
+							<svg
+								on:click={next_image}
+								tabindex="-1"
+								role="button"
+								aria-label="Next image"
+								clip-rule="evenodd"
+								fill-rule="evenodd"
+								stroke-linejoin="round"
+								stroke-miterlimit="2"
+								width="18"
+								height="18"
+								fill="currentColor"
+								viewBox="0 0 24 24"
+								xmlns="http://www.w3.org/2000/svg"
+								><path
+									d="m10.211 7.155c-.141-.108-.3-.157-.456-.157-.389 0-.755.306-.755.749v8.501c0 .445.367.75.755.75.157 0 .316-.05.457-.159 1.554-1.203 4.199-3.252 5.498-4.258.184-.142.29-.36.29-.592 0-.23-.107-.449-.291-.591-1.299-1.002-3.945-3.044-5.498-4.243z"
+								/></svg
+							>
+						</div>
+					</div>
+				{/if}
 			</div>
-			<div class="spacer" />
-			<div class="row">
-				<div class="label">Title</div>
-				<!-- svelte-ignore a11y-autofocus -->
-				<input type="text" bind:value={name} autofocus />
+			<div class="text">
+				<div class="name">{name}</div>
+				<div class="artist">{artist}</div>
 			</div>
-			<div class="row">
-				<div class="label">Artist</div>
-				<input type="text" bind:value={artist} />
-			</div>
-			<div class="row">
-				<div class="label">Album</div>
-				<input type="text" bind:value={album_name} />
-			</div>
-			<div class="row">
-				<div class="label">Album artist</div>
-				<input type="text" bind:value={album_artist} />
-			</div>
-			<div class="row">
-				<div class="label">Composer</div>
-				<input type="text" bind:value={composer} />
-			</div>
-			<div class="row">
-				<div class="label">Grouping</div>
-				<input type="text" bind:value={grouping} />
-			</div>
-			<div class="row">
-				<div class="label">Genre</div>
-				<input type="text" bind:value={genre} />
-			</div>
-			<div class="row">
-				<div class="label">Year</div>
-				<input class="medium" type="text" bind:value={year} />
-			</div>
-			<div class="row num">
-				<div class="label">Track</div>
-				<input class="num" type="text" bind:value={track_num} class:big={big(track_num)} />
-				<div class="midtext">of</div>
-				<input class="num" type="text" bind:value={track_count} class:big={big(track_count)} />
-			</div>
-			<div class="row num">
-				<div class="label">Disc number</div>
-				<input class="num" type="text" bind:value={disc_num} class:big={big(disc_num)} />
-				<div class="midtext">of</div>
-				<input class="num" type="text" bind:value={disc_count} class:big={big(disc_count)} />
-			</div>
-			<div class="row">
-				<div class="label">Compilation</div>
-				<p>{compilation ? 'Yes' : 'No'}</p>
-			</div>
-			<div class="row">
-				<div class="label">Rating</div>
-				<p>{rating}, {liked ? 'Liked' : 'Not Liked'}</p>
-			</div>
-			<div class="row">
-				<div class="label">BPM</div>
-				<input class="medium" type="text" bind:value={bpm} />
-			</div>
-			<div class="row">
-				<div class="label">Play count</div>
-				<p>{play_count}</p>
-			</div>
-			<div class="row">
-				<div class="label">Comments</div>
-				<input type="text" bind:value={comments} />
-			</div>
-			<div class="spacer" />
-		</main>
-		<svelte:fragment slot="buttons">
-			<Button secondary on:click={cancel}>Cancel</Button>
-			<Button type="submit" on:click={() => save()}>Save</Button>
-		</svelte:fragment>
-	</Modal>
-{/if}
+		</div>
+		<div class="spacer" />
+		<div class="row">
+			<div class="label">Title</div>
+			<!-- svelte-ignore a11y-autofocus -->
+			<input type="text" bind:value={name} autofocus />
+		</div>
+		<div class="row">
+			<div class="label">Artist</div>
+			<input type="text" bind:value={artist} />
+		</div>
+		<div class="row">
+			<div class="label">Album</div>
+			<input type="text" bind:value={album_name} />
+		</div>
+		<div class="row">
+			<div class="label">Album artist</div>
+			<input type="text" bind:value={album_artist} />
+		</div>
+		<div class="row">
+			<div class="label">Composer</div>
+			<input type="text" bind:value={composer} />
+		</div>
+		<div class="row">
+			<div class="label">Grouping</div>
+			<input type="text" bind:value={grouping} />
+		</div>
+		<div class="row">
+			<div class="label">Genre</div>
+			<input type="text" bind:value={genre} />
+		</div>
+		<div class="row">
+			<div class="label">Year</div>
+			<input class="medium" type="text" bind:value={year} />
+		</div>
+		<div class="row num">
+			<div class="label">Track</div>
+			<input class="num" type="text" bind:value={track_num} class:big={big(track_num)} />
+			<div class="midtext">of</div>
+			<input class="num" type="text" bind:value={track_count} class:big={big(track_count)} />
+		</div>
+		<div class="row num">
+			<div class="label">Disc number</div>
+			<input class="num" type="text" bind:value={disc_num} class:big={big(disc_num)} />
+			<div class="midtext">of</div>
+			<input class="num" type="text" bind:value={disc_count} class:big={big(disc_count)} />
+		</div>
+		<div class="row">
+			<div class="label">Compilation</div>
+			<p>{compilation ? 'Yes' : 'No'}</p>
+		</div>
+		<div class="row">
+			<div class="label">Rating</div>
+			<p>{rating}, {liked ? 'Liked' : 'Not Liked'}</p>
+		</div>
+		<div class="row">
+			<div class="label">BPM</div>
+			<input class="medium" type="text" bind:value={bpm} />
+		</div>
+		<div class="row">
+			<div class="label">Play count</div>
+			<p>{play_count}</p>
+		</div>
+		<div class="row">
+			<div class="label">Comments</div>
+			<input type="text" bind:value={comments} />
+		</div>
+		<div class="spacer" />
+	</main>
+	<svelte:fragment slot="buttons">
+		<Button secondary on:click={cancel}>Cancel</Button>
+		<Button type="submit" on:click={() => save()}>Save</Button>
+	</svelte:fragment>
+</Modal>
 
 <style lang="sass">
 	$cover-size: 90px
