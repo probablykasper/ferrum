@@ -254,6 +254,23 @@ export function init_menu_bar(app: App, main_window: BrowserWindow) {
 			label: 'Window',
 			submenu: [
 				{
+					id: 'Back',
+					label: 'Back',
+					accelerator: 'CmdOrCtrl+[',
+					click: () => {
+						web_contents.send('Back')
+					},
+				},
+				{
+					id: 'Forward',
+					label: 'Forward',
+					accelerator: 'CmdOrCtrl+]',
+					click: () => {
+						web_contents.send('Forward')
+					},
+				},
+				{ type: 'separator', visible: is.mac },
+				{
 					id: 'Select Next List',
 					label: 'Select Next List',
 					accelerator: 'Ctrl+Tab',

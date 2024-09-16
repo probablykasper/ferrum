@@ -26,3 +26,14 @@ window.addEventListener('click', (e) => {
 		node = (node as Node).parentNode
 	}
 })
+
+export function navigate_back() {
+	window.history.back()
+}
+
+export function navigate_forward() {
+	window.history.forward()
+}
+window.addEventListener('popstate', () => {
+	url.set(new URL(window.location.href))
+})

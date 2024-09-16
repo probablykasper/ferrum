@@ -119,6 +119,8 @@ type Events = {
 			| 'Delete from Library',
 	) => void
 
+	Back: () => void
+	Forward: () => void
 	'Select Next List': () => void
 	'Select Previous List': () => void
 

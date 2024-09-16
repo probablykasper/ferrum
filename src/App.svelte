@@ -28,7 +28,7 @@
 	import { tracklist_actions } from './lib/page'
 	import './lib/router'
 	import Route from './lib/Route.svelte'
-	import { navigate } from './lib/router'
+	import { navigate_back, navigate_forward } from './lib/router'
 
 	ipc_renderer.emit('appLoaded')
 
@@ -160,6 +160,9 @@
 			}
 		}),
 	)
+
+	onDestroy(ipc_listen('Back', navigate_back))
+	onDestroy(ipc_listen('Forward', navigate_forward))
 
 	onMount(() => {
 		tracklist_actions.focus()
