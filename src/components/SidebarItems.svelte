@@ -6,6 +6,7 @@
 		add_track_to_playlist,
 		move_playlist,
 	} from '../lib/data'
+	import Self from './SidebarItems.svelte'
 
 	export type SidebarItemHandle = {
 		handleKey(e: KeyboardEvent): void
@@ -221,7 +222,7 @@
 					{child_list.name}
 				</div>
 			</a>
-			<svelte:self
+			<Self
 				show={$shown_folders.has(child_list.id)}
 				parent_path={child_list.path}
 				children={child_list.children?.map((child_id) => ({
