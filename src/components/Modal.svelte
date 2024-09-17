@@ -43,6 +43,7 @@
 <dialog
 	class="modal m-auto"
 	bind:this={dialog_el}
+	tabindex="-1"
 	on:click|self={() => {
 		if (clickable) {
 			on_cancel()
