@@ -195,9 +195,11 @@
 		if (check_shortcut(e, '[', { cmd_or_ctrl: true })) {
 			save(false)
 			open_prev()
+			e.preventDefault()
 		} else if (check_shortcut(e, ']', { cmd_or_ctrl: true })) {
 			save(false)
 			open_next()
+			e.preventDefault()
 		}
 	}
 	function keydown_none_selected(e: KeyboardEvent) {
