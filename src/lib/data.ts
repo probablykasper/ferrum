@@ -246,8 +246,8 @@ export const methods = {
 	setImage: (index: number, path: string) => {
 		return call((data) => data.set_image(index, path))
 	},
-	setImageData: (index: number, bytes: ArrayBuffer, mime_type: string) => {
-		return call((data) => data.set_image_data(index, bytes, mime_type))
+	setImageData: (index: number, bytes: ArrayBuffer) => {
+		return call((data) => data.set_image_data(index, bytes))
 	},
 	removeImage: (index: number) => {
 		return call((data) => data.remove_image(index))

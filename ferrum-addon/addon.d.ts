@@ -184,7 +184,7 @@ export interface JsImage {
 }
 export declare function get_image(index: number): JsImage | null
 export declare function set_image(index: number, pathStr: string): void
-export declare function set_image_data(index: number, bytes: ArrayBuffer, mimeType: string): void
+export declare function set_image_data(index: number, bytes: ArrayBuffer): void
 export declare function remove_image(index: number): void
 export declare function update_track_info(trackId: string, info: TrackMd): void
 export declare class ItunesImport {

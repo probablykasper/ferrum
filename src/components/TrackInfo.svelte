@@ -292,8 +292,8 @@
 		image_edited = true
 		load_image(image?.index || 0)
 	}
-	function replace_cover_data(data: ArrayBuffer, mime_type: string) {
-		methods.setImageData(image?.index || 0, data, mime_type)
+	function replace_cover_data(data: ArrayBuffer) {
+		methods.setImageData(image?.index || 0, data)
 		image_edited = true
 		load_image(image?.index || 0)
 	}
@@ -306,7 +306,7 @@
 				const reader = new FileReader()
 				reader.onload = (e) => {
 					if (e.target?.result && e.target.result instanceof ArrayBuffer) {
-						replace_cover_data(e.target.result, file.type)
+						replace_cover_data(e.target.result)
 					}
 				}
 				reader.readAsArrayBuffer(file)

@@ -166,7 +166,7 @@ pub fn generate_filename(dest_dir: &Path, artist: &str, title: &str, ext: &str) 
 pub fn import_file(path: String, now: MsSinceUnixEpoch, env: Env) -> Result<()> {
 	let data: &mut Data = get_data(&env)?;
 	let id = data.library.generate_id();
-	let track = import::import_auto(&data, Path::new(&path), now)?;
+	let track = import::import(&data, Path::new(&path), now)?;
 	data.library.tracks.insert(id, track);
 	Ok(())
 }
@@ -222,18 +222,11 @@ pub fn set_image(index: u32, path_str: String, env: Env) -> Result<()> {
 	let path = data.paths.tracks_dir.join(path_str);
 	match &mut data.current_tag {
 		Some(tag) => {
-			let ext = path.extension().unwrap_or_default().to_string_lossy();
-			let mime_type = match ext.as_ref() {
-				"jpg" | "jpeg" => "image/jpeg".to_string(),
-				"png" => "image/png".to_string(),
-				"bmp" => "image/bmp".to_string(),
-				ext => throw!("Unsupported file type: {}", ext),
-			};
 			let new_bytes = match fs::read(&path) {
 				Ok(b) => b,
 				Err(e) => throw!("Error reading that file: {}", e),
 			};
-			tag.set_image(index as usize, new_bytes, &mime_type)?;
+			tag.set_image(index as usize, new_bytes)?;
 		}
 		None => throw!("No tag loaded"),
 	};
@@ -242,11 +235,11 @@ pub fn set_image(index: u32, path_str: String, env: Env) -> Result<()> {
 
 #[napi(js_name = "set_image_data")]
 #[allow(dead_code)]
-pub fn set_image_data(index: u32, bytes: JsArrayBuffer, mime_type: String, env: Env) -> Result<()> {
+pub fn set_image_data(index: u32, bytes: JsArrayBuffer, env: Env) -> Result<()> {
 	let bytes: Vec<u8> = bytes.into_value()?.to_vec();
 	let data: &mut Data = get_data(&env)?;
 	match &mut data.current_tag {
-		Some(tag) => tag.set_image(index as usize, bytes, &mime_type)?,
+		Some(tag) => tag.set_image(index as usize, bytes)?,
 		None => throw!("No tag loaded"),
 	};
 	Ok(())
@@ -257,7 +250,9 @@ pub fn set_image_data(index: u32, bytes: JsArrayBuffer, mime_type: String, env: 
 pub fn remove_image(index: u32, env: Env) -> Result<()> {
 	let data: &mut Data = get_data(&env)?;
 	match data.current_tag {
-		Some(ref mut tag) => tag.remove_image(index as usize),
+		Some(ref mut tag) => {
+			tag.remove_image(index as usize);
+		}
 		None => {}
 	};
 	Ok(())
