@@ -26,7 +26,7 @@ export default defineConfig({
 			entry: ['./src/electron/main.ts', './src/electron/preload.ts'],
 			onstart({ startup }) {
 				if (process.electronApp) {
-					console.log('\x1b[33mNot restarting\x1b[0m')
+					process.kill(process.electronApp.pid, 'SIGTERM')
 				} else {
 					startup()
 				}

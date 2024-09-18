@@ -9,6 +9,7 @@ import { init_media_keys } from './shortcuts'
 import('./ipc')
 import path from 'path'
 import url from 'url'
+import { ipc_main } from './typed_ipc'
 
 async function err_handler(msg: string, error: Error) {
 	app.whenReady().then(() => {
@@ -142,19 +143,25 @@ app.whenReady().then(async () => {
 	main_window.on('closed', () => {
 		main_window = null
 	})
-	ipcMain.once('appLoaded', () => {
+	ipc_main.handle('app_loaded', () => {
 		app_loaded = true
 	})
 
-	// doesn't fire on Windows :(
-	app.on('before-quit', () => {
-		if (app_loaded) {
+	// doesn't always fire on Windows :(
+	app.on('before-quit', (e) => {
+		if (quitting) {
+			return
+		} else if (app_loaded) {
+			console.log('Preparing to quit')
+			e.preventDefault()
 			main_window?.webContents.send('gonnaQuit')
 			ipcMain.once('readyToQuit', () => {
+				console.log('Quitting gracefully')
 				quitting = true
 				main_window?.close()
 			})
 		} else {
+			console.log('Quitting immediately')
 			quitting = true
 			main_window?.close()
 		}

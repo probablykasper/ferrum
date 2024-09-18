@@ -30,7 +30,13 @@
 	import Route from './lib/Route.svelte'
 	import { navigate_back, navigate_forward } from './lib/router'
 
-	ipc_renderer.emit('appLoaded')
+	ipc_renderer.invoke('app_loaded').catch(() => {
+		ipc_renderer.invoke('showMessageBox', false, {
+			type: 'error',
+			message: 'Failed to signal app loading',
+			detail: 'Graceful shutdown will not be possible.',
+		})
+	})
 
 	async function open_import_dialog() {
 		if ($modal_count !== 0) {

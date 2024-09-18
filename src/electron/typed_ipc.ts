@@ -145,6 +145,7 @@ export type ShowTrackMenuOptions = {
 }
 
 type Commands = {
+	app_loaded: () => void
 	showMessageBox: (
 		attached: boolean,
 		options: Parameters<typeof dialog.showMessageBox>[0],
