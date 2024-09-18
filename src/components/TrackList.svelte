@@ -6,6 +6,7 @@
 		delete_tracks_in_open,
 		paths,
 		view_as_songs,
+		methods,
 	} from '../lib/data'
 	import { new_playback_instance, playing_id } from '../lib/player'
 	import {
@@ -246,18 +247,41 @@
 		// { name: 'Volume', key: 'volume' },
 		{ name: 'Year', key: 'year' },
 	]
-	let columns: Column[] = [
-		{ name: '#', key: 'index' },
-		{ name: 'Name', key: 'name', width: '170%' },
-		{ name: 'Plays', key: 'playCount' },
-		{ name: 'Time', key: 'duration' },
-		{ name: 'Artist', key: 'artist', width: '120%' },
-		{ name: 'Album', key: 'albumName', width: '90%' },
-		{ name: 'Comments', key: 'comments', width: '65%' },
-		{ name: 'Genre', key: 'genre', width: '65%' },
-		{ name: 'Date Added', key: 'dateAdded' },
-		{ name: 'Year', key: 'year' },
+	const default_columns: Column['key'][] = [
+		'index',
+		'name',
+		'playCount',
+		'duration',
+		'artist',
+		'albumName',
+		'comments',
+		'genre',
+		'dateAdded',
+		'year',
 	]
+	let columns: Column[] = load_columns()
+	function load_columns(): Column[] {
+		let loaded_columns = methods.load_view_options().columns
+		if (loaded_columns.length === 0) {
+			loaded_columns = [...default_columns]
+		}
+		return loaded_columns
+			.map((key) => {
+				const col = all_columns.find((col) => col.key === key)
+				if (col) {
+					return col
+				}
+			})
+			.filter((col) => col !== undefined)
+	}
+	function save_columns() {
+		const view_options = methods.load_view_options()
+		view_options.columns = columns.map((col) => col.key)
+		if (JSON.stringify(view_options.columns) === JSON.stringify(default_columns)) {
+			view_options.columns = []
+		}
+		methods.save_view_options(view_options)
+	}
 	function on_column_context_menu() {
 		ipc_renderer.invoke('show_columns_menu', {
 			menu: all_columns.map((col) => {
@@ -277,9 +301,11 @@
 				if (column) {
 					columns.push({ ...column })
 					columns = columns
+					save_columns()
 				}
 			} else {
 				columns = columns.filter((column) => column.key !== item.id)
+				save_columns()
 			}
 		}),
 	)
@@ -315,6 +341,7 @@
 			const removed_column = columns.splice(col_drag_index, 1)[0]
 			columns.splice(col_drag_to_index - Number(move_to_left), 0, removed_column)
 			columns = columns
+			save_columns()
 
 			col_drag_to_index = null
 		}

@@ -7,6 +7,7 @@ import type {
 	TrackListID,
 	TrackMd,
 	ViewAs,
+	ViewOptions,
 } from '../../ferrum-addon'
 import { selection as pageSelection } from './page'
 import { queue } from './queue'
@@ -257,6 +258,12 @@ export const methods = {
 	},
 	viewFolderSetShow: (id: string, show: boolean) => {
 		return call((data) => data.view_folder_set_show(id, show))
+	},
+	load_view_options: () => {
+		return call((data) => data.load_view_options())
+	},
+	save_view_options: (view_options: ViewOptions) => {
+		return call((data) => data.save_view_options(view_options))
 	},
 }
 

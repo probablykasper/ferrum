@@ -149,8 +149,6 @@ export declare function delete_tracks_in_open(indexesToDelete: Array<number>): v
 export declare function new_playlist(name: string, description: string, isFolder: boolean, parentId: string): void
 export declare function update_playlist(id: string, name: string, description: string): void
 export declare function move_playlist(id: string, fromId: string, toId: string, toIndex: number): void
-export declare function shown_playlist_folders(): Array<string>
-export declare function view_folder_set_show(id: string, show: boolean): void
 export interface TrackMd {
   name: string
   artist: string
@@ -187,6 +185,14 @@ export declare function set_image(index: number, pathStr: string): void
 export declare function set_image_data(index: number, bytes: ArrayBuffer): void
 export declare function remove_image(index: number): void
 export declare function update_track_info(trackId: string, info: TrackMd): void
+export interface ViewOptions {
+  shownPlaylistFolders: Array<string>
+  columns: Array<string>
+}
+export declare function shown_playlist_folders(): Array<string>
+export declare function view_folder_set_show(id: string, show: boolean): void
+export declare function load_view_options(): ViewOptions
+export declare function save_view_options(viewOptions: ViewOptions): void
 export declare class ItunesImport {
   static new(): ItunesImport
   start(path: string, tracksDir: string): Promise<ImportStatus>

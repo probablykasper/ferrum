@@ -30,9 +30,9 @@ mod library;
 mod library_types;
 mod page;
 mod playlists;
-mod sidebar_view;
 mod sort;
 mod tracks;
+mod view_options;
 
 fn get_now_timestamp() -> i64 {
 	let timestamp = match SystemTime::now().duration_since(UNIX_EPOCH) {

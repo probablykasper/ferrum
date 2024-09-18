@@ -2,9 +2,9 @@ use crate::artists::load_artists;
 use crate::library::{load_library, Paths};
 use crate::library_types::{Library, TrackID, TrackList, TrackListID};
 use crate::page::{get_track_ids, ViewAs};
-use crate::sidebar_view::SidebarView;
 use crate::sort::sort;
 use crate::tracks::Tag;
+use crate::view_options::ViewOptions;
 use crate::{page, UniResult};
 use atomicwrites::{AllowOverwrite, AtomicFile};
 use napi::Result;
@@ -19,7 +19,7 @@ pub struct Data {
 	pub paths: Paths,
 	pub is_dev: bool,
 	pub library: Library,
-	pub view_cache: SidebarView,
+	pub view_options: ViewOptions,
 	/// All tracks on the current page, even if they are filtered out
 	pub open_playlist_track_ids: Vec<TrackID>,
 	/// The visible tracks on the current page
@@ -114,7 +114,7 @@ impl Data {
 		};
 
 		let loaded_library = load_library(&paths)?;
-		let loaded_cache = SidebarView::load(&paths);
+		let loaded_cache = ViewOptions::load(&paths);
 		let artists = load_artists(&loaded_library);
 
 		let mut data = Data {
@@ -122,7 +122,7 @@ impl Data {
 			paths,
 			library: loaded_library,
 			artists,
-			view_cache: loaded_cache,
+			view_options: loaded_cache,
 			open_playlist_id: "root".to_string(),
 			open_playlist_track_ids: vec![],
 			view_as: ViewAs::Songs,
