@@ -1,6 +1,7 @@
 <script lang="ts">
 	import {
 		append_to_user_queue,
+		clear_user_queue,
 		get_by_queue_index,
 		get_queue_length,
 		insert_ids,
@@ -19,9 +20,10 @@
 	import * as dragGhost from './DragGhost.svelte'
 	import { ipc_listen, ipc_renderer } from '@/lib/window'
 	import { assert_unreachable, check_shortcut } from '@/lib/helpers'
-	import { fly } from 'svelte/transition'
+	import { fly, scale } from 'svelte/transition'
 	import VirtualListBlock, { scroll_container_keydown } from './VirtualListBlock.svelte'
 	import { open_track_info } from './TrackInfo.svelte'
+	import Button from './Button.svelte'
 
 	let object_urls: string[] = []
 
@@ -290,9 +292,30 @@
 		{#if $queue.user_queue.length || queue.getQueueLength() === 0}
 			<div class="relative">
 				<h4
-					class="sticky top-0 z-1 flex h-[40px] items-center bg-black/50 pl-7 font-semibold backdrop-blur-md"
+					class="sticky top-0 z-1 flex h-[40px] items-center justify-between bg-black/50 px-7 font-semibold backdrop-blur-md"
 				>
 					Up Next
+					{#if $queue.user_queue.length > 0}
+						<button
+							type="button"
+							aria-label="Clear 'Up Next'"
+							tabindex="-1"
+							on:mousedown|preventDefault
+							on:click={clear_user_queue}
+						>
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								class="parent-active-zoom"
+								height="24px"
+								viewBox="0 0 24 24"
+								width="24px"
+								fill="#e8eaed"
+								><path d="M0 0h24v24H0z" fill="none" /><path
+									d="M5 13h14v-2H5v2zm-2 4h14v-2H3v2zM7 7v2h14V7H7z"
+								/></svg
+							>
+						</button>
+					{/if}
 				</h4>
 				<VirtualListBlock
 					bind:this={up_next_list}
@@ -329,7 +352,7 @@
 		{#if $queue.auto_queue.length}
 			<div class="relative">
 				<h4
-					class="sticky top-0 z-1 flex h-[40px] items-center bg-black/50 pl-7 font-semibold backdrop-blur-md"
+					class="sticky top-0 z-1 flex h-[40px] items-center bg-black/50 px-7 font-semibold backdrop-blur-md"
 				>
 					Autoplay
 				</h4>

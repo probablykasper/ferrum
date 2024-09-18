@@ -155,6 +155,13 @@ export function append_to_user_queue(track_ids: TrackID[]) {
 	})
 }
 
+export function clear_user_queue() {
+	queue.update((q) => {
+		q.user_queue = []
+		return q
+	})
+}
+
 export function move_indexes(indexes: number[], new_index: number, to_user_queue: boolean) {
 	const items: QueueItem[] = []
 	queue.update((q) => {

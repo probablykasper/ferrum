@@ -5,6 +5,7 @@
 - Drop support for macOS 10.13 and 10.14
 - Preserve "Up next" when starting a new playback
 - Add playback history to queue panel
+- Add "Clear" button to "Up next" in queue panel
 - Redesign queue panel
 - Add queue panel slide-out transition
 - Add `Ctrl+Tab` and `Ctrl+Shift+Tab` to select next/previous playlist
