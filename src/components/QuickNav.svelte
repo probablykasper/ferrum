@@ -18,7 +18,7 @@
 		playlists = get_playlists()
 	}
 	function get_playlists() {
-		const playlists: Result[] = special_playlists_nav
+		const playlists: Result[] = [...special_playlists_nav]
 		for (const playlist of Object.values($track_lists_details_map)) {
 			if (playlist.kind === 'playlist' || playlist.kind === 'folder') {
 				playlists.push(playlist)
