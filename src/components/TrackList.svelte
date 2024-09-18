@@ -212,13 +212,13 @@
 		{ name: '#', key: 'index' },
 		// { name: 'Size', key: 'size' },
 		{ name: 'Album', key: 'albumName', width: '90%' },
-		// { name: 'Album Artist', key: 'albumArtist', width: '90%' },
+		{ name: 'Album Artist', key: 'albumArtist', width: '90%' },
 		{ name: 'Artist', key: 'artist', width: '120%' },
 		// { name: 'Bitrate', key: 'bitrate' },
-		// { name: 'Bpm', key: 'bpm' },
+		{ name: 'BPM', key: 'bpm' },
 		{ name: 'Comments', key: 'comments', width: '65%' },
 		// { name: 'Compilation', key: 'compilation' },
-		// { name: 'Composer', key: 'composer' },
+		{ name: 'Composer', key: 'composer', width: '65%' },
 		{ name: 'Date Added', key: 'dateAdded' },
 		// { name: 'DateImported', key: 'dateImported' },
 		// { name: 'DateModified', key: 'dateModified' },
@@ -228,19 +228,19 @@
 		// { name: 'Disliked', key: 'disliked' },
 		{ name: 'Time', key: 'duration' },
 		{ name: 'Genre', key: 'genre', width: '65%' },
-		// { name: 'Grouping', key: 'grouping', width: '65%' },
+		{ name: 'Grouping', key: 'grouping', width: '65%' },
 		// { name: 'ImportedFrom', key: 'importedFrom' },
 		// { name: 'Liked', key: 'liked' },
 		{ name: 'Name', key: 'name', width: '170%' },
 		{ name: 'Plays', key: 'playCount' },
 		// { name: 'Rating', key: 'rating' },
 		// { name: 'SampleRate', key: 'sampleRate' },
-		// { name: 'Skips', key: 'skipCount' },
-		// { name: 'SortAlbumArtist', key: 'sortAlbumArtist' },
-		// { name: 'SortAlbumName', key: 'sortAlbumName' },
-		// { name: 'SortArtist', key: 'sortArtist' },
-		// { name: 'SortComposer', key: 'sortComposer' },
-		// { name: 'SortName', key: 'sortName' },
+		{ name: 'Skips', key: 'skipCount' },
+		{ name: 'Sort Album', key: 'sortAlbumName', width: '65%' },
+		{ name: 'Sort Album Artist', key: 'sortAlbumArtist', width: '65%' },
+		{ name: 'Sort Artist', key: 'sortArtist', width: '65%' },
+		{ name: 'Sort Composer', key: 'sortComposer', width: '65%' },
+		{ name: 'Sort Name', key: 'sortName', width: '65%' },
 		// { name: 'TrackCount', key: 'trackCount' },
 		// { name: 'TrackNum', key: 'trackNum' },
 		// { name: 'Volume', key: 'volume' },
@@ -465,6 +465,9 @@
 	.year
 		width: 0px
 		min-width: 47px
+	.bpm
+		width: 0px
+		min-width: 43px
 	.drag-line
 		position: absolute
 		width: 100%
