@@ -8,7 +8,7 @@
 - Add queue panel slide-out transition
 - Add `Ctrl+Tab` and `Ctrl+Shift+Tab` to select next/previous playlist
 - Add `Back` and `Forward` shortcuts
-- Add ability to hide/show columns
+- Add ability to rearrange, hide & show columns
 - Add columns: Album Artist, Composer, Grouping, BPM, Sort Album, Sort Album Artist, Sort Artist, Sort Composer, Sort Name
 - Make time & volume sliders look ok
 - Small design updates to tracklist header & filter textbox

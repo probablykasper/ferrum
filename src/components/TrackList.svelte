@@ -283,6 +283,45 @@
 			}
 		}),
 	)
+
+	let col_container: HTMLElement
+	let col_drag_line: HTMLElement
+	let col_drag_index: number | null = null
+	function on_col_drag_start(e: DragEvent, index: number) {
+		if (e.dataTransfer) {
+			col_drag_index = index
+		}
+	}
+	let col_drag_to_index: null | number = null
+	function on_col_drag_over(e: DragEvent, index: number) {
+		if (col_drag_index !== null && e.currentTarget instanceof HTMLElement) {
+			e.preventDefault()
+			const rect = e.currentTarget.getBoundingClientRect()
+			const container_rect = col_container.getBoundingClientRect()
+			if (e.pageX < rect.right - rect.width / 2) {
+				const offset = index === 0 ? 0 : -1
+				col_drag_line.style.left = rect.left - container_rect.left + offset + 'px'
+				col_drag_to_index = index
+			} else {
+				const offset = index === columns.length - 1 ? -2 : -1
+				col_drag_line.style.left = rect.right - container_rect.left + offset + 'px'
+				col_drag_to_index = index + 1
+			}
+		}
+	}
+	async function col_drop_handler() {
+		if (col_drag_index !== null && col_drag_to_index !== null) {
+			const move_to_left = col_drag_index < col_drag_to_index
+			const removed_column = columns.splice(col_drag_index, 1)[0]
+			columns.splice(col_drag_to_index - Number(move_to_left), 0, removed_column)
+			columns = columns
+
+			col_drag_to_index = null
+		}
+	}
+	function col_drag_end_handler() {
+		col_drag_to_index = null
+	}
 </script>
 
 <div
@@ -298,20 +337,28 @@
 		class:desc={$page.sortDesc}
 		role="row"
 		on:contextmenu={on_column_context_menu}
+		on:dragleave={() => (col_drag_to_index = null)}
+		bind:this={col_container}
 	>
-		{#each columns as column}
+		{#each columns as column, i}
 			<!-- svelte-ignore a11y-interactive-supports-focus -->
 			<!-- svelte-ignore a11y-click-events-have-key-events -->
 			<div
 				class="c {column.key}"
 				class:sort={sort_key === column.key}
 				style:width={column.width}
-				on:click={() => sort_by(column.key)}
 				role="button"
+				on:click={() => sort_by(column.key)}
+				draggable="true"
+				on:dragstart={(e) => on_col_drag_start(e, i)}
+				on:dragend={col_drag_end_handler}
+				on:dragover={(e) => on_col_drag_over(e, i)}
+				on:drop={col_drop_handler}
 			>
 				<span>{column.name}</span>
 			</div>
 		{/each}
+		<div class="col-drag-line" class:show={col_drag_to_index !== null} bind:this={col_drag_line} />
 	</div>
 	<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
 	<!-- svelte-ignore a11y-no-static-element-interactions -->
@@ -435,14 +482,16 @@
 		white-space: nowrap
 		overflow: hidden
 		text-overflow: ellipsis
-		padding-right: 10px
+		padding-left: 5px
+		padding-right: 5px
 		&:first-child
 			padding-left: 10px
-			box-sizing: content-box
+		&:last-child
+			padding-right: 0px
 		&.index, &.playCount, &.skipCount, &.duration
 			padding-left: 0px
+			padding-right: 10px
 			text-align: right
-			box-sizing: border-box
 	.selected .index svg.playing-icon
 		fill: var(--icon-color)
 	.index
@@ -475,6 +524,16 @@
 		background-color: var(--drag-line-color)
 		pointer-events: none
 		display: none
+		&.show
+			display: block
+	.col-drag-line
+		position: absolute
+		width: 2px
+		height: 100vh
+		background-color: var(--drag-line-color)
+		pointer-events: none
+		display: none
+		z-index: 5
 		&.show
 			display: block
 </style>
