@@ -26,13 +26,15 @@ export const time_record = writable({
 	duration: 0,
 })
 function update_time_details() {
-	time_record.update((record) => {
-		record.elapsed = audio.currentTime
-		record.at_timestamp = Date.now()
-		record.paused = audio.paused
-		record.duration = audio.duration
-		return record
-	})
+	if (!Number.isNaN(audio.duration)) {
+		time_record.update((record) => {
+			record.elapsed = audio.currentTime
+			record.at_timestamp = Date.now()
+			record.paused = audio.paused
+			record.duration = audio.duration
+			return record
+		})
+	}
 }
 export const playing_track: Writable<Track | null> = writable(null)
 export const playing_id = derived(queue, () => {
@@ -89,6 +91,8 @@ export const cover_src = (() => {
 })()
 
 audio.onplay = update_time_details
+audio.onloadeddata = update_time_details
+audio.onloadedmetadata = update_time_details
 audio.onpause = update_time_details
 audio.ontimeupdate = update_time_details
 
