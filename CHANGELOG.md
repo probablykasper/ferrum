@@ -3,6 +3,7 @@
 ## Next
 - Drop support for Windows 7 and 8
 - Drop support for macOS 10.13 and 10.14
+- Preserve "Up next" when starting a new playback
 - Add playback history to queue panel
 - Redesign queue panel
 - Add queue panel slide-out transition

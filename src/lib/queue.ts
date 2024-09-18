@@ -276,20 +276,21 @@ export function prev() {
 	}
 }
 
-// TODO: Preserve userQueue when setting a new queue. Before we do that, a clear user queue button would be nice
 export function set_new_queue(new_ids: TrackID[], new_current_index: number) {
 	const auto_queue = new_ids.splice(new_current_index + 1)
 	const current = new_ids.pop()
-	queue.set({
-		past: new_ids.map(new_queue_item),
-		current: current
+	queue.update((q) => {
+		if (q.current) {
+			q.past.push(q.current.item)
+		}
+		q.current = current
 			? {
 					item: new_queue_item(current),
 					from_auto_queue: true,
 				}
-			: null,
-		user_queue: [],
-		auto_queue: auto_queue.map(new_queue_item),
+			: null
+		q.auto_queue = auto_queue.map(new_queue_item)
+		return q
 	})
 	queue.removeDeleted()
 	apply_shuffle(get(shuffle))
