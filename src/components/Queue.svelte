@@ -366,7 +366,7 @@
 		{/if}
 		<div
 			bind:this={drag_line}
-			class="pointer-events-none absolute z-10 h-[2px] w-full bg-[var(--drag-line-color)]"
+			class="drag-line pointer-events-none absolute z-10 h-[2px] w-full bg-[var(--drag-line-color)]"
 			class:hidden={drag_to_index === null}
 		/>
 	</div>

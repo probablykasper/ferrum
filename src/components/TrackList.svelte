@@ -159,16 +159,20 @@
 		}
 		if (
 			dragged.tracks?.playlist_indexes &&
-			e.currentTarget &&
+			e.currentTarget instanceof HTMLElement &&
 			e.dataTransfer?.types[0] === 'ferrum.tracks'
 		) {
 			e.preventDefault()
-			const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
+			const rect = e.currentTarget.getBoundingClientRect()
+			const container_rect = scroll_container.getBoundingClientRect()
 			if (e.pageY < rect.bottom - rect.height / 2) {
-				drag_line.style.top = rect.top - 1 + 'px'
+				const top = rect.top - container_rect.top + scroll_container.scrollTop - 1
+				drag_line.style.top = Math.max(0, top) + 'px'
 				drag_to_index = index
 			} else {
-				drag_line.style.top = rect.bottom - 1 + 'px'
+				const top = rect.bottom - container_rect.top + scroll_container.scrollTop - 1
+				const max_top = scroll_container.scrollHeight - 2
+				drag_line.style.top = Math.min(max_top, top) + 'px'
 				drag_to_index = index + 1
 			}
 		}
@@ -385,7 +389,11 @@
 				<span>{column.name}</span>
 			</div>
 		{/each}
-		<div class="col-drag-line" class:show={col_drag_to_index !== null} bind:this={col_drag_line} />
+		<div
+			class="col-drag-line"
+			class:hidden={col_drag_to_index === null}
+			bind:this={col_drag_line}
+		/>
 	</div>
 	<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
 	<!-- svelte-ignore a11y-no-static-element-interactions -->
@@ -456,8 +464,8 @@
 				</div>
 			{/if}
 		</VirtualListBlock>
+		<div class="drag-line" class:hidden={drag_to_index === null} bind:this={drag_line} />
 	</div>
-	<div class="drag-line" class:show={drag_to_index !== null} bind:this={drag_line} />
 </div>
 
 <style lang="sass">
@@ -550,17 +558,11 @@
 		height: 2px
 		background-color: var(--drag-line-color)
 		pointer-events: none
-		display: none
-		&.show
-			display: block
 	.col-drag-line
 		position: absolute
 		width: 2px
 		height: 100vh
 		background-color: var(--drag-line-color)
 		pointer-events: none
-		display: none
 		z-index: 5
-		&.show
-			display: block
 </style>

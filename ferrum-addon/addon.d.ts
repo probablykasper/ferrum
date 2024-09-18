@@ -187,6 +187,7 @@ export declare function remove_image(index: number): void
 export declare function update_track_info(trackId: string, info: TrackMd): void
 export interface ViewOptions {
   shownPlaylistFolders: Array<string>
+  /** Empty is treated as default */
   columns: Array<string>
 }
 export declare function shown_playlist_folders(): Array<string>
