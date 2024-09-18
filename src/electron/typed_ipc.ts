@@ -8,7 +8,7 @@ import type {
 	dialog,
 } from 'electron'
 import { ipcMain as electronIpcMain } from 'electron'
-import type { TrackID } from '../../ferrum-addon'
+import type { Track, TrackID } from '../../ferrum-addon'
 
 type OptionalPromise<T> = T | Promise<T>
 type InputMap = {
@@ -133,6 +133,7 @@ type Events = {
 	'context.revealTrackFile': (id: TrackID) => void
 	'context.Get Info': (allIds: TrackID[], selectedIndex: number) => void
 	'context.Remove from Playlist': (selectedIndexes: number[]) => void
+	'context.toggle_column': (item: { id: string; label: string; checked: boolean }) => void
 }
 
 export type ShowTrackMenuOptions = {
@@ -155,6 +156,7 @@ type Commands = {
 	revealTrackFile: (...paths: string[]) => void
 	showTrackMenu: (options: ShowTrackMenuOptions) => void
 	showTracklistMenu: (options: { id: string; isFolder: boolean; isRoot: boolean }) => void
+	show_columns_menu: (options: { menu: Electron.MenuItemConstructorOptions[] }) => void
 	volume_change: (up: boolean) => void
 
 	'update:Shuffle': (checked: boolean) => void

@@ -238,7 +238,7 @@ export const methods = {
 		methods.save()
 	},
 	loadTags: (id: TrackID) => {
-		call((data) => data.load_tags(id))
+		return call((data) => data.load_tags(id))
 	},
 	getImage: (index: number) => {
 		return call((data) => data.get_image(index))

@@ -127,3 +127,19 @@ ipc_main.handle('showTracklistMenu', (e, args) => {
 	const menu = Menu.buildFromTemplate(menu_items)
 	menu.popup()
 })
+
+ipc_main.handle('show_columns_menu', (e, args) => {
+	const menu = Menu.buildFromTemplate(
+		args.menu.map((item) => {
+			item.click = (item) => {
+				e.sender.send('context.toggle_column', {
+					id: item.id,
+					label: item.label,
+					checked: item.checked,
+				})
+			}
+			return item
+		}),
+	)
+	menu.popup()
+})

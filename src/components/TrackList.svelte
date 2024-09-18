@@ -23,6 +23,7 @@
 	import * as dragGhost from './DragGhost.svelte'
 	import VirtualListBlock, { scroll_container_keydown } from './VirtualListBlock.svelte'
 	import { open_track_info } from './TrackInfo.svelte'
+	import type { Track } from 'ferrum-addon/addon'
 
 	let tracklist_element: HTMLDivElement
 	export let params: { playlist_id: string }
@@ -56,7 +57,7 @@
 	onDestroy(track_action_unlisten)
 
 	const sort_by = page.sort_by
-	$: sortKey = $page.sortKey
+	$: sort_key = $page.sortKey
 
 	ipc_renderer.on('Group Album Tracks', (_, checked) => {
 		page.set_group_album_tracks(checked)
@@ -200,6 +201,88 @@
 	onMount(() => {
 		tracklist_actions.scroll_to_index = virtual_list.scroll_to_index
 	})
+
+	type Column = {
+		name: string
+		key: 'index' | keyof Track
+		width?: string
+	}
+	const all_columns: Column[] = [
+		// sorted alphabetically
+		{ name: '#', key: 'index' },
+		// { name: 'Size', key: 'size' },
+		{ name: 'Album', key: 'albumName', width: '90%' },
+		// { name: 'Album Artist', key: 'albumArtist', width: '90%' },
+		{ name: 'Artist', key: 'artist', width: '120%' },
+		// { name: 'Bitrate', key: 'bitrate' },
+		// { name: 'Bpm', key: 'bpm' },
+		{ name: 'Comments', key: 'comments', width: '65%' },
+		// { name: 'Compilation', key: 'compilation' },
+		// { name: 'Composer', key: 'composer' },
+		{ name: 'Date Added', key: 'dateAdded' },
+		// { name: 'DateImported', key: 'dateImported' },
+		// { name: 'DateModified', key: 'dateModified' },
+		// { name: 'Disabled', key: 'disabled' },
+		// { name: 'DiscCount', key: 'discCount' },
+		// { name: 'DiscNum', key: 'discNum' },
+		// { name: 'Disliked', key: 'disliked' },
+		{ name: 'Time', key: 'duration' },
+		{ name: 'Genre', key: 'genre', width: '65%' },
+		// { name: 'Grouping', key: 'grouping', width: '65%' },
+		// { name: 'ImportedFrom', key: 'importedFrom' },
+		// { name: 'Liked', key: 'liked' },
+		{ name: 'Name', key: 'name', width: '170%' },
+		{ name: 'Plays', key: 'playCount' },
+		// { name: 'Rating', key: 'rating' },
+		// { name: 'SampleRate', key: 'sampleRate' },
+		// { name: 'Skips', key: 'skipCount' },
+		// { name: 'SortAlbumArtist', key: 'sortAlbumArtist' },
+		// { name: 'SortAlbumName', key: 'sortAlbumName' },
+		// { name: 'SortArtist', key: 'sortArtist' },
+		// { name: 'SortComposer', key: 'sortComposer' },
+		// { name: 'SortName', key: 'sortName' },
+		// { name: 'TrackCount', key: 'trackCount' },
+		// { name: 'TrackNum', key: 'trackNum' },
+		// { name: 'Volume', key: 'volume' },
+		{ name: 'Year', key: 'year' },
+	]
+	let columns: Column[] = [
+		{ name: '#', key: 'index' },
+		{ name: 'Name', key: 'name', width: '170%' },
+		{ name: 'Plays', key: 'playCount' },
+		{ name: 'Time', key: 'duration' },
+		{ name: 'Artist', key: 'artist', width: '120%' },
+		{ name: 'Album', key: 'albumName', width: '90%' },
+		{ name: 'Comments', key: 'comments', width: '65%' },
+		{ name: 'Genre', key: 'genre', width: '65%' },
+		{ name: 'Date Added', key: 'dateAdded' },
+		{ name: 'Year', key: 'year' },
+	]
+	function on_column_context_menu() {
+		ipc_renderer.invoke('show_columns_menu', {
+			menu: all_columns.map((col) => {
+				return {
+					id: col.key,
+					label: col.name,
+					type: 'checkbox',
+					checked: !!columns.find((c) => c.key === col.key),
+				}
+			}),
+		})
+	}
+	onDestroy(
+		ipc_listen('context.toggle_column', (_, item) => {
+			if (item.checked) {
+				const column = all_columns.find((column) => column.key === item.id)
+				if (column) {
+					columns.push({ ...column })
+					columns = columns
+				}
+			} else {
+				columns = columns.filter((column) => column.key !== item.id)
+			}
+		}),
+	)
 </script>
 
 <div
@@ -209,111 +292,26 @@
 	on:dragleave={() => (drag_to_index = null)}
 	class:no-selection={$selection.count === 0}
 >
+	<!-- svelte-ignore a11y-interactive-supports-focus -->
 	<div
 		class="row table-header border-b border-b-slate-500/30"
 		class:desc={$page.sortDesc}
 		role="row"
+		on:contextmenu={on_column_context_menu}
 	>
-		<!-- svelte-ignore a11y-interactive-supports-focus -->
-		<!-- svelte-ignore a11y-click-events-have-key-events -->
-		<div
-			class="c index"
-			class:sort={sortKey === 'index'}
-			on:click={() => sort_by('index')}
-			role="button"
-		>
-			<span>#</span>
-		</div>
-		<!-- svelte-ignore a11y-interactive-supports-focus -->
-		<!-- svelte-ignore a11y-click-events-have-key-events -->
-		<div
-			class="c name"
-			class:sort={sortKey === 'name'}
-			on:click={() => sort_by('name')}
-			role="button"
-		>
-			<span>Name</span>
-		</div>
-		<!-- svelte-ignore a11y-interactive-supports-focus -->
-		<!-- svelte-ignore a11y-click-events-have-key-events -->
-		<div
-			class="c playCount"
-			class:sort={sortKey === 'playCount'}
-			on:click={() => sort_by('playCount')}
-			role="button"
-		>
-			<span>Plays</span>
-		</div>
-		<!-- svelte-ignore a11y-interactive-supports-focus -->
-		<!-- svelte-ignore a11y-click-events-have-key-events -->
-		<div
-			class="c duration"
-			class:sort={sortKey === 'duration'}
-			on:click={() => sort_by('duration')}
-			role="button"
-		>
-			<span>Time</span>
-		</div>
-		<!-- svelte-ignore a11y-interactive-supports-focus -->
-		<!-- svelte-ignore a11y-click-events-have-key-events -->
-		<div
-			class="c artist"
-			class:sort={sortKey === 'artist'}
-			on:click={() => sort_by('artist')}
-			role="button"
-		>
-			<span>Artist</span>
-		</div>
-		<!-- svelte-ignore a11y-interactive-supports-focus -->
-		<!-- svelte-ignore a11y-click-events-have-key-events -->
-		<div
-			class="c albumName"
-			class:sort={sortKey === 'albumName'}
-			on:click={() => sort_by('albumName')}
-			role="button"
-		>
-			<span>Album</span>
-		</div>
-		<!-- svelte-ignore a11y-interactive-supports-focus -->
-		<!-- svelte-ignore a11y-click-events-have-key-events -->
-		<div
-			class="c comments"
-			class:sort={sortKey === 'comments'}
-			on:click={() => sort_by('comments')}
-			role="button"
-		>
-			<span>Comments</span>
-		</div>
-		<!-- svelte-ignore a11y-interactive-supports-focus -->
-		<!-- svelte-ignore a11y-click-events-have-key-events -->
-		<div
-			class="c genre"
-			class:sort={sortKey === 'genre'}
-			on:click={() => sort_by('genre')}
-			role="button"
-		>
-			<span>Genre</span>
-		</div>
-		<!-- svelte-ignore a11y-interactive-supports-focus -->
-		<!-- svelte-ignore a11y-click-events-have-key-events -->
-		<div
-			class="c dateAdded"
-			class:sort={sortKey === 'dateAdded'}
-			on:click={() => sort_by('dateAdded')}
-			role="button"
-		>
-			<span>Date Added</span>
-		</div>
-		<!-- svelte-ignore a11y-interactive-supports-focus -->
-		<!-- svelte-ignore a11y-click-events-have-key-events -->
-		<div
-			class="c year"
-			class:sort={sortKey === 'year'}
-			on:click={() => sort_by('year')}
-			role="button"
-		>
-			<span>Year</span>
-		</div>
+		{#each columns as column}
+			<!-- svelte-ignore a11y-interactive-supports-focus -->
+			<!-- svelte-ignore a11y-click-events-have-key-events -->
+			<div
+				class="c {column.key}"
+				class:sort={sort_key === column.key}
+				style:width={column.width}
+				on:click={() => sort_by(column.key)}
+				role="button"
+			>
+				<span>{column.name}</span>
+			</div>
+		{/each}
 	</div>
 	<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
 	<!-- svelte-ignore a11y-no-static-element-interactions -->
@@ -353,33 +351,34 @@
 					class:selected={$selection.list[i] === true}
 					class:playing={track.id === $playing_id}
 				>
-					<div class="c index">
-						{#if track.id === $playing_id}
-							<svg
-								class="playing-icon inline"
-								xmlns="http://www.w3.org/2000/svg"
-								height="24"
-								viewBox="0 0 24 24"
-								width="24"
-							>
-								<path d="M0 0h24v24H0z" fill="none" />
-								<path
-									d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"
-								/>
-							</svg>
-						{:else}
-							{i + 1}
-						{/if}
-					</div>
-					<div class="c name">{track.name}</div>
-					<div class="c playCount">{track.playCount || ''}</div>
-					<div class="c duration">{track.duration ? get_duration(track.duration) : ''}</div>
-					<div class="c artist">{track.artist}</div>
-					<div class="c albumName">{track.albumName || ''}</div>
-					<div class="c comments">{track.comments || ''}</div>
-					<div class="c genre">{track.genre || ''}</div>
-					<div class="c dateAdded">{format_date(track.dateAdded)}</div>
-					<div class="c year">{track.year || ''}</div>
+					{#each columns as column}
+						<div class="c {column.key}" style:width={column.width}>
+							{#if column.key === 'index'}
+								{#if track.id === $playing_id}
+									<svg
+										class="playing-icon inline"
+										xmlns="http://www.w3.org/2000/svg"
+										height="24"
+										viewBox="0 0 24 24"
+										width="24"
+									>
+										<path d="M0 0h24v24H0z" fill="none" />
+										<path
+											d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"
+										/>
+									</svg>
+								{:else}
+									{i + 1}
+								{/if}
+							{:else if column.key === 'duration'}
+								{track.duration ? get_duration(track.duration) : ''}
+							{:else if column.key === 'dateAdded'}
+								{format_date(track.dateAdded)}
+							{:else}
+								{track[column.key] || ''}
+							{/if}
+						</div>
+					{/each}
 				</div>
 			{/if}
 		</VirtualListBlock>
@@ -416,62 +415,56 @@
 				display: inline-block
 			&.desc .c.sort span::after
 				content: '▼'
-		.row
-			display: flex
-			max-width: 100%
-			$row-height: 24px
-			height: $row-height
-			font-size: 12px
-			line-height: $row-height
+	.row
+		display: flex
+		max-width: 100%
+		$row-height: 24px
+		height: $row-height
+		font-size: 12px
+		line-height: $row-height
+		box-sizing: border-box
+		position: relative
+		&.playing.selected
+			color: #ffffff
+		&.playing
+			color: #00ffff
+	.c
+		display: inline-block
+		vertical-align: top
+		width: 100%
+		white-space: nowrap
+		overflow: hidden
+		text-overflow: ellipsis
+		padding-right: 10px
+		&:first-child
+			padding-left: 10px
+			box-sizing: content-box
+		&.index, &.playCount, &.skipCount, &.duration
+			padding-left: 0px
+			text-align: right
 			box-sizing: border-box
-			position: relative
-			&.playing.selected
-				color: #ffffff
-			&.playing
-				color: #00ffff
-			.c
-				display: inline-block
-				vertical-align: top
-				width: 100%
-				white-space: nowrap
-				overflow: hidden
-				text-overflow: ellipsis
-				padding-right: 10px
-			&.selected .index svg.playing-icon
-					fill: var(--icon-color)
-			.index
-				width: 0px
-				min-width: 46px
-				text-align: right
-				svg.playing-icon
-					fill: #00ffff
-					width: 16px
-					height: 100%
-			.name
-				width: 170%
-			.playCount
-				width: 0px
-				min-width: 52px
-				text-align: right
-			.duration
-				width: 0px
-				min-width: 50px
-				text-align: right
-			.artist
-				width: 120%
-			.albumName
-				width: 90%
-			.genre
-				width: 65%
-			.comments
-				width: 65%
-			.dateAdded
-				width: 130px
-				min-width: 140px
-				font-variant-numeric: tabular-nums
-			.year
-				width: 0px
-				min-width: 47px
+	.selected .index svg.playing-icon
+		fill: var(--icon-color)
+	.index
+		width: 46px
+		flex-shrink: 0
+		svg.playing-icon
+			fill: #00ffff
+			width: 16px
+			height: 100%
+	.playCount, .skipCount
+		width: 52px
+		flex-shrink: 0
+	.duration
+		width: 50px
+		flex-shrink: 0
+	.dateAdded
+		flex-shrink: 0
+		width: 140px
+		font-variant-numeric: tabular-nums
+	.year
+		width: 0px
+		min-width: 47px
 	.drag-line
 		position: absolute
 		width: 100%
