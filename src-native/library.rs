@@ -50,11 +50,8 @@ pub fn load_library(paths: &Paths) -> UniResult<Library> {
 				Err(err) => throw!("Error parsing library file: {:?}", err),
 			};
 			// Migrate version number to string
-			println!("---- PARSE LIBRARY");
 			if let Some(obj) = value.as_object_mut() {
-				println!("---- ob");
 				if let Some(version_field) = obj.get_mut("version") {
-					println!("---- ve");
 					if let Some(version) = version_field.as_number() {
 						if version.as_u64() == Some(1) {
 							*version_field = json!("1");

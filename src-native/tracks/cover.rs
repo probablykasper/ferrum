@@ -1,86 +1,85 @@
-use crate::data::Data;
-use crate::data_js::get_data;
-
 use super::Tag;
+use image::codecs::jpeg::JpegEncoder;
 use lazy_static::lazy_static;
+use lofty::picture::MimeType;
 use napi::bindgen_prelude::Buffer;
-use napi::{Env, JsBuffer, JsObject, Result, Task};
-use photon_rs::transform::{resize, SamplingFilter};
-use photon_rs::PhotonImage;
+use napi::Result;
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::Mutex;
 
-// /// File path, artwork index
-// struct ReadCover(PathBuf, usize);
-// impl Task for ReadCover {
-// 	type Output = Vec<u8>;
-// 	type JsValue = JsBuffer;
-// 	fn compute(&mut self) -> Result<Self::Output> {
-// 		let path = &self.0;
-// 		let index = self.1;
-
-// 		let tag = Tag::read_from_path(path)?;
-// 		let image = match tag.get_image_consume(index) {
-// 			Some(image) => image,
-// 			None => {
-// 				return Err(nerr!("No image"));
-// 			}
-// 		};
-
-// 		let photon_img = PhotonImage::new_from_byteslice(image.data);
-// 		let resized = resize(&photon_img, 15, 15, SamplingFilter::Lanczos3);
-// 		let jpg_bytes = resized.get_bytes_jpeg(95);
-
-// 		Ok(jpg_bytes)
-// 	}
-// 	fn resolve(&mut self, env: Env, output: Self::Output) -> Result<Self::JsValue> {
-// 		let data = get_data(&env)?;
-// 		// let path = self.0.to_string_lossy().to_string();
-// 		// data.img_cache.insert(path, output.clone());
-// 		let result = env.create_buffer_copy(output)?;
-// 		return Ok(result.into_raw());
-// 	}
-// }
-
-// #[napi(
-// 	js_name = "read_cache_cover_async",
-// 	ts_return_type = "Promise<ArrayBuffer>"
-// )]
-// #[allow(dead_code)]
-// pub fn read_cache_cover_async(path: String, index: u16, env: Env) -> Result<JsObject> {
-// 	let task = ReadCover(path.into(), index.into());
-// 	env.spawn(task).map(|t| t.promise_object())
-// }
+use fast_image_resize::images::Image;
+use fast_image_resize::{IntoImageView, Resizer};
+use image::{ImageEncoder, ImageFormat, ImageReader};
+use std::io::{BufWriter, Cursor};
 
 lazy_static! {
-	static ref IMG_CACHE: Mutex<HashMap<String, Vec<u8>>> = Mutex::new(HashMap::new());
+	static ref IMG_CACHE: Mutex<HashMap<String, Option<Vec<u8>>>> = Mutex::new(HashMap::new());
 }
 
 #[napi(js_name = "read_cache_cover_async")]
 #[allow(dead_code)]
-pub async fn read_cache_cover_async(path: String, index: u16) -> Result<Buffer> {
+/// Returns `None` if the file does not have an image
+pub async fn read_cache_cover_async(path: String, index: u16) -> Result<Option<Buffer>> {
+	println!("{path} 0");
 	let img_cache = IMG_CACHE.lock().unwrap();
-	if let Some(bytes) = img_cache.get(&path) {
-		println!("-------------- cache hit");
-		return Ok(bytes.clone().into());
+	if let Some(cache_entry) = img_cache.get(&path) {
+		return Ok(cache_entry.clone().map(|bytes| bytes.clone().into()));
 	}
 	drop(img_cache);
 
 	let tag = Tag::read_from_path(&PathBuf::from(path.clone()))?;
-	let image = match tag.get_image_consume(index.into()) {
+	let image = match tag.get_image_consume(index.into())? {
 		Some(image) => image,
 		None => {
-			return Err(nerr!("No image"));
+			return Ok(None);
 		}
 	};
 
-	let photon_img = PhotonImage::new_from_byteslice(image.data);
-	let resized = resize(&photon_img, 15, 15, SamplingFilter::Lanczos3);
-	let jpg_bytes = resized.get_bytes_jpeg(95);
+	let format = match image.mime_type {
+		MimeType::Png => ImageFormat::Png,
+		MimeType::Jpeg => ImageFormat::Jpeg,
+		_ => return Err(nerr!("Unsupported image type")),
+	};
+
+	let mut image = ImageReader::new(Cursor::new(image.data));
+	image.set_format(format);
+	let src_image = match image.decode() {
+		Ok(image_data) => image_data,
+		Err(e) => return Err(nerr!("Unable to decode image: {}", e)),
+	};
+
+	let dst_width = 1024;
+	let dst_height = 768;
+	let mut dst_image = Image::new(dst_width, dst_height, src_image.pixel_type().unwrap());
+
+	let mut resizer = Resizer::new();
+	resizer.resize(&src_image, &mut dst_image, None).unwrap();
+
+	let mut result_buf = BufWriter::new(Vec::new());
+	let jpeg_result = JpegEncoder::new(&mut result_buf).write_image(
+		dst_image.buffer(),
+		dst_width,
+		dst_height,
+		src_image.color().into(),
+	);
+	match jpeg_result {
+		Ok(_) => {}
+		Err(err) => {
+			return Err(nerr!(
+				"Unable to encode image in track \"{}\": {}",
+				path,
+				err
+			))
+		}
+	}
+	let jpg_bytes = match result_buf.into_inner() {
+		Ok(bytes) => bytes,
+		Err(_) => return Err(nerr!("Error getting inner img buffer")),
+	};
 
 	let mut img_cache = IMG_CACHE.lock().unwrap();
-	img_cache.insert(path, jpg_bytes.clone());
+	img_cache.insert(path, Some(jpg_bytes.clone()));
 
-	Ok(jpg_bytes.into())
+	Ok(Some(jpg_bytes.into()))
 }

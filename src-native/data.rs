@@ -9,7 +9,7 @@ use crate::{page, UniResult};
 use atomicwrites::{AllowOverwrite, AtomicFile};
 use napi::Result;
 use serde::Serialize;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 use std::env;
 use std::io::Write;
 use std::path::PathBuf;
@@ -32,7 +32,6 @@ pub struct Data {
 	/// Current tag being edited
 	pub current_tag: Option<Tag>,
 	pub artists: HashSet<String>,
-	pub img_cache: HashMap<String, Vec<u8>>,
 }
 
 impl Data {
@@ -131,7 +130,6 @@ impl Data {
 			sort_desc: true,
 			group_album_tracks: true,
 			current_tag: None,
-			img_cache: HashMap::new(),
 		};
 		data.open_playlist_track_ids = page::get_track_ids(&data)?;
 		sort(&mut data, "dateAdded", true)?;

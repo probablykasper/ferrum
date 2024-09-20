@@ -80,11 +80,15 @@ app.whenReady().then(async () => {
 		addon
 			.read_cache_cover_async(path, 0)
 			.then((buffer) => {
-				callback(Buffer.from(buffer))
+				if (buffer === null) {
+					callback({ error: 404 })
+				} else {
+					callback(Buffer.from(buffer))
+				}
 			})
 			.catch((error) => {
 				callback({ error: 500 })
-				console.log('Could not read cover', error)
+				console.log(`Could not read cover "${path}":`, error)
 			})
 	})
 

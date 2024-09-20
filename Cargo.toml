@@ -38,8 +38,12 @@ time = { version = "0.3", features = ["serde", "serde-well-known"] }
 url = "2.4"
 unicode-normalization = "0.1"
 rayon = "1.8"
-photon-rs = "0.3.2"
 lazy_static = "1.5.0"
+fast_image_resize = { version = "4.2.1", features = ["image"] }
+image = { version = "0.25.2", features = [
+	"png",
+	"jpeg",
+], default-features = false }
 
 [profile.dev]
 panic = "abort"

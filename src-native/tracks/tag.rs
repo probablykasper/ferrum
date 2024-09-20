@@ -29,7 +29,7 @@ impl From<SetInfoError> for UniError {
 }
 
 pub struct Image {
-	// i64 because napi doesn't support u64
+	pub mime_type: MimeType,
 	pub data: Vec<u8>,
 }
 pub struct ImageRef<'a> {
@@ -211,32 +211,36 @@ impl Tag {
 
 		Ok(())
 	}
-	pub fn get_image_ref(&self, index: usize) -> Option<ImageRef> {
+	pub fn get_image_ref(&self, index: usize) -> UniResult<Option<ImageRef>> {
 		let pictures = self.tag.pictures();
 		match pictures.get(index) {
 			Some(pic) => {
 				let data = pic.data();
-				Some(ImageRef {
+				Ok(Some(ImageRef {
 					index: index.try_into().expect("usize conv"),
 					total_images: pictures.len().try_into().expect("usize conv"),
 					data,
 					mime_type: match pic.mime_type() {
 						Some(mime_type) => mime_type.clone(),
-						_ => return None,
+						_ => throw!("No mime type"),
 					},
-				})
+				}))
 			}
-			None => None,
+			None => Ok(None),
 		}
 	}
-	pub fn get_image_consume(mut self, index: usize) -> Option<Image> {
+	pub fn get_image_consume(mut self, index: usize) -> UniResult<Option<Image>> {
 		if self.tag.picture_count() <= index.try_into().expect("usize conv") {
-			return None;
+			return Ok(None);
 		}
 		let pic = self.tag.remove_picture(index);
-		Some(Image {
+		Ok(Some(Image {
+			mime_type: match pic.mime_type() {
+				Some(mime_type) => mime_type.clone(),
+				_ => throw!("No mime type"),
+			},
 			data: pic.into_data(),
-		})
+		}))
 	}
 	pub fn remove_image(&mut self, index: usize) -> Picture {
 		self.tag.remove_picture(index)
