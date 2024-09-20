@@ -1,6 +1,7 @@
 use crate::library_types::{Library, VersionedLibrary};
 use crate::UniResult;
 use serde::{Deserialize, Serialize};
+use serde_json::{json, Value};
 use std::fs::{create_dir_all, File};
 use std::io::{Error, ErrorKind, Read};
 use std::path::PathBuf;
@@ -44,7 +45,27 @@ pub fn load_library(paths: &Paths) -> UniResult<Library> {
 			println!("Read library: {}ms", now.elapsed().as_millis());
 			now = Instant::now();
 
-			let versioned_library: VersionedLibrary = match serde_json::from_str(&mut json_str) {
+			let mut value: Value = match serde_json::from_str(&mut json_str) {
+				Ok(library) => library,
+				Err(err) => throw!("Error parsing library file: {:?}", err),
+			};
+			// Migrate version number to string
+			println!("---- PARSE LIBRARY");
+			if let Some(obj) = value.as_object_mut() {
+				println!("---- ob");
+				if let Some(version_field) = obj.get_mut("version") {
+					println!("---- ve");
+					if let Some(version) = version_field.as_number() {
+						if version.as_u64() == Some(1) {
+							*version_field = json!("1");
+						} else if version.as_u64() == Some(2) {
+							*version_field = json!("2");
+						}
+					}
+				}
+			}
+
+			let versioned_library: VersionedLibrary = match serde_json::from_value(value) {
 				Ok(library) => library,
 				Err(err) => throw!("Error parsing library file: {:?}", err),
 			};

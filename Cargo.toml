@@ -34,10 +34,6 @@ url = "2.4"
 unicode-normalization = "0.1"
 rayon = "1.8"
 
-[patch.crates-io]
-# For allowing integer version field in Library.json (https://github.com/serde-rs/serde/pull/2525)
-serde = { git = "https://github.com/Astavie/serde", rev = "f552a790e985f9e9cd6a09ec909f0f8091ac1525" }
-
 [profile.dev]
 panic = "abort"
 

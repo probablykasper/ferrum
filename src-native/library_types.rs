@@ -26,9 +26,9 @@ impl Library {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(tag = "version", deny_unknown_fields)]
 pub enum VersionedLibrary<'a> {
-	#[serde(rename = 1)]
+	#[serde(rename = "1")]
 	V1(Cow<'a, V1Library>),
-	#[serde(rename = 2)]
+	#[serde(rename = "2")]
 	V2(Cow<'a, Library>),
 }
 impl VersionedLibrary<'_> {
