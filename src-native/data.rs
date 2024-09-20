@@ -9,7 +9,7 @@ use crate::{page, UniResult};
 use atomicwrites::{AllowOverwrite, AtomicFile};
 use napi::Result;
 use serde::Serialize;
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::env;
 use std::io::Write;
 use std::path::PathBuf;
@@ -17,7 +17,6 @@ use std::time::Instant;
 
 pub struct Data {
 	pub paths: Paths,
-	pub is_dev: bool,
 	pub library: Library,
 	pub view_options: ViewOptions,
 	/// All tracks on the current page, even if they are filtered out
@@ -33,6 +32,7 @@ pub struct Data {
 	/// Current tag being edited
 	pub current_tag: Option<Tag>,
 	pub artists: HashSet<String>,
+	pub img_cache: HashMap<String, Vec<u8>>,
 }
 
 impl Data {
@@ -118,7 +118,6 @@ impl Data {
 		let artists = load_artists(&loaded_library);
 
 		let mut data = Data {
-			is_dev,
 			paths,
 			library: loaded_library,
 			artists,
@@ -132,6 +131,7 @@ impl Data {
 			sort_desc: true,
 			group_album_tracks: true,
 			current_tag: None,
+			img_cache: HashMap::new(),
 		};
 		data.open_playlist_track_ids = page::get_track_ids(&data)?;
 		sort(&mut data, "dateAdded", true)?;

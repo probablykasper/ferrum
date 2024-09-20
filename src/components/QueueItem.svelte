@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { methods, paths, track_metadata_updated } from '@/lib/data'
-	import { fade } from 'svelte/transition'
 	import type { Track } from '../../ferrum-addon'
 	import { join_paths } from '@/lib/window'
 
@@ -17,7 +16,6 @@
 	{#if success === false}
 		<svg
 			class="cover"
-			in:fade={{ duration: 200 }}
 			xmlns="http://www.w3.org/2000/svg"
 			width="24"
 			height="24"
@@ -71,7 +69,6 @@
 		min-width: 42px
 		height: 42px
 		min-height: 42px
-		transition: 200ms opacity linear
 	.invisible
 		opacity: 0
 	img.cover

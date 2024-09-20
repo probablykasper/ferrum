@@ -78,7 +78,7 @@ app.whenReady().then(async () => {
 		const url = decodeURI(request.url)
 		const path = url.substring(9)
 		addon
-			.read_cover_async_path(path, 0)
+			.read_cache_cover_async(path, 0)
 			.then((buffer) => {
 				callback(Buffer.from(buffer))
 			})

@@ -7,6 +7,7 @@ use napi::{Env, JsArrayBuffer, JsBuffer, JsObject, Result, Task};
 use std::fs;
 use std::path::{Path, PathBuf};
 
+pub mod cover;
 pub mod import;
 mod md;
 mod tag;
@@ -209,7 +210,7 @@ pub fn get_image(index: u32, env: Env) -> Result<Option<JsImage>> {
 	let js_image = JsImage {
 		index: img.index,
 		total_images: img.total_images,
-		mime_type: img.mime_type,
+		mime_type: img.mime_type.to_string(),
 		data: env.create_buffer_copy(img.data)?.into_raw(),
 	};
 	Ok(Some(js_image))
