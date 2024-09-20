@@ -24,6 +24,7 @@ pub struct PathsJs {
 	pub library_dir: String,
 	pub tracks_dir: String,
 	pub library_json: String,
+	pub cache_db: String,
 	pub local_data_dir: String,
 }
 
@@ -35,6 +36,7 @@ pub fn get_paths(env: Env) -> Result<PathsJs> {
 		library_dir: data.paths.library_dir.to_string_lossy().into(),
 		tracks_dir: data.paths.tracks_dir.to_string_lossy().into(),
 		library_json: data.paths.library_json.to_string_lossy().into(),
+		cache_db: data.paths.cache_db.to_string_lossy().into(),
 		local_data_dir: data.paths.local_data_dir.to_string_lossy().into(),
 	})
 }

@@ -44,6 +44,7 @@ image = { version = "0.25.2", features = [
 	"png",
 	"jpeg",
 ], default-features = false }
+redb = "2.1.3"
 
 [profile.dev]
 panic = "abort"

@@ -82,6 +82,7 @@ impl Data {
 				library_dir: library_dir.clone(),
 				tracks_dir: library_dir.join("Tracks"),
 				library_json: library_dir.join("Library.json"),
+				cache_db: library_dir.join("Cache.redb"),
 				local_data_dir: match local_data_path {
 					Some(path) => PathBuf::from(path),
 					None => env::current_dir()
@@ -103,6 +104,7 @@ impl Data {
 				library_dir: library_dir.clone(),
 				tracks_dir: library_dir.join("Tracks"),
 				library_json: library_dir.join("Library.json"),
+				cache_db: library_dir.join("Cache.redb"),
 				local_data_dir: match local_data_path {
 					Some(path) => PathBuf::from(path),
 					None => dirs::data_local_dir()

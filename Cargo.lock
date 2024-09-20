@@ -340,6 +340,7 @@ dependencies = [
  "napi-derive",
  "plist",
  "rayon",
+ "redb",
  "serde",
  "serde_json",
  "time",
@@ -888,6 +889,15 @@ checksum = "1465873a3dfdaa8ae7cb14b4383657caab0b3e8a0aa9ae8e04b044854c8dfce2"
 dependencies = [
  "crossbeam-deque",
  "crossbeam-utils",
+]
+
+[[package]]
+name = "redb"
+version = "2.1.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e4760ad04a88ef77075ba86ba9ea79b919e6bab29c1764c5747237cd6eaedcaa"
+dependencies = [
+ "libc",
 ]
 
 [[package]]

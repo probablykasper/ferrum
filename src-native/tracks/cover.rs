@@ -1,32 +1,62 @@
 use super::Tag;
+use fast_image_resize::images::Image;
+use fast_image_resize::{IntoImageView, Resizer};
 use image::codecs::jpeg::JpegEncoder;
+use image::codecs::png::PngEncoder;
+use image::{ImageEncoder, ImageFormat, ImageReader};
 use lazy_static::lazy_static;
 use lofty::picture::MimeType;
 use napi::bindgen_prelude::Buffer;
 use napi::Result;
-use std::collections::HashMap;
-use std::path::PathBuf;
-use std::sync::Mutex;
-
-use fast_image_resize::images::Image;
-use fast_image_resize::{IntoImageView, Resizer};
-use image::{ImageEncoder, ImageFormat, ImageReader};
+// use redb::{Database, DatabaseError, TableDefinition};
+use redb::{Database, TableDefinition};
 use std::io::{BufWriter, Cursor};
+use std::path::PathBuf;
+use std::sync::{Arc, Mutex};
+
+const IMG_CACHE_TABLE: TableDefinition<&str, Vec<u8>> = TableDefinition::new("img_cache");
 
 lazy_static! {
-	static ref IMG_CACHE: Mutex<HashMap<String, Option<Vec<u8>>>> = Mutex::new(HashMap::new());
+	// static ref CACHE_DB: Arc<Mutex<CacheDb>> = Arc::new(Mutex::new(CacheDb::open()));
+	static ref CACHE_DB: Arc<Mutex<Option<Database>>> = Arc::new(Mutex::new(None));
 }
 
 #[napi(js_name = "read_cache_cover_async")]
 #[allow(dead_code)]
 /// Returns `None` if the file does not have an image
-pub async fn read_cache_cover_async(path: String, index: u16) -> Result<Option<Buffer>> {
-	println!("{path} 0");
-	let img_cache = IMG_CACHE.lock().unwrap();
-	if let Some(cache_entry) = img_cache.get(&path) {
-		return Ok(cache_entry.clone().map(|bytes| bytes.clone().into()));
+pub async fn read_cache_cover_async(
+	path: String,
+	index: u16,
+	cache_db_path: String,
+) -> Result<Option<Buffer>> {
+	let mut cache_db_mutex = CACHE_DB.lock().unwrap();
+	let cache_db = match cache_db_mutex.as_ref() {
+		Some(db) => db,
+		None => {
+			let db = match Database::create(&cache_db_path) {
+				Ok(db) => db,
+				Err(err) => panic!("Could not load image cache: {}", err),
+			};
+			let init_txn = db.begin_write().unwrap();
+			{
+				// Create table
+				init_txn.open_table(IMG_CACHE_TABLE).unwrap();
+			}
+			init_txn.commit().unwrap();
+			println!("Initializing Cache.redb");
+			*cache_db_mutex = Some(db);
+			cache_db_mutex.as_ref().unwrap()
+		}
+	};
+	let read_txn = cache_db.begin_read().unwrap();
+	{
+		let table = read_txn.open_table(IMG_CACHE_TABLE).unwrap();
+		let record = table.get(&*path).unwrap();
+		if let Some(cache_entry) = record {
+			let bytes: Vec<u8> = cache_entry.value();
+			return Ok(Some(bytes.into()));
+		}
 	}
-	drop(img_cache);
 
 	let tag = Tag::read_from_path(&PathBuf::from(path.clone()))?;
 	let image = match tag.get_image_consume(index.into())? {
@@ -42,44 +72,79 @@ pub async fn read_cache_cover_async(path: String, index: u16) -> Result<Option<B
 		_ => return Err(nerr!("Unsupported image type")),
 	};
 
-	let mut image = ImageReader::new(Cursor::new(image.data));
-	image.set_format(format);
+	let image = match ImageReader::new(Cursor::new(image.data)).with_guessed_format() {
+		Ok(image) => image,
+		Err(e) => return Err(nerr!("Unable to guess image format: {}", e)),
+	};
 	let src_image = match image.decode() {
 		Ok(image_data) => image_data,
 		Err(e) => return Err(nerr!("Unable to decode image: {}", e)),
 	};
 
-	let dst_width = 1024;
-	let dst_height = 768;
+	let dst_width = 84;
+	let dst_height = 84;
 	let mut dst_image = Image::new(dst_width, dst_height, src_image.pixel_type().unwrap());
 
 	let mut resizer = Resizer::new();
 	resizer.resize(&src_image, &mut dst_image, None).unwrap();
 
 	let mut result_buf = BufWriter::new(Vec::new());
-	let jpeg_result = JpegEncoder::new(&mut result_buf).write_image(
-		dst_image.buffer(),
-		dst_width,
-		dst_height,
-		src_image.color().into(),
-	);
-	match jpeg_result {
-		Ok(_) => {}
-		Err(err) => {
-			return Err(nerr!(
-				"Unable to encode image in track \"{}\": {}",
-				path,
-				err
-			))
+	let img_bytes = match format {
+		ImageFormat::Jpeg => {
+			let jpeg_result = JpegEncoder::new(&mut result_buf).write_image(
+				dst_image.buffer(),
+				dst_width,
+				dst_height,
+				src_image.color().into(),
+			);
+			match jpeg_result {
+				Ok(_) => {}
+				Err(err) => {
+					return Err(nerr!(
+						"Unable to encode image in track \"{}\": {}",
+						path,
+						err
+					))
+				}
+			}
+			let bytes = match result_buf.into_inner() {
+				Ok(bytes) => bytes,
+				Err(_) => return Err(nerr!("Error getting inner img buffer")),
+			};
+			bytes
 		}
-	}
-	let jpg_bytes = match result_buf.into_inner() {
-		Ok(bytes) => bytes,
-		Err(_) => return Err(nerr!("Error getting inner img buffer")),
+		ImageFormat::Png => {
+			let jpeg_result = PngEncoder::new(&mut result_buf).write_image(
+				dst_image.buffer(),
+				dst_width,
+				dst_height,
+				src_image.color().into(),
+			);
+			match jpeg_result {
+				Ok(_) => {}
+				Err(err) => {
+					return Err(nerr!(
+						"Unable to encode image in track \"{}\": {}",
+						path,
+						err
+					))
+				}
+			}
+			let bytes = match result_buf.into_inner() {
+				Ok(bytes) => bytes,
+				Err(_) => return Err(nerr!("Error getting inner img buffer")),
+			};
+			bytes
+		}
+		_ => return Err(nerr!("Unsupported image type")),
 	};
 
-	let mut img_cache = IMG_CACHE.lock().unwrap();
-	img_cache.insert(path, Some(jpg_bytes.clone()));
+	let write_txn = cache_db.begin_write().unwrap();
+	{
+		let mut table = write_txn.open_table(IMG_CACHE_TABLE).unwrap();
+		table.insert(&*path, img_bytes.clone()).unwrap();
+	}
+	write_txn.commit().unwrap();
 
-	Ok(Some(jpg_bytes.into()))
+	Ok(Some(img_bytes.into()))
 }

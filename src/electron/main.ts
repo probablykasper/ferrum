@@ -74,22 +74,26 @@ app.whenReady().then(async () => {
 		callback(path)
 	})
 
-	protocol.registerBufferProtocol('trackimg', (request, callback) => {
-		const url = decodeURI(request.url)
-		const path = url.substring(9)
-		addon
-			.read_cache_cover_async(path, 0)
-			.then((buffer) => {
-				if (buffer === null) {
-					callback({ error: 404 })
-				} else {
-					callback(Buffer.from(buffer))
-				}
-			})
-			.catch((error) => {
-				callback({ error: 500 })
-				console.log(`Could not read cover "${path}":`, error)
-			})
+	protocol.handle('trackimg', (request) => {
+		return new Promise((resolve) => {
+			const url_raw = new URL(request.url)
+			const pathname = decodeURI(url_raw.pathname)
+			const cache_db_path = decodeURI(url_raw.searchParams.get('cache_db') ?? '')
+
+			addon
+				.read_cache_cover_async(pathname, 0, cache_db_path)
+				.then((buffer) => {
+					if (buffer === null) {
+						resolve(new Response(null, { status: 404 }))
+					} else {
+						resolve(new Response(Buffer.from(buffer)))
+					}
+				})
+				.catch((error) => {
+					resolve(new Response(null, { status: 500 }))
+					console.log(`Could not read cover "${pathname}":`, error)
+				})
+		})
 	})
 
 	session.defaultSession.webRequest.onHeadersReceived((details, callback) => {

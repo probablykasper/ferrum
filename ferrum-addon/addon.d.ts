@@ -9,6 +9,7 @@ export interface PathsJs {
   libraryDir: string
   tracksDir: string
   libraryJson: string
+  cacheDb: string
   localDataDir: string
 }
 export declare function get_paths(): PathsJs
@@ -150,7 +151,7 @@ export declare function new_playlist(name: string, description: string, isFolder
 export declare function update_playlist(id: string, name: string, description: string): void
 export declare function move_playlist(id: string, fromId: string, toId: string, toIndex: number): void
 /** Returns `None` if the file does not have an image */
-export declare function read_cache_cover_async(path: string, index: number): Promise<Buffer | null>
+export declare function read_cache_cover_async(path: string, index: number, cacheDbPath: string): Promise<Buffer | null>
 export interface TrackMd {
   name: string
   artist: string

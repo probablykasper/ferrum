@@ -29,7 +29,7 @@
 		<img
 			class="cover pointer-events-none"
 			class:invisible={success === null}
-			src="trackimg:{filePath}"
+			src="trackimg:{filePath}?cache_db={paths.cacheDb}"
 			alt=""
 			on:load={() => {
 				success = true
