@@ -4,7 +4,7 @@ import { clamp } from './helpers'
 import quit from './quit'
 import { methods, paths } from './data'
 import type { Track, TrackID } from '../../ferrum-addon'
-import { ipc_renderer, join_paths } from './window'
+import { ipc_renderer, join_paths, path_to_file_url } from './window'
 import { queue, set_new_queue, next as queueNext, prev as queuePrev } from './queue'
 
 const audio = new Audio()
@@ -127,7 +127,7 @@ function start_playback() {
 
 function set_playing_file(id: TrackID, paused = false) {
 	const track = methods.getTrack(id)
-	const file_url = 'track:' + join_paths(paths.tracksDir, track.file)
+	const file_url = path_to_file_url(join_paths(paths.tracksDir, track.file))
 	waiting_to_play = !paused
 	audio.src = file_url
 	playing_track.set(track)

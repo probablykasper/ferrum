@@ -56,6 +56,7 @@ app.whenReady().then(async () => {
 		minHeight: 400,
 		titleBarStyle: is.mac ? 'hidden' : 'default',
 		webPreferences: {
+			webSecurity: false,
 			contextIsolation: false,
 			nodeIntegration: true,
 			preload: path.resolve(__dirname, './preload.js'),
@@ -67,12 +68,6 @@ app.whenReady().then(async () => {
 	if (!is.dev) {
 		await init_media_keys(main_window)
 	}
-
-	protocol.registerFileProtocol('track', (request, callback) => {
-		const url = decodeURI(request.url)
-		const path = url.substring(6)
-		callback(path)
-	})
 
 	protocol.registerBufferProtocol('trackimg', (request, callback) => {
 		const url = decodeURI(request.url)

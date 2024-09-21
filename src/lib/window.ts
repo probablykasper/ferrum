@@ -20,7 +20,9 @@ declare global {
 		is_mac: boolean
 		is_windows: boolean
 		join_paths: (...args: string[]) => string
+		path_to_file_url: (path: string) => string
 	}
 }
 
 export const join_paths = window.join_paths
+export const path_to_file_url = window.path_to_file_url

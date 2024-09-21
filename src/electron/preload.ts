@@ -1,4 +1,5 @@
 import path from 'path'
+import url from 'url'
 import is from './is'
 import addon from '../../ferrum-addon'
 
@@ -10,6 +11,8 @@ window.is_mac = is.mac
 window.is_windows = is.windows
 
 window.join_paths = (...args) => {
-	const combined_path = path.join(...args)
-	return combined_path
+	return path.join(...args)
+}
+window.path_to_file_url = (path: string) => {
+	return url.pathToFileURL(path).toString()
 }
