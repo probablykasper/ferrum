@@ -291,8 +291,10 @@
 
 		{#if $queue.user_queue.length || queue.getQueueLength() === 0}
 			<div class="relative">
+				<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
 				<h4
 					class="sticky top-0 z-1 flex h-[40px] items-center justify-between bg-black/50 px-7 font-semibold backdrop-blur-md"
+					on:mousedown|self={selection.clear}
 				>
 					Up Next
 					{#if $queue.user_queue.length > 0}
@@ -351,8 +353,10 @@
 
 		{#if $queue.auto_queue.length}
 			<div class="relative">
+				<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
 				<h4
 					class="sticky top-0 z-1 flex h-[40px] items-center bg-black/50 px-7 font-semibold backdrop-blur-md"
+					on:mousedown={selection.clear}
 				>
 					Autoplay
 				</h4>
