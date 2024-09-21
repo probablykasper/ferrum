@@ -62,21 +62,17 @@
 		opacity: 0.75
 		font-size: 12px
 	.box
-		width: 42px
-		min-width: 42px
-		height: 42px
-		min-height: 42px
 		margin-right: 10px
-	.cover
+	.cover, .box
 		width: 42px
 		min-width: 42px
 		height: 42px
 		min-height: 42px
 	.invisible
 		opacity: 0
-	img.cover
+	img
 		object-fit: contain
-	svg.cover
+	svg
 		padding: 12px
 		box-sizing: border-box
 		background: var(--empty-cover-bg-color)

@@ -12,7 +12,7 @@
 - Add `Ctrl+Tab` and `Ctrl+Shift+Tab` to select next/previous playlist
 - Add `Back` and `Forward` shortcuts
 - Add ability to rearrange, hide & show columns
-- Add columns: Album Artist, Composer, Grouping, BPM
+- Add columns: Image, Album Artist, Composer, Grouping, BPM
 - Make time & volume sliders look ok
 - Small design updates to tracklist header & filter textbox
 - Respect user's locale time
