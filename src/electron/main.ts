@@ -88,13 +88,7 @@ app.whenReady().then(async () => {
 					if (buffer === null) {
 						resolve(new Response(null, { status: 404 }))
 					} else {
-						resolve(
-							new Response(Buffer.from(buffer), {
-								headers: {
-									'Cache-Control': 'no-cache',
-								},
-							}),
-						)
+						resolve(new Response(Buffer.from(buffer)))
 					}
 				})
 				.catch((error) => {
