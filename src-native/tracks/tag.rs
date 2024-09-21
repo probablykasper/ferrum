@@ -29,7 +29,6 @@ impl From<SetInfoError> for UniError {
 }
 
 pub struct Image {
-	pub mime_type: MimeType,
 	pub data: Vec<u8>,
 }
 pub struct ImageRef<'a> {
@@ -235,10 +234,6 @@ impl Tag {
 		}
 		let pic = self.tag.remove_picture(index);
 		Ok(Some(Image {
-			mime_type: match pic.mime_type() {
-				Some(mime_type) => mime_type.clone(),
-				_ => throw!("No mime type"),
-			},
 			data: pic.into_data(),
 		}))
 	}

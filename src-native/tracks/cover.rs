@@ -5,7 +5,6 @@ use image::codecs::jpeg::JpegEncoder;
 use image::codecs::png::PngEncoder;
 use image::{ImageEncoder, ImageFormat, ImageReader};
 use lazy_static::lazy_static;
-use lofty::picture::MimeType;
 use napi::bindgen_prelude::Buffer;
 use napi::Result;
 use redb::{Database, TableDefinition};
@@ -19,20 +18,13 @@ lazy_static! {
 	static ref CACHE_DB: Arc<RwLock<Option<Database>>> = Arc::new(RwLock::new(None));
 }
 
-#[napi(js_name = "read_cache_cover_async")]
-#[allow(dead_code)]
-/// Returns `None` if the file does not have an image
-pub async fn read_cache_cover_async(
-	path: String,
-	index: u16,
-	cache_db_path: String,
-) -> Result<Option<Buffer>> {
+fn open_cache_db(path: String) -> Result<()> {
 	let cache_db_mutex = CACHE_DB.read().unwrap();
 	if cache_db_mutex.is_none() {
 		drop(cache_db_mutex);
 		let mut cache_db_mutex = CACHE_DB.write().unwrap();
 		if cache_db_mutex.is_none() {
-			let db = match Database::create(&cache_db_path) {
+			let db = match Database::create(&path) {
 				Ok(db) => db,
 				Err(err) => panic!("Could not load image cache: {}", err),
 			};
@@ -46,6 +38,18 @@ pub async fn read_cache_cover_async(
 			println!("Initialized Cache.redb");
 		}
 	}
+	Ok(())
+}
+
+#[napi(js_name = "read_cache_cover_async")]
+#[allow(dead_code)]
+/// Returns `None` if the file does not have an image
+pub async fn read_cache_cover_async(
+	path: String,
+	index: u16,
+	cache_db_path: String,
+) -> Result<Option<Buffer>> {
+	open_cache_db(cache_db_path)?;
 
 	let cache_db_mutex = CACHE_DB.read().unwrap();
 	let cache_db = cache_db_mutex.as_ref().unwrap();
@@ -67,16 +71,11 @@ pub async fn read_cache_cover_async(
 		}
 	};
 
-	let format = match image.mime_type {
-		MimeType::Png => ImageFormat::Png,
-		MimeType::Jpeg => ImageFormat::Jpeg,
-		_ => return Err(nerr!("Unsupported image type")),
-	};
-
 	let image = match ImageReader::new(Cursor::new(image.data)).with_guessed_format() {
 		Ok(image) => image,
 		Err(e) => return Err(nerr!("Unable to guess image format: {}", e)),
 	};
+	let format_format = image.format();
 	let src_image = match image.decode() {
 		Ok(image_data) => image_data,
 		Err(e) => return Err(nerr!("Unable to decode image: {}", e)),
@@ -102,8 +101,8 @@ pub async fn read_cache_cover_async(
 	resizer.resize(&src_image, &mut dst_image, None).unwrap();
 
 	let mut result_buf = BufWriter::new(Vec::new());
-	let img_bytes = match format {
-		ImageFormat::Jpeg => {
+	let img_bytes = match format_format {
+		Some(ImageFormat::Jpeg) => {
 			let jpeg_result = JpegEncoder::new(&mut result_buf).write_image(
 				dst_image.buffer(),
 				dst_width,
@@ -126,7 +125,7 @@ pub async fn read_cache_cover_async(
 			};
 			bytes
 		}
-		ImageFormat::Png => {
+		Some(ImageFormat::Png) => {
 			let jpeg_result = PngEncoder::new(&mut result_buf).write_image(
 				dst_image.buffer(),
 				dst_width,
