@@ -12,6 +12,7 @@ pub struct Paths {
 	pub library_dir: PathBuf,
 	pub tracks_dir: PathBuf,
 	pub library_json: PathBuf,
+	pub cache_dir: PathBuf,
 	pub cache_db: PathBuf,
 	pub local_data_dir: PathBuf,
 }
@@ -20,6 +21,7 @@ impl Paths {
 		create_dir_all(&self.library_dir)?;
 		create_dir_all(&self.tracks_dir)?;
 		create_dir_all(&self.local_data_dir)?;
+		create_dir_all(&self.cache_dir)?;
 		return Ok(());
 	}
 }

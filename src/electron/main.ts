@@ -32,7 +32,9 @@ process.on('unhandledRejection', (error: Error) => {
 const app_data = app.getPath('appData')
 const local_data_path = process.env.LOCAL_DATA ? path.resolve(process.env.LOCAL_DATA) : null
 if (is.dev) {
-	const data_path = local_data_path ?? path.join(__dirname, '../../src-native/appdata/local_data')
+	const data_path =
+		local_data_path ??
+		path.join(__dirname, '../../src-native/appdata/LocalData/space.kasper.ferrum')
 	const electron_data_path = path.join(data_path, 'Electron Data')
 	app.setPath('userData', electron_data_path)
 } else {
