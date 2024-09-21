@@ -82,8 +82,20 @@ pub async fn read_cache_cover_async(
 		Err(e) => return Err(nerr!("Unable to decode image: {}", e)),
 	};
 
-	let dst_width = 84;
-	let dst_height = 84;
+	let src_width = src_image.width();
+	let src_height = src_image.height();
+
+	let max_size = 84;
+
+	let mut dst_width = max_size.min(src_width);
+	let mut dst_height = max_size.min(src_height);
+	if src_width > src_height {
+		dst_width = max_size;
+		dst_height = max_size * src_height / src_width;
+	} else if src_height > src_width {
+		dst_height = max_size;
+		dst_width = max_size * src_width / src_height;
+	}
 	let mut dst_image = Image::new(dst_width, dst_height, src_image.pixel_type().unwrap());
 
 	let mut resizer = Resizer::new();
