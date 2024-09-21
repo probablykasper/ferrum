@@ -94,6 +94,7 @@
 		dummy.style.scrollMarginBottom = offset + 'px'
 		main_element.prepend(dummy)
 		dummy.scrollIntoView({ behavior: 'instant', block: 'nearest' })
+		dummy.remove()
 	}
 </script>
 
