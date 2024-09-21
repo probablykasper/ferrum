@@ -3,7 +3,7 @@
 use super::tag::SetInfoError;
 use super::{generate_filename, Tag};
 use crate::library_types::Track;
-use crate::{str_to_option, UniResult};
+use crate::{get_now_timestamp, str_to_option, UniResult};
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::PathBuf;
@@ -198,6 +198,7 @@ pub fn update_track_info(
 	track.discCount = new_disc_count;
 	track.bpm = new_bpm.map(|n| n.into());
 	track.comments = new_comments;
+	track.dateModified = get_now_timestamp();
 
 	Ok(())
 }

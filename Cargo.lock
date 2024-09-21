@@ -54,6 +54,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "anyhow"
+version = "1.0.89"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "86fdf8605db99b54d3cd748a44c6d04df638eb5dafb219b135d0149bd0db01f6"
+
+[[package]]
 name = "atomicwrites"
 version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -324,6 +330,7 @@ name = "ferrum"
 version = "0.0.0"
 dependencies = [
  "alphanumeric-sort",
+ "anyhow",
  "atomicwrites",
  "dirs",
  "fast_image_resize",
@@ -622,6 +629,7 @@ version = "2.16.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "04409e8c2d61995696e44d2181b79b68c1dd41f7e24a17cde60bbd9f54ddddef"
 dependencies = [
+ "anyhow",
  "bitflags 2.6.0",
  "ctor",
  "napi-derive",

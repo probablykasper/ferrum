@@ -7,9 +7,8 @@
 
 	let track: Track
 	$: $track_metadata_updated, (track = methods.getTrack(id))
-	let success: boolean | null = null
 
-	$: filePath = join_paths(paths.tracksDir, track.file)
+	let success: boolean | null = null
 </script>
 
 <div class="box">
@@ -27,9 +26,13 @@
 		</svg>
 	{:else}
 		<img
-			class="cover pointer-events-none"
+			class="cover poinraer-events-none"
 			class:invisible={success === null}
-			src="trackimg:{filePath}?cache_db={paths.cacheDb}"
+			src="trackimg:?path={encodeURIComponent(
+				join_paths(paths.tracksDir, track.file),
+			)}&cache_db_path={encodeURIComponent(paths.cacheDb)}&date_modified={encodeURIComponent(
+				track.dateModified,
+			)}"
 			alt=""
 			on:load={() => {
 				success = true

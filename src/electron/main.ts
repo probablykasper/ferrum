@@ -77,21 +77,29 @@ app.whenReady().then(async () => {
 	protocol.handle('trackimg', (request) => {
 		return new Promise((resolve) => {
 			const url_raw = new URL(request.url)
-			const pathname = decodeURI(url_raw.pathname)
-			const cache_db_path = decodeURI(url_raw.searchParams.get('cache_db') ?? '')
+			const track_path = decodeURIComponent(url_raw.searchParams.get('path') ?? '')
+			const cache_db_path = decodeURIComponent(url_raw.searchParams.get('cache_db_path') ?? '')
+			const date_modified = decodeURIComponent(url_raw.searchParams.get('date_modified') ?? '')
 
 			addon
-				.read_cache_cover_async(pathname, 0, cache_db_path)
+				// .read_cache_cover_async(pathname, 0, Number(date_modified), cache_db_path)
+				.read_cache_cover_async(track_path, 0, parseInt(date_modified), cache_db_path)
 				.then((buffer) => {
 					if (buffer === null) {
 						resolve(new Response(null, { status: 404 }))
 					} else {
-						resolve(new Response(Buffer.from(buffer)))
+						resolve(
+							new Response(Buffer.from(buffer), {
+								headers: {
+									'Cache-Control': 'no-cache',
+								},
+							}),
+						)
 					}
 				})
 				.catch((error) => {
 					resolve(new Response(null, { status: 500 }))
-					console.log(`Could not read cover "${pathname}":`, error)
+					console.log(`Could not read cover "${track_path}":`, error)
 				})
 		})
 	})
