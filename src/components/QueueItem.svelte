@@ -26,7 +26,7 @@
 		</svg>
 	{:else}
 		<img
-			class="cover poinraer-events-none"
+			class="cover"
 			class:invisible={success === null}
 			src="trackimg:?path={encodeURIComponent(
 				join_paths(paths.tracksDir, track.file),
@@ -68,6 +68,7 @@
 		min-width: 42px
 		height: 42px
 		min-height: 42px
+		pointer-events: none
 	.invisible
 		opacity: 0
 	img
