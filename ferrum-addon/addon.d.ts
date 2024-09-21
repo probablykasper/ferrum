@@ -9,6 +9,7 @@ export interface PathsJs {
   libraryDir: string
   tracksDir: string
   libraryJson: string
+  cacheDb: string
   localDataDir: string
 }
 export declare function get_paths(): PathsJs
@@ -149,6 +150,10 @@ export declare function delete_tracks_in_open(indexesToDelete: Array<number>): v
 export declare function new_playlist(name: string, description: string, isFolder: boolean, parentId: string): void
 export declare function update_playlist(id: string, name: string, description: string): void
 export declare function move_playlist(id: string, fromId: string, toId: string, toIndex: number): void
+/** Returns `None` if the file does not have an image */
+export declare function get_modified_timestamp_ms(path: string): number | null
+/** Returns `None` if the file does not have an image */
+export declare function read_cache_cover_async(path: string, index: number, dateModifiedMs: number, cacheDbPath: string): Promise<Buffer | null>
 export interface TrackMd {
   name: string
   artist: string

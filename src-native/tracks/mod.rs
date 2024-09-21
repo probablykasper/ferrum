@@ -7,6 +7,7 @@ use napi::{Env, JsArrayBuffer, JsBuffer, JsObject, Result, Task};
 use std::fs;
 use std::path::{Path, PathBuf};
 
+pub mod cover;
 pub mod import;
 mod md;
 mod tag;
@@ -89,7 +90,7 @@ impl Task for ReadCover {
 		let index = self.1;
 
 		let tag = Tag::read_from_path(path)?;
-		let image = match tag.get_image_consume(index) {
+		let image = match tag.get_image_consume(index)? {
 			Some(image) => image,
 			None => {
 				return Err(nerr!("No image"));
@@ -201,7 +202,7 @@ pub fn get_image(index: u32, env: Env) -> Result<Option<JsImage>> {
 		Some(tag) => tag,
 		None => return Ok(None),
 	};
-	let img = match tag.get_image_ref(index as usize) {
+	let img = match tag.get_image_ref(index as usize)? {
 		Some(image) => image,
 		None => return Ok(None),
 	};
@@ -209,7 +210,7 @@ pub fn get_image(index: u32, env: Env) -> Result<Option<JsImage>> {
 	let js_image = JsImage {
 		index: img.index,
 		total_images: img.total_images,
-		mime_type: img.mime_type,
+		mime_type: img.mime_type.to_string(),
 		data: env.create_buffer_copy(img.data)?.into_raw(),
 	};
 	Ok(Some(js_image))

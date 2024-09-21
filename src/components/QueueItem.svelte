@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { methods, paths, track_metadata_updated } from '@/lib/data'
-	import { fade } from 'svelte/transition'
 	import type { Track } from '../../ferrum-addon'
 	import { join_paths } from '@/lib/window'
 
@@ -8,16 +7,14 @@
 
 	let track: Track
 	$: $track_metadata_updated, (track = methods.getTrack(id))
-	let success: boolean | null = null
 
-	$: filePath = join_paths(paths.tracksDir, track.file)
+	let success: boolean | null = null
 </script>
 
 <div class="box">
 	{#if success === false}
 		<svg
 			class="cover"
-			in:fade={{ duration: 200 }}
 			xmlns="http://www.w3.org/2000/svg"
 			width="24"
 			height="24"
@@ -29,9 +26,13 @@
 		</svg>
 	{:else}
 		<img
-			class="cover pointer-events-none"
+			class="cover poinraer-events-none"
 			class:invisible={success === null}
-			src="trackimg:{filePath}"
+			src="trackimg:?path={encodeURIComponent(
+				join_paths(paths.tracksDir, track.file),
+			)}&cache_db_path={encodeURIComponent(paths.cacheDb)}&date_modified={encodeURIComponent(
+				track.dateModified,
+			)}"
 			alt=""
 			on:load={() => {
 				success = true
@@ -71,7 +72,6 @@
 		min-width: 42px
 		height: 42px
 		min-height: 42px
-		transition: 200ms opacity linear
 	.invisible
 		opacity: 0
 	img.cover

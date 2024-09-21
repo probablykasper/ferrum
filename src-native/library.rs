@@ -12,6 +12,8 @@ pub struct Paths {
 	pub library_dir: PathBuf,
 	pub tracks_dir: PathBuf,
 	pub library_json: PathBuf,
+	pub cache_dir: PathBuf,
+	pub cache_db: PathBuf,
 	pub local_data_dir: PathBuf,
 }
 impl Paths {
@@ -19,6 +21,7 @@ impl Paths {
 		create_dir_all(&self.library_dir)?;
 		create_dir_all(&self.tracks_dir)?;
 		create_dir_all(&self.local_data_dir)?;
+		create_dir_all(&self.cache_dir)?;
 		return Ok(());
 	}
 }
@@ -50,11 +53,8 @@ pub fn load_library(paths: &Paths) -> UniResult<Library> {
 				Err(err) => throw!("Error parsing library file: {:?}", err),
 			};
 			// Migrate version number to string
-			println!("---- PARSE LIBRARY");
 			if let Some(obj) = value.as_object_mut() {
-				println!("---- ob");
 				if let Some(version_field) = obj.get_mut("version") {
-					println!("---- ve");
 					if let Some(version) = version_field.as_number() {
 						if version.as_u64() == Some(1) {
 							*version_field = json!("1");

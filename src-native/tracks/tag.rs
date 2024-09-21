@@ -1,5 +1,5 @@
 use crate::{UniError, UniResult};
-use lofty::picture::Picture;
+use lofty::picture::{MimeType, Picture};
 use lofty::tag::ItemKey;
 use lofty::{file::TaggedFileExt, tag::Accessor, tag::TagExt};
 use std::io::Cursor;
@@ -29,17 +29,13 @@ impl From<SetInfoError> for UniError {
 }
 
 pub struct Image {
-	// i64 because napi doesn't support u64
-	pub index: i64,
-	pub total_images: i64,
-	pub mime_type: String,
 	pub data: Vec<u8>,
 }
 pub struct ImageRef<'a> {
 	// i64 because napi doesn't support u64
 	pub index: i64,
 	pub total_images: i64,
-	pub mime_type: String,
+	pub mime_type: MimeType,
 	pub data: &'a [u8],
 }
 
@@ -214,39 +210,32 @@ impl Tag {
 
 		Ok(())
 	}
-	pub fn get_image_ref(&self, index: usize) -> Option<ImageRef> {
+	pub fn get_image_ref(&self, index: usize) -> UniResult<Option<ImageRef>> {
 		let pictures = self.tag.pictures();
 		match pictures.get(index) {
 			Some(pic) => {
 				let data = pic.data();
-				Some(ImageRef {
+				Ok(Some(ImageRef {
 					index: index.try_into().expect("usize conv"),
 					total_images: pictures.len().try_into().expect("usize conv"),
 					data,
 					mime_type: match pic.mime_type() {
-						Some(mime_type) => mime_type.to_string(),
-						_ => return None,
+						Some(mime_type) => mime_type.clone(),
+						_ => throw!("No mime type"),
 					},
-				})
+				}))
 			}
-			None => None,
+			None => Ok(None),
 		}
 	}
-	pub fn get_image_consume(mut self, index: usize) -> Option<Image> {
-		let pictures_len = self.tag.pictures().len();
+	pub fn get_image_consume(mut self, index: usize) -> UniResult<Option<Image>> {
 		if self.tag.picture_count() <= index.try_into().expect("usize conv") {
-			return None;
+			return Ok(None);
 		}
 		let pic = self.tag.remove_picture(index);
-		Some(Image {
-			index: index.try_into().expect("usize conv"),
-			total_images: pictures_len.try_into().expect("usize conv"),
-			mime_type: match pic.mime_type() {
-				Some(mime_type) => mime_type.to_string(),
-				_ => return None,
-			},
+		Ok(Some(Image {
 			data: pic.into_data(),
-		})
+		}))
 	}
 	pub fn remove_image(&mut self, index: usize) -> Picture {
 		self.tag.remove_picture(index)

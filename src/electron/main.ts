@@ -32,7 +32,9 @@ process.on('unhandledRejection', (error: Error) => {
 const app_data = app.getPath('appData')
 const local_data_path = process.env.LOCAL_DATA ? path.resolve(process.env.LOCAL_DATA) : null
 if (is.dev) {
-	const data_path = local_data_path ?? path.join(__dirname, '../../src-native/appdata/local_data')
+	const data_path =
+		local_data_path ??
+		path.join(__dirname, '../../src-native/appdata/LocalData/space.kasper.ferrum')
 	const electron_data_path = path.join(data_path, 'Electron Data')
 	app.setPath('userData', electron_data_path)
 } else {
@@ -74,18 +76,28 @@ app.whenReady().then(async () => {
 		callback(path)
 	})
 
-	protocol.registerBufferProtocol('trackimg', (request, callback) => {
-		const url = decodeURI(request.url)
-		const path = url.substring(9)
-		addon
-			.read_cover_async_path(path, 0)
-			.then((buffer) => {
-				callback(Buffer.from(buffer))
-			})
-			.catch((error) => {
-				callback({ error: 500 })
-				console.log('Could not read cover', error)
-			})
+	protocol.handle('trackimg', (request) => {
+		return new Promise((resolve) => {
+			const url_raw = new URL(request.url)
+			const track_path = decodeURIComponent(url_raw.searchParams.get('path') ?? '')
+			const cache_db_path = decodeURIComponent(url_raw.searchParams.get('cache_db_path') ?? '')
+			const date_modified = decodeURIComponent(url_raw.searchParams.get('date_modified') ?? '')
+
+			addon
+				// .read_cache_cover_async(pathname, 0, Number(date_modified), cache_db_path)
+				.read_cache_cover_async(track_path, 0, parseInt(date_modified), cache_db_path)
+				.then((buffer) => {
+					if (buffer === null) {
+						resolve(new Response(null, { status: 404 }))
+					} else {
+						resolve(new Response(Buffer.from(buffer)))
+					}
+				})
+				.catch((error) => {
+					resolve(new Response(null, { status: 500 }))
+					console.log(`Could not read cover "${track_path}":`, error)
+				})
+		})
 	})
 
 	session.defaultSession.webRequest.onHeadersReceived((details, callback) => {

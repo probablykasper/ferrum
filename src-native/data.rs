@@ -7,6 +7,7 @@ use crate::tracks::Tag;
 use crate::view_options::ViewOptions;
 use crate::{page, UniResult};
 use atomicwrites::{AllowOverwrite, AtomicFile};
+use dirs_next;
 use napi::Result;
 use serde::Serialize;
 use std::collections::HashSet;
@@ -17,7 +18,6 @@ use std::time::Instant;
 
 pub struct Data {
 	pub paths: Paths,
-	pub is_dev: bool,
 	pub library: Library,
 	pub view_options: ViewOptions,
 	/// All tracks on the current page, even if they are filtered out
@@ -70,47 +70,39 @@ impl Data {
 		if is_dev {
 			println!("Starting in dev mode");
 		}
-		let paths = if is_dev {
-			let library_dir = match library_path {
-				Some(path) => PathBuf::from(path),
-				None => env::current_dir()
-					.unwrap()
-					.join("src-native")
-					.join("appdata")
-					.join("Library"),
-			};
-			Paths {
-				library_dir: library_dir.clone(),
-				tracks_dir: library_dir.join("Tracks"),
-				library_json: library_dir.join("Library.json"),
-				local_data_dir: match local_data_path {
-					Some(path) => PathBuf::from(path),
-					None => env::current_dir()
-						.unwrap()
-						.join("src-native")
-						.join("appdata")
-						.join("local_data"),
-				},
-			}
+
+		let library_dir;
+		let cache_dir;
+		let local_data_dir;
+		if is_dev {
+			let appdata_dev = env::current_dir().unwrap().join("src-native/appdata");
+			library_dir = appdata_dev.join("Library");
+			cache_dir = appdata_dev.join("Caches");
+			local_data_dir = appdata_dev.join("LocalData/space.kasper.ferrum");
 		} else {
-			let library_dir = match library_path {
+			library_dir = dirs_next::audio_dir()
+				.ok_or("Music folder not found")?
+				.join("Ferrum");
+			cache_dir = dirs_next::cache_dir()
+				.ok_or("Cache folder not found")?
+				.join("space.kasper.ferrum");
+			local_data_dir = dirs_next::data_local_dir()
+				.ok_or("Local data folder not found")?
+				.join("space.kasper.ferrum");
+		};
+		let paths = Paths {
+			library_dir: match library_path {
 				Some(path) => PathBuf::from(path),
-				None => {
-					let music_dir = dirs::audio_dir().ok_or("Music folder not found")?;
-					music_dir.join("Ferrum")
-				}
-			};
-			Paths {
-				library_dir: library_dir.clone(),
-				tracks_dir: library_dir.join("Tracks"),
-				library_json: library_dir.join("Library.json"),
-				local_data_dir: match local_data_path {
-					Some(path) => PathBuf::from(path),
-					None => dirs::data_local_dir()
-						.ok_or("Local data folder not found")?
-						.join("space.kasper.ferrum"),
-				},
-			}
+				None => library_dir.clone(),
+			},
+			tracks_dir: library_dir.join("Tracks"),
+			library_json: library_dir.join("Library.json"),
+			cache_dir: cache_dir.clone(),
+			cache_db: cache_dir.join("Cache.redb"),
+			local_data_dir: match local_data_path {
+				Some(path) => PathBuf::from(path),
+				None => local_data_dir,
+			},
 		};
 
 		let loaded_library = load_library(&paths)?;
@@ -118,7 +110,6 @@ impl Data {
 		let artists = load_artists(&loaded_library);
 
 		let mut data = Data {
-			is_dev,
 			paths,
 			library: loaded_library,
 			artists,

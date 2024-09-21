@@ -6,6 +6,7 @@
 - Preserve "Up next" when starting a new playback
 - Add playback history to queue panel
 - Add "Clear" button to "Up next" in queue panel
+- Make cover artworks load fast in the queue panel by caching them
 - Redesign queue panel
 - Add queue panel slide-out transition
 - Add `Ctrl+Tab` and `Ctrl+Shift+Tab` to select next/previous playlist
