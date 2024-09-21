@@ -8,17 +8,15 @@ use lazy_static::lazy_static;
 use lofty::picture::MimeType;
 use napi::bindgen_prelude::Buffer;
 use napi::Result;
-// use redb::{Database, DatabaseError, TableDefinition};
 use redb::{Database, TableDefinition};
 use std::io::{BufWriter, Cursor};
 use std::path::PathBuf;
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, RwLock};
 
 const IMG_CACHE_TABLE: TableDefinition<&str, Vec<u8>> = TableDefinition::new("img_cache");
 
 lazy_static! {
-	// static ref CACHE_DB: Arc<Mutex<CacheDb>> = Arc::new(Mutex::new(CacheDb::open()));
-	static ref CACHE_DB: Arc<Mutex<Option<Database>>> = Arc::new(Mutex::new(None));
+	static ref CACHE_DB: Arc<RwLock<Option<Database>>> = Arc::new(RwLock::new(None));
 }
 
 #[napi(js_name = "read_cache_cover_async")]
@@ -29,10 +27,11 @@ pub async fn read_cache_cover_async(
 	index: u16,
 	cache_db_path: String,
 ) -> Result<Option<Buffer>> {
-	let mut cache_db_mutex = CACHE_DB.lock().unwrap();
-	let cache_db = match cache_db_mutex.as_ref() {
-		Some(db) => db,
-		None => {
+	let cache_db_mutex = CACHE_DB.read().unwrap();
+	if cache_db_mutex.is_none() {
+		drop(cache_db_mutex);
+		let mut cache_db_mutex = CACHE_DB.write().unwrap();
+		if cache_db_mutex.is_none() {
 			let db = match Database::create(&cache_db_path) {
 				Ok(db) => db,
 				Err(err) => panic!("Could not load image cache: {}", err),
@@ -43,11 +42,13 @@ pub async fn read_cache_cover_async(
 				init_txn.open_table(IMG_CACHE_TABLE).unwrap();
 			}
 			init_txn.commit().unwrap();
-			println!("Initializing Cache.redb");
 			*cache_db_mutex = Some(db);
-			cache_db_mutex.as_ref().unwrap()
+			println!("Initialized Cache.redb");
 		}
-	};
+	}
+
+	let cache_db_mutex = CACHE_DB.read().unwrap();
+	let cache_db = cache_db_mutex.as_ref().unwrap();
 	let read_txn = cache_db.begin_read().unwrap();
 	{
 		let table = read_txn.open_table(IMG_CACHE_TABLE).unwrap();
