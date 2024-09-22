@@ -21,6 +21,7 @@
 - Fix button edge not clickable due to zoom
 - Fix dragging of covers in queue
 - Make draglines stable during scroll
+- Fix importing of playlist likes/dislikes from Apple Music. Any previously imported likes/dislikes are lost.
 
 ## 0.18.0 - 2024 Jun 7
 - Add arm64 support for macOS and Windows
