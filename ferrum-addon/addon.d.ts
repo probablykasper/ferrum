@@ -82,7 +82,7 @@ export interface Playlist {
   originalId?: string
   dateImported?: MsSinceUnixEpoch
   dateCreated?: MsSinceUnixEpoch
-  tracks: Array<TrackID>
+  tracks: Array<PlaylistItemId>
 }
 export interface Folder {
   id: TrackListID

@@ -5,6 +5,7 @@ use linked_hash_map::LinkedHashMap;
 use nanoid::nanoid;
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
+use std::sync::RwLock;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(deny_unknown_fields)]
@@ -280,6 +281,33 @@ fn is_false(value: &bool) -> bool {
 	*value
 }
 
+// These are used to give each playlist entry an ID. This is for example helpful to keep track of a user's selection. These IDs are unique across the entire library, so that it works for folders folders.
+type ItemId = u32;
+pub static PLAYLIST_TRACK_ID_MAP: RwLock<Vec<String>> = RwLock::new(Vec::new());
+
+pub fn new_item_ids_from_track_ids(track_ids: &[TrackID]) -> Vec<ItemId> {
+	let mut playlist_track_id_map = PLAYLIST_TRACK_ID_MAP.write().unwrap();
+	let playlist_track_ids: Vec<u32> = track_ids
+		.iter()
+		.map(|track_id| {
+			let new_index = playlist_track_id_map.len();
+			playlist_track_id_map.push(track_id.clone());
+			new_index as u32
+		})
+		.collect();
+	assert_eq!(playlist_track_ids.len(), track_ids.len());
+	assert!(playlist_track_id_map.len() < u32::MAX as usize);
+	playlist_track_ids
+}
+
+pub fn get_track_ids_from_item_ids(playlist_item_ids: &[ItemId]) -> Vec<TrackID> {
+	let playlist_track_id_map = PLAYLIST_TRACK_ID_MAP.read().unwrap();
+	playlist_item_ids
+		.iter()
+		.map(|playlist_item_id| playlist_track_id_map[*playlist_item_id as usize].clone())
+		.collect()
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[napi(object)]
 pub struct Playlist {
@@ -299,7 +327,37 @@ pub struct Playlist {
 	pub dateImported: Option<MsSinceUnixEpoch>,
 	#[serde(default, skip_serializing_if = "Option::is_none")]
 	pub dateCreated: Option<MsSinceUnixEpoch>,
-	pub tracks: Vec<TrackID>,
+	#[serde(
+		deserialize_with = "deserialize_playlist_ids",
+		serialize_with = "serialize_playlist_ids"
+	)]
+	pub tracks: Vec<ItemId>,
+}
+impl Playlist {
+	pub fn get_track_ids(&self) -> Vec<TrackID> {
+		get_track_ids_from_item_ids(&self.tracks)
+	}
+}
+
+// Deserialize list of strings into list of numbers
+fn deserialize_playlist_ids<'de, D>(deserializer: D) -> Result<Vec<ItemId>, D::Error>
+where
+	D: serde::Deserializer<'de>,
+{
+	let track_ids: Vec<String> = serde::Deserialize::deserialize(deserializer)?;
+	let playlist_track_ids = new_item_ids_from_track_ids(&track_ids);
+	Ok(playlist_track_ids)
+}
+
+fn serialize_playlist_ids<S>(
+	playlist_track_ids: &[ItemId],
+	serializer: S,
+) -> Result<S::Ok, S::Error>
+where
+	S: serde::Serializer,
+{
+	let track_ids = get_track_ids_from_item_ids(playlist_track_ids);
+	track_ids.serialize(serializer)
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]

@@ -1,6 +1,8 @@
 use crate::data_js::get_data;
 use crate::get_now_timestamp;
-use crate::library_types::{CountObject, Folder, Library, Playlist, Track, TrackList};
+use crate::library_types::{
+	new_item_ids_from_track_ids, CountObject, Folder, Library, Playlist, Track, TrackList,
+};
 use crate::tracks::generate_filename;
 use crate::tracks::import::{read_file_metadata, FileType};
 use lofty::file::{AudioFile, TaggedFileExt};
@@ -573,7 +575,7 @@ fn import_playlist(
 			originalId: Some(xml_playlist.playlist_persistent_id.clone()),
 			dateImported: Some(start_time),
 			dateCreated: None,
-			tracks: track_ids,
+			tracks: new_item_ids_from_track_ids(&track_ids),
 		});
 		// immediately insert into library so new generated ids are unique
 		library.trackLists.insert(id.clone(), tracklist);

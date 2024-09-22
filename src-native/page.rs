@@ -2,7 +2,9 @@ use crate::data::Data;
 use crate::data_js::get_data;
 use crate::js::nerr;
 use crate::library::{get_track_field_type, TrackField};
-use crate::library_types::{SpecialTrackListName, Track, TrackID, TrackList};
+use crate::library_types::{
+	SpecialTrackListName, Track, TrackID, TrackList, PLAYLIST_TRACK_ID_MAP,
+};
 use crate::sort::sort;
 use crate::{filter, UniResult};
 use napi::{Env, JsString, JsUndefined, JsUnknown, Result};
@@ -66,10 +68,11 @@ pub fn get_page_track_ids(env: Env) -> Result<Vec<TrackID>> {
 fn get_tracklist_track_ids(data: &Data, playlist_id: &str) -> UniResult<Vec<TrackID>> {
 	match data.library.get_tracklist(playlist_id)? {
 		TrackList::Playlist(playlist) => {
+			let id_map = PLAYLIST_TRACK_ID_MAP.read().unwrap();
 			let ids = playlist
 				.tracks
 				.iter()
-				.map(|track_id| track_id.to_string())
+				.map(|item_id| id_map[*item_id as usize].clone())
 				.collect();
 			Ok(ids)
 		}

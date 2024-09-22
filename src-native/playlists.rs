@@ -1,6 +1,9 @@
 use crate::data::Data;
 use crate::data_js::get_data;
-use crate::library_types::{Library, SpecialTrackListName, TrackID, TrackList};
+use crate::library_types::{
+	new_item_ids_from_track_ids, Library, SpecialTrackListName, TrackID, TrackList,
+	PLAYLIST_TRACK_ID_MAP,
+};
 use crate::{str_to_option, UniResult};
 use napi::{Env, JsUnknown, Result};
 use std::collections::{HashMap, HashSet};
@@ -148,14 +151,15 @@ pub fn delete_track_list_js(id: String, env: Env) -> Result<()> {
 
 #[napi(js_name = "add_tracks_to_playlist")]
 #[allow(dead_code)]
-pub fn add_tracks(playlist_id: String, mut track_ids: Vec<String>, env: Env) -> Result<()> {
+pub fn add_tracks(playlist_id: String, track_ids: Vec<String>, env: Env) -> Result<()> {
 	let data: &mut Data = get_data(&env)?;
 	let playlist = match data.library.get_tracklist_mut(&playlist_id)? {
 		TrackList::Playlist(playlist) => playlist,
 		TrackList::Folder(_) => throw!("Cannot add track to folder"),
 		TrackList::Special(_) => throw!("Cannot add track to special playlist"),
 	};
-	playlist.tracks.append(&mut track_ids);
+	let mut new_item_ids = new_item_ids_from_track_ids(&track_ids);
+	playlist.tracks.append(&mut new_item_ids);
 	return Ok(());
 }
 
@@ -168,7 +172,7 @@ pub fn filter_duplicates(playlist_id: String, ids: Vec<String>, env: Env) -> Res
 		TrackList::Playlist(playlist) => playlist,
 		_ => throw!("Cannot check if folder/special contains track"),
 	};
-	for track in &playlist.tracks {
+	for track in &playlist.get_track_ids() {
 		if track_ids.contains(track) {
 			track_ids.remove(track);
 		}
@@ -210,12 +214,15 @@ pub fn remove_from_open(mut indexes_to_remove: Vec<u32>, env: Env) -> Result<()>
 }
 
 fn remove_from_all_playlists(library: &mut Library, id: &str) {
+	let track_id_map = PLAYLIST_TRACK_ID_MAP.read().unwrap();
 	for (_, tracklist) in &mut library.trackLists {
 		let playlist = match tracklist {
 			TrackList::Playlist(playlist) => playlist,
 			_ => continue,
 		};
-		playlist.tracks.retain(|current_id| current_id != id);
+		playlist
+			.tracks
+			.retain(|current_id| track_id_map[*current_id as usize] != id);
 	}
 }
 
