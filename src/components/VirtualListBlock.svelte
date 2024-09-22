@@ -21,7 +21,7 @@
 	/** Must be a positioned element, like `position: relative` */
 	export let scroll_container: HTMLElement
 	export let get_key: (item: X, i: number) => number | string = (_, i) => i
-	export let buffer = 0
+	export let buffer = 3
 
 	$: height = items.length * item_height
 	$: buffer_height = buffer * item_height

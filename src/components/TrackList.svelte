@@ -25,6 +25,7 @@
 	import VirtualListBlock, { scroll_container_keydown } from './VirtualListBlock.svelte'
 	import { open_track_info } from './TrackInfo.svelte'
 	import type { Track } from 'ferrum-addon/addon'
+	import Cover from './Cover.svelte'
 
 	let tracklist_element: HTMLDivElement
 	export let params: { playlist_id: string }
@@ -209,7 +210,7 @@
 
 	type Column = {
 		name: string
-		key: 'index' | keyof Track
+		key: 'index' | 'image' | keyof Track
 		width?: string
 	}
 	const all_columns: Column[] = [
@@ -234,6 +235,7 @@
 		{ name: 'Time', key: 'duration' },
 		{ name: 'Genre', key: 'genre', width: '65%' },
 		{ name: 'Grouping', key: 'grouping', width: '65%' },
+		{ name: 'Image', key: 'image' },
 		// { name: 'ImportedFrom', key: 'importedFrom' },
 		// { name: 'Liked', key: 'liked' },
 		{ name: 'Name', key: 'name', width: '170%' },
@@ -253,6 +255,7 @@
 	]
 	const default_columns: Column['key'][] = [
 		'index',
+		'image',
 		'name',
 		'playCount',
 		'duration',
@@ -386,7 +389,7 @@
 				on:dragover={(e) => on_col_drag_over(e, i)}
 				on:drop={col_drop_handler}
 			>
-				<span>{column.name}</span>
+				<span>{column.key === 'image' ? '' : column.name}</span>
 			</div>
 		{/each}
 		<div
@@ -412,6 +415,7 @@
 			item_height={24}
 			{scroll_container}
 			let:item={i}
+			buffer={5}
 		>
 			{@const track = get_item(i)}
 			{#if track !== null}
@@ -456,6 +460,8 @@
 								{track.duration ? get_duration(track.duration) : ''}
 							{:else if column.key === 'dateAdded'}
 								{format_date(track.dateAdded)}
+							{:else if column.key === 'image'}
+								<Cover {track} />
 							{:else}
 								{track[column.key] || ''}
 							{/if}
@@ -527,24 +533,26 @@
 			padding-left: 0px
 			padding-right: 10px
 			text-align: right
+			flex-shrink: 0
 	.selected .index svg.playing-icon
 		fill: var(--icon-color)
 	.index
 		width: 46px
-		flex-shrink: 0
 		svg.playing-icon
 			fill: #00ffff
 			width: 16px
 			height: 100%
+	.image
+		width: 18px
+		flex-shrink: 0
+		box-sizing: content-box
 	.playCount, .skipCount
 		width: 52px
-		flex-shrink: 0
 	.duration
 		width: 50px
-		flex-shrink: 0
 	.dateAdded
-		flex-shrink: 0
 		width: 140px
+		flex-shrink: 0
 		font-variant-numeric: tabular-nums
 	.year
 		width: 0px

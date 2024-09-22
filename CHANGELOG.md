@@ -12,14 +12,14 @@
 - Add `Ctrl+Tab` and `Ctrl+Shift+Tab` to select next/previous playlist
 - Add `Back` and `Forward` shortcuts
 - Add ability to rearrange, hide & show columns
-- Add columns: Album Artist, Composer, Grouping, BPM
+- Add columns: Image, Album Artist, Composer, Grouping, BPM
 - Make time & volume sliders look ok
 - Small design updates to tracklist header & filter textbox
 - Respect user's locale time
 - Make sidebar not focusable by mouse
 - Fix dragging tracks to up next/autoplay queue boundary
 - Fix button edge not clickable due to zoom
-- Fix rearranging queue items not working when dragging the cover artwork
+- Fix dragging of covers in queue
 - Make draglines stable during scroll
 
 ## 0.18.0 - 2024 Jun 7
