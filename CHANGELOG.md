@@ -3,16 +3,16 @@
 ## Next
 - Drop support for Windows 7 and 8
 - Drop support for macOS 10.13 and 10.14
-- Preserve "Up next" when starting a new playback
 - Add playback history to queue panel
-- Add "Clear" button to "Up next" in queue panel
+- Add ability to rearrange, hide & show columns
+- Add columns: Image, Album Artist, Composer, Grouping, BPM
 - Make cover artworks load fast in the queue panel by caching them
+- Preserve "Up next" when starting a new playback
+- Add "Clear" button to "Up next" in queue panel
 - Redesign queue panel
 - Add queue panel slide-out transition
 - Add `Ctrl+Tab` and `Ctrl+Shift+Tab` to select next/previous playlist
 - Add `Back` and `Forward` shortcuts
-- Add ability to rearrange, hide & show columns
-- Add columns: Image, Album Artist, Composer, Grouping, BPM
 - Make time & volume sliders look ok
 - Small design updates to tracklist header & filter textbox
 - Respect user's locale time
