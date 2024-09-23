@@ -14,20 +14,22 @@ import type { ShowTrackMenuOptions } from '@/electron/typed_ipc'
 import { current_playlist_id } from '@/components/TrackList.svelte'
 
 export async function show_track_menu(
-	all_id: string[],
+	all_ids: string[],
 	selected_indexes: number[],
 	playlist?: { editable: boolean },
 	queue = false,
 ) {
 	const track_lists = get(track_lists_details_map)
 	const flat = flatten_child_lists(track_lists.root, track_lists, '')
+
 	const args: ShowTrackMenuOptions = {
-		allIds: all_id,
+		allIds: all_ids,
 		selectedIndexes: selected_indexes,
 		playlist,
 		queue,
 		lists: flat,
 	}
+	console.log('args.allids', args.allIds)
 
 	await ipc_renderer.invoke('showTrackMenu', args)
 }

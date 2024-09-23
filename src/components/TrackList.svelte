@@ -28,6 +28,7 @@
 	import Header from './Header.svelte'
 	import { writable } from 'svelte/store'
 	import { SvelteSelection } from '@/lib/selection-new'
+	import { show_track_menu } from '@/lib/menus'
 
 	let tracklist_element: HTMLDivElement
 
@@ -36,7 +37,6 @@
 	$: {
 		$current_playlist_id = params.playlist_id
 	}
-	$: tracklist = $track_lists_details_map[params.playlist_id]
 
 	$: tracks_page = methods.get_tracks_page({
 		playlistId: params.playlist_id,
@@ -51,13 +51,16 @@
 		scroll_to_item(i) {
 			tracklist_actions.scroll_to_index?.(i)
 		},
-		async on_context_menu() {
-			// const indexes = selection.getSelectedIndexes()
-			// const ids = page.get_track_ids()
-			// await show_track_menu(ids, indexes, { editable: get(page).tracklist.type === 'playlist' })
+		async on_contextmenu(selected_track_indexes) {
+			await show_track_menu(tracks_page.trackIds, [...selected_track_indexes], {
+				editable: tracks_page.playlistKind === 'playlist',
+			})
 		},
 	})
-	$: selection.update_all_items(track_indexes)
+	$: {
+		selection.clear()
+		selection.update_all_items(track_indexes)
+	}
 
 	const track_action_unlisten = ipc_listen('selectedTracksAction', (_, action) => {
 		// let first_index = selection.findFirst()
@@ -118,7 +121,7 @@
 			check_shortcut(e, 'Backspace') &&
 			$selection.size > 0 &&
 			!$filter &&
-			tracklist.kind === 'playlist'
+			tracks_page.playlistKind === 'playlist'
 		) {
 			e.preventDefault()
 			// const s = $selection.count > 1 ? 's' : ''
@@ -173,7 +176,12 @@
 	}
 	let drag_to_index: null | number = null
 	function on_drag_over(e: DragEvent, index: number) {
-		if (!$sort_desc || $sort_key !== 'index' || $filter || tracklist.kind !== 'playlist') {
+		if (
+			!$sort_desc ||
+			$sort_key !== 'index' ||
+			$filter ||
+			tracks_page.playlistKind !== 'playlist'
+		) {
 			drag_to_index = null
 			return
 		}
@@ -378,11 +386,11 @@
 	}
 </script>
 
-{#if tracklist.id === 'root'}
+{#if params.playlist_id === 'root'}
 	<Header title="Songs" subtitle="{tracks_page.trackIds.length} songs" description={undefined} />
 {:else}
 	<Header
-		title={tracklist.name}
+		title={tracks_page.playlistName}
 		subtitle="{tracks_page.trackIds.length} songs"
 		description={tracks_page.playlistDescription}
 	/>

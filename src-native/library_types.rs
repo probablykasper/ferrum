@@ -268,6 +268,13 @@ pub enum TrackList {
 }
 
 impl TrackList {
+	pub fn kind(&self) -> &str {
+		match self {
+			TrackList::Playlist(_) => "playlist",
+			TrackList::Folder(_) => "folder",
+			TrackList::Special(_) => "special",
+		}
+	}
 	pub fn id(&self) -> &str {
 		match self {
 			TrackList::Playlist(list) => &list.id,

@@ -114,6 +114,7 @@ export interface TracksPageOptions {
   groupAlbumTracks: boolean
 }
 export interface TracksPage {
+  playlistKind: string
   playlistName: string
   playlistDescription?: string
   playlistLength: number

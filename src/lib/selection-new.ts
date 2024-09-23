@@ -1,9 +1,9 @@
 import { writable, type Updater, type Writable } from 'svelte/store'
 import { check_mouse_shortcut, check_shortcut } from './helpers'
 
-type SelectionOptions = {
+type SelectionOptions<T> = {
 	scroll_to_item: (index: number) => void
-	on_contextmenu: () => void
+	on_contextmenu: (items: Set<T>) => void
 }
 
 class Selection<T> {
@@ -19,13 +19,13 @@ class Selection<T> {
 	/** Whether the user is current mouseup is a click or a selection update */
 	possible_row_click = false
 
-	scroll_to_item: SelectionOptions['scroll_to_item']
-	on_context_menu: SelectionOptions['on_contextmenu']
+	scroll_to_item: SelectionOptions<T>['scroll_to_item']
+	on_contextmenu: SelectionOptions<T>['on_contextmenu']
 
-	constructor(all_items: T[], options: SelectionOptions) {
+	constructor(all_items: T[], options: SelectionOptions<T>) {
 		this.all = all_items
 		this.scroll_to_item = options.scroll_to_item
-		this.on_context_menu = options.on_contextmenu
+		this.on_contextmenu = options.on_contextmenu
 	}
 
 	clear() {
@@ -242,7 +242,7 @@ class Selection<T> {
 	}
 	handle_contextmenu(e: MouseEvent, index: number) {
 		this.mouse_down_select(e, index)
-		this.on_context_menu()
+		this.on_contextmenu(this.items)
 	}
 	handle_click(e: MouseEvent, index: number) {
 		if (this.possible_row_click && e.button === 0) {
@@ -297,7 +297,7 @@ export class SvelteSelection<T> {
 	readonly selection: Selection<T>
 	readonly store: Writable<Set<T>>
 	readonly subscribe: typeof this.store.subscribe
-	constructor(all_items: T[], options: SelectionOptions) {
+	constructor(all_items: T[], options: SelectionOptions<T>) {
 		this.selection = new Selection(all_items, options)
 		this.store = writable(this.selection.items)
 		this.subscribe = this.store.subscribe

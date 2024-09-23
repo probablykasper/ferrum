@@ -21,6 +21,7 @@ pub struct TracksPageOptions {
 
 #[napi(object)]
 pub struct TracksPage {
+	pub playlist_kind: String,
 	pub playlist_name: String,
 	pub playlist_description: Option<String>,
 	pub playlist_length: u32,
@@ -37,18 +38,21 @@ pub fn get_tracks_page(options: TracksPageOptions, env: Env) -> Result<TracksPag
 	let track_ids = filter(track_ids, options.filter_query, &data.library);
 	let track_page = match tracklist {
 		TrackList::Playlist(playlist) => TracksPage {
+			playlist_kind: tracklist.kind().to_string(),
 			playlist_name: playlist.name.clone(),
 			playlist_description: playlist.description.clone(),
 			playlist_length: tracklist_length as u32,
 			track_ids,
 		},
 		TrackList::Folder(folder) => TracksPage {
+			playlist_kind: tracklist.kind().to_string(),
 			playlist_name: folder.name.clone(),
 			playlist_description: folder.description.clone(),
 			playlist_length: tracklist_length as u32,
 			track_ids,
 		},
 		TrackList::Special(special) => TracksPage {
+			playlist_kind: tracklist.kind().to_string(),
 			playlist_name: special.name.to_string(),
 			playlist_description: None,
 			playlist_length: tracklist_length as u32,
