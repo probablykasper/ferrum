@@ -27,7 +27,7 @@
 	import Cover from './Cover.svelte'
 	import Header from './Header.svelte'
 	import { writable } from 'svelte/store'
-	import { new_selection } from '@/lib/selection-new'
+	import { SvelteSelection } from '@/lib/selection-new'
 
 	let tracklist_element: HTMLDivElement
 
@@ -47,7 +47,7 @@
 	})
 	$: track_indexes = tracks_page.trackIds.map((_, i) => i)
 
-	let selection = new_selection({
+	let selection = new SvelteSelection(track_indexes, {
 		scroll_to_item(i) {
 			tracklist_actions.scroll_to_index?.(i)
 		},
@@ -107,39 +107,39 @@
 		// }
 	}
 	async function keydown(e: KeyboardEvent) {
-		// if (check_shortcut(e, 'Enter')) {
-		// 	let first_index = selection.findFirst()
-		// 	if (first_index !== null) {
-		// 		play_row(first_index)
-		// 	} else if (!$playing_id) {
-		// 		play_row(0)
-		// 	}
-		// } else if (
-		// 	check_shortcut(e, 'Backspace') &&
-		// 	$selection.count > 0 &&
-		// 	!$filter &&
-		// 	tracklist.kind === 'playlist'
-		// ) {
-		// 	e.preventDefault()
-		// 	const s = $selection.count > 1 ? 's' : ''
-		// 	const result = ipc_renderer.invoke('showMessageBox', false, {
-		// 		type: 'info',
-		// 		message: `Remove ${$selection.count} song${s} from the list?`,
-		// 		buttons: ['Remove Song' + s, 'Cancel'],
-		// 		defaultId: 0,
-		// 	})
-		// 	const indexes = selection.getSelectedIndexes()
-		// 	if ((await result).response === 0) {
-		// 		remove_from_open_playlist(indexes)
-		// 	}
-		// } else if (check_shortcut(e, 'Backspace', { cmd_or_ctrl: true }) && $selection.count > 0) {
-		// 	e.preventDefault()
-		// 	delete_indexes(selection.getSelectedIndexes())
-		// } else {
-		// 	selection.handleKeyDown(e)
-		// 	return
-		// }
-		// e.preventDefault()
+		if (check_shortcut(e, 'Enter')) {
+			// let first_index = selection.findFirst()
+			// if (first_index !== null) {
+			// 	play_row(first_index)
+			// } else if (!$playing_id) {
+			// 	play_row(0)
+			// }
+		} else if (
+			check_shortcut(e, 'Backspace') &&
+			$selection.size > 0 &&
+			!$filter &&
+			tracklist.kind === 'playlist'
+		) {
+			e.preventDefault()
+			// const s = $selection.count > 1 ? 's' : ''
+			// const result = ipc_renderer.invoke('showMessageBox', false, {
+			// 	type: 'info',
+			// 	message: `Remove ${$selection.count} song${s} from the list?`,
+			// 	buttons: ['Remove Song' + s, 'Cancel'],
+			// 	defaultId: 0,
+			// })
+			// const indexes = selection.getSelectedIndexes()
+			// if ((await result).response === 0) {
+			// 	remove_from_open_playlist(indexes)
+			// }
+		} else if (check_shortcut(e, 'Backspace', { cmd_or_ctrl: true }) && $selection.size > 0) {
+			e.preventDefault()
+			// delete_indexes(selection.getSelectedIndexes())
+		} else {
+			selection.handle_keydown(e)
+			return
+		}
+		e.preventDefault()
 	}
 
 	function play_row(index: number) {
@@ -463,7 +463,7 @@
 					on:drop={drop_handler}
 					on:dragend={drag_end_handler}
 					class:odd={i % 2 === 0}
-					class:selected={$selection.has(track.id)}
+					class:selected={$selection.has(i)}
 					class:playing={track.id === $playing_id}
 				>
 					{#each columns as column}

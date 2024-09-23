@@ -1,41 +1,34 @@
-import { writable, type Updater } from 'svelte/store'
+import { writable, type Updater, type Writable } from 'svelte/store'
+import { check_mouse_shortcut, check_shortcut } from './helpers'
 
 type SelectionOptions = {
 	scroll_to_item: (index: number) => void
 	on_context_menu: () => void
 }
 
-export class Selection<T> {
+class Selection<T> {
 	/** Currently selected items */
-	selection = new Set<T>()
-	selection_store = writable(this.selection)
-	subscribe = this.selection_store.subscribe
+	items = new Set<T>()
 	/** Full list of items that can be selected */
-	all: T[] = []
+	all: T[]
 	/** The last added index */
 	last_added: { index: number; item: T } | null = null
 	/** An anchor index for shift selection. */
 	shift_anchor: { index: number; item: T } | null = null
+	/** Whether the user is current mouseup is a click or a selection update */
+	possible_row_click = false
+
 	scroll_to_item: SelectionOptions['scroll_to_item']
 	on_context_menu: SelectionOptions['on_context_menu']
 
-	constructor(options: SelectionOptions) {
+	constructor(all_items: T[], options: SelectionOptions) {
+		this.all = all_items
 		this.scroll_to_item = options.scroll_to_item
 		this.on_context_menu = options.on_context_menu
 	}
 
-	set(new_selection: Set<T>) {
-		this.selection = new_selection
-		this.selection_store.set(new_selection)
-	}
-
-	update(updater: Updater<Set<T>>) {
-		this.selection = updater(this.selection)
-		this.selection_store.set(this.selection)
-	}
-
 	clear() {
-		this.selection = new Set()
+		this.items = new Set()
 		this.last_added = null
 		this.shift_anchor = null
 	}
@@ -45,85 +38,91 @@ export class Selection<T> {
 	update_all_items(all: T[]) {
 		let new_selection = new Set<T>()
 		for (const item of all) {
-			if (this.selection.has(item)) {
+			if (this.items.has(item)) {
 				new_selection.add(item)
 			}
 		}
 		this.all = all
-		this.selection = new_selection
-		if (this.last_added !== null && !this.selection.has(this.last_added.item)) {
+		this.items = new_selection
+		if (this.last_added !== null && !this.items.has(this.last_added.item)) {
 			this.last_added = null
 		}
-		if (this.shift_anchor !== null && !this.selection.has(this.shift_anchor.item)) {
+		if (this.shift_anchor !== null && !this.items.has(this.shift_anchor.item)) {
 			this.shift_anchor = null
 		}
 	}
 
-	get_shift_anchor() {
+	#get_shift_anchor() {
 		if (this.shift_anchor !== null) return this.shift_anchor
 		else return this.last_added
 	}
 
 	add_index(index: number) {
-		this.selection.add(this.all[index])
+		this.items.add(this.all[index])
+		this.last_added = { index, item: this.all[index] }
+		this.shift_anchor = null
+	}
+
+	#add_index_in_shift_mode(index: number) {
+		this.items.add(this.all[index])
 		this.last_added = { index, item: this.all[index] }
 	}
 
-	add_range(from_index: number, to_index: number) {
+	#add_index_range_in_shift_mode(from_index: number, to_index: number) {
 		// Direction here determines this.last_added
 		if (from_index < to_index) {
 			for (let i = from_index; i <= to_index; i++) {
-				this.add_index(i)
+				this.#add_index_in_shift_mode(i)
 			}
 		} else {
 			for (let i = from_index; i >= to_index; i--) {
-				this.add_index(i)
+				this.#add_index_in_shift_mode(i)
 			}
 		}
 	}
 
-	remove_range(from_i: number, to_i: number) {
+	#remove_range_in_shift_mode(from_i: number, to_i: number) {
 		if (from_i < to_i) {
 			for (let i = from_i; i <= to_i; i++) {
-				this.selection.delete(this.all[i])
+				this.items.delete(this.all[i])
 			}
 		} else {
 			for (let i = from_i; i >= to_i; i--) {
-				this.selection.delete(this.all[i])
+				this.items.delete(this.all[i])
 			}
 		}
 	}
 
 	/** Shift-select to index */
 	shift_select_to(to_index: number) {
-		const anchor = this.get_shift_anchor()
+		const anchor = this.#get_shift_anchor()
 		const last_added = this.last_added
 		if (last_added === null || anchor === null) {
-			return this.selection
+			return this.items
 		}
 
 		if (anchor.index < to_index) {
 			if (to_index < last_added.index) {
 				// Retract selection closer to anchor
-				this.remove_range(to_index + 1, last_added.index)
+				this.#remove_range_in_shift_mode(to_index + 1, last_added.index)
 			} else if (last_added.index < anchor.index) {
 				// New shift selection is on the other side of anchor
-				this.remove_range(anchor.index - 1, last_added.index)
-				this.add_range(anchor.index, to_index)
+				this.#remove_range_in_shift_mode(anchor.index - 1, last_added.index)
+				this.#add_index_range_in_shift_mode(anchor.index, to_index)
 			} else {
-				this.add_range(last_added.index, to_index)
+				this.#add_index_range_in_shift_mode(last_added.index, to_index)
 			}
 			this.last_added = { index: to_index, item: this.all[to_index] }
 		} else {
 			if (to_index > last_added.index) {
 				// Retract selection closer to anchor
-				this.remove_range(to_index - 1, last_added.index)
+				this.#remove_range_in_shift_mode(to_index - 1, last_added.index)
 			} else if (last_added.index > anchor.index) {
 				// New shift selection is on the other side of anchor
-				this.remove_range(anchor.index + 1, last_added.index)
-				this.add_range(anchor.index, to_index)
+				this.#remove_range_in_shift_mode(anchor.index + 1, last_added.index)
+				this.#add_index_range_in_shift_mode(anchor.index, to_index)
 			} else {
-				this.add_range(last_added.index, to_index)
+				this.#add_index_range_in_shift_mode(last_added.index, to_index)
 			}
 			this.last_added = { index: to_index, item: this.all[to_index] }
 		}
@@ -132,7 +131,7 @@ export class Selection<T> {
 
 	/** Get first selected index, or `null` if selection is empty */
 	find_first_index() {
-		const item_i = this.all.findIndex((item) => this.selection.has(item))
+		const item_i = this.all.findIndex((item) => this.items.has(item))
 		if (item_i === -1) {
 			return null
 		}
@@ -141,172 +140,207 @@ export class Selection<T> {
 
 	/** Replace selection with the previous index, like perssing `ArrowUp` in a list. */
 	go_backward() {
-		// selection.clear()
-		// store.update((selection) => {
-		// 	if (selection.count === 0) {
-		// 		addIndex(selection, maxIndex)
-		// 	} else if (selection.lastAdded !== null) {
-		// 		const newIndex = selection.lastAdded - 1
-		// 		selection = createEmpty()
-		// 		addIndex(selection, Math.max(0, newIndex))
-		// 	}
-		// 	return selection
-		// })
+		if (this.items.size === 0) {
+			this.add_index(this.all.length - 1)
+		} else if (this.last_added !== null) {
+			const prev_index = this.last_added.index - 1
+			this.clear()
+			this.add_index(Math.max(prev_index, 0))
+		}
 	}
 
 	/** Replace selection with the previous index, like perssing `ArrowDown` in a list. */
 	go_forward() {
-		// store.update((selection) => {
-		// 	if (selection.count === 0) {
-		// 		addIndex(selection, 0)
-		// 	} else if (selection.lastAdded !== null) {
-		// 		const newIndex = selection.lastAdded + 1
-		// 		selection = createEmpty()
-		// 		addIndex(selection, Math.min(newIndex, maxIndex))
-		// 	}
-		// 	return selection
-		// })
+		if (this.items.size === 0) {
+			this.add_index(0)
+		} else if (this.last_added !== null) {
+			const next_index = this.last_added.index + 1
+			this.clear()
+			this.add_index(Math.min(next_index, this.all.length - 1))
+		}
 	}
 	/** Expand or shrink selection backwards (shift+up) */
 	shift_select_backward() {
-		// store.update((selection) => {
-		// 	const anchor = getShiftAnchor(selection)
-		// 	selection.shiftAnchor = anchor
-		// 	if (anchor === null || selection.lastAdded === null) {
-		// 		return selection
-		// 	}
-		// 	if (selection.lastAdded <= anchor) {
-		// 		// add prev to selection
-		// 		for (let i = selection.lastAdded; i >= 0; i--) {
-		// 			if (selection.list[i] !== true) {
-		// 				addIndex(selection, i)
-		// 				return selection
-		// 			}
-		// 		}
-		// 	} else {
-		// 		// remove first from selection
-		// 		remove(selection, selection.lastAdded)
-		// 		selection.lastAdded -= 1
-		// 	}
-		// 	return selection
-		// })
+		const anchor = this.#get_shift_anchor()
+		this.shift_anchor = anchor
+		if (anchor === null || this.last_added === null) {
+			return
+		}
+		if (this.last_added.index <= anchor.index) {
+			// add prev to selection
+			for (let i = this.last_added.index; i >= 0; i--) {
+				if (!this.items.has(this.all[i])) {
+					this.#add_index_in_shift_mode(i)
+					return
+				}
+			}
+		} else {
+			// remove first from selection
+			this.items.delete(this.last_added.item)
+			this.last_added = {
+				index: this.last_added.index - 1,
+				item: this.all[this.last_added.index - 1],
+			}
+		}
 	}
-	/**
-	 * Expand or shrink selection forwards (shift+down).
-	 * - `maxIndex`: The maximum index to expand to
-	 */
-	shift_select_forward(maxIndex: number) {
-		// store.update((selection) => {
-		// 	const anchor = getShiftAnchor(selection)
-		// 	selection.shiftAnchor = anchor
-		// 	if (anchor === null || selection.lastAdded === null) {
-		// 		return selection
-		// 	}
-		// 	if (selection.lastAdded >= anchor) {
-		// 		// add next to selection
-		// 		for (let i = selection.lastAdded; i <= maxIndex; i++) {
-		// 			if (selection.list[i] !== true) {
-		// 				addIndex(selection, i)
-		// 				return selection
-		// 			}
-		// 		}
-		// 	} else {
-		// 		// remove last from selection
-		// 		remove(selection, selection.lastAdded)
-		// 		selection.lastAdded += 1
-		// 	}
-		// 	return selection
-		// })
+	/** Expand or shrink selection forwards (shift+down) */
+	shift_select_forward() {
+		const anchor = this.#get_shift_anchor()
+		this.shift_anchor = anchor
+		if (anchor === null || this.last_added === null) {
+			return
+		}
+		if (this.last_added.index >= anchor.index) {
+			// add next to selection
+			for (let i = this.last_added.index; i < this.all.length; i++) {
+				if (!this.items.has(this.all[i])) {
+					this.#add_index_in_shift_mode(i)
+					return
+				}
+			}
+		} else {
+			// remove last from selection
+			this.items.delete(this.last_added.item)
+			this.last_added = {
+				index: this.last_added.index + 1,
+				item: this.all[this.last_added.index + 1],
+			}
+		}
 	}
-	toggle(index: number) {
-		// store.update((selection) => {
-		// 	if (selection.list[index]) {
-		// 		if (selection.lastAdded === index) {
-		// 			selection.lastAdded = null
-		// 		}
-		// 		remove(selection, index)
-		// 	} else {
-		// 		addIndex(selection, index)
-		// 	}
-		// 	selection.shiftAnchor = null
-		// 	return selection
-		// })
+	#toggle(index: number) {
+		if (this.items.has(this.all[index])) {
+			if (this.last_added && this.last_added.item === this.all[index]) {
+				this.last_added = null
+			}
+			this.items.delete(this.all[index])
+		} else {
+			this.add_index(index)
+		}
+		this.shift_anchor = null
 	}
 
-	// mouse_down_select(e: MouseEvent, index: number) {
-	// 	const isSelected = store.get().list[index]
-	// 	if (check_mouse_shortcut(e) && !isSelected) {
-	// 		selection.clear()
-	// 		selection.add(index)
-	// 	} else if (check_mouse_shortcut(e, { cmd_or_ctrl: true }) && !isSelected) {
-	// 		selection.add(index)
-	// 	} else if (check_mouse_shortcut(e, { shift: true })) {
-	// 		selection.shift_select_to(index)
-	// 	}
-	// }
+	mouse_down_select(e: MouseEvent, index: number) {
+		const is_selected = this.items.has(this.all[index])
+		if (check_mouse_shortcut(e) && !is_selected) {
+			this.clear()
+			this.add_index(index)
+		} else if (check_mouse_shortcut(e, { cmd_or_ctrl: true }) && !is_selected) {
+			this.add_index(index)
+		} else if (check_mouse_shortcut(e, { shift: true })) {
+			this.shift_select_to(index)
+		}
+	}
 
 	handle_mouse_down(e: MouseEvent, index: number) {
-		// if (e.button !== 0) {
-		// 	return
-		// }
-		// if (store.get().list[index]) {
-		// 	possible_row_click = true
-		// }
-		// mouse_down_select(e, index)
+		if (e.button !== 0) {
+			return
+		}
+		if (this.items.has(this.all[index])) {
+			this.possible_row_click = true
+		}
+		this.mouse_down_select(e, index)
 	}
 	handle_contextmenu(e: MouseEvent, index: number) {
-		// mouse_down_select(e, index)
-		// options.on_context_menu()
+		this.mouse_down_select(e, index)
+		this.on_context_menu()
 	}
 	handle_click(e: MouseEvent, index: number) {
-		// if (possible_row_click && e.button === 0) {
-		// 	if (check_mouse_shortcut(e)) {
-		// 		selection.clear()
-		// 		selection.add(index)
-		// 	} else if (check_mouse_shortcut(e, { cmd_or_ctrl: true })) {
-		// 		selection.toggle(index)
-		// 	}
-		// }
-		// possible_row_click = false
+		if (this.possible_row_click && e.button === 0) {
+			if (check_mouse_shortcut(e)) {
+				this.clear()
+				this.add_index(index)
+			} else if (check_mouse_shortcut(e, { cmd_or_ctrl: true })) {
+				this.#toggle(index)
+			}
+		}
+		this.possible_row_click = false
 	}
 	handle_keydown(e: KeyboardEvent) {
-		// if (check_shortcut(e, 'Escape')) {
-		// 	selection.clear()
-		// } else if (check_shortcut(e, 'A', { cmd_or_ctrl: true })) {
-		// 	selection.add(0, options.getItemCount() - 1)
-		// } else if (check_shortcut(e, 'ArrowUp')) {
-		// 	selection.goBackward(options.getItemCount() - 1)
-		// 	options.scroll_to_item(store.get().lastAdded || 0)
-		// } else if (check_shortcut(e, 'ArrowUp', { shift: true })) {
-		// 	selection.shiftSelectBackward()
-		// 	options.scroll_to_item(store.get().lastAdded || 0)
-		// } else if (check_shortcut(e, 'ArrowUp', { alt: true })) {
-		// 	selection.clear()
-		// 	selection.add(0)
-		// 	options.scroll_to_item(0)
-		// } else if (check_shortcut(e, 'ArrowUp', { shift: true, alt: true })) {
-		// 	selection.shiftSelectTo(0)
-		// 	options.scroll_to_item(store.get().lastAdded || 0)
-		// } else if (check_shortcut(e, 'ArrowDown')) {
-		// 	selection.goForward(options.getItemCount() - 1)
-		// 	options.scroll_to_item(store.get().lastAdded || 0)
-		// } else if (check_shortcut(e, 'ArrowDown', { shift: true })) {
-		// 	selection.shiftSelectForward(options.getItemCount() - 1)
-		// 	options.scroll_to_item(store.get().lastAdded || 0)
-		// } else if (check_shortcut(e, 'ArrowDown', { alt: true })) {
-		// 	selection.clear()
-		// 	selection.add(options.getItemCount() - 1)
-		// 	options.scroll_to_item(store.get().lastAdded || 0)
-		// } else if (check_shortcut(e, 'ArrowDown', { shift: true, alt: true })) {
-		// 	selection.shiftSelectTo(options.getItemCount() - 1)
-		// 	options.scroll_to_item(store.get().lastAdded || 0)
-		// } else {
-		// 	return
-		// }
-		// e.preventDefault()
+		if (check_shortcut(e, 'Escape')) {
+			this.clear()
+		} else if (check_shortcut(e, 'A', { cmd_or_ctrl: true })) {
+			this.#add_index_range_in_shift_mode(0, this.all.length - 1)
+		} else if (check_shortcut(e, 'ArrowUp')) {
+			this.go_backward()
+			this.scroll_to_item(this.last_added?.index || 0)
+		} else if (check_shortcut(e, 'ArrowUp', { shift: true })) {
+			this.shift_select_backward()
+			this.scroll_to_item(this.last_added?.index || 0)
+		} else if (check_shortcut(e, 'ArrowUp', { alt: true })) {
+			this.clear()
+			this.add_index(0)
+			this.scroll_to_item(0)
+		} else if (check_shortcut(e, 'ArrowUp', { shift: true, alt: true })) {
+			this.shift_select_to(0)
+			this.scroll_to_item(this.last_added?.index || 0)
+		} else if (check_shortcut(e, 'ArrowDown')) {
+			this.go_forward()
+			this.scroll_to_item(this.last_added?.index || 0)
+		} else if (check_shortcut(e, 'ArrowDown', { shift: true })) {
+			this.shift_select_forward()
+			this.scroll_to_item(this.last_added?.index || 0)
+		} else if (check_shortcut(e, 'ArrowDown', { alt: true })) {
+			this.clear()
+			this.add_index(this.all.length - 1)
+			this.scroll_to_item(this.last_added?.index || 0)
+		} else if (check_shortcut(e, 'ArrowDown', { shift: true, alt: true })) {
+			this.shift_select_to(this.all.length - 1)
+			this.scroll_to_item(this.last_added?.index || 0)
+		} else {
+			return
+		}
+		e.preventDefault()
 	}
 }
 
-export function new_selection(options: SelectionOptions) {
-	return new Selection(options)
+export class SvelteSelection<T> {
+	readonly selection: Selection<T>
+	readonly store: Writable<Set<T>>
+	readonly subscribe: typeof this.store.subscribe
+	constructor(all_items: T[], options: SelectionOptions) {
+		this.selection = new Selection(all_items, options)
+		this.store = writable(this.selection.items)
+		this.subscribe = this.store.subscribe
+	}
+
+	clear() {
+		this.selection.clear()
+		this.store.set(this.selection.items)
+	}
+
+	update_all_items(all: T[]) {
+		this.selection.update_all_items(all)
+		this.store.set(this.selection.items)
+	}
+
+	shift_select_to(to_index: number) {
+		this.selection.shift_select_to(to_index)
+		this.store.set(this.selection.items)
+	}
+
+	find_first_index() {
+		this.selection.find_first_index()
+		this.store.set(this.selection.items)
+	}
+
+	mouse_down_select(e: MouseEvent, index: number) {
+		this.selection.mouse_down_select(e, index)
+		this.store.set(this.selection.items)
+	}
+	handle_mouse_down(e: MouseEvent, index: number) {
+		this.selection.handle_mouse_down(e, index)
+		this.store.set(this.selection.items)
+	}
+	handle_contextmenu(e: MouseEvent, index: number) {
+		this.selection.handle_contextmenu(e, index)
+		this.store.set(this.selection.items)
+	}
+	handle_click(e: MouseEvent, index: number) {
+		this.selection.handle_click(e, index)
+		this.store.set(this.selection.items)
+	}
+	handle_keydown(e: KeyboardEvent) {
+		this.selection.handle_keydown(e)
+		this.store.set(this.selection.items)
+	}
 }
