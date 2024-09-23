@@ -1,7 +1,6 @@
 <script lang="ts" context="module">
 	import {
 		track_lists_details_map,
-		page,
 		methods,
 		add_track_to_playlist,
 		move_playlist,
@@ -38,6 +37,7 @@
 	import { ipc_renderer } from '@/lib/window'
 	import { check_shortcut } from '@/lib/helpers'
 	import { navigate, url } from '@/lib/router'
+	import { current_playlist_id } from './TrackList.svelte'
 
 	export let show = true
 	export let parent_path: string | null
@@ -98,7 +98,7 @@
 			return
 		}
 
-		const selected_list = $track_lists_details_map[$page.tracklist.id]
+		const selected_list = $track_lists_details_map[$current_playlist_id]
 		if (check_shortcut(e, 'ArrowUp')) {
 			select_up(index)
 		} else if (check_shortcut(e, 'ArrowUp', { alt: true })) {

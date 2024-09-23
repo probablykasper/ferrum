@@ -1,13 +1,12 @@
+<script lang="ts" context="module">
+	export let current_playlist_id = writable('')
+	export const sort_key = writable('index')
+	export const sort_desc = writable(true)
+	export const group_album_tracks = writable(true)
+</script>
+
 <script lang="ts">
-	import {
-		page,
-		remove_from_open_playlist,
-		filter,
-		delete_tracks_in_open,
-		paths,
-		view_as_songs,
-		methods,
-	} from '../lib/data'
+	import { filter, paths, methods, track_lists_details_map, move_tracks } from '../lib/data'
 	import { new_playback_instance, playing_id } from '../lib/player'
 	import {
 		get_duration,
@@ -17,7 +16,7 @@
 		assert_unreachable,
 	} from '../lib/helpers'
 	import { append_to_user_queue, prepend_to_user_queue } from '../lib/queue'
-	import { selection, tracklist_actions } from '../lib/page'
+	import { tracklist_actions } from '../lib/page'
 	import { ipc_listen, ipc_renderer } from '../lib/window'
 	import { onDestroy, onMount } from 'svelte'
 	import { dragged } from '../lib/drag-drop'
@@ -26,43 +25,68 @@
 	import { open_track_info } from './TrackInfo.svelte'
 	import type { Track } from 'ferrum-addon/addon'
 	import Cover from './Cover.svelte'
+	import Header from './Header.svelte'
+	import { writable } from 'svelte/store'
+	import { new_selection } from '@/lib/selection-new'
 
 	let tracklist_element: HTMLDivElement
+
 	export let params: { playlist_id: string }
 
-	$: page.open_playlist(params.playlist_id, view_as_songs)
+	$: {
+		$current_playlist_id = params.playlist_id
+	}
+	$: tracklist = $track_lists_details_map[params.playlist_id]
+
+	$: tracks_page = methods.get_tracks_page({
+		playlistId: params.playlist_id,
+		filterQuery: $filter,
+		sortKey: $sort_key,
+		sortDesc: $sort_desc,
+		groupAlbumTracks: $group_album_tracks,
+	})
+	$: track_indexes = tracks_page.trackIds.map((_, i) => i)
+
+	let selection = new_selection({
+		scroll_to_item(i) {
+			tracklist_actions.scroll_to_index?.(i)
+		},
+		async on_context_menu() {
+			// const indexes = selection.getSelectedIndexes()
+			// const ids = page.get_track_ids()
+			// await show_track_menu(ids, indexes, { editable: get(page).tracklist.type === 'playlist' })
+		},
+	})
+	$: selection.update_all_items(track_indexes)
 
 	const track_action_unlisten = ipc_listen('selectedTracksAction', (_, action) => {
-		let first_index = selection.findFirst()
-		if (first_index === null || !tracklist_element.contains(document.activeElement)) {
-			return
-		}
-		if (action === 'Play Next') {
-			const ids = selection.getSelectedIndexes().map((i) => page.get_track_id(i))
-			prepend_to_user_queue(ids)
-		} else if (action === 'Add to Queue') {
-			const ids = selection.getSelectedIndexes().map((i) => page.get_track_id(i))
-			append_to_user_queue(ids)
-		} else if (action === 'Get Info') {
-			open_track_info(page.get_track_ids(), first_index)
-		} else if (action === 'revealTrackFile') {
-			const track = page.get_track(first_index)
-			ipc_renderer.invoke('revealTrackFile', paths.tracksDir, track.file)
-		} else if (action === 'Remove from Playlist') {
-			remove_from_open_playlist(selection.getSelectedIndexes())
-		} else if (action === 'Delete from Library') {
-			delete_indexes(selection.getSelectedIndexes())
-		} else {
-			assert_unreachable(action)
-		}
+		// let first_index = selection.findFirst()
+		// if (first_index === null || !tracklist_element.contains(document.activeElement)) {
+		// 	return
+		// }
+		// if (action === 'Play Next') {
+		// 	const ids = selection.getSelectedIndexes().map((i) => page.get_track_id(i))
+		// 	prepend_to_user_queue(ids)
+		// } else if (action === 'Add to Queue') {
+		// 	const ids = selection.getSelectedIndexes().map((i) => page.get_track_id(i))
+		// 	append_to_user_queue(ids)
+		// } else if (action === 'Get Info') {
+		// 	open_track_info(page.get_track_ids(), first_index)
+		// } else if (action === 'revealTrackFile') {
+		// 	const track = page.get_track(first_index)
+		// 	ipc_renderer.invoke('revealTrackFile', paths.tracksDir, track.file)
+		// } else if (action === 'Remove from Playlist') {
+		// 	remove_from_open_playlist(selection.getSelectedIndexes())
+		// } else if (action === 'Delete from Library') {
+		// 	delete_indexes(selection.getSelectedIndexes())
+		// } else {
+		// 	assert_unreachable(action)
+		// }
 	})
 	onDestroy(track_action_unlisten)
 
-	const sort_by = page.sort_by
-	$: sort_key = $page.sortKey
-
 	ipc_renderer.on('Group Album Tracks', (_, checked) => {
-		page.set_group_album_tracks(checked)
+		group_album_tracks.set(checked)
 	})
 
 	function double_click(e: MouseEvent, index: number) {
@@ -71,90 +95,85 @@
 		}
 	}
 	async function delete_indexes(indexes: number[]) {
-		const s = $selection.count > 1 ? 's' : ''
-		const result = await ipc_renderer.invoke('showMessageBox', false, {
-			type: 'info',
-			message: `Delete ${$selection.count} song${s} from library?`,
-			buttons: [`Delete Song${s}`, 'Cancel'],
-			defaultId: 0,
-		})
-		if (result.response === 0) {
-			delete_tracks_in_open(indexes)
-		}
+		// const s = $selection.count > 1 ? 's' : ''
+		// const result = await ipc_renderer.invoke('showMessageBox', false, {
+		// 	type: 'info',
+		// 	message: `Delete ${$selection.count} song${s} from library?`,
+		// 	buttons: [`Delete Song${s}`, 'Cancel'],
+		// 	defaultId: 0,
+		// })
+		// if (result.response === 0) {
+		// 	delete_tracks_in_open(indexes)
+		// }
 	}
 	async function keydown(e: KeyboardEvent) {
-		if (check_shortcut(e, 'Enter')) {
-			let first_index = selection.findFirst()
-			if (first_index !== null) {
-				play_row(first_index)
-			} else if (!$playing_id) {
-				play_row(0)
-			}
-		} else if (
-			check_shortcut(e, 'Backspace') &&
-			$selection.count > 0 &&
-			!$filter &&
-			$page.tracklist.type === 'playlist'
-		) {
-			e.preventDefault()
-			const s = $selection.count > 1 ? 's' : ''
-			const result = ipc_renderer.invoke('showMessageBox', false, {
-				type: 'info',
-				message: `Remove ${$selection.count} song${s} from the list?`,
-				buttons: ['Remove Song' + s, 'Cancel'],
-				defaultId: 0,
-			})
-			const indexes = selection.getSelectedIndexes()
-			if ((await result).response === 0) {
-				remove_from_open_playlist(indexes)
-			}
-		} else if (check_shortcut(e, 'Backspace', { cmd_or_ctrl: true }) && $selection.count > 0) {
-			e.preventDefault()
-			delete_indexes(selection.getSelectedIndexes())
-		} else {
-			selection.handleKeyDown(e)
-			return
-		}
-		e.preventDefault()
+		// if (check_shortcut(e, 'Enter')) {
+		// 	let first_index = selection.findFirst()
+		// 	if (first_index !== null) {
+		// 		play_row(first_index)
+		// 	} else if (!$playing_id) {
+		// 		play_row(0)
+		// 	}
+		// } else if (
+		// 	check_shortcut(e, 'Backspace') &&
+		// 	$selection.count > 0 &&
+		// 	!$filter &&
+		// 	tracklist.kind === 'playlist'
+		// ) {
+		// 	e.preventDefault()
+		// 	const s = $selection.count > 1 ? 's' : ''
+		// 	const result = ipc_renderer.invoke('showMessageBox', false, {
+		// 		type: 'info',
+		// 		message: `Remove ${$selection.count} song${s} from the list?`,
+		// 		buttons: ['Remove Song' + s, 'Cancel'],
+		// 		defaultId: 0,
+		// 	})
+		// 	const indexes = selection.getSelectedIndexes()
+		// 	if ((await result).response === 0) {
+		// 		remove_from_open_playlist(indexes)
+		// 	}
+		// } else if (check_shortcut(e, 'Backspace', { cmd_or_ctrl: true }) && $selection.count > 0) {
+		// 	e.preventDefault()
+		// 	delete_indexes(selection.getSelectedIndexes())
+		// } else {
+		// 	selection.handleKeyDown(e)
+		// 	return
+		// }
+		// e.preventDefault()
 	}
 
 	function play_row(index: number) {
-		new_playback_instance(page.get_track_ids(), index)
+		// new_playback_instance(page.get_track_ids(), index)
 	}
 
 	let drag_line: HTMLElement
 	let drag_indexes: number[] = []
 	function on_drag_start(e: DragEvent) {
-		if (e.dataTransfer) {
-			drag_indexes = []
-			for (let i = 0; i < $selection.list.length; i++) {
-				if ($selection.list[i]) {
-					drag_indexes.push(i)
-				}
-			}
-			e.dataTransfer.effectAllowed = 'move'
-			if (drag_indexes.length === 1) {
-				const track = page.get_track(drag_indexes[0])
-				dragGhost.set_inner_text(track.artist + ' - ' + track.name)
-			} else {
-				dragGhost.set_inner_text(drag_indexes.length + ' items')
-			}
-			dragged.tracks = {
-				ids: drag_indexes.map((i) => page.get_track_id(i)),
-				playlist_indexes: drag_indexes,
-			}
-			e.dataTransfer.setDragImage(dragGhost.drag_el, 0, 0)
-			e.dataTransfer.setData('ferrum.tracks', '')
-		}
+		// if (e.dataTransfer) {
+		// 	drag_indexes = []
+		// 	for (let i = 0; i < $selection.list.length; i++) {
+		// 		if ($selection.list[i]) {
+		// 			drag_indexes.push(i)
+		// 		}
+		// 	}
+		// 	e.dataTransfer.effectAllowed = 'move'
+		// 	if (drag_indexes.length === 1) {
+		// 		const track = page.get_track(drag_indexes[0])
+		// 		dragGhost.set_inner_text(track.artist + ' - ' + track.name)
+		// 	} else {
+		// 		dragGhost.set_inner_text(drag_indexes.length + ' items')
+		// 	}
+		// 	dragged.tracks = {
+		// 		ids: drag_indexes.map((i) => page.get_track_id(i)),
+		// 		playlist_indexes: drag_indexes,
+		// 	}
+		// 	e.dataTransfer.setDragImage(dragGhost.drag_el, 0, 0)
+		// 	e.dataTransfer.setData('ferrum.tracks', '')
+		// }
 	}
 	let drag_to_index: null | number = null
 	function on_drag_over(e: DragEvent, index: number) {
-		if (
-			!$page.sortDesc ||
-			$page.sortKey !== 'index' ||
-			$filter ||
-			$page.tracklist.type !== 'playlist'
-		) {
+		if (!$sort_desc || $sort_key !== 'index' || $filter || tracklist.kind !== 'playlist') {
 			drag_to_index = null
 			return
 		}
@@ -180,7 +199,7 @@
 	}
 	async function drop_handler() {
 		if (drag_to_index !== null) {
-			page.move_tracks(drag_indexes, drag_to_index)
+			move_tracks(params.playlist_id, drag_indexes, drag_to_index)
 			drag_to_index = null
 		}
 	}
@@ -190,8 +209,9 @@
 
 	function get_item(index: number) {
 		try {
-			const track = page.get_track(index)
-			return { ...track, id: page.get_track_id(index) }
+			const track_id = tracks_page.trackIds[index]
+			const track = methods.getTrack(track_id)
+			return { ...track, id: track_id }
 		} catch (_) {
 			return null
 		}
@@ -199,7 +219,7 @@
 
 	let virtual_list: VirtualListBlock<number>
 
-	$: if ($page && virtual_list) {
+	$: if (virtual_list) {
 		virtual_list.refresh()
 	}
 
@@ -358,17 +378,25 @@
 	}
 </script>
 
+{#if tracklist.id === 'root'}
+	<Header title="Songs" subtitle="{tracks_page.trackIds.length} songs" description={undefined} />
+{:else}
+	<Header
+		title={tracklist.name}
+		subtitle="{tracks_page.trackIds.length} songs"
+		description={tracks_page.playlistDescription}
+	/>
+{/if}
 <div
 	bind:this={tracklist_element}
 	class="tracklist h-full"
 	role="table"
 	on:dragleave={() => (drag_to_index = null)}
-	class:no-selection={$selection.count === 0}
 >
 	<!-- svelte-ignore a11y-interactive-supports-focus -->
 	<div
 		class="row table-header border-b border-b-slate-500/30"
-		class:desc={$page.sortDesc}
+		class:desc={$sort_desc}
 		role="row"
 		on:contextmenu={on_column_context_menu}
 		on:dragleave={() => (col_drag_to_index = null)}
@@ -379,10 +407,12 @@
 			<!-- svelte-ignore a11y-click-events-have-key-events -->
 			<div
 				class="c {column.key}"
-				class:sort={sort_key === column.key}
+				class:sort={$sort_key === column.key}
 				style:width={column.width}
 				role="button"
-				on:click={() => sort_by(column.key)}
+				on:click={() => {
+					sort_key.set(column.key)
+				}}
 				draggable="true"
 				on:dragstart={(e) => on_col_drag_start(e, i)}
 				on:dragend={col_drag_end_handler}
@@ -408,10 +438,9 @@
 		tabindex="0"
 		on:keydown={scroll_container_keydown}
 	>
-		<!-- Using `let:item={i}` instead of `let:i` fixes drag-and-drop -->
 		<VirtualListBlock
 			bind:this={virtual_list}
-			items={Array.from({ length: $page.length }).map((_, i) => i)}
+			items={track_indexes}
 			item_height={24}
 			{scroll_container}
 			let:item={i}
@@ -425,16 +454,16 @@
 					class="row"
 					role="row"
 					on:dblclick={(e) => double_click(e, i)}
-					on:mousedown={(e) => selection.handleMouseDown(e, i)}
-					on:contextmenu={(e) => selection.handleContextMenu(e, i)}
-					on:click={(e) => selection.handleClick(e, i)}
+					on:mousedown={(e) => selection.handle_mouse_down(e, i)}
+					on:contextmenu={(e) => selection.handle_contextmenu(e, i)}
+					on:click={(e) => selection.handle_click(e, i)}
 					draggable="true"
 					on:dragstart={on_drag_start}
 					on:dragover={(e) => on_drag_over(e, i)}
 					on:drop={drop_handler}
 					on:dragend={drag_end_handler}
 					class:odd={i % 2 === 0}
-					class:selected={$selection.list[i] === true}
+					class:selected={$selection.has(track.id)}
 					class:playing={track.id === $playing_id}
 				>
 					{#each columns as column}

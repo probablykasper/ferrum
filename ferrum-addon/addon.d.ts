@@ -145,9 +145,9 @@ export declare function get_track_list(id: string): TrackList
 /** Returns the deleted track lists, including folder children */
 export declare function delete_track_list(id: string): void
 export declare function add_tracks_to_playlist(playlistId: string, trackIds: Array<string>): void
-export declare function playlist_filter_duplicates(playlistId: string, ids: Array<string>): Array<TrackID>
-export declare function remove_from_playlist(playlistId: string, itemIds: Array<ItemId>): void
-export declare function delete_tracks(itemIds: Array<ItemId>): void
+export declare function playlist_filter_duplicates(playlistId: TrackID, ids: Array<string>): Array<TrackID>
+export declare function remove_from_playlist(playlistId: TrackID, itemIds: Array<ItemId>): void
+export declare function delete_tracks_with_item_ids(itemIds: Array<ItemId>): void
 export declare function new_playlist(name: string, description: string, isFolder: boolean, parentId: string): void
 export declare function update_playlist(id: string, name: string, description: string): void
 export declare function move_playlist(id: string, fromId: string, toId: string, toIndex: number): void

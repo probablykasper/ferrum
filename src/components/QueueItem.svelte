@@ -1,12 +1,12 @@
 <script lang="ts">
-	import { methods, paths, track_metadata_updated } from '@/lib/data'
+	import { methods, paths, tracks_updated } from '@/lib/data'
 	import type { Track } from '../../ferrum-addon'
 	import { join_paths } from '@/lib/window'
 
 	export let id: string
 
 	let track: Track
-	$: $track_metadata_updated, (track = methods.getTrack(id))
+	$: $tracks_updated, (track = methods.getTrack(id))
 
 	$: src =
 		'trackimg:?path=' +

@@ -4,6 +4,7 @@
 export * from './addon.d'
 
 declare module 'ferrum-addon/addon' {
+	export type ItemId = number
 	export type TrackID = string
 	export type TrackListID = string
 	export type PercentInteger = number

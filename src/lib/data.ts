@@ -5,12 +5,12 @@ import type {
 	TrackID,
 	TrackList,
 	TrackListID,
+	ItemId,
 	TrackMd,
+	TracksPageOptions,
 	ViewAs,
 	ViewOptions,
 } from '../../ferrum-addon'
-import { selection as pageSelection } from './page'
-import { queue } from './queue'
 
 export const is_dev = window.is_dev
 export const local_data_path = window.local_data_path
@@ -66,8 +66,7 @@ export function call<T, P extends T | Promise<T>>(cb: (addon: typeof inner_addon
 			return result
 		}
 	} catch (err) {
-		console.log('errorPopup')
-
+		console.error('errorPopup:', err)
 		error_popup(err)
 		throw err
 	}
@@ -89,48 +88,47 @@ export async function add_track_to_playlist(
 	track_ids: TrackID[],
 	check_duplicates = true,
 ) {
-	if (check_duplicates) {
-		const filtered_ids = call((addon) => addon.playlist_filter_duplicates(playlist_id, track_ids))
-		const duplicates = track_ids.length - filtered_ids.length
-
-		if (duplicates > 0) {
-			const result = await ipc_renderer.invoke('showMessageBox', false, {
-				type: 'question',
-				message: 'Already added',
-				detail:
-					duplicates > 1
-						? `${duplicates} songs are already in this playlist`
-						: `${duplicates} song is already in this playlist`,
-				buttons: ['Add anyway', 'Cancel', 'Skip'],
-				defaultId: 0,
-			})
-			if (result.response === 1) {
-				return
-			} else if (result.response === 2) {
-				track_ids = filtered_ids
-			}
-		}
-	}
-	if (track_ids.length >= 1) {
-		call((addon) => addon.add_tracks_to_playlist(playlist_id, track_ids))
-		if (page.get().tracklist.id === playlist_id) {
-			page.refresh_ids_and_keep_selection()
-		}
-		methods.save()
-	}
+	// if (check_duplicates) {
+	// 	const filtered_ids = call((addon) => addon.playlist_filter_duplicates(playlist_id, track_ids))
+	// 	const duplicates = track_ids.length - filtered_ids.length
+	// 	if (duplicates > 0) {
+	// 		const result = await ipc_renderer.invoke('showMessageBox', false, {
+	// 			type: 'question',
+	// 			message: 'Already added',
+	// 			detail:
+	// 				duplicates > 1
+	// 					? `${duplicates} songs are already in this playlist`
+	// 					: `${duplicates} song is already in this playlist`,
+	// 			buttons: ['Add anyway', 'Cancel', 'Skip'],
+	// 			defaultId: 0,
+	// 		})
+	// 		if (result.response === 1) {
+	// 			return
+	// 		} else if (result.response === 2) {
+	// 			track_ids = filtered_ids
+	// 		}
+	// 	}
+	// }
+	// if (track_ids.length >= 1) {
+	// 	call((addon) => addon.add_tracks_to_playlist(playlist_id, track_ids))
+	// 	if (page.get().tracklist.id === playlist_id) {
+	// 		page.refresh_ids_and_keep_selection()
+	// 	}
+	// 	methods.save()
+	// }
 }
-export function remove_from_open_playlist(indexes: number[]) {
-	call((addon) => addon.remove_from_open_playlist(indexes))
-	page.refresh_ids_and_keep_selection()
-	pageSelection.clear()
-	methods.save()
+export function remove_from_playlist(playlist_id: TrackListID, item_ids: ItemId[]) {
+	// call((addon) => addon.remove_from_playlist(playlist_id, item_ids))
+	// page.refresh_ids_and_keep_selection()
+	// pageSelection.clear()
+	// methods.save()
 }
-export function delete_tracks_in_open(indexes: number[]) {
-	call((addon) => addon.delete_tracks_in_open(indexes))
-	page.refresh_ids_and_keep_selection()
-	pageSelection.clear()
-	queue.removeDeleted()
-	methods.save()
+export function delete_tracks_with_item_ids(item_ids: ItemId[]) {
+	// call((addon) => addon.delete_tracks_with_item_ids(item_ids))
+	// page.refresh_ids_and_keep_selection()
+	// pageSelection.clear()
+	// queue.removeDeleted()
+	// methods.save()
 }
 export type PlaylistInfo = {
 	name: string
@@ -146,10 +144,10 @@ export function new_playlist(info: PlaylistInfo) {
 	methods.save()
 }
 export function update_playlist(id: string, name: string, description: string) {
-	call((addon) => addon.update_playlist(id, name, description))
-	track_lists_details_map.refresh()
-	page.refresh_ids_and_keep_selection()
-	methods.save()
+	// call((addon) => addon.update_playlist(id, name, description))
+	// track_lists_details_map.refresh()
+	// page.refresh_ids_and_keep_selection()
+	// methods.save()
 }
 export function move_playlist(
 	id: TrackListID,
@@ -165,27 +163,27 @@ export function move_playlist(
 export const paths = call((addon) => addon.get_paths())
 
 export async function import_tracks(paths: string[]) {
-	let err_state = null
-	const now = Date.now()
-	for (const path of paths) {
-		try {
-			inner_addon.import_file(path, now)
-		} catch (err) {
-			if (err_state === 'skip') continue
-			const result = await ipc_renderer.invoke('showMessageBox', false, {
-				type: 'error',
-				message: 'Error importing track ' + path,
-				detail: get_error_message(err),
-				buttons: err_state ? ['OK', 'Skip all errors'] : ['OK'],
-				defaultId: 0,
-			})
-			if (result.response === 1) err_state = 'skip'
-			else err_state = 'skippable'
-		}
-	}
-	page.refresh_ids_and_keep_selection()
-	pageSelection.clear()
-	methods.save()
+	// let err_state = null
+	// const now = Date.now()
+	// for (const path of paths) {
+	// 	try {
+	// 		inner_addon.import_file(path, now)
+	// 	} catch (err) {
+	// 		if (err_state === 'skip') continue
+	// 		const result = await ipc_renderer.invoke('showMessageBox', false, {
+	// 			type: 'error',
+	// 			message: 'Error importing track ' + path,
+	// 			detail: get_error_message(err),
+	// 			buttons: err_state ? ['OK', 'Skip all errors'] : ['OK'],
+	// 			defaultId: 0,
+	// 		})
+	// 		if (result.response === 1) err_state = 'skip'
+	// 		else err_state = 'skippable'
+	// 	}
+	// }
+	// page.refresh_ids_and_keep_selection()
+	// pageSelection.clear()
+	// methods.save()
 }
 
 export const methods = {
@@ -195,6 +193,9 @@ export const methods = {
 	getTrack: (id: TrackID) => {
 		return call((data) => data.get_track(id))
 	},
+	get_tracks_page: (options: TracksPageOptions) => {
+		return call((data) => data.get_tracks_page(options))
+	},
 	trackExists: (id: TrackID) => {
 		return call((data) => data.track_exists(id))
 	},
@@ -202,29 +203,34 @@ export const methods = {
 		return call((data) => data.get_track_list(id)) as TrackList
 	},
 	deleteTrackList: (id: TrackListID) => {
-		call((data) => data.delete_track_list(id))
-		page.refresh_ids_and_keep_selection()
-		pageSelection.clear()
-		track_lists_details_map.refresh()
-		methods.save()
+		// console.log('deleteTL')
+		// call((data) => data.delete_track_list(id))
+		// console.log('id ', '===', ' current_playlist_id')
+		// if (id === current_playlist_id) {
+		// 	navigate('/playlist/root')
+		// }
+		// page.refresh_ids_and_keep_selection()
+		// pageSelection.clear()
+		// track_lists_details_map.refresh()
+		// methods.save()
 	},
 	save: () => {
 		return call((addon) => addon.save())
 	},
 	addPlay: (id: TrackID) => {
-		call((data) => data.add_play(id))
-		page.refresh_ids_and_keep_selection()
-		methods.save()
+		// call((data) => data.add_play(id))
+		// page.refresh_ids_and_keep_selection()
+		// methods.save()
 	},
 	addSkip: (id: TrackID) => {
-		call((data) => data.add_skip(id))
-		page.refresh_ids_and_keep_selection()
-		methods.save()
+		// call((data) => data.add_skip(id))
+		// page.refresh_ids_and_keep_selection()
+		// methods.save()
 	},
 	addPlayTime: (id: TrackID, start_time: MsSinceUnixEpoch, duration_ms: number) => {
-		call((data) => data.add_play_time(id, start_time, duration_ms))
-		page.refresh_ids_and_keep_selection()
-		methods.save()
+		// call((data) => data.add_play_time(id, start_time, duration_ms))
+		// page.refresh_ids_and_keep_selection()
+		// methods.save()
 	},
 	readCoverAsync(id: TrackID, index: number) {
 		return inner_addon.read_cover_async(id, index).catch((error) => {
@@ -233,10 +239,10 @@ export const methods = {
 		})
 	},
 	updateTrackInfo: (id: TrackID, md: TrackMd) => {
-		call((data) => data.update_track_info(id, md))
-		track_metadata_updated.emit()
-		page.refresh_ids_and_keep_selection()
-		methods.save()
+		// call((data) => data.update_track_info(id, md))
+		// tracks_updated.emit()
+		// page.refresh_ids_and_keep_selection()
+		// methods.save()
 	},
 	loadTags: (id: TrackID) => {
 		return call((data) => data.load_tags(id))
@@ -267,18 +273,7 @@ export const methods = {
 	},
 }
 
-export const filter = (() => {
-	const { subscribe, set } = writable('')
-	return {
-		subscribe: subscribe,
-		set: (query: string) => {
-			call((data) => data.filter_open_playlist(query))
-			page.set(page.get())
-			pageSelection.clear()
-			set(query)
-		},
-	}
-})()
+export const filter = writable('')
 
 function create_refresh_store() {
 	const store = writable(0)
@@ -289,62 +284,13 @@ function create_refresh_store() {
 		},
 	}
 }
-export const track_metadata_updated = create_refresh_store()
+export const tracks_updated = create_refresh_store()
 
-export const page = (() => {
-	function get() {
-		const info = call((addon) => addon.get_page_info())
-		return info
-	}
-	function refresh_ids_and_keep_selection() {
-		call((addon) => addon.refresh_page())
-		set(get())
-	}
-
-	const { subscribe, set, update } = writable(get())
-	return {
-		subscribe,
-		get,
-		set,
-		update,
-		refresh_ids_and_keep_selection: refresh_ids_and_keep_selection,
-		open_playlist(id: string, view_as: ViewAs) {
-			call((data) => data.open_playlist(id, view_as))
-			refresh_ids_and_keep_selection()
-			pageSelection.clear()
-			filter.set('')
-		},
-		sort_by(key: string) {
-			call((addon) => addon.sort(key, true))
-			refresh_ids_and_keep_selection()
-			pageSelection.clear()
-		},
-		set_group_album_tracks(value: boolean) {
-			call((addon) => addon.set_group_album_tracks(value))
-			refresh_ids_and_keep_selection()
-			pageSelection.clear()
-		},
-		get_artists() {
-			return call((addon) => addon.get_artists())
-		},
-		get_track(index: number) {
-			return call((addon) => addon.get_page_track(index))
-		},
-		get_track_id(index: number) {
-			return call((data) => data.get_page_track_id(index))
-		},
-		get_track_ids() {
-			return call((data) => data.get_page_track_ids())
-		},
-		move_tracks: (indexes: number[], to_index: number) => {
-			const new_selection = call((data) => data.move_tracks(indexes, to_index))
-			call((data) => data.refresh_page())
-			refresh_ids_and_keep_selection()
-			pageSelection.clear()
-			for (let i = new_selection.from; i <= new_selection.to; i++) {
-				pageSelection.add(i)
-			}
-			methods.save()
-		},
-	}
-})()
+export function get_artists() {
+	return call((addon) => addon.get_artists())
+}
+export function move_tracks(playlist_id: TrackListID, indexes: number[], to_index: number) {
+	call((data) => data.move_tracks(playlist_id, indexes, to_index))
+	tracks_updated.emit()
+	methods.save()
+}

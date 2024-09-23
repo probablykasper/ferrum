@@ -2,7 +2,7 @@ import {
 	add_track_to_playlist,
 	methods,
 	paths,
-	remove_from_open_playlist,
+	remove_from_playlist,
 	track_lists_details_map,
 } from '@/lib/data'
 import { flatten_child_lists } from '@/lib/helpers'
@@ -11,6 +11,7 @@ import type { TrackID } from '../../ferrum-addon'
 import { get } from 'svelte/store'
 import { append_to_user_queue, prepend_to_user_queue } from './queue'
 import type { ShowTrackMenuOptions } from '@/electron/typed_ipc'
+import { current_playlist_id } from '@/components/TrackList.svelte'
 
 export async function show_track_menu(
 	all_id: string[],
@@ -45,5 +46,6 @@ ipc_renderer.on('context.revealTrackFile', (e, id: TrackID) => {
 	ipc_renderer.invoke('revealTrackFile', paths.tracksDir, track.file)
 })
 ipc_renderer.on('context.Remove from Playlist', (e, indexes: number[]) => {
-	remove_from_open_playlist(indexes)
+	const playlist_id = get(current_playlist_id)
+	remove_from_playlist(playlist_id, indexes)
 })

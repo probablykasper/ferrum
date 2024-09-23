@@ -158,7 +158,7 @@ pub fn add_tracks(playlist_id: String, track_ids: Vec<String>, env: Env) -> Resu
 
 #[napi(js_name = "playlist_filter_duplicates")]
 #[allow(dead_code)]
-pub fn filter_duplicates(playlist_id: String, ids: Vec<String>, env: Env) -> Result<Vec<TrackID>> {
+pub fn filter_duplicates(playlist_id: TrackID, ids: Vec<String>, env: Env) -> Result<Vec<TrackID>> {
 	let data: &mut Data = get_data(&env)?;
 	let mut track_ids: HashSet<String> = HashSet::from_iter(ids);
 	let playlist = match data.library.get_tracklist_mut(&playlist_id)? {
@@ -176,7 +176,7 @@ pub fn filter_duplicates(playlist_id: String, ids: Vec<String>, env: Env) -> Res
 
 #[napi(js_name = "remove_from_playlist")]
 #[allow(dead_code)]
-pub fn remove_from_playlist(playlist_id: String, item_ids: Vec<ItemId>, env: Env) -> Result<()> {
+pub fn remove_from_playlist(playlist_id: TrackID, item_ids: Vec<ItemId>, env: Env) -> Result<()> {
 	let data: &mut Data = get_data(&env)?;
 	let playlist = match data.library.get_tracklist_mut(&playlist_id)? {
 		TrackList::Playlist(playlist) => playlist,
@@ -217,9 +217,9 @@ fn delete_file(path: &PathBuf) -> UniResult<()> {
 	}
 }
 
-#[napi(js_name = "delete_tracks")]
+#[napi(js_name = "delete_tracks_with_item_ids")]
 #[allow(dead_code)]
-pub fn delete_tracks_with_item_id(item_ids: Vec<ItemId>, env: Env) -> Result<()> {
+pub fn delete_tracks_with_item_ids(item_ids: Vec<ItemId>, env: Env) -> Result<()> {
 	let data: &mut Data = get_data(&env)?;
 	let library = &mut data.library;
 	let track_ids = get_track_ids_from_item_ids(&item_ids);
