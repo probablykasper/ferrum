@@ -282,7 +282,7 @@ fn is_false(value: &bool) -> bool {
 }
 
 // These are used to give each playlist entry an ID. This is for example helpful to keep track of a user's selection. These IDs are unique across the entire library, so that it works for folders folders.
-type ItemId = u32;
+pub type ItemId = u32;
 pub static PLAYLIST_TRACK_ID_MAP: RwLock<Vec<String>> = RwLock::new(Vec::new());
 
 pub fn new_item_ids_from_track_ids(track_ids: &[TrackID]) -> Vec<ItemId> {

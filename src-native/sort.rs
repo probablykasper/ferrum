@@ -1,7 +1,7 @@
-use crate::data::Data;
 use crate::library::{get_track_field_type, TrackField};
-use crate::library_types::{Track, TrackList};
-use crate::{page, UniResult};
+use crate::library_types::{Library, Track, TrackID};
+use crate::page::{get_tracklist_track_ids, TracksPageOptions};
+use crate::UniResult;
 use alphanumeric_sort::compare_str;
 use std::cmp::Ordering;
 use std::time::Instant;
@@ -85,42 +85,30 @@ fn get_field_bool(track: &Track, sort_key: &str) -> Option<bool> {
 	}
 }
 
-pub fn sort(data: &mut Data, sort_key: &str, desc: bool) -> UniResult<()> {
+pub fn sort(options: TracksPageOptions, library: &Library) -> UniResult<Vec<TrackID>> {
 	let now = Instant::now();
 
-	if sort_key == "index" {
-		// No need to sort for index. Indexes descend from "first to last"
-		// instead of "high to low", so it needs to be reversed
-		let playlist = data
-			.library
-			.trackLists
-			.get(&data.open_playlist_id)
-			.ok_or("Playlist ID not found")?;
-		match playlist {
-			TrackList::Playlist(_) => {
-				data.open_playlist_track_ids = page::get_track_ids(&data)?;
-				data.sort_key = sort_key.to_string();
-				data.sort_desc = true;
-				println!("Sort: {}ms", now.elapsed().as_millis());
-				return Ok(());
-			}
-			TrackList::Folder(_) | TrackList::Special(_) => return Ok(()),
-		}
+	let mut track_ids = get_tracklist_track_ids(library, &options.playlist_id)?;
+
+	if options.sort_key == "index" {
+		// No need to sort for index. Note: Indexes descend from "first to last",
+		// unlike other numbers which ascend from "high to low"
+		println!("Sort: {}ms", now.elapsed().as_millis());
+		track_ids.reverse();
+		return Ok(track_ids);
 	}
 
-	data.open_playlist_track_ids = page::get_track_ids(&data)?;
-
-	let tracks = &data.library.tracks;
-	let field = match get_track_field_type(sort_key) {
+	let tracks = &library.tracks;
+	let field = match get_track_field_type(&options.sort_key) {
 		Some(field) => field,
-		None => throw!("Field type not found for {sort_key}"),
+		None => throw!("Field type not found for {}", options.sort_key),
 	};
-	let subsort_field = data.group_album_tracks
-		&& match sort_key {
+	let subsort_field = options.group_album_tracks
+		&& match options.sort_key.as_str() {
 			"dateAdded" | "albumName" | "comments" | "genre" | "year" | "artist" => true,
 			_ => false,
 		};
-	data.open_playlist_track_ids.sort_by(|id_a, id_b| {
+	track_ids.sort_by(|id_a, id_b| {
 		let track_a = tracks.get(id_a).expect("Track ID non-existant (1)");
 		let track_b = tracks.get(id_b).expect("Track ID non-existant (2)");
 		if subsort_field
@@ -138,16 +126,14 @@ pub fn sort(data: &mut Data, sort_key: &str, desc: bool) -> UniResult<()> {
 				order => return order,
 			};
 		}
-		let order = compare_track_field(track_a, track_b, sort_key, &field);
-		return match desc {
+		let order = compare_track_field(track_a, track_b, &options.sort_key, &field);
+		return match options.sort_desc {
 			true => order.reverse(),
 			false => order,
 		};
 	});
-	data.sort_key = sort_key.to_string();
-	data.sort_desc = desc;
 	println!("Sort: {}ms", now.elapsed().as_millis());
-	return Ok(());
+	return Ok(track_ids);
 }
 
 pub fn compare_track_field(a: &Track, b: &Track, sort_key: &str, field: &TrackField) -> Ordering {

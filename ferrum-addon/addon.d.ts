@@ -14,7 +14,6 @@ export interface PathsJs {
 }
 export declare function get_paths(): PathsJs
 export declare function save(): void
-export declare function filter_open_playlist(query: string): void
 export interface ImportStatus {
   errors: Array<string>
   tracksCount: number
@@ -82,7 +81,7 @@ export interface Playlist {
   originalId?: string
   dateImported?: MsSinceUnixEpoch
   dateCreated?: MsSinceUnixEpoch
-  tracks: Array<PlaylistItemId>
+  tracks: Array<ItemId>
 }
 export interface Folder {
   id: TrackListID
@@ -107,11 +106,20 @@ export interface Special {
 export const enum SpecialTrackListName {
   Root = 0
 }
-export declare function open_playlist(openPlaylistId: string, viewAs?: ViewAs | undefined | null): void
-export declare function get_page_track(index: number): Track
-export declare function get_page_track_id(index: number): string
-export declare function refresh_page(): void
-export declare function get_page_track_ids(): Array<TrackID>
+export interface TracksPageOptions {
+  playlistId: string
+  sortKey: string
+  sortDesc: boolean
+  filterQuery: string
+  groupAlbumTracks: boolean
+}
+export interface TracksPage {
+  playlistName: string
+  playlistDescription?: string
+  playlistLength: number
+  trackIds: Array<TrackID>
+}
+export declare function get_tracks_page(options: TracksPageOptions): TracksPage
 export const enum ViewAs {
   Songs = 0,
   Artists = 1
@@ -124,14 +132,7 @@ export interface PageInfo {
   sortDesc: boolean
   length: number
 }
-export declare function get_page_info(): PageInfo
-export declare function set_group_album_tracks(value: boolean): void
-export declare function sort(sortKey: string, keepFilter: boolean): void
-export interface SelectionInfo {
-  from: number
-  to: number
-}
-export declare function move_tracks(indexesToMove: Array<number>, toIndex: number): SelectionInfo
+export declare function move_tracks(playlistId: string, itemIds: Array<ItemId>, toIndex: number): void
 export interface TrackListDetails {
   id: string
   name: string
@@ -145,8 +146,8 @@ export declare function get_track_list(id: string): TrackList
 export declare function delete_track_list(id: string): void
 export declare function add_tracks_to_playlist(playlistId: string, trackIds: Array<string>): void
 export declare function playlist_filter_duplicates(playlistId: string, ids: Array<string>): Array<TrackID>
-export declare function remove_from_open_playlist(indexesToRemove: Array<number>): void
-export declare function delete_tracks_in_open(indexesToDelete: Array<number>): void
+export declare function remove_from_playlist(playlistId: string, itemIds: Array<ItemId>): void
+export declare function delete_tracks(itemIds: Array<ItemId>): void
 export declare function new_playlist(name: string, description: string, isFolder: boolean, parentId: string): void
 export declare function update_playlist(id: string, name: string, description: string): void
 export declare function move_playlist(id: string, fromId: string, toId: string, toIndex: number): void

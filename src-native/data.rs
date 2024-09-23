@@ -1,11 +1,9 @@
 use crate::artists::load_artists;
 use crate::library::{load_library, Paths};
-use crate::library_types::{Library, TrackID, TrackList, TrackListID};
-use crate::page::{get_track_ids, ViewAs};
-use crate::sort::sort;
+use crate::library_types::Library;
 use crate::tracks::Tag;
 use crate::view_options::ViewOptions;
-use crate::{page, UniResult};
+use crate::UniResult;
 use atomicwrites::{AllowOverwrite, AtomicFile};
 use dirs_next;
 use napi::Result;
@@ -20,16 +18,6 @@ pub struct Data {
 	pub paths: Paths,
 	pub library: Library,
 	pub view_options: ViewOptions,
-	/// All tracks on the current page, even if they are filtered out
-	pub open_playlist_track_ids: Vec<TrackID>,
-	/// The visible tracks on the current page
-	pub page_track_ids: Option<Vec<TrackID>>,
-	pub open_playlist_id: TrackListID,
-	pub view_as: ViewAs,
-	pub filter: String,
-	pub sort_key: String,
-	pub sort_desc: bool,
-	pub group_album_tracks: bool,
 	/// Current tag being edited
 	pub current_tag: Option<Tag>,
 	pub artists: HashSet<String>,
@@ -55,12 +43,6 @@ impl Data {
 		}
 		println!("Write: {}ms", now.elapsed().as_millis());
 		Ok(())
-	}
-	pub fn get_page_tracks(&self) -> &Vec<String> {
-		match &self.page_track_ids {
-			Some(ids) => ids,
-			None => &self.open_playlist_track_ids,
-		}
 	}
 	pub fn load(
 		is_dev: bool,
@@ -109,39 +91,13 @@ impl Data {
 		let loaded_cache = ViewOptions::load(&paths);
 		let artists = load_artists(&loaded_library);
 
-		let mut data = Data {
+		let data = Data {
 			paths,
 			library: loaded_library,
 			artists,
 			view_options: loaded_cache,
-			open_playlist_id: "root".to_string(),
-			open_playlist_track_ids: vec![],
-			view_as: ViewAs::Songs,
-			page_track_ids: None,
-			filter: "".to_string(),
-			sort_key: "index".to_string(),
-			sort_desc: true,
-			group_album_tracks: true,
 			current_tag: None,
 		};
-		data.open_playlist_track_ids = page::get_track_ids(&data)?;
-		sort(&mut data, "dateAdded", true)?;
 		return Ok(data);
-	}
-	pub fn open_playlist(&mut self, playlist_id: TrackID, view_as: Option<ViewAs>) -> Result<()> {
-		self.open_playlist_id = playlist_id;
-		self.view_as = view_as.unwrap_or_default();
-		self.open_playlist_track_ids = get_track_ids(self)?;
-		self.page_track_ids = None;
-		match self.library.get_tracklist(&self.open_playlist_id)? {
-			TrackList::Special(_) => {
-				sort(self, "dateAdded", true)?;
-			}
-			_ => {
-				self.sort_key = "index".to_string();
-				self.sort_desc = true;
-			}
-		};
-		Ok(())
 	}
 }

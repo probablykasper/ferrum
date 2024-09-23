@@ -1,8 +1,8 @@
 use crate::data::Data;
 use crate::data_js::get_data;
 use crate::library_types::{
-	new_item_ids_from_track_ids, Library, SpecialTrackListName, TrackID, TrackList,
-	PLAYLIST_TRACK_ID_MAP,
+	get_track_ids_from_item_ids, new_item_ids_from_track_ids, ItemId, Library,
+	SpecialTrackListName, TrackID, TrackList, PLAYLIST_TRACK_ID_MAP,
 };
 use crate::{str_to_option, UniResult};
 use napi::{Env, JsUnknown, Result};
@@ -118,7 +118,11 @@ fn remove_child_id(library: &mut Library, parent_id: &String, child_id: &String)
 	Ok(())
 }
 
-fn delete_track_list(data: &mut Data, id: String) -> Result<()> {
+/// Returns the deleted track lists, including folder children
+#[napi(js_name = "delete_track_list")]
+#[allow(dead_code)]
+pub fn delete_track_list_js(id: String, env: Env) -> Result<()> {
+	let data: &mut Data = get_data(&env)?;
 	let parent_id = data
 		.library
 		.get_parent_id(&id)
@@ -135,18 +139,7 @@ fn delete_track_list(data: &mut Data, id: String) -> Result<()> {
 	for id in &ids {
 		data.library.trackLists.remove(id);
 	}
-	if ids.contains(&data.open_playlist_id) {
-		data.open_playlist("root".to_string(), None)?;
-	}
 	Ok(())
-}
-
-/// Returns the deleted track lists, including folder children
-#[napi(js_name = "delete_track_list")]
-#[allow(dead_code)]
-pub fn delete_track_list_js(id: String, env: Env) -> Result<()> {
-	let data: &mut Data = get_data(&env)?;
-	delete_track_list(data, id)
 }
 
 #[napi(js_name = "add_tracks_to_playlist")]
@@ -181,35 +174,20 @@ pub fn filter_duplicates(playlist_id: String, ids: Vec<String>, env: Env) -> Res
 	Ok(track_ids)
 }
 
-#[napi(js_name = "remove_from_open_playlist")]
+#[napi(js_name = "remove_from_playlist")]
 #[allow(dead_code)]
-pub fn remove_from_open(mut indexes_to_remove: Vec<u32>, env: Env) -> Result<()> {
+pub fn remove_from_playlist(playlist_id: String, item_ids: Vec<ItemId>, env: Env) -> Result<()> {
 	let data: &mut Data = get_data(&env)?;
-	indexes_to_remove.sort_unstable();
-	indexes_to_remove.dedup();
-	let playlist = match data.library.get_tracklist_mut(&data.open_playlist_id)? {
+	let playlist = match data.library.get_tracklist_mut(&playlist_id)? {
 		TrackList::Playlist(playlist) => playlist,
-		TrackList::Folder(_) => throw!("Cannot remove track from folder"),
-		TrackList::Special(_) => throw!("Cannot remove track from special playlist"),
+		_ => throw!("Cannot remove track from non-playlist"),
 	};
-	if data.sort_key != "index" || !data.sort_desc {
-		throw!("Cannot remove track when custom sorting is used");
-	}
-	if data.filter != "" {
-		throw!("Cannot remove track when filter is used");
-	}
-	let mut new_list = Vec::new();
-	let mut indexes_to_remove = indexes_to_remove.iter();
-	let mut next_index = indexes_to_remove.next().map(|n| *n as usize);
-	for i in 0..playlist.tracks.len() {
-		let id = playlist.tracks.remove(0);
-		if Some(i) == next_index {
-			next_index = indexes_to_remove.next().map(|n| *n as usize);
-		} else {
-			new_list.push(id);
-		}
-	}
-	playlist.tracks = new_list;
+	let items_to_remove: HashSet<ItemId> = item_ids.into_iter().collect();
+
+	playlist
+		.tracks
+		.retain(|item_id| !items_to_remove.contains(item_id));
+
 	return Ok(());
 }
 
@@ -226,19 +204,6 @@ fn remove_from_all_playlists(library: &mut Library, id: &str) {
 	}
 }
 
-fn get_page_ids(data: &mut Data, indexes: Vec<u32>) -> UniResult<Vec<String>> {
-	let mut ids = Vec::new();
-	let page_track_ids = data.get_page_tracks();
-	for index in indexes {
-		let id = match page_track_ids.get(index as usize) {
-			Some(id) => id,
-			None => throw!("Track index not found"),
-		};
-		ids.push(id.clone());
-	}
-	Ok(ids)
-}
-
 fn delete_file(path: &PathBuf) -> UniResult<()> {
 	#[allow(unused_mut)]
 	let mut trash_context = trash::TrashContext::new();
@@ -252,16 +217,13 @@ fn delete_file(path: &PathBuf) -> UniResult<()> {
 	}
 }
 
-#[napi(js_name = "delete_tracks_in_open")]
+#[napi(js_name = "delete_tracks")]
 #[allow(dead_code)]
-pub fn delete_tracks_in_open(mut indexes_to_delete: Vec<u32>, env: Env) -> Result<()> {
+pub fn delete_tracks_with_item_id(item_ids: Vec<ItemId>, env: Env) -> Result<()> {
 	let data: &mut Data = get_data(&env)?;
-	indexes_to_delete.sort_unstable();
-	indexes_to_delete.dedup();
-	let ids_to_delete = get_page_ids(data, indexes_to_delete)?;
 	let library = &mut data.library;
-
-	for id_to_delete in &ids_to_delete {
+	let track_ids = get_track_ids_from_item_ids(&item_ids);
+	for id_to_delete in &track_ids {
 		let file_path = {
 			let track = library.get_track(id_to_delete)?;
 			data.paths.tracks_dir.join(&track.file)
