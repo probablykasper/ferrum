@@ -289,7 +289,7 @@ export const tracks_updated = create_refresh_store()
 export function get_artists() {
 	return call((addon) => addon.get_artists())
 }
-export function move_tracks(playlist_id: TrackListID, indexes: number[], to_index: number) {
+export function move_tracks(playlist_id: TrackListID, indexes: ItemId[], to_index: number) {
 	call((data) => data.move_tracks(playlist_id, indexes, to_index))
 	tracks_updated.emit()
 	methods.save()
