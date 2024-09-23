@@ -3,12 +3,13 @@ import { check_mouse_shortcut, check_shortcut } from './helpers'
 
 type SelectionOptions = {
 	scroll_to_item: (index: number) => void
-	on_context_menu: () => void
+	on_contextmenu: () => void
 }
 
 class Selection<T> {
-	/** Currently selected items */
-	items = new Set<T>()
+	/** Currently selected items. Disallowing assignment
+	 * prevents the Svelte store from getting out of sync */
+	readonly items = new Set<T>()
 	/** Full list of items that can be selected */
 	all: T[]
 	/** The last added index */
@@ -19,16 +20,16 @@ class Selection<T> {
 	possible_row_click = false
 
 	scroll_to_item: SelectionOptions['scroll_to_item']
-	on_context_menu: SelectionOptions['on_context_menu']
+	on_context_menu: SelectionOptions['on_contextmenu']
 
 	constructor(all_items: T[], options: SelectionOptions) {
 		this.all = all_items
 		this.scroll_to_item = options.scroll_to_item
-		this.on_context_menu = options.on_context_menu
+		this.on_context_menu = options.on_contextmenu
 	}
 
 	clear() {
-		this.items = new Set()
+		this.items.clear()
 		this.last_added = null
 		this.shift_anchor = null
 	}
@@ -36,14 +37,13 @@ class Selection<T> {
 	/** Update the list of items that can be selected.
 	 * Items that no longer exist are de-selected. */
 	update_all_items(all: T[]) {
-		let new_selection = new Set<T>()
-		for (const item of all) {
-			if (this.items.has(item)) {
-				new_selection.add(item)
+		this.all = all
+		const keep = new Set(all.filter((item) => this.items.has(item)))
+		for (const item of this.items) {
+			if (!keep.has(item)) {
+				this.items.delete(item)
 			}
 		}
-		this.all = all
-		this.items = new_selection
 		if (this.last_added !== null && !this.items.has(this.last_added.item)) {
 			this.last_added = null
 		}
