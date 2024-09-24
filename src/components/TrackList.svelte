@@ -1,7 +1,16 @@
 <script lang="ts" context="module">
-	export let current_playlist_id = writable('')
 	export const sort_key = writable('index')
 	export const sort_desc = writable(true)
+	export let current_playlist_id = writable('')
+	current_playlist_id.subscribe((id) => {
+		if (id === 'root') {
+			sort_key.set('dateAdded')
+			sort_desc.set(true)
+		} else {
+			sort_key.set('index')
+			sort_desc.set(true)
+		}
+	})
 	export const group_album_tracks = writable(true)
 </script>
 
@@ -30,7 +39,7 @@
 	import * as dragGhost from './DragGhost.svelte'
 	import VirtualListBlock, { scroll_container_keydown } from './VirtualListBlock.svelte'
 	import { open_track_info } from './TrackInfo.svelte'
-	import type { Track } from 'ferrum-addon/addon'
+	import type { ItemId, Track } from 'ferrum-addon/addon'
 	import Cover from './Cover.svelte'
 	import Header from './Header.svelte'
 	import { writable } from 'svelte/store'
@@ -45,6 +54,13 @@
 		$current_playlist_id = params.playlist_id
 	}
 
+	let tracks_page = methods.get_tracks_page({
+		playlistId: params.playlist_id,
+		filterQuery: $filter,
+		sortKey: $sort_key,
+		sortDesc: $sort_desc,
+		groupAlbumTracks: $group_album_tracks,
+	})
 	$: tracks_page = methods.get_tracks_page({
 		playlistId: params.playlist_id,
 		filterQuery: $filter,
@@ -52,41 +68,34 @@
 		sortDesc: $sort_desc,
 		groupAlbumTracks: $group_album_tracks,
 	})
-	$: track_indexes = tracks_page.trackIds.map((_, i) => i)
 
-	let selection = new SvelteSelection(track_indexes, {
+	let selection = new SvelteSelection(tracks_page.itemIds, {
 		scroll_to_item(i) {
 			tracklist_actions.scroll_to_index?.(i)
 		},
 		async on_contextmenu(selected_track_indexes) {
-			await show_track_menu(tracks_page.trackIds, [...selected_track_indexes], {
-				editable: tracks_page.playlistKind === 'playlist',
-			})
+			// await show_track_menu(tracks_page.trackIds, [...selected_track_indexes], {
+			// 	editable: tracks_page.playlistKind === 'playlist',
+			// })
 		},
 	})
-	$: {
-		selection.clear()
-		selection.update_all_items(track_indexes)
-	}
-
-	function get_selected_track_ids() {
-		return Array.from(selection.items).map((track_index) => tracks_page.trackIds[track_index])
-	}
+	$: selection.update_all_items(tracks_page.itemIds)
 
 	const track_action_unlisten = ipc_listen('selectedTracksAction', (_, action) => {
-		let first_index = selection.find_first_index()
-		if (first_index === null || !tracklist_element.contains(document.activeElement)) {
+		let first_item_id = selection.find_first()
+		if (first_item_id === undefined || !tracklist_element.contains(document.activeElement)) {
 			return
 		}
 		if (action === 'Play Next') {
-			prepend_to_user_queue(get_selected_track_ids())
+			// const selected_item_ids = Array.from(selection.items)
+			// prepend_to_user_queue(methods.get_track_ids(selected_item_ids))
 		} else if (action === 'Add to Queue') {
-			append_to_user_queue(get_selected_track_ids())
+			// const selected_item_ids = Array.from(selection.items)
+			// append_to_user_queue(methods.get_track_ids(selected_item_ids))
 		} else if (action === 'Get Info') {
-			open_track_info(tracks_page.trackIds, first_index)
+			// open_track_info(tracks_page.trackIds, first_index)
 		} else if (action === 'revealTrackFile') {
-			const track_id = tracks_page.trackIds[first_index]
-			const track = methods.getTrack(track_id)
+			const { track } = methods.get_track_by_item_id(first_item_id)
 			ipc_renderer.invoke('revealTrackFile', paths.tracksDir, track.file)
 		} else if (action === 'Remove from Playlist') {
 			// remove_from_playlist(params.playlist_id, item_ids)
@@ -225,17 +234,15 @@
 		drag_to_index = null
 	}
 
-	function get_item(index: number) {
+	function get_item(item_id: ItemId) {
 		try {
-			const track_id = tracks_page.trackIds[index]
-			const track = methods.getTrack(track_id)
-			return { ...track, id: track_id }
+			return methods.get_track_by_item_id(item_id)
 		} catch (_) {
-			return null
+			return { id: null, track: null }
 		}
 	}
 
-	let virtual_list: VirtualListBlock<number>
+	let virtual_list: VirtualListBlock<ItemId>
 
 	$: if (virtual_list) {
 		virtual_list.refresh()
@@ -396,15 +403,11 @@
 	}
 </script>
 
-{#if params.playlist_id === 'root'}
-	<Header title="Songs" subtitle="{tracks_page.trackIds.length} songs" description={undefined} />
-{:else}
-	<Header
-		title={tracks_page.playlistName}
-		subtitle="{tracks_page.trackIds.length} songs"
-		description={tracks_page.playlistDescription}
-	/>
-{/if}
+<Header
+	title={params.playlist_id === 'root' ? 'Songs' : tracks_page.playlistName}
+	subtitle="{tracks_page.itemIds.length} songs"
+	description={tracks_page.playlistDescription}
+/>
 <div
 	bind:this={tracklist_element}
 	class="tracklist h-full"
@@ -458,13 +461,14 @@
 	>
 		<VirtualListBlock
 			bind:this={virtual_list}
-			items={track_indexes}
+			items={tracks_page.itemIds}
 			item_height={24}
 			{scroll_container}
-			let:item={i}
+			let:item={item_id}
+			let:i
 			buffer={5}
 		>
-			{@const track = get_item(i)}
+			{@const { id: track_id, track } = get_item(item_id)}
 			{#if track !== null}
 				<!-- svelte-ignore a11y-click-events-have-key-events -->
 				<!-- svelte-ignore a11y-interactive-supports-focus -->
@@ -481,13 +485,13 @@
 					on:drop={drop_handler}
 					on:dragend={drag_end_handler}
 					class:odd={i % 2 === 0}
-					class:selected={$selection.has(i)}
-					class:playing={track.id === $playing_id}
+					class:selected={$selection.has(item_id)}
+					class:playing={track_id === $playing_id}
 				>
 					{#each columns as column}
 						<div class="c {column.key}" style:width={column.width}>
 							{#if column.key === 'index'}
-								{#if track.id === $playing_id}
+								{#if track_id === $playing_id}
 									<svg
 										class="playing-icon inline"
 										xmlns="http://www.w3.org/2000/svg"

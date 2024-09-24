@@ -1,6 +1,6 @@
 use crate::library::{get_track_field_type, TrackField};
-use crate::library_types::{Library, Track, TrackID};
-use crate::page::{get_tracklist_track_ids, TracksPageOptions};
+use crate::library_types::{ItemId, Library, Track, TRACK_ID_MAP};
+use crate::page::{get_tracklist_item_ids, TracksPageOptions};
 use crate::UniResult;
 use alphanumeric_sort::compare_str;
 use std::cmp::Ordering;
@@ -85,10 +85,12 @@ fn get_field_bool(track: &Track, sort_key: &str) -> Option<bool> {
 	}
 }
 
-pub fn sort(options: TracksPageOptions, library: &Library) -> UniResult<Vec<TrackID>> {
+pub fn sort(options: TracksPageOptions, library: &Library) -> UniResult<Vec<ItemId>> {
 	let now = Instant::now();
 
-	let mut track_ids = get_tracklist_track_ids(library, &options.playlist_id)?;
+	let id_map = TRACK_ID_MAP.read().unwrap();
+
+	let mut track_ids = get_tracklist_item_ids(library, &options.playlist_id)?;
 
 	if options.sort_key == "index" {
 		// No need to sort for index. Note: Indexes descend from "first to last",
@@ -109,8 +111,10 @@ pub fn sort(options: TracksPageOptions, library: &Library) -> UniResult<Vec<Trac
 			_ => false,
 		};
 	track_ids.sort_by(|id_a, id_b| {
-		let track_a = tracks.get(id_a).expect("Track ID non-existant (1)");
-		let track_b = tracks.get(id_b).expect("Track ID non-existant (2)");
+		let track_id_a = &id_map[*id_a as usize];
+		let track_id_b = &id_map[*id_b as usize];
+		let track_a = tracks.get(track_id_a).expect("Track ID non-existant (1)");
+		let track_b = tracks.get(track_id_b).expect("Track ID non-existant (2)");
 		if subsort_field
 			&& track_a.albumName.is_some()
 			&& track_a.albumName == track_b.albumName

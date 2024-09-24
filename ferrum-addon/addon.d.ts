@@ -118,7 +118,7 @@ export interface TracksPage {
   playlistName: string
   playlistDescription?: string
   playlistLength: number
-  trackIds: Array<TrackID>
+  itemIds: Array<ItemId>
 }
 export declare function get_tracks_page(options: TracksPageOptions): TracksPage
 export const enum ViewAs {
@@ -171,6 +171,12 @@ export interface TrackMd {
   comments: string
 }
 export declare function get_track(id: string): Track
+export interface KeyedTrack {
+  id: TrackID
+  track: Track
+}
+export declare function get_track_by_item_id(itemId: ItemId): KeyedTrack
+export declare function get_track_ids(itemIds: Array<ItemId>): Array<TrackID>
 export declare function track_exists(id: string): boolean
 export declare function add_play(trackId: string): void
 export declare function add_skip(trackId: string): void

@@ -138,6 +138,12 @@ class Selection<T> {
 		return item_i
 	}
 
+	/** Get first selected item, or `undefined` if selection is empty */
+	find_first() {
+		const item_i = this.all.find((item) => this.items.has(item))
+		return item_i
+	}
+
 	/** Replace selection with the previous index, like perssing `ArrowUp` in a list. */
 	go_backward() {
 		if (this.items.size === 0) {
@@ -307,6 +313,10 @@ export class SvelteSelection<T> {
 
 	find_first_index() {
 		return this.#selection.find_first_index()
+	}
+
+	find_first() {
+		return this.#selection.find_first()
 	}
 
 	clear() {

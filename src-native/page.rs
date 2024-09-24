@@ -1,9 +1,7 @@
 use crate::data::Data;
 use crate::data_js::get_data;
 use crate::filter::filter;
-use crate::library_types::{
-	ItemId, Library, SpecialTrackListName, TrackID, TrackList, TRACK_ID_MAP,
-};
+use crate::library_types::{ItemId, Library, SpecialTrackListName, TrackList};
 use crate::sort::sort;
 use crate::UniResult;
 use napi::{Env, JsUnknown, Result};
@@ -25,7 +23,7 @@ pub struct TracksPage {
 	pub playlist_name: String,
 	pub playlist_description: Option<String>,
 	pub playlist_length: u32,
-	pub track_ids: Vec<TrackID>,
+	pub item_ids: Vec<ItemId>,
 }
 
 #[napi(js_name = "get_tracks_page")]
@@ -33,59 +31,50 @@ pub struct TracksPage {
 pub fn get_tracks_page(options: TracksPageOptions, env: Env) -> Result<TracksPage> {
 	let data: &mut Data = get_data(&env)?;
 	let tracklist = data.library.get_tracklist(&options.playlist_id)?;
-	let track_ids = sort(options.clone(), &data.library)?;
-	let tracklist_length = track_ids.len();
-	let track_ids = filter(track_ids, options.filter_query, &data.library);
+	let item_ids = sort(options.clone(), &data.library)?;
+	let tracklist_length = item_ids.len();
+	let item_ids = filter(item_ids, options.filter_query, &data.library);
 	let track_page = match tracklist {
 		TrackList::Playlist(playlist) => TracksPage {
 			playlist_kind: tracklist.kind().to_string(),
 			playlist_name: playlist.name.clone(),
 			playlist_description: playlist.description.clone(),
 			playlist_length: tracklist_length as u32,
-			track_ids,
+			item_ids,
 		},
 		TrackList::Folder(folder) => TracksPage {
 			playlist_kind: tracklist.kind().to_string(),
 			playlist_name: folder.name.clone(),
 			playlist_description: folder.description.clone(),
 			playlist_length: tracklist_length as u32,
-			track_ids,
+			item_ids,
 		},
 		TrackList::Special(special) => TracksPage {
 			playlist_kind: tracklist.kind().to_string(),
 			playlist_name: special.name.to_string(),
 			playlist_description: None,
 			playlist_length: tracklist_length as u32,
-			track_ids,
+			item_ids,
 		},
 	};
 	Ok(track_page)
 }
 
-pub fn get_tracklist_track_ids(library: &Library, playlist_id: &str) -> UniResult<Vec<TrackID>> {
+pub fn get_tracklist_item_ids(library: &Library, playlist_id: &str) -> UniResult<Vec<ItemId>> {
 	match library.get_tracklist(playlist_id)? {
-		TrackList::Playlist(playlist) => {
-			let id_map = TRACK_ID_MAP.read().unwrap();
-			let ids = playlist
-				.tracks
-				.iter()
-				.map(|item_id| id_map[*item_id as usize].clone())
-				.collect();
-			Ok(ids)
-		}
+		TrackList::Playlist(playlist) => Ok(playlist.tracks.clone()),
 		TrackList::Folder(folder) => {
-			let mut ids: HashSet<TrackID> = HashSet::new();
+			let mut ids: HashSet<ItemId> = HashSet::new();
 			for child in &folder.children {
-				let child_ids = get_tracklist_track_ids(library, &child)?;
+				let child_ids = get_tracklist_item_ids(library, &child)?;
 				ids.extend(child_ids);
 			}
 			Ok(ids.into_iter().collect())
 		}
 		TrackList::Special(special) => match special.name {
 			SpecialTrackListName::Root => {
-				let track_keys = library.get_tracks().keys();
-				let ids = track_keys.map(|track| track.to_string()).collect();
-				Ok(ids)
+				let item_ids = library.get_track_item_ids().values().cloned().collect();
+				Ok(item_ids)
 			}
 		},
 	}

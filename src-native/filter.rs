@@ -1,4 +1,4 @@
-use crate::library_types::{Library, TrackID};
+use crate::library_types::{ItemId, Library, TRACK_ID_MAP};
 use rayon::prelude::*;
 use std::str::Chars;
 use std::time::Instant;
@@ -57,13 +57,17 @@ fn find_match_opt(text: &Option<String>, keyword: &str) -> bool {
 	}
 }
 
-fn filter_keyword(ids: Vec<TrackID>, keyword: &str, library: &Library) -> Vec<TrackID> {
-	let tracks = library.get_tracks();
+fn filter_keyword(ids: Vec<ItemId>, keyword: &str, library: &Library) -> Vec<ItemId> {
+	let id_map = TRACK_ID_MAP.read().unwrap();
 	let filtered_tracks: Vec<_> = ids
 		.into_par_iter()
 		.with_min_len(2000)
-		.filter(|id| {
-			let track = tracks.get(id).expect("Track ID not found");
+		.filter(|item_id| {
+			let track_id = &id_map[*item_id as usize];
+			let track = match library.get_track(track_id) {
+				Ok(track) => track,
+				Err(_) => panic!("Track ID {} not found", track_id),
+			};
 			let is_match = find_match(&track.name, keyword)
 				|| find_match(&track.artist, keyword)
 				|| find_match_opt(&track.albumName, keyword)
@@ -76,10 +80,10 @@ fn filter_keyword(ids: Vec<TrackID>, keyword: &str, library: &Library) -> Vec<Tr
 	filtered_tracks
 }
 
-pub fn filter(mut track_ids: Vec<TrackID>, query: String, library: &Library) -> Vec<TrackID> {
+pub fn filter(mut item_ids: Vec<ItemId>, query: String, library: &Library) -> Vec<ItemId> {
 	let now = Instant::now();
 	if query == "" {
-		return track_ids;
+		return item_ids;
 	}
 	let query: String = query.nfc().collect();
 
@@ -87,10 +91,10 @@ pub fn filter(mut track_ids: Vec<TrackID>, query: String, library: &Library) -> 
 		if keyword == "" {
 			continue;
 		}
-		track_ids = filter_keyword(track_ids, keyword, &library);
+		item_ids = filter_keyword(item_ids, keyword, &library);
 	}
 	println!("Filter: {}ms", now.elapsed().as_millis());
-	track_ids
+	item_ids
 }
 
 enum Eq {

@@ -193,6 +193,12 @@ export const methods = {
 	getTrack: (id: TrackID) => {
 		return call((data) => data.get_track(id))
 	},
+	get_track_by_item_id(item_id: ItemId) {
+		return call((data) => data.get_track_by_item_id(item_id))
+	},
+	get_track_ids(item_ids: ItemId[]) {
+		return call((data) => data.get_track_ids(item_ids))
+	},
 	get_tracks_page: (options: TracksPageOptions) => {
 		return call((data) => data.get_tracks_page(options))
 	},

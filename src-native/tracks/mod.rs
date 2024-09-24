@@ -2,7 +2,7 @@ use crate::data::Data;
 use crate::data_js::get_data;
 use crate::get_now_timestamp;
 use crate::js::nerr;
-use crate::library_types::{MsSinceUnixEpoch, Track, TrackID};
+use crate::library_types::{ItemId, MsSinceUnixEpoch, Track, TrackID, TRACK_ID_MAP};
 use napi::{Env, JsArrayBuffer, JsBuffer, JsObject, Result, Task};
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -24,9 +24,38 @@ fn id_to_track<'a>(env: &'a Env, id: &String) -> Result<&'a mut Track> {
 #[allow(dead_code)]
 pub fn get_track(id: String, env: Env) -> Result<Track> {
 	let data: &mut Data = get_data(&env)?;
-	let tracks = &data.library.get_tracks();
-	let track = tracks.get(&id).ok_or(nerr("Track ID not found"))?;
+	let track = data.library.get_track(&id)?;
 	Ok(track.clone())
+}
+
+#[napi(object)]
+pub struct KeyedTrack {
+	pub id: TrackID,
+	pub track: Track,
+}
+
+#[napi(js_name = "get_track_by_item_id")]
+#[allow(dead_code)]
+pub fn get_track_by_item_id(item_id: ItemId, env: Env) -> Result<KeyedTrack> {
+	let data: &mut Data = get_data(&env)?;
+	let id_map = TRACK_ID_MAP.read().unwrap();
+	let track_id = &id_map[item_id as usize];
+	let track = data.library.get_track(&track_id)?;
+	Ok(KeyedTrack {
+		id: track_id.clone(),
+		track: track.clone(),
+	})
+}
+
+#[napi(js_name = "get_track_ids")]
+#[allow(dead_code)]
+pub fn get_track_ids(item_ids: Vec<ItemId>) -> Result<Vec<TrackID>> {
+	let id_map = TRACK_ID_MAP.read().unwrap();
+	let track_ids = item_ids.into_iter().map(|item_id| {
+		let track_id = &id_map[item_id as usize];
+		track_id.clone()
+	});
+	Ok(track_ids.collect())
 }
 
 #[napi(js_name = "track_exists")]

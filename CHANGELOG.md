@@ -13,6 +13,7 @@
 - Add queue panel slide-out transition
 - Add `Ctrl+Tab` and `Ctrl+Shift+Tab` to select next/previous playlist
 - Add `Back` and `Forward` shortcuts
+- Selection no longer gets cleared when the page updates
 - Make time & volume sliders look ok
 - Small design updates to tracklist header & filter textbox
 - Respect user's locale time
