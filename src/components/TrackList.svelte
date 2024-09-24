@@ -22,8 +22,9 @@
 		track_lists_details_map,
 		move_tracks,
 		remove_from_playlist,
-		playlist_items_updated,
+		tracklist_items_updated,
 		get_default_sort_desc,
+		delete_tracks_with_item_ids,
 	} from '../lib/data'
 	import { new_playback_instance, playing_id } from '../lib/player'
 	import {
@@ -67,7 +68,7 @@
 			groupAlbumTracks: $group_album_tracks,
 		})
 	}
-	$: if (playlist_items_updated || true) {
+	$: if ($tracklist_items_updated || true) {
 		tracks_page = methods.get_tracks_page({
 			playlistId: params.playlist_id,
 			filterQuery: $filter,

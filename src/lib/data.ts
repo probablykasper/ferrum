@@ -11,6 +11,7 @@ import type {
 	ViewAs,
 	ViewOptions,
 } from '../../ferrum-addon'
+import { queue } from './queue'
 
 export const is_dev = window.is_dev
 export const local_data_path = window.local_data_path
@@ -111,7 +112,7 @@ export async function add_tracks_to_playlist(
 	}
 	if (track_ids.length >= 1) {
 		call((addon) => addon.add_tracks_to_playlist(playlist_id, track_ids))
-		playlist_items_updated.emit()
+		tracklist_items_updated.emit()
 		methods.save()
 	}
 }
@@ -122,11 +123,10 @@ export function remove_from_playlist(playlist_id: TrackListID, item_ids: ItemId[
 	// methods.save()
 }
 export function delete_tracks_with_item_ids(item_ids: ItemId[]) {
-	// call((addon) => addon.delete_tracks_with_item_ids(item_ids))
-	// page.refresh_ids_and_keep_selection()
-	// pageSelection.clear()
-	// queue.removeDeleted()
-	// methods.save()
+	call((addon) => addon.delete_tracks_with_item_ids(item_ids))
+	tracklist_items_updated.emit()
+	queue.removeDeleted()
+	methods.save()
 }
 export type PlaylistInfo = {
 	name: string
@@ -293,13 +293,13 @@ function create_refresh_store() {
 	}
 }
 export const tracks_updated = create_refresh_store()
-export const playlist_items_updated = create_refresh_store()
+export const tracklist_items_updated = create_refresh_store()
 
 export function get_artists() {
 	return call((addon) => addon.get_artists())
 }
 export function move_tracks(playlist_id: TrackListID, indexes: ItemId[], to_index: number) {
 	call((data) => data.move_tracks(playlist_id, indexes, to_index))
-	playlist_items_updated.emit()
+	tracklist_items_updated.emit()
 	methods.save()
 }
