@@ -161,27 +161,26 @@ export function move_playlist(
 export const paths = call((addon) => addon.get_paths())
 
 export async function import_tracks(paths: string[]) {
-	// let err_state = null
-	// const now = Date.now()
-	// for (const path of paths) {
-	// 	try {
-	// 		inner_addon.import_file(path, now)
-	// 	} catch (err) {
-	// 		if (err_state === 'skip') continue
-	// 		const result = await ipc_renderer.invoke('showMessageBox', false, {
-	// 			type: 'error',
-	// 			message: 'Error importing track ' + path,
-	// 			detail: get_error_message(err),
-	// 			buttons: err_state ? ['OK', 'Skip all errors'] : ['OK'],
-	// 			defaultId: 0,
-	// 		})
-	// 		if (result.response === 1) err_state = 'skip'
-	// 		else err_state = 'skippable'
-	// 	}
-	// }
-	// page.refresh_ids_and_keep_selection()
-	// pageSelection.clear()
-	// methods.save()
+	let err_state = null
+	const now = Date.now()
+	for (const path of paths) {
+		try {
+			inner_addon.import_file(path, now)
+		} catch (err) {
+			if (err_state === 'skip') continue
+			const result = await ipc_renderer.invoke('showMessageBox', false, {
+				type: 'error',
+				message: 'Error importing track ' + path,
+				detail: get_error_message(err),
+				buttons: err_state ? ['OK', 'Skip all errors'] : ['OK'],
+				defaultId: 0,
+			})
+			if (result.response === 1) err_state = 'skip'
+			else err_state = 'skippable'
+		}
+	}
+	tracklist_items_updated.emit()
+	methods.save()
 }
 
 export function get_default_sort_desc(field: string) {
