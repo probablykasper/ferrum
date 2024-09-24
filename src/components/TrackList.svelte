@@ -44,7 +44,8 @@
 	import Header from './Header.svelte'
 	import { writable } from 'svelte/store'
 	import { SvelteSelection } from '@/lib/selection-new'
-	import { show_track_menu } from '@/lib/menus'
+	import { get_flattened_tracklists, handle_selected_tracks_action } from '@/lib/menus'
+	import type { SelectedTracksAction } from '@/electron/typed_ipc'
 
 	let tracklist_element: HTMLDivElement
 
@@ -69,40 +70,42 @@
 		groupAlbumTracks: $group_album_tracks,
 	})
 
+	function handle_action(action: SelectedTracksAction) {
+		if (action === 'Remove from Playlist') {
+			remove_from_playlist($current_playlist_id, selection.items_as_array())
+			return
+		} else if (action === 'Delete from Library') {
+			delete_tracks(selection.items_as_array())
+		} else {
+			handle_selected_tracks_action({
+				action,
+				track_ids: methods.get_track_ids(selection.items_as_array()),
+				all_ids: methods.get_track_ids(tracks_page.itemIds),
+				first_index: selection.find_first_index(),
+			})
+		}
+	}
+
 	let selection = new SvelteSelection(tracks_page.itemIds, {
 		scroll_to_item(i) {
 			tracklist_actions.scroll_to_index?.(i)
 		},
-		async on_contextmenu(selected_track_indexes) {
-			// await show_track_menu(tracks_page.trackIds, [...selected_track_indexes], {
-			// 	editable: tracks_page.playlistKind === 'playlist',
-			// })
+		async on_contextmenu() {
+			const action = await ipc_renderer.invoke('show_tracks_menu', {
+				is_editable_playlist: tracks_page.playlistKind === 'playlist',
+				queue: false,
+				lists: get_flattened_tracklists(),
+			})
+			if (action !== null) {
+				handle_action(action)
+			}
 		},
 	})
 	$: selection.update_all_items(tracks_page.itemIds)
 
-	const track_action_unlisten = ipc_listen('selectedTracksAction', (_, action) => {
-		let first_item_id = selection.find_first()
-		if (first_item_id === undefined || !tracklist_element.contains(document.activeElement)) {
-			return
-		}
-		if (action === 'Play Next') {
-			// const selected_item_ids = Array.from(selection.items)
-			// prepend_to_user_queue(methods.get_track_ids(selected_item_ids))
-		} else if (action === 'Add to Queue') {
-			// const selected_item_ids = Array.from(selection.items)
-			// append_to_user_queue(methods.get_track_ids(selected_item_ids))
-		} else if (action === 'Get Info') {
-			// open_track_info(tracks_page.trackIds, first_index)
-		} else if (action === 'revealTrackFile') {
-			const { track } = methods.get_track_by_item_id(first_item_id)
-			ipc_renderer.invoke('revealTrackFile', paths.tracksDir, track.file)
-		} else if (action === 'Remove from Playlist') {
-			// remove_from_playlist(params.playlist_id, item_ids)
-		} else if (action === 'Delete from Library') {
-			// delete_indexes(selection.items)
-		} else {
-			assert_unreachable(action)
+	const track_action_unlisten = ipc_listen('selected_tracks_action', (_, action) => {
+		if (tracklist_element.contains(document.activeElement)) {
+			handle_action(action)
 		}
 	})
 	onDestroy(track_action_unlisten)
@@ -116,7 +119,7 @@
 			play_row(index)
 		}
 	}
-	async function delete_indexes(indexes: number[]) {
+	async function delete_tracks(item_ids: ItemId[]) {
 		// const s = $selection.count > 1 ? 's' : ''
 		// const result = await ipc_renderer.invoke('showMessageBox', false, {
 		// 	type: 'info',
@@ -156,7 +159,7 @@
 			// }
 		} else if (check_shortcut(e, 'Backspace', { cmd_or_ctrl: true }) && $selection.size > 0) {
 			e.preventDefault()
-			// delete_indexes(selection.getSelectedIndexes())
+			// delete_tracks(selection.getSelectedIndexes())
 		} else {
 			selection.handle_keydown(e)
 			return

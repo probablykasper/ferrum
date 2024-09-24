@@ -52,6 +52,25 @@ class Selection<T> {
 		}
 	}
 
+	/** Get first selected index, or `null` if selection is empty */
+	find_first_index() {
+		const item_i = this.all.findIndex((item) => this.items.has(item))
+		if (item_i === -1) {
+			return null
+		}
+		return item_i
+	}
+
+	/** Get first selected item, or `undefined` if selection is empty */
+	find_first() {
+		const item_i = this.all.find((item) => this.items.has(item))
+		return item_i
+	}
+
+	items_as_array() {
+		return this.all.filter((item) => this.items.has(item))
+	}
+
 	#get_shift_anchor() {
 		if (this.shift_anchor !== null) return this.shift_anchor
 		else return this.last_added
@@ -127,21 +146,6 @@ class Selection<T> {
 			this.last_added = { index: to_index, item: this.all[to_index] }
 		}
 		this.shift_anchor = anchor
-	}
-
-	/** Get first selected index, or `null` if selection is empty */
-	find_first_index() {
-		const item_i = this.all.findIndex((item) => this.items.has(item))
-		if (item_i === -1) {
-			return null
-		}
-		return item_i
-	}
-
-	/** Get first selected item, or `undefined` if selection is empty */
-	find_first() {
-		const item_i = this.all.find((item) => this.items.has(item))
-		return item_i
 	}
 
 	/** Replace selection with the previous index, like perssing `ArrowUp` in a list. */
@@ -314,26 +318,25 @@ export class SvelteSelection<T> {
 	find_first_index() {
 		return this.#selection.find_first_index()
 	}
-
 	find_first() {
 		return this.#selection.find_first()
+	}
+	items_as_array() {
+		return this.#selection.items_as_array()
 	}
 
 	clear() {
 		this.#selection.clear()
 		this.#store.set(this.#selection.items)
 	}
-
 	update_all_items(all: T[]) {
 		this.#selection.update_all_items(all)
 		this.#store.set(this.#selection.items)
 	}
-
 	shift_select_to(to_index: number) {
 		this.#selection.shift_select_to(to_index)
 		this.#store.set(this.#selection.items)
 	}
-
 	mouse_down_select(e: MouseEvent, index: number) {
 		this.#selection.mouse_down_select(e, index)
 		this.#store.set(this.#selection.items)

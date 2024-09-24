@@ -10,11 +10,10 @@
 		queue,
 		type QueueItem,
 	} from '../lib/queue'
-	import { paths } from '../lib/data'
+	import { add_tracks_to_playlist, paths } from '../lib/data'
 	import { onDestroy } from 'svelte'
 	import QueueItemComponent from './QueueItem.svelte'
 	import { new_selection } from '@/lib/selection'
-	import { show_track_menu } from '@/lib/menus'
 	import { dragged } from '@/lib/drag-drop'
 	import { methods } from '@/lib/data'
 	import * as dragGhost from './DragGhost.svelte'
@@ -24,6 +23,8 @@
 	import VirtualListBlock, { scroll_container_keydown } from './VirtualListBlock.svelte'
 	import { open_track_info } from './TrackInfo.svelte'
 	import Button from './Button.svelte'
+	import type { SelectedTracksAction } from '@/electron/typed_ipc'
+	import { get_flattened_tracklists, handle_selected_tracks_action } from '@/lib/menus'
 
 	let object_urls: string[] = []
 
@@ -60,16 +61,14 @@
 			autoplay_list.scroll_to_index(i, 40)
 		},
 		async on_context_menu() {
-			const indexes = selection.getSelectedIndexes()
-			const current_array = $queue.current ? [$queue.current.item] : []
-			const all_items = [
-				...$queue.past,
-				...current_array,
-				...$queue.user_queue,
-				...$queue.auto_queue,
-			]
-			const all_ids = all_items.map((item) => item.id)
-			await show_track_menu(all_ids, indexes, undefined, true)
+			const action = await ipc_renderer.invoke('show_tracks_menu', {
+				is_editable_playlist: false,
+				queue: true,
+				lists: get_flattened_tracklists(),
+			})
+			if (action !== null) {
+				handle_action(action)
+			}
 		},
 	})
 	$: selection.setMinimumIndex(show_history ? 0 : up_next_index)
@@ -85,38 +84,28 @@
 
 	let queue_element: HTMLElement
 
-	const track_action_unlisten = ipc_listen('selectedTracksAction', (_, action) => {
-		let first_index = selection.findFirst()
+	function handle_action(action: SelectedTracksAction) {
+		const first_index = selection.findFirst()
+		const indexes = selection.getSelectedIndexes()
+		const track_ids = indexes.map((i) => queue.getByQueueIndex(i).id)
+		const all_items = [
+			...$queue.past,
+			...($queue.current ? [$queue.current.item] : []),
+			...$queue.user_queue,
+			...$queue.auto_queue,
+		]
+		const all_ids = all_items.map((item) => item.id)
+		handle_selected_tracks_action({
+			action,
+			track_ids: track_ids,
+			all_ids,
+			first_index,
+		})
+	}
 
-		if (first_index === null || !queue_element.contains(document.activeElement)) {
-			return
-		}
-		if (action === 'Play Next') {
-			const indexes = selection.getSelectedIndexes()
-			const ids = indexes.map((i) => queue.getByQueueIndex(i).id)
-			prepend_to_user_queue(ids)
-		} else if (action === 'Add to Queue') {
-			const indexes = selection.getSelectedIndexes()
-			const ids = indexes.map((i) => queue.getByQueueIndex(i).id)
-			append_to_user_queue(ids)
-		} else if (action === 'Get Info') {
-			const all_items = [
-				...$queue.past,
-				...($queue.current ? [$queue.current.item] : []),
-				...$queue.user_queue,
-				...$queue.auto_queue,
-			]
-			const all_ids = all_items.map((item) => item.id)
-			open_track_info(all_ids, first_index)
-		} else if (action === 'revealTrackFile') {
-			const track = methods.getTrack(queue.getByQueueIndex(first_index).id)
-			ipc_renderer.invoke('revealTrackFile', paths.tracksDir, track.file)
-		} else if (action === 'Remove from Playlist') {
-			return
-		} else if (action === 'Delete from Library') {
-			return
-		} else {
-			assert_unreachable(action)
+	const track_action_unlisten = ipc_listen('selected_tracks_action', (_, action) => {
+		if (queue_element.contains(document.activeElement)) {
+			handle_action(action)
 		}
 	})
 	onDestroy(track_action_unlisten)

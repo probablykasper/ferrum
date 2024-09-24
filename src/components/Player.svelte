@@ -14,15 +14,28 @@
 	import { get_duration } from '../lib/helpers'
 	import { queue_visible, toggle_queue_visibility, queue, shuffle, repeat } from '../lib/queue'
 	import { is_dev, methods } from '../lib/data'
-	import { show_track_menu } from '@/lib/menus'
 	import { dragged } from '@/lib/drag-drop'
 	import * as dragGhost from './DragGhost.svelte'
 	import Slider from './Slider.svelte'
+	import { get_flattened_tracklists, handle_selected_tracks_action } from '@/lib/menus'
+	import { ipc_renderer } from '@/lib/window'
 
 	async function playing_context_menu() {
 		const playing = queue.getCurrent()
 		if (playing) {
-			await show_track_menu([playing.id], [0])
+			const action = await ipc_renderer.invoke('show_tracks_menu', {
+				is_editable_playlist: false,
+				queue: false,
+				lists: get_flattened_tracklists(),
+			})
+			if (action !== null) {
+				handle_selected_tracks_action({
+					action,
+					track_ids: [playing.id],
+					all_ids: [playing.id],
+					first_index: 0,
+				})
+			}
 		}
 	}
 

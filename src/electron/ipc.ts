@@ -1,4 +1,4 @@
-import { dialog, Menu, shell, BrowserWindow } from 'electron'
+import { dialog, Menu, shell, BrowserWindow, type MenuItemConstructorOptions } from 'electron'
 import { ipc_main } from './typed_ipc'
 import path from 'path'
 import is from './is'
@@ -33,67 +33,59 @@ ipc_main.handle('volume_change', async (_e, up) => {
 	}
 })
 
-ipc_main.handle('showTrackMenu', (e, options) => {
-	let queue_menu: Electron.MenuItemConstructorOptions[] = []
-	if (options.queue) {
-		queue_menu = [
+ipc_main.handle('show_tracks_menu', (e, options) => {
+	return new Promise((resolve) => {
+		const menu = Menu.buildFromTemplate([
 			{
 				label: 'Remove from Queue',
 				click: () => {
 					e.sender.send('context.Remove from Queue')
 				},
+				visible: options.queue,
+			},
+			{ type: 'separator', visible: options.queue },
+			{
+				label: 'Play Next',
+				click: () => resolve('Play Next'),
+			},
+			{
+				label: 'Add to Queue',
+				click: () => resolve('Add to Queue'),
+			},
+			{
+				label: 'Add to Playlist',
+				submenu: options.lists.map((item) => {
+					return {
+						...item,
+						click: () => resolve({ action: 'Add to Playlist', playlist_id: item.id }),
+					}
+				}),
 			},
 			{ type: 'separator' },
-		]
-	}
-	const selected_ids = options.selectedIndexes.map((i) => options.allIds[i])
-	const menu = Menu.buildFromTemplate([
-		...queue_menu,
-		{
-			label: 'Play Next',
-			click: () => {
-				e.sender.send('context.Play Next', selected_ids)
+			{
+				label: 'Get Info',
+				click: () => resolve('Get Info'),
 			},
-		},
-		{
-			label: 'Add to Queue',
-			click: () => {
-				e.sender.send('context.Add to Queue', selected_ids)
+			{ type: 'separator' },
+			{
+				label: (() => {
+					if (is.mac) return 'Reveal in Finder'
+					else if (is.windows) return 'Reveal in File Explorer'
+					else return 'Reveal in File Manager'
+				})(),
+				click: () => resolve('reveal_track_file'),
 			},
-		},
-		{
-			label: 'Add to Playlist',
-			submenu: options.lists.map((item) => {
-				return {
-					...item,
-					click: () => e.sender.send('context.Add to Playlist', item.id, selected_ids),
-				}
-			}),
-		},
-		{ type: 'separator' },
-		{
-			label: 'Get Info',
-			click: () => {
-				e.sender.send('context.Get Info', options.allIds, options.selectedIndexes[0])
+			{ type: 'separator', visible: options.is_editable_playlist === true },
+			{
+				label: 'Remove from Playlist',
+				click: () => resolve('Remove from Playlist'),
+				visible: options.is_editable_playlist === true,
 			},
-		},
-		{ type: 'separator' },
-		{
-			label: (() => {
-				if (is.mac) return 'Reveal in Finder'
-				else if (is.windows) return 'Reveal in File Explorer'
-				else return 'Reveal in File Manager'
-			})(),
-			click: () => e.sender.send('context.revealTrackFile', selected_ids[0]),
-		},
-		{ type: 'separator', visible: options.playlist?.editable === true },
-		{
-			label: 'Remove from Playlist',
-			click: () => e.sender.send('context.Remove from Playlist', options.selectedIndexes),
-			visible: options.playlist?.editable === true,
-		},
-	])
-	menu.popup()
+		])
+		menu.popup({
+			callback: () => resolve(null),
+		})
+	})
 })
 
 ipc_main.handle('showTracklistMenu', (e, args) => {

@@ -6,6 +6,7 @@ import type {
 	IpcRendererEvent,
 	WebContents as ElectronWebContents,
 	dialog,
+	MenuItemConstructorOptions,
 } from 'electron'
 import { ipcMain as electronIpcMain } from 'electron'
 import type { Track, TrackID } from '../../ferrum-addon'
@@ -88,6 +89,15 @@ interface TypedIpcRenderer<IpcEvents extends InputMap, IpcCommands extends Input
 	): Promise<ReturnType<IpcCommands[K]>>
 }
 
+export type SelectedTracksAction =
+	| 'Play Next'
+	| 'Add to Queue'
+	| { action: 'Add to Playlist'; playlist_id: string }
+	| 'Get Info'
+	| 'reveal_track_file'
+	| 'Remove from Playlist'
+	| 'Delete from Library'
+
 type Events = {
 	readyToQuit: () => void
 	gonnaQuit: () => void
@@ -109,15 +119,7 @@ type Events = {
 	ToggleQuickNav: () => void
 	'Group Album Tracks': (checked: boolean) => void
 
-	selectedTracksAction: (
-		action:
-			| 'Play Next'
-			| 'Add to Queue'
-			| 'Get Info'
-			| 'revealTrackFile'
-			| 'Remove from Playlist'
-			| 'Delete from Library',
-	) => void
+	selected_tracks_action: (action: SelectedTracksAction) => void
 
 	Back: () => void
 	Forward: () => void
@@ -127,20 +129,14 @@ type Events = {
 	'context.playlist.edit': (id: TrackID) => void
 	'context.playlist.delete': (id: TrackID) => void
 	'context.Remove from Queue': () => void
-	'context.Play Next': (ids: TrackID[]) => void
-	'context.Add to Queue': (ids: TrackID[]) => void
-	'context.Add to Playlist': (id: string, trackIds: TrackID[]) => void
-	'context.revealTrackFile': (id: TrackID) => void
 	'context.Get Info': (allIds: TrackID[], selectedIndex: number) => void
 	'context.Remove from Playlist': (selectedIndexes: number[]) => void
 	'context.toggle_column': (item: { id: string; label: string; checked: boolean }) => void
 }
 
 export type ShowTrackMenuOptions = {
-	allIds: string[]
-	selectedIndexes: number[]
-	playlist?: { editable: boolean }
 	lists: { label: string; enabled: boolean; id: string }[]
+	is_editable_playlist: boolean
 	queue: boolean
 }
 
@@ -155,7 +151,7 @@ type Commands = {
 		options: Parameters<typeof dialog.showOpenDialog>[0],
 	) => ReturnType<typeof dialog.showOpenDialog>
 	revealTrackFile: (...paths: string[]) => void
-	showTrackMenu: (options: ShowTrackMenuOptions) => void
+	show_tracks_menu: (options: ShowTrackMenuOptions) => null | SelectedTracksAction
 	showTracklistMenu: (options: { id: string; isFolder: boolean; isRoot: boolean }) => void
 	show_columns_menu: (options: { menu: Electron.MenuItemConstructorOptions[] }) => void
 	volume_change: (up: boolean) => void
