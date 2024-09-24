@@ -635,7 +635,7 @@ pub async fn import_itunes(
 		None => throw!("Not initialized"),
 	};
 	let mut itunes_track_paths = itunes_import.itunes_track_paths.lock().unwrap();
-	let original_tracks_count = library.tracks.len();
+	let original_tracks_count = library.get_tracks().len();
 	let original_tracklists_count = library.trackLists.len();
 	let xml_lib: XmlLibrary = match plist::from_file(path) {
 		Ok(book) => book,
@@ -682,7 +682,7 @@ pub async fn import_itunes(
 				let generated_id = library.generate_id();
 				// immediately insert into library so new generated ids are unique
 				itunes_track_paths.insert(xml_track_path, track.file.clone());
-				library.tracks.insert(generated_id.clone(), track);
+				library.insert_track(generated_id.clone(), track);
 				if xml_track_id_map.contains_key(&xml_id) {
 					errors.push(format!("Duplicate track ids \"{}\": artist_title", xml_id));
 				}
@@ -769,7 +769,7 @@ pub async fn import_itunes(
 
 	Ok(ImportStatus {
 		errors,
-		tracks_count: (library.tracks.len() - original_tracks_count) as i64,
+		tracks_count: (library.get_tracks().len() - original_tracks_count) as i64,
 		playlists_count: (library.trackLists.len() - original_tracklists_count) as i64,
 	})
 }

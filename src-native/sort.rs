@@ -98,7 +98,7 @@ pub fn sort(options: TracksPageOptions, library: &Library) -> UniResult<Vec<Trac
 		return Ok(track_ids);
 	}
 
-	let tracks = &library.tracks;
+	let tracks = library.get_tracks();
 	let field = match get_track_field_type(&options.sort_key) {
 		Some(field) => field,
 		None => throw!("Field type not found for {}", options.sort_key),

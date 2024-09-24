@@ -8,7 +8,7 @@ use std::time::Instant;
 pub fn load_artists(library: &Library) -> HashSet<String> {
 	let now = Instant::now();
 	let mut artists = HashSet::new();
-	for (_, track) in &library.tracks {
+	for (_, track) in library.get_tracks() {
 		if !artists.contains(&track.artist) {
 			artists.insert(track.artist.clone());
 		}

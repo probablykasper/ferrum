@@ -58,7 +58,7 @@ fn find_match_opt(text: &Option<String>, keyword: &str) -> bool {
 }
 
 fn filter_keyword(ids: Vec<TrackID>, keyword: &str, library: &Library) -> Vec<TrackID> {
-	let tracks = &library.tracks;
+	let tracks = library.get_tracks();
 	let filtered_tracks: Vec<_> = ids
 		.into_par_iter()
 		.with_min_len(2000)

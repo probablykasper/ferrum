@@ -91,7 +91,7 @@
 		} else if (action === 'Remove from Playlist') {
 			// remove_from_playlist(params.playlist_id, item_ids)
 		} else if (action === 'Delete from Library') {
-			delete_indexes(selection.items)
+			// delete_indexes(selection.items)
 		} else {
 			assert_unreachable(action)
 		}

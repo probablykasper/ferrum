@@ -16,8 +16,7 @@ pub use tag::Tag;
 
 fn id_to_track<'a>(env: &'a Env, id: &String) -> Result<&'a mut Track> {
 	let data: &mut Data = get_data(env)?;
-	let tracks = &mut data.library.tracks;
-	let track = tracks.get_mut(id).ok_or(nerr("Track ID not found"))?;
+	let track = data.library.get_track_mut(id)?;
 	return Ok(track);
 }
 
@@ -25,7 +24,7 @@ fn id_to_track<'a>(env: &'a Env, id: &String) -> Result<&'a mut Track> {
 #[allow(dead_code)]
 pub fn get_track(id: String, env: Env) -> Result<Track> {
 	let data: &mut Data = get_data(&env)?;
-	let tracks = &data.library.tracks;
+	let tracks = &data.library.get_tracks();
 	let track = tracks.get(&id).ok_or(nerr("Track ID not found"))?;
 	Ok(track.clone())
 }
@@ -34,7 +33,7 @@ pub fn get_track(id: String, env: Env) -> Result<Track> {
 #[allow(dead_code)]
 pub fn track_exists(id: String, env: Env) -> Result<bool> {
 	let data: &mut Data = get_data(&env)?;
-	let tracks = &data.library.tracks;
+	let tracks = &data.library.get_tracks();
 	Ok(tracks.contains_key(&id))
 }
 
@@ -74,8 +73,8 @@ pub fn add_skip(track_id: String, env: Env) -> Result<()> {
 #[allow(dead_code)]
 pub fn add_play_time(id: TrackID, start: MsSinceUnixEpoch, dur_ms: i64, env: Env) -> Result<()> {
 	let data: &mut Data = get_data(&env)?;
-	let tracks = &mut data.library.tracks;
-	tracks.get_mut(&id).ok_or(nerr("Track ID not found"))?;
+	let tracks = data.library.get_tracks();
+	tracks.get(&id).ok_or(nerr("Track ID not found"))?;
 	data.library.playTime.push((id, start, dur_ms));
 	Ok(())
 }
@@ -168,7 +167,7 @@ pub fn import_file(path: String, now: MsSinceUnixEpoch, env: Env) -> Result<()> 
 	let data: &mut Data = get_data(&env)?;
 	let id = data.library.generate_id();
 	let track = import::import(&data, Path::new(&path), now)?;
-	data.library.tracks.insert(id, track);
+	data.library.insert_track(id, track);
 	Ok(())
 }
 

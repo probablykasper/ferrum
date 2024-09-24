@@ -2,7 +2,7 @@ use crate::data::Data;
 use crate::data_js::get_data;
 use crate::filter::filter;
 use crate::library_types::{
-	ItemId, Library, SpecialTrackListName, TrackID, TrackList, PLAYLIST_TRACK_ID_MAP,
+	ItemId, Library, SpecialTrackListName, TrackID, TrackList, TRACK_ID_MAP,
 };
 use crate::sort::sort;
 use crate::UniResult;
@@ -65,7 +65,7 @@ pub fn get_tracks_page(options: TracksPageOptions, env: Env) -> Result<TracksPag
 pub fn get_tracklist_track_ids(library: &Library, playlist_id: &str) -> UniResult<Vec<TrackID>> {
 	match library.get_tracklist(playlist_id)? {
 		TrackList::Playlist(playlist) => {
-			let id_map = PLAYLIST_TRACK_ID_MAP.read().unwrap();
+			let id_map = TRACK_ID_MAP.read().unwrap();
 			let ids = playlist
 				.tracks
 				.iter()
@@ -83,7 +83,7 @@ pub fn get_tracklist_track_ids(library: &Library, playlist_id: &str) -> UniResul
 		}
 		TrackList::Special(special) => match special.name {
 			SpecialTrackListName::Root => {
-				let track_keys = library.tracks.keys();
+				let track_keys = library.get_tracks().keys();
 				let ids = track_keys.map(|track| track.to_string()).collect();
 				Ok(ids)
 			}

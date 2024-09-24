@@ -2,7 +2,7 @@ use crate::data::Data;
 use crate::data_js::get_data;
 use crate::library_types::{
 	get_track_ids_from_item_ids, new_item_ids_from_track_ids, ItemId, Library,
-	SpecialTrackListName, TrackID, TrackList, PLAYLIST_TRACK_ID_MAP,
+	SpecialTrackListName, TrackID, TrackList, TRACK_ID_MAP,
 };
 use crate::{str_to_option, UniResult};
 use napi::{Env, JsUnknown, Result};
@@ -191,8 +191,8 @@ pub fn remove_from_playlist(playlist_id: TrackID, item_ids: Vec<ItemId>, env: En
 	return Ok(());
 }
 
-fn remove_from_all_playlists(library: &mut Library, id: &str) {
-	let track_id_map = PLAYLIST_TRACK_ID_MAP.read().unwrap();
+pub fn remove_from_all_playlists(library: &mut Library, id: &TrackID) {
+	let track_id_map = TRACK_ID_MAP.read().unwrap();
 	for (_, tracklist) in &mut library.trackLists {
 		let playlist = match tracklist {
 			TrackList::Playlist(playlist) => playlist,
@@ -200,11 +200,11 @@ fn remove_from_all_playlists(library: &mut Library, id: &str) {
 		};
 		playlist
 			.tracks
-			.retain(|current_id| track_id_map[*current_id as usize] != id);
+			.retain(|current_id| track_id_map[*current_id as usize] != *id);
 	}
 }
 
-fn delete_file(path: &PathBuf) -> UniResult<()> {
+pub fn delete_file(path: &PathBuf) -> UniResult<()> {
 	#[allow(unused_mut)]
 	let mut trash_context = trash::TrashContext::new();
 
@@ -223,21 +223,8 @@ pub fn delete_tracks_with_item_ids(item_ids: Vec<ItemId>, env: Env) -> Result<()
 	let data: &mut Data = get_data(&env)?;
 	let library = &mut data.library;
 	let track_ids = get_track_ids_from_item_ids(&item_ids);
-	for id_to_delete in &track_ids {
-		let file_path = {
-			let track = library.get_track(id_to_delete)?;
-			data.paths.tracks_dir.join(&track.file)
-		};
-		if !file_path.exists() {
-			throw!("File does not exist: {}", file_path.to_string_lossy());
-		}
-
-		remove_from_all_playlists(library, &id_to_delete);
-		library
-			.tracks
-			.remove(id_to_delete)
-			.expect("Track ID not found when deleting");
-		delete_file(&file_path)?;
+	for track_id in &track_ids {
+		library.delete_track_and_file(track_id, &data.paths.tracks_dir)?;
 	}
 	return Ok(());
 }

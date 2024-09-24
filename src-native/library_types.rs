@@ -1,16 +1,18 @@
 #![allow(non_snake_case)]
 
+use crate::playlists::{delete_file, remove_from_all_playlists};
 use crate::{get_now_timestamp, UniResult};
-use linked_hash_map::LinkedHashMap;
+use linked_hash_map::{Entry, LinkedHashMap};
 use nanoid::nanoid;
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
+use std::path::PathBuf;
 use std::sync::RwLock;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(deny_unknown_fields)]
 pub struct Library {
-	pub tracks: LinkedHashMap<TrackID, Track>,
+	tracks: LinkedHashMap<TrackID, Track>,
 	pub trackLists: TrackLists,
 	/// v1 playtime has two issues:
 	/// - some durations are double counted (or triple, etc.)
@@ -50,12 +52,16 @@ pub struct V1Library {
 }
 impl V1Library {
 	pub fn upgrade(self) -> Library {
-		Library {
-			tracks: self.tracks,
+		let mut library = Library {
+			tracks: LinkedHashMap::new(),
 			trackLists: self.trackLists,
 			v1PlayTime: self.playTime,
 			playTime: Vec::new(),
+		};
+		for (id, track) in self.tracks {
+			library.insert_track(id, track);
 		}
+		library
 	}
 }
 
@@ -76,6 +82,34 @@ impl Library {
 			trackLists: track_lists,
 		}
 	}
+	#[inline]
+	pub fn get_tracks(&self) -> &LinkedHashMap<TrackID, Track> {
+		&self.tracks
+	}
+	pub fn insert_track(&mut self, id: TrackID, track: Track) {
+		match self.tracks.entry(id.clone()) {
+			Entry::Occupied(_) => panic!("Track ID already exists"),
+			Entry::Vacant(entry) => entry.insert(track),
+		};
+		let mut track_id_map = TRACK_ID_MAP.write().unwrap();
+		track_id_map.push(id);
+	}
+	pub fn delete_track_and_file(&mut self, id: &TrackID, tracks_dir: &PathBuf) -> UniResult<()> {
+		let file_path = {
+			let track = self.get_track(id)?;
+			tracks_dir.join(&track.file)
+		};
+		if !file_path.exists() {
+			throw!("File does not exist: {}", file_path.to_string_lossy());
+		}
+
+		remove_from_all_playlists(self, id);
+		self.tracks
+			.remove(id)
+			.expect("Track ID not found when deleting");
+		delete_file(&file_path)?;
+		Ok(())
+	}
 	pub fn generate_id(&self) -> String {
 		let alphabet: [char; 32] = [
 			'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q',
@@ -83,7 +117,7 @@ impl Library {
 		];
 		for _ in 0..1000 {
 			let id = nanoid!(7, &alphabet);
-			if !self.tracks.contains_key(&id) && !self.trackLists.contains_key(&id) {
+			if !self.get_tracks().contains_key(&id) && !self.trackLists.contains_key(&id) {
 				return id;
 			}
 		}
@@ -117,8 +151,14 @@ impl Library {
 			children: Vec::new(),
 		}
 	}
-	pub fn get_track(&self, id: &str) -> UniResult<&Track> {
-		match self.tracks.get(id) {
+	pub fn get_track(&self, id: &TrackID) -> UniResult<&Track> {
+		match self.get_tracks().get(id) {
+			Some(track) => Ok(track),
+			None => throw!("Track with ID {} not found", id),
+		}
+	}
+	pub fn get_track_mut(&mut self, id: &TrackID) -> UniResult<&mut Track> {
+		match self.tracks.get_mut(id) {
 			Some(track) => Ok(track),
 			None => throw!("Track with ID {} not found", id),
 		}
@@ -290,10 +330,10 @@ fn is_false(value: &bool) -> bool {
 
 // These are used to give each playlist entry an ID. This is for example helpful to keep track of a user's selection. These IDs are unique across the entire library, so that it works for folders folders.
 pub type ItemId = u32;
-pub static PLAYLIST_TRACK_ID_MAP: RwLock<Vec<String>> = RwLock::new(Vec::new());
+pub static TRACK_ID_MAP: RwLock<Vec<String>> = RwLock::new(Vec::new());
 
 pub fn new_item_ids_from_track_ids(track_ids: &[TrackID]) -> Vec<ItemId> {
-	let mut playlist_track_id_map = PLAYLIST_TRACK_ID_MAP.write().unwrap();
+	let mut playlist_track_id_map = TRACK_ID_MAP.write().unwrap();
 	let playlist_track_ids: Vec<u32> = track_ids
 		.iter()
 		.map(|track_id| {
@@ -308,7 +348,7 @@ pub fn new_item_ids_from_track_ids(track_ids: &[TrackID]) -> Vec<ItemId> {
 }
 
 pub fn get_track_ids_from_item_ids(playlist_item_ids: &[ItemId]) -> Vec<TrackID> {
-	let playlist_track_id_map = PLAYLIST_TRACK_ID_MAP.read().unwrap();
+	let playlist_track_id_map = TRACK_ID_MAP.read().unwrap();
 	playlist_item_ids
 		.iter()
 		.map(|playlist_item_id| playlist_track_id_map[*playlist_item_id as usize].clone())
