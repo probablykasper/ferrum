@@ -81,7 +81,9 @@ pub fn load_library(paths: &Paths) -> UniResult<Library> {
 		},
 	};
 
-	Ok(versioned_library.upgrade())
+	let library = versioned_library.upgrade().init_libary();
+	println!("Initialized library: {}ms", now.elapsed().as_millis());
+	Ok(library)
 }
 
 pub enum TrackField {
