@@ -5,10 +5,10 @@
 	current_playlist_id.subscribe((id) => {
 		if (id === 'root') {
 			sort_key.set('dateAdded')
-			sort_desc.set(true)
+			sort_desc.set(get_default_sort_desc('dateAdded'))
 		} else {
 			sort_key.set('index')
-			sort_desc.set(true)
+			sort_desc.set(get_default_sort_desc('index'))
 		}
 	})
 	export const group_album_tracks = writable(true)
@@ -23,6 +23,7 @@
 		move_tracks,
 		remove_from_playlist,
 		playlist_items_updated,
+		get_default_sort_desc,
 	} from '../lib/data'
 	import { new_playback_instance, playing_id } from '../lib/player'
 	import {
@@ -441,7 +442,17 @@
 				style:width={column.width}
 				role="button"
 				on:click={() => {
-					sort_key.set(column.key)
+					if (tracks_page.playlistKind === 'special' && column.key === 'index') {
+						return
+					} else if (column.key === 'image') {
+						return
+					}
+					if ($sort_key === column.key) {
+						sort_desc.set(!$sort_desc)
+					} else {
+						sort_key.set(column.key)
+						sort_desc.set(get_default_sort_desc(column.key))
+					}
 				}}
 				draggable="true"
 				on:dragstart={(e) => on_col_drag_start(e, i)}

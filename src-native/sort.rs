@@ -93,10 +93,12 @@ pub fn sort(options: TracksPageOptions, library: &Library) -> UniResult<Vec<Item
 	let mut track_ids = get_tracklist_item_ids(library, &options.playlist_id)?;
 
 	if options.sort_key == "index" {
-		// No need to sort for index. Note: Indexes descend from "first to last",
-		// unlike other numbers which ascend from "high to low"
+		// Note: Indexes descend from "first to last", unlike
+		// other numbers which ascend from "high to low"
+		if !options.sort_desc {
+			track_ids.reverse();
+		}
 		println!("Sort: {}ms", now.elapsed().as_millis());
-		track_ids.reverse();
 		return Ok(track_ids);
 	}
 

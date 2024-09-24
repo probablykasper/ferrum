@@ -96,6 +96,20 @@ pub enum TrackField {
 	Bool,
 }
 
+#[napi(js_name = "get_default_sort_desc")]
+#[allow(dead_code)]
+pub fn get_default_sort_desc(field: String) -> bool {
+	if field == "index" {
+		return true;
+	}
+	let field = get_track_field_type(&field);
+	let desc = match field {
+		Some(TrackField::String) => false,
+		_ => true,
+	};
+	return desc;
+}
+
 pub fn get_track_field_type(field: &str) -> Option<TrackField> {
 	let field = match field {
 		"size" => TrackField::I64,

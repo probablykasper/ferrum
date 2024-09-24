@@ -21,6 +21,7 @@ export interface ImportStatus {
 }
 export declare function copyFile(from: string, to: string): void
 export declare function atomicFileSave(filePath: string, content: string): void
+export declare function get_default_sort_desc(field: string): boolean
 export interface Track {
   size: number
   duration: number

@@ -184,6 +184,10 @@ export async function import_tracks(paths: string[]) {
 	// methods.save()
 }
 
+export function get_default_sort_desc(field: string) {
+	return call((addon) => addon.get_default_sort_desc(field))
+}
+
 export const methods = {
 	importTrack: (path: string, now: MsSinceUnixEpoch) => {
 		call((data) => data.import_file(path, now))
