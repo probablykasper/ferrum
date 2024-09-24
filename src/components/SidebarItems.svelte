@@ -2,7 +2,7 @@
 	import {
 		track_lists_details_map,
 		methods,
-		add_track_to_playlist,
+		add_tracks_to_playlist,
 		move_playlist,
 	} from '../lib/data'
 	import Self from './SidebarItems.svelte'
@@ -256,7 +256,7 @@
 				class:droppable-below={drag_playlist_onto_index === i && !drop_above}
 				on:drop={(e) => {
 					if (e.currentTarget && e.dataTransfer?.types[0] === 'ferrum.tracks' && dragged.tracks) {
-						add_track_to_playlist(child_list.id, dragged.tracks.ids)
+						add_tracks_to_playlist(child_list.id, dragged.tracks.ids)
 						drag_track_onto_index = null
 					} else if (
 						e.currentTarget &&

@@ -1,5 +1,5 @@
 import {
-	add_track_to_playlist,
+	add_tracks_to_playlist,
 	methods,
 	paths,
 	remove_from_playlist,
@@ -30,7 +30,6 @@ export function handle_selected_tracks_action({
 	all_ids: TrackID[]
 	first_index: number | null
 }) {
-	console.log('hsta', track_ids.length, first_index)
 	if (track_ids.length === 0 || first_index === null) {
 		return
 	}
@@ -46,6 +45,6 @@ export function handle_selected_tracks_action({
 		const track = methods.getTrack(first_track_id)
 		ipc_renderer.invoke('revealTrackFile', paths.tracksDir, track.file)
 	} else if (typeof action === 'object' && action.action === 'Add to Playlist') {
-		add_track_to_playlist(action.playlist_id, track_ids)
+		add_tracks_to_playlist(action.playlist_id, track_ids)
 	}
 }

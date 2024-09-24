@@ -22,6 +22,7 @@
 		track_lists_details_map,
 		move_tracks,
 		remove_from_playlist,
+		playlist_items_updated,
 	} from '../lib/data'
 	import { new_playback_instance, playing_id } from '../lib/player'
 	import {
@@ -55,20 +56,25 @@
 		$current_playlist_id = params.playlist_id
 	}
 
-	let tracks_page = methods.get_tracks_page({
-		playlistId: params.playlist_id,
-		filterQuery: $filter,
-		sortKey: $sort_key,
-		sortDesc: $sort_desc,
-		groupAlbumTracks: $group_album_tracks,
-	})
-	$: tracks_page = methods.get_tracks_page({
-		playlistId: params.playlist_id,
-		filterQuery: $filter,
-		sortKey: $sort_key,
-		sortDesc: $sort_desc,
-		groupAlbumTracks: $group_album_tracks,
-	})
+	let tracks_page = get_tracks_page()
+	function get_tracks_page() {
+		return methods.get_tracks_page({
+			playlistId: params.playlist_id,
+			filterQuery: $filter,
+			sortKey: $sort_key,
+			sortDesc: $sort_desc,
+			groupAlbumTracks: $group_album_tracks,
+		})
+	}
+	$: if (playlist_items_updated || true) {
+		tracks_page = methods.get_tracks_page({
+			playlistId: params.playlist_id,
+			filterQuery: $filter,
+			sortKey: $sort_key,
+			sortDesc: $sort_desc,
+			groupAlbumTracks: $group_album_tracks,
+		})
+	}
 
 	function handle_action(action: SelectedTracksAction) {
 		if (action === 'Remove from Playlist') {

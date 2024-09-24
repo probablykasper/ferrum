@@ -83,39 +83,37 @@ export const track_lists_details_map = (() => {
 		},
 	}
 })()
-export async function add_track_to_playlist(
+export async function add_tracks_to_playlist(
 	playlist_id: TrackListID,
 	track_ids: TrackID[],
 	check_duplicates = true,
 ) {
-	// if (check_duplicates) {
-	// 	const filtered_ids = call((addon) => addon.playlist_filter_duplicates(playlist_id, track_ids))
-	// 	const duplicates = track_ids.length - filtered_ids.length
-	// 	if (duplicates > 0) {
-	// 		const result = await ipc_renderer.invoke('showMessageBox', false, {
-	// 			type: 'question',
-	// 			message: 'Already added',
-	// 			detail:
-	// 				duplicates > 1
-	// 					? `${duplicates} songs are already in this playlist`
-	// 					: `${duplicates} song is already in this playlist`,
-	// 			buttons: ['Add anyway', 'Cancel', 'Skip'],
-	// 			defaultId: 0,
-	// 		})
-	// 		if (result.response === 1) {
-	// 			return
-	// 		} else if (result.response === 2) {
-	// 			track_ids = filtered_ids
-	// 		}
-	// 	}
-	// }
-	// if (track_ids.length >= 1) {
-	// 	call((addon) => addon.add_tracks_to_playlist(playlist_id, track_ids))
-	// 	if (page.get().tracklist.id === playlist_id) {
-	// 		page.refresh_ids_and_keep_selection()
-	// 	}
-	// 	methods.save()
-	// }
+	if (check_duplicates) {
+		const filtered_ids = call((addon) => addon.playlist_filter_duplicates(playlist_id, track_ids))
+		const duplicates = track_ids.length - filtered_ids.length
+		if (duplicates > 0) {
+			const result = await ipc_renderer.invoke('showMessageBox', false, {
+				type: 'question',
+				message: 'Already added',
+				detail:
+					duplicates > 1
+						? `${duplicates} songs are already in this playlist`
+						: `${duplicates} song is already in this playlist`,
+				buttons: ['Add anyway', 'Cancel', 'Skip'],
+				defaultId: 0,
+			})
+			if (result.response === 1) {
+				return
+			} else if (result.response === 2) {
+				track_ids = filtered_ids
+			}
+		}
+	}
+	if (track_ids.length >= 1) {
+		call((addon) => addon.add_tracks_to_playlist(playlist_id, track_ids))
+		playlist_items_updated.emit()
+		methods.save()
+	}
 }
 export function remove_from_playlist(playlist_id: TrackListID, item_ids: ItemId[]) {
 	// call((addon) => addon.remove_from_playlist(playlist_id, item_ids))
@@ -291,12 +289,13 @@ function create_refresh_store() {
 	}
 }
 export const tracks_updated = create_refresh_store()
+export const playlist_items_updated = create_refresh_store()
 
 export function get_artists() {
 	return call((addon) => addon.get_artists())
 }
 export function move_tracks(playlist_id: TrackListID, indexes: ItemId[], to_index: number) {
 	call((data) => data.move_tracks(playlist_id, indexes, to_index))
-	tracks_updated.emit()
+	playlist_items_updated.emit()
 	methods.save()
 }
