@@ -6,7 +6,14 @@
 </script>
 
 <script lang="ts">
-	import { filter, paths, methods, track_lists_details_map, move_tracks } from '../lib/data'
+	import {
+		filter,
+		paths,
+		methods,
+		track_lists_details_map,
+		move_tracks,
+		remove_from_playlist,
+	} from '../lib/data'
 	import { new_playback_instance, playing_id } from '../lib/player'
 	import {
 		get_duration,
@@ -62,29 +69,32 @@
 		selection.update_all_items(track_indexes)
 	}
 
+	function get_selected_track_ids() {
+		return Array.from(selection.items).map((track_index) => tracks_page.trackIds[track_index])
+	}
+
 	const track_action_unlisten = ipc_listen('selectedTracksAction', (_, action) => {
-		// let first_index = selection.findFirst()
-		// if (first_index === null || !tracklist_element.contains(document.activeElement)) {
-		// 	return
-		// }
-		// if (action === 'Play Next') {
-		// 	const ids = selection.getSelectedIndexes().map((i) => page.get_track_id(i))
-		// 	prepend_to_user_queue(ids)
-		// } else if (action === 'Add to Queue') {
-		// 	const ids = selection.getSelectedIndexes().map((i) => page.get_track_id(i))
-		// 	append_to_user_queue(ids)
-		// } else if (action === 'Get Info') {
-		// 	open_track_info(page.get_track_ids(), first_index)
-		// } else if (action === 'revealTrackFile') {
-		// 	const track = page.get_track(first_index)
-		// 	ipc_renderer.invoke('revealTrackFile', paths.tracksDir, track.file)
-		// } else if (action === 'Remove from Playlist') {
-		// 	remove_from_open_playlist(selection.getSelectedIndexes())
-		// } else if (action === 'Delete from Library') {
-		// 	delete_indexes(selection.getSelectedIndexes())
-		// } else {
-		// 	assert_unreachable(action)
-		// }
+		let first_index = selection.find_first_index()
+		if (first_index === null || !tracklist_element.contains(document.activeElement)) {
+			return
+		}
+		if (action === 'Play Next') {
+			prepend_to_user_queue(get_selected_track_ids())
+		} else if (action === 'Add to Queue') {
+			append_to_user_queue(get_selected_track_ids())
+		} else if (action === 'Get Info') {
+			open_track_info(tracks_page.trackIds, first_index)
+		} else if (action === 'revealTrackFile') {
+			const track_id = tracks_page.trackIds[first_index]
+			const track = methods.getTrack(track_id)
+			ipc_renderer.invoke('revealTrackFile', paths.tracksDir, track.file)
+		} else if (action === 'Remove from Playlist') {
+			// remove_from_playlist(params.playlist_id, item_ids)
+		} else if (action === 'Delete from Library') {
+			delete_indexes(selection.items)
+		} else {
+			assert_unreachable(action)
+		}
 	})
 	onDestroy(track_action_unlisten)
 

@@ -294,53 +294,54 @@ class Selection<T> {
 }
 
 export class SvelteSelection<T> {
-	readonly selection: Selection<T>
-	readonly store: Writable<Set<T>>
-	readonly subscribe: typeof this.store.subscribe
+	readonly #selection: Selection<T>
+	readonly #store: Writable<Set<T>>
+	readonly subscribe: Writable<Set<T>>['subscribe']
+	readonly items: Set<T>
 	constructor(all_items: T[], options: SelectionOptions<T>) {
-		this.selection = new Selection(all_items, options)
-		this.store = writable(this.selection.items)
-		this.subscribe = this.store.subscribe
-	}
-
-	clear() {
-		this.selection.clear()
-		this.store.set(this.selection.items)
-	}
-
-	update_all_items(all: T[]) {
-		this.selection.update_all_items(all)
-		this.store.set(this.selection.items)
-	}
-
-	shift_select_to(to_index: number) {
-		this.selection.shift_select_to(to_index)
-		this.store.set(this.selection.items)
+		this.#selection = new Selection(all_items, options)
+		this.#store = writable(this.#selection.items)
+		this.subscribe = this.#store.subscribe
+		this.items = this.#selection.items
 	}
 
 	find_first_index() {
-		this.selection.find_first_index()
-		this.store.set(this.selection.items)
+		return this.#selection.find_first_index()
+	}
+
+	clear() {
+		this.#selection.clear()
+		this.#store.set(this.#selection.items)
+	}
+
+	update_all_items(all: T[]) {
+		this.#selection.update_all_items(all)
+		this.#store.set(this.#selection.items)
+	}
+
+	shift_select_to(to_index: number) {
+		this.#selection.shift_select_to(to_index)
+		this.#store.set(this.#selection.items)
 	}
 
 	mouse_down_select(e: MouseEvent, index: number) {
-		this.selection.mouse_down_select(e, index)
-		this.store.set(this.selection.items)
+		this.#selection.mouse_down_select(e, index)
+		this.#store.set(this.#selection.items)
 	}
 	handle_mouse_down(e: MouseEvent, index: number) {
-		this.selection.handle_mouse_down(e, index)
-		this.store.set(this.selection.items)
+		this.#selection.handle_mouse_down(e, index)
+		this.#store.set(this.#selection.items)
 	}
 	handle_contextmenu(e: MouseEvent, index: number) {
-		this.selection.handle_contextmenu(e, index)
-		this.store.set(this.selection.items)
+		this.#selection.handle_contextmenu(e, index)
+		this.#store.set(this.#selection.items)
 	}
 	handle_click(e: MouseEvent, index: number) {
-		this.selection.handle_click(e, index)
-		this.store.set(this.selection.items)
+		this.#selection.handle_click(e, index)
+		this.#store.set(this.#selection.items)
 	}
 	handle_keydown(e: KeyboardEvent) {
-		this.selection.handle_keydown(e)
-		this.store.set(this.selection.items)
+		this.#selection.handle_keydown(e)
+		this.#store.set(this.#selection.items)
 	}
 }
