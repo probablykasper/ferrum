@@ -1,4 +1,4 @@
-import { writable } from 'svelte/store'
+import { get, writable } from 'svelte/store'
 import { ipc_renderer } from '@/lib/window'
 import type {
 	MsSinceUnixEpoch,
@@ -12,6 +12,8 @@ import type {
 	ViewOptions,
 } from '../../ferrum-addon'
 import { queue } from './queue'
+import { current_playlist_id } from '@/components/TrackList.svelte'
+import { navigate } from './router'
 
 export const is_dev = window.is_dev
 export const local_data_path = window.local_data_path
@@ -209,16 +211,12 @@ export const methods = {
 		return call((data) => data.get_track_list(id)) as TrackList
 	},
 	deleteTrackList: (id: TrackListID) => {
-		// console.log('deleteTL')
-		// call((data) => data.delete_track_list(id))
-		// console.log('id ', '===', ' current_playlist_id')
-		// if (id === current_playlist_id) {
-		// 	navigate('/playlist/root')
-		// }
-		// page.refresh_ids_and_keep_selection()
-		// pageSelection.clear()
-		// track_lists_details_map.refresh()
-		// methods.save()
+		call((data) => data.delete_track_list(id))
+		if (id === get(current_playlist_id)) {
+			navigate('/playlist/root')
+		}
+		track_lists_details_map.refresh()
+		methods.save()
 	},
 	save: () => {
 		return call((addon) => addon.save())
