@@ -1,5 +1,12 @@
 <script lang="ts">
-	import { ItunesImport, paths, call } from '@/lib/data'
+	import {
+		ItunesImport,
+		paths,
+		call,
+		tracklist_updated,
+		track_lists_details_map,
+		save,
+	} from '@/lib/data'
 	import { ipc_renderer } from '@/lib/window'
 	import type { ImportStatus } from 'ferrum-addon/addon'
 	import Button from './Button.svelte'
@@ -34,12 +41,11 @@
 		}
 	}
 	async function finish() {
-		// itunes_import.finish()
-		// methods.save()
-		// page.refresh_ids_and_keep_selection()
-		// pageSelection.clear()
-		// track_lists_details_map.refresh()
-		// cancel()
+		itunes_import.finish()
+		save()
+		tracklist_updated.emit()
+		track_lists_details_map.refresh()
+		cancel()
 	}
 	async function submit() {
 		if (stage === 'select') {
