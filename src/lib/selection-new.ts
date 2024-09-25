@@ -76,6 +76,7 @@ class Selection<T> {
 		else return this.last_added
 	}
 
+	/** Make sure the index exists */
 	add_index(index: number) {
 		this.items.add(this.all[index])
 		this.last_added = { index, item: this.all[index] }
@@ -269,7 +270,9 @@ class Selection<T> {
 		if (check_shortcut(e, 'Escape')) {
 			this.clear()
 		} else if (check_shortcut(e, 'A', { cmd_or_ctrl: true })) {
-			this.#add_index_range_in_shift_mode(0, this.all.length - 1)
+			if (this.all.length > 1) {
+				this.#add_index_range_in_shift_mode(0, this.all.length - 1)
+			}
 		} else if (check_shortcut(e, 'ArrowUp')) {
 			this.go_backward()
 			this.scroll_to_item(this.last_added?.index || 0)
@@ -278,8 +281,10 @@ class Selection<T> {
 			this.scroll_to_item(this.last_added?.index || 0)
 		} else if (check_shortcut(e, 'ArrowUp', { alt: true })) {
 			this.clear()
-			this.add_index(0)
-			this.scroll_to_item(0)
+			if (this.all.length > 1) {
+				this.add_index(0)
+				this.scroll_to_item(0)
+			}
 		} else if (check_shortcut(e, 'ArrowUp', { shift: true, alt: true })) {
 			this.shift_select_to(0)
 			this.scroll_to_item(this.last_added?.index || 0)
@@ -291,8 +296,10 @@ class Selection<T> {
 			this.scroll_to_item(this.last_added?.index || 0)
 		} else if (check_shortcut(e, 'ArrowDown', { alt: true })) {
 			this.clear()
-			this.add_index(this.all.length - 1)
-			this.scroll_to_item(this.last_added?.index || 0)
+			if (this.all.length > 1) {
+				this.add_index(this.all.length - 1)
+				this.scroll_to_item(this.last_added?.index || 0)
+			}
 		} else if (check_shortcut(e, 'ArrowDown', { shift: true, alt: true })) {
 			this.shift_select_to(this.all.length - 1)
 			this.scroll_to_item(this.last_added?.index || 0)
@@ -331,14 +338,6 @@ export class SvelteSelection<T> {
 	}
 	update_all_items(all: T[]) {
 		this.#selection.update_all_items(all)
-		this.#store.set(this.#selection.items)
-	}
-	shift_select_to(to_index: number) {
-		this.#selection.shift_select_to(to_index)
-		this.#store.set(this.#selection.items)
-	}
-	mouse_down_select(e: MouseEvent, index: number) {
-		this.#selection.mouse_down_select(e, index)
 		this.#store.set(this.#selection.items)
 	}
 	handle_mouse_down(e: MouseEvent, index: number) {
