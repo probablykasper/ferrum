@@ -16,7 +16,7 @@
 	</svg>
 {:else}
 	<img
-		class="cover poinraer-events-none"
+		class="cover"
 		class:invisible={success === null}
 		src="trackimg:?path={encodeURIComponent(
 			join_paths(paths.tracksDir, track.file),

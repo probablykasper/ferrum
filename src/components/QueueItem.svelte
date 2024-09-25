@@ -8,11 +8,20 @@
 	let track: Track
 	$: $track_metadata_updated, (track = methods.getTrack(id))
 
-	let success: boolean | null = null
+	$: src =
+		'trackimg:?path=' +
+		encodeURIComponent(join_paths(paths.tracksDir, track.file)) +
+		'&cache_db_path=' +
+		encodeURIComponent(paths.cacheDb) +
+		'&date_modified=' +
+		encodeURIComponent(track.dateModified)
+
+	let failed_src: string | null = null
+	let loaded = false
 </script>
 
 <div class="box">
-	{#if success === false}
+	{#if src === failed_src && failed_src !== null}
 		<svg
 			class="cover"
 			xmlns="http://www.w3.org/2000/svg"
@@ -27,18 +36,15 @@
 	{:else}
 		<img
 			class="cover"
-			class:invisible={success === null}
-			src="trackimg:?path={encodeURIComponent(
-				join_paths(paths.tracksDir, track.file),
-			)}&cache_db_path={encodeURIComponent(paths.cacheDb)}&date_modified={encodeURIComponent(
-				track.dateModified,
-			)}"
+			class:invisible={!loaded}
+			{src}
 			alt=""
 			on:load={() => {
-				success = true
+				loaded = true
+				failed_src = null
 			}}
 			on:error={() => {
-				success = false
+				failed_src = src
 			}}
 		/>
 	{/if}
