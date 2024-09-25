@@ -224,19 +224,18 @@ export const methods = {
 		return call((addon) => addon.save())
 	},
 	addPlay: (id: TrackID) => {
-		// call((data) => data.add_play(id))
-		// page.refresh_ids_and_keep_selection()
-		// methods.save()
+		call((data) => data.add_play(id))
+		tracklist_items_updated.emit()
+		methods.save()
 	},
 	addSkip: (id: TrackID) => {
-		// call((data) => data.add_skip(id))
-		// page.refresh_ids_and_keep_selection()
-		// methods.save()
+		call((data) => data.add_skip(id))
+		tracklist_items_updated.emit()
+		methods.save()
 	},
 	addPlayTime: (id: TrackID, start_time: MsSinceUnixEpoch, duration_ms: number) => {
-		// call((data) => data.add_play_time(id, start_time, duration_ms))
-		// page.refresh_ids_and_keep_selection()
-		// methods.save()
+		call((data) => data.add_play_time(id, start_time, duration_ms))
+		methods.save()
 	},
 	readCoverAsync(id: TrackID, index: number) {
 		return inner_addon.read_cover_async(id, index).catch((error) => {
