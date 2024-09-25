@@ -486,6 +486,7 @@
 		<VirtualListBlock
 			bind:this={virtual_list}
 			items={tracks_page.itemIds}
+			get_key={(item) => item}
 			item_height={24}
 			{scroll_container}
 			let:item={item_id}
