@@ -24,27 +24,19 @@
 		track_lists_details_map,
 		move_tracks,
 		remove_from_playlist,
-		tracklist_items_updated,
+		tracklist_updated,
 		get_default_sort_desc,
 		delete_tracks_with_item_ids,
 		tracks_updated,
 	} from '../lib/data'
 	import { new_playback_instance, playing_id } from '../lib/player'
-	import {
-		get_duration,
-		format_date,
-		check_mouse_shortcut,
-		check_shortcut,
-		assert_unreachable,
-	} from '../lib/helpers'
-	import { append_to_user_queue, prepend_to_user_queue } from '../lib/queue'
+	import { get_duration, format_date, check_mouse_shortcut, check_shortcut } from '../lib/helpers'
 	import { tracklist_actions } from '../lib/page'
 	import { ipc_listen, ipc_renderer } from '../lib/window'
 	import { onDestroy, onMount } from 'svelte'
 	import { dragged } from '../lib/drag-drop'
 	import * as dragGhost from './DragGhost.svelte'
 	import VirtualListBlock, { scroll_container_keydown } from './VirtualListBlock.svelte'
-	import { open_track_info } from './TrackInfo.svelte'
 	import type { ItemId, Track } from 'ferrum-addon/addon'
 	import Cover from './Cover.svelte'
 	import Header from './Header.svelte'
@@ -71,7 +63,7 @@
 			groupAlbumTracks: $group_album_tracks,
 		})
 	}
-	$: if ($tracklist_items_updated || $tracks_updated || true) {
+	$: if ($tracklist_updated || $tracks_updated || true) {
 		tracks_page = methods.get_tracks_page({
 			playlistId: params.playlist_id,
 			filterQuery: $filter,

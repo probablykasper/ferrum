@@ -114,18 +114,18 @@ export async function add_tracks_to_playlist(
 	}
 	if (track_ids.length >= 1) {
 		call((addon) => addon.add_tracks_to_playlist(playlist_id, track_ids))
-		tracklist_items_updated.emit()
+		tracklist_updated.emit()
 		methods.save()
 	}
 }
 export function remove_from_playlist(playlist_id: TrackListID, item_ids: ItemId[]) {
 	call((addon) => addon.remove_from_playlist(playlist_id, item_ids))
-	tracklist_items_updated.emit()
+	tracklist_updated.emit()
 	methods.save()
 }
 export function delete_tracks_with_item_ids(item_ids: ItemId[]) {
 	call((addon) => addon.delete_tracks_with_item_ids(item_ids))
-	tracklist_items_updated.emit()
+	tracklist_updated.emit()
 	queue.removeDeleted()
 	methods.save()
 }
@@ -143,10 +143,10 @@ export function new_playlist(info: PlaylistInfo) {
 	methods.save()
 }
 export function update_playlist(id: string, name: string, description: string) {
-	// call((addon) => addon.update_playlist(id, name, description))
-	// track_lists_details_map.refresh()
-	// page.refresh_ids_and_keep_selection()
-	// methods.save()
+	call((addon) => addon.update_playlist(id, name, description))
+	track_lists_details_map.refresh()
+	tracklist_updated.emit()
+	methods.save()
 }
 export function move_playlist(
 	id: TrackListID,
@@ -180,7 +180,7 @@ export async function import_tracks(paths: string[]) {
 			else err_state = 'skippable'
 		}
 	}
-	tracklist_items_updated.emit()
+	tracklist_updated.emit()
 	methods.save()
 }
 
@@ -223,12 +223,12 @@ export const methods = {
 	},
 	addPlay: (id: TrackID) => {
 		call((data) => data.add_play(id))
-		tracklist_items_updated.emit()
+		tracklist_updated.emit()
 		methods.save()
 	},
 	addSkip: (id: TrackID) => {
 		call((data) => data.add_skip(id))
-		tracklist_items_updated.emit()
+		tracklist_updated.emit()
 		methods.save()
 	},
 	addPlayTime: (id: TrackID, start_time: MsSinceUnixEpoch, duration_ms: number) => {
@@ -287,13 +287,13 @@ function create_refresh_store() {
 	}
 }
 export const tracks_updated = create_refresh_store()
-export const tracklist_items_updated = create_refresh_store()
+export const tracklist_updated = create_refresh_store()
 
 export function get_artists() {
 	return call((addon) => addon.get_artists())
 }
 export function move_tracks(playlist_id: TrackListID, indexes: ItemId[], to_index: number) {
 	call((data) => data.move_tracks(playlist_id, indexes, to_index))
-	tracklist_items_updated.emit()
+	tracklist_updated.emit()
 	methods.save()
 }
