@@ -125,9 +125,9 @@ pub fn move_tracks(
 	}
 
 	let mut start_items = playlist.tracks.clone();
-	start_items.retain(|item_id| !item_ids_set.contains(item_id));
-
 	let mut end_items = start_items.split_off(to_index as usize);
+
+	start_items.retain(|item_id| !item_ids_set.contains(item_id));
 	end_items.retain(|item_id| !item_ids_set.contains(item_id));
 
 	start_items.append(&mut item_ids);

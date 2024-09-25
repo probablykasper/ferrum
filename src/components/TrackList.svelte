@@ -137,10 +137,7 @@
 			defaultId: 0,
 		})
 		if (result.response === 0) {
-			console.log('delete_tracks_with_item_ids(', item_ids)
-
 			delete_tracks_with_item_ids(item_ids)
-			console.log('deleted 👍')
 		}
 	}
 	async function keydown(e: KeyboardEvent) {
