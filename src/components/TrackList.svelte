@@ -50,10 +50,7 @@
 	let tracklist_element: HTMLDivElement
 
 	export let params: { playlist_id: string }
-
-	$: {
-		$current_playlist_id = params.playlist_id
-	}
+	$: $current_playlist_id = params.playlist_id
 
 	let tracks_page = get_tracks_page({
 		playlistId: params.playlist_id,
@@ -62,7 +59,8 @@
 		sortDesc: $sort_desc,
 		groupAlbumTracks: $group_album_tracks,
 	})
-	$: if ($tracklist_updated || $tracks_updated) {
+	// eslint-disable-next-line no-constant-condition
+	$: if ($tracklist_updated || $tracks_updated || true) {
 		tracks_page = get_tracks_page({
 			playlistId: params.playlist_id,
 			filterQuery: $filter,

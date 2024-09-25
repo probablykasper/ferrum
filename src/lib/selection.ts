@@ -72,7 +72,7 @@ class Selection<T> {
 	}
 
 	get_selected_indexes() {
-		const indexes = new Array()
+		const indexes = []
 		for (let i = 0; i < this.all.length; i++) {
 			if (this.items.has(this.all[i])) {
 				indexes.push(i)
