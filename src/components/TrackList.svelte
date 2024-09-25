@@ -43,7 +43,7 @@
 	import Cover from './Cover.svelte'
 	import Header from './Header.svelte'
 	import { writable } from 'svelte/store'
-	import { SvelteSelection } from '@/lib/selection-new'
+	import { SvelteSelection } from '@/lib/selection'
 	import { get_flattened_tracklists, handle_selected_tracks_action } from '@/lib/menus'
 	import type { SelectedTracksAction } from '@/electron/typed_ipc'
 
@@ -487,7 +487,7 @@
 					class="row"
 					role="row"
 					on:dblclick={(e) => double_click(e, i)}
-					on:mousedown={(e) => selection.handle_mouse_down(e, i)}
+					on:mousedown={(e) => selection.handle_mousedown(e, i)}
 					on:contextmenu={(e) => selection.handle_contextmenu(e, i)}
 					on:click={(e) => selection.handle_click(e, i)}
 					draggable="true"

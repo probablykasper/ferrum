@@ -2,7 +2,6 @@
 	import {
 		clear_user_queue,
 		get_by_queue_index,
-		get_queue_length,
 		insert_ids,
 		move_indexes,
 		queue,
@@ -10,7 +9,6 @@
 	} from '../lib/queue'
 	import { onDestroy } from 'svelte'
 	import QueueItemComponent from './QueueItem.svelte'
-	import { new_selection } from '@/lib/selection'
 	import { dragged } from '@/lib/drag-drop'
 	import { get_track } from '@/lib/data'
 	import * as dragGhost from './DragGhost.svelte'
@@ -20,6 +18,7 @@
 	import VirtualListBlock, { scroll_container_keydown } from './VirtualListBlock.svelte'
 	import type { SelectedTracksAction } from '@/electron/typed_ipc'
 	import { get_flattened_tracklists, handle_selected_tracks_action } from '@/lib/menus'
+	import { SvelteSelection } from '@/lib/selection'
 
 	let object_urls: string[] = []
 
@@ -38,24 +37,35 @@
 	let up_next_list: VirtualListBlock<QueueItem>
 	let autoplay_list: VirtualListBlock<QueueItem>
 
-	const selection = new_selection({
-		get_item_count: () => get_queue_length(),
-		scroll_to_item: (i) => {
-			if (i < $queue.past.length) {
-				return history_list.scroll_to_index(i, 40)
+	let full_queue_list = [
+		...(show_history ? $queue.past : []),
+		...(show_history && $queue.current ? [$queue.current.item] : []),
+		...$queue.user_queue,
+		...$queue.auto_queue,
+	].map((item) => item.qId)
+	$: full_queue_list = [
+		...(show_history ? $queue.past : []),
+		...($queue.current ? [$queue.current.item] : []),
+		...$queue.user_queue,
+		...$queue.auto_queue,
+	].map((item) => item.qId)
+	const selection = new SvelteSelection(full_queue_list, {
+		scroll_to: ({ index }) => {
+			if (index < $queue.past.length) {
+				return history_list.scroll_to_index(index, 40)
 			}
-			i -= $queue.past.length
-			if ($queue.current && i === 0) {
-				return history_list.scroll_to_index(i, 40)
+			index -= $queue.past.length
+			if ($queue.current && index === 0) {
+				return history_list.scroll_to_index(index, 40)
 			}
-			i -= Number(!!$queue.current)
-			if (i < $queue.user_queue.length) {
-				return up_next_list.scroll_to_index(i, 40)
+			index -= Number(!!$queue.current)
+			if (index < $queue.user_queue.length) {
+				return up_next_list.scroll_to_index(index, 40)
 			}
-			i -= $queue.user_queue.length
-			autoplay_list.scroll_to_index(i, 40)
+			index -= $queue.user_queue.length
+			autoplay_list.scroll_to_index(index, 40)
 		},
-		async on_context_menu() {
+		async on_contextmenu() {
 			const action = await ipc_renderer.invoke('show_tracks_menu', {
 				is_editable_playlist: false,
 				queue: true,
@@ -66,13 +76,12 @@
 			}
 		},
 	})
-	$: selection.setMinimumIndex(show_history ? 0 : up_next_index)
-
+	$: selection.update_all_items(full_queue_list)
 	$: $queue, selection.clear()
 
 	function remove_from_queue() {
-		if ($selection.count >= 1) {
-			queue.removeIndexes(selection.getSelectedIndexes())
+		if (selection.items.size >= 1) {
+			queue.removeIndexes(selection.get_selected_indexes())
 		}
 	}
 	onDestroy(ipc_listen('context.Remove from Queue', remove_from_queue))
@@ -80,8 +89,8 @@
 	let queue_element: HTMLElement
 
 	function handle_action(action: SelectedTracksAction) {
-		const first_index = selection.findFirst()
-		const indexes = selection.getSelectedIndexes()
+		const first_index = selection.find_first_index()
+		const indexes = selection.get_selected_indexes()
 		const track_ids = indexes.map((i) => queue.getByQueueIndex(i).id)
 		const all_items = [
 			...$queue.past,
@@ -106,25 +115,20 @@
 	onDestroy(track_action_unlisten)
 
 	let drag_line: HTMLElement
-	let dagged_indexes: number[] = []
+	let dragged_indexes: number[] = []
 	function on_drag_start(e: DragEvent) {
 		if (e.dataTransfer) {
-			dagged_indexes = []
-			for (let i = 0; i < $selection.list.length; i++) {
-				if ($selection.list[i]) {
-					dagged_indexes.push(i)
-				}
-			}
+			dragged_indexes = selection.get_selected_indexes()
 			e.dataTransfer.effectAllowed = 'move'
-			if (dagged_indexes.length === 1) {
-				const track = get_track(get_by_queue_index(dagged_indexes[0]).id)
+			if (dragged_indexes.length === 1) {
+				const track = get_track(get_by_queue_index(dragged_indexes[0]).id)
 				dragGhost.set_inner_text(track.artist + ' - ' + track.name)
 			} else {
-				dragGhost.set_inner_text(dagged_indexes.length + ' items')
+				dragGhost.set_inner_text(dragged_indexes.length + ' items')
 			}
 			dragged.tracks = {
-				ids: dagged_indexes.map((i) => get_by_queue_index(i).id),
-				queue_indexes: dagged_indexes,
+				ids: dragged_indexes.map((i) => get_by_queue_index(i).id),
+				queue_indexes: dragged_indexes,
 			}
 			e.dataTransfer.setDragImage(dragGhost.drag_el, 0, 0)
 			e.dataTransfer.setData('ferrum.tracks', '')
@@ -167,7 +171,7 @@
 				? move_indexes(dragged.tracks.queue_indexes, drag_to_index, to_user_queue)
 				: insert_ids(dragged.tracks.ids, drag_to_index, to_user_queue)
 			for (let i = new_selection.from; i <= new_selection.to; i++) {
-				selection.add(i)
+				selection.add_index(i)
 			}
 			drag_to_index = null
 		}
@@ -183,11 +187,11 @@
 		tabindex="-1"
 		on:keydown={scroll_container_keydown}
 		on:keydown={(e) => {
-			if (check_shortcut(e, 'Backspace') && $selection.count >= 1) {
+			if (check_shortcut(e, 'Backspace') && selection.items.size >= 1) {
 				e.preventDefault()
 				remove_from_queue()
 			} else {
-				selection.handleKeyDown(e)
+				selection.handle_keydown(e)
 			}
 		}}
 		on:mousedown|self={selection.clear}
@@ -234,10 +238,10 @@
 						<div
 							class="row"
 							role="row"
-							class:selected={$selection.list[qi] === true}
-							on:mousedown={(e) => selection.handleMouseDown(e, qi)}
-							on:contextmenu={(e) => selection.handleContextMenu(e, qi)}
-							on:click={(e) => selection.handleClick(e, qi)}
+							class:selected={$selection.has(item.qId)}
+							on:mousedown={(e) => selection.handle_mousedown(e, qi)}
+							on:contextmenu={(e) => selection.handle_contextmenu(e, qi)}
+							on:click={(e) => selection.handle_click(e, qi)}
 							draggable="true"
 							on:dragstart={on_drag_start}
 							on:dragover={(e) => on_drag_over(e, qi)}
@@ -255,10 +259,10 @@
 						<div
 							class="row"
 							role="row"
-							class:selected={$selection.list[qi] === true}
-							on:mousedown={(e) => selection.handleMouseDown(e, qi)}
-							on:contextmenu={(e) => selection.handleContextMenu(e, qi)}
-							on:click={(e) => selection.handleClick(e, qi)}
+							class:selected={$selection.has($queue.current.item.qId)}
+							on:mousedown={(e) => selection.handle_mousedown(e, qi)}
+							on:contextmenu={(e) => selection.handle_contextmenu(e, qi)}
+							on:click={(e) => selection.handle_click(e, qi)}
 							draggable="true"
 							on:dragstart={on_drag_start}
 							on:dragover={(e) => on_drag_over(e, qi)}
@@ -318,10 +322,10 @@
 					<div
 						class="row"
 						role="row"
-						class:selected={$selection.list[qi] === true}
-						on:mousedown={(e) => selection.handleMouseDown(e, qi)}
-						on:contextmenu={(e) => selection.handleContextMenu(e, qi)}
-						on:click={(e) => selection.handleClick(e, qi)}
+						class:selected={$selection.has(item.qId)}
+						on:mousedown={(e) => selection.handle_mousedown(e, qi)}
+						on:contextmenu={(e) => selection.handle_contextmenu(e, qi)}
+						on:click={(e) => selection.handle_click(e, qi)}
 						draggable="true"
 						on:dragstart={on_drag_start}
 						on:dragover={(e) => on_drag_over(e, qi)}
@@ -359,10 +363,10 @@
 					<div
 						class="row"
 						role="row"
-						class:selected={$selection.list[qi] === true}
-						on:mousedown={(e) => selection.handleMouseDown(e, qi)}
-						on:contextmenu={(e) => selection.handleContextMenu(e, qi)}
-						on:click={(e) => selection.handleClick(e, qi)}
+						class:selected={$selection.has(item.qId)}
+						on:mousedown={(e) => selection.handle_mousedown(e, qi)}
+						on:contextmenu={(e) => selection.handle_contextmenu(e, qi)}
+						on:click={(e) => selection.handle_click(e, qi)}
 						draggable="true"
 						on:dragstart={on_drag_start}
 						on:dragover={(e) => on_drag_over(e, qi)}
