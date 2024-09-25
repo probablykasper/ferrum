@@ -25,7 +25,6 @@ mod data;
 mod data_js;
 mod filter;
 mod itunes_import;
-mod js;
 mod library;
 mod library_types;
 mod page;

@@ -8,7 +8,6 @@ import type {
 	ItemId,
 	TrackMd,
 	TracksPageOptions,
-	ViewAs,
 	ViewOptions,
 } from '../../ferrum-addon'
 import { queue } from './queue'
@@ -25,9 +24,6 @@ const inner_addon = window.addon
 export const ItunesImport = inner_addon.ItunesImport
 
 call((addon) => addon.load_data(is_dev, local_data_path, library_path))
-
-export const view_as_songs: ViewAs.Songs = 0
-export const view_as_artists: ViewAs.Artists = 1
 
 function get_error_message(err: unknown): string {
 	if (typeof err === 'object' && err !== null) {

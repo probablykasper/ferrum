@@ -1,17 +1,10 @@
-import {
-	add_tracks_to_playlist,
-	methods,
-	paths,
-	remove_from_playlist,
-	track_lists_details_map,
-} from '@/lib/data'
+import { add_tracks_to_playlist, methods, paths, track_lists_details_map } from '@/lib/data'
 import { flatten_child_lists } from '@/lib/helpers'
 import { ipc_renderer } from '@/lib/window'
-import type { ItemId, TrackID } from '../../ferrum-addon'
+import type { TrackID } from '../../ferrum-addon'
 import { get } from 'svelte/store'
 import { append_to_user_queue, prepend_to_user_queue } from './queue'
-import type { SelectedTracksAction, ShowTrackMenuOptions } from '@/electron/typed_ipc'
-import { current_playlist_id } from '@/components/TrackList.svelte'
+import type { SelectedTracksAction } from '@/electron/typed_ipc'
 import { open_track_info } from '@/components/TrackInfo.svelte'
 
 export function get_flattened_tracklists() {

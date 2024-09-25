@@ -1,4 +1,4 @@
-import { writable, type Updater, type Writable } from 'svelte/store'
+import { writable, type Writable } from 'svelte/store'
 import { check_mouse_shortcut, check_shortcut } from './helpers'
 
 type SelectionOptions<T> = {

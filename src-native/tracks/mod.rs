@@ -1,7 +1,6 @@
 use crate::data::Data;
 use crate::data_js::get_data;
 use crate::get_now_timestamp;
-use crate::js::nerr;
 use crate::library_types::{ItemId, MsSinceUnixEpoch, Track, TrackID, TRACK_ID_MAP};
 use napi::{Env, JsArrayBuffer, JsBuffer, JsObject, Result, Task};
 use std::fs;
@@ -103,7 +102,7 @@ pub fn add_skip(track_id: String, env: Env) -> Result<()> {
 pub fn add_play_time(id: TrackID, start: MsSinceUnixEpoch, dur_ms: i64, env: Env) -> Result<()> {
 	let data: &mut Data = get_data(&env)?;
 	let tracks = data.library.get_tracks();
-	tracks.get(&id).ok_or(nerr("Track ID not found"))?;
+	tracks.get(&id).ok_or(nerr!("Track ID not found"))?;
 	data.library.playTime.push((id, start, dur_ms));
 	Ok(())
 }
@@ -140,15 +139,6 @@ pub fn read_cover_async(track_id: String, index: u16, env: Env) -> Result<JsObje
 	let tracks_dir = &data.paths.tracks_dir;
 	let file_path = tracks_dir.join(&track.file);
 	let task = ReadCover(file_path, index.into());
-	env.spawn(task).map(|t| t.promise_object())
-}
-#[napi(
-	js_name = "read_cover_async_path",
-	ts_return_type = "Promise<ArrayBuffer>"
-)]
-#[allow(dead_code)]
-pub fn read_cover_async_path(path: String, index: u16, env: Env) -> Result<JsObject> {
-	let task = ReadCover(path.into(), index.into());
 	env.spawn(task).map(|t| t.promise_object())
 }
 

@@ -1,16 +1,13 @@
 <script lang="ts">
 	import {
-		append_to_user_queue,
 		clear_user_queue,
 		get_by_queue_index,
 		get_queue_length,
 		insert_ids,
 		move_indexes,
-		prepend_to_user_queue,
 		queue,
 		type QueueItem,
 	} from '../lib/queue'
-	import { add_tracks_to_playlist, paths } from '../lib/data'
 	import { onDestroy } from 'svelte'
 	import QueueItemComponent from './QueueItem.svelte'
 	import { new_selection } from '@/lib/selection'
@@ -18,11 +15,9 @@
 	import { methods } from '@/lib/data'
 	import * as dragGhost from './DragGhost.svelte'
 	import { ipc_listen, ipc_renderer } from '@/lib/window'
-	import { assert_unreachable, check_shortcut } from '@/lib/helpers'
-	import { fly, scale } from 'svelte/transition'
+	import { check_shortcut } from '@/lib/helpers'
+	import { fly } from 'svelte/transition'
 	import VirtualListBlock, { scroll_container_keydown } from './VirtualListBlock.svelte'
-	import { open_track_info } from './TrackInfo.svelte'
-	import Button from './Button.svelte'
 	import type { SelectedTracksAction } from '@/electron/typed_ipc'
 	import { get_flattened_tracklists, handle_selected_tracks_action } from '@/lib/menus'
 

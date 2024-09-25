@@ -3,7 +3,7 @@ use crate::data_js::get_data;
 use crate::filter::filter;
 use crate::library_types::{ItemId, TrackList};
 use crate::sort::sort;
-use napi::{Env, JsUnknown, Result};
+use napi::{Env, Result};
 
 #[napi(object)]
 #[derive(Clone)]
@@ -56,26 +56,4 @@ pub fn get_tracks_page(options: TracksPageOptions, env: Env) -> Result<TracksPag
 		},
 	};
 	Ok(track_page)
-}
-
-#[napi]
-pub enum ViewAs {
-	Songs,
-	Artists,
-}
-impl Default for ViewAs {
-	fn default() -> Self {
-		Self::Songs
-	}
-}
-
-#[napi(object)]
-pub struct PageInfo {
-	pub id: String,
-	pub view_as: ViewAs,
-	#[napi(ts_type = "TrackList")]
-	pub tracklist: JsUnknown,
-	pub sort_key: String,
-	pub sort_desc: bool,
-	pub length: i64,
 }

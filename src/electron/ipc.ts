@@ -1,4 +1,4 @@
-import { dialog, Menu, shell, BrowserWindow, type MenuItemConstructorOptions } from 'electron'
+import { dialog, Menu, shell, BrowserWindow } from 'electron'
 import { ipc_main } from './typed_ipc'
 import path from 'path'
 import is from './is'

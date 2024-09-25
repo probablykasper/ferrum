@@ -19,8 +19,6 @@ export interface ImportStatus {
   tracksCount: number
   playlistsCount: number
 }
-export declare function copyFile(from: string, to: string): void
-export declare function atomicFileSave(filePath: string, content: string): void
 export declare function get_default_sort_desc(field: string): boolean
 export interface Track {
   size: number
@@ -122,19 +120,6 @@ export interface TracksPage {
   itemIds: Array<ItemId>
 }
 export declare function get_tracks_page(options: TracksPageOptions): TracksPage
-export const enum ViewAs {
-  Songs = 0,
-  Artists = 1
-}
-export interface PageInfo {
-  id: string
-  viewAs: ViewAs
-  tracklist: TrackList
-  sortKey: string
-  sortDesc: boolean
-  length: number
-}
-export declare function move_tracks(playlistId: string, itemIds: Array<ItemId>, toIndex: number): void
 export interface TrackListDetails {
   id: string
   name: string
@@ -153,6 +138,7 @@ export declare function delete_tracks_with_item_ids(itemIds: Array<ItemId>): voi
 export declare function new_playlist(name: string, description: string, isFolder: boolean, parentId: string): void
 export declare function update_playlist(id: string, name: string, description: string): void
 export declare function move_playlist(id: string, fromId: string, toId: string, toIndex: number): void
+export declare function move_tracks(playlistId: string, itemIds: Array<ItemId>, toIndex: number): void
 /** Returns `None` if the file does not have an image */
 export declare function read_small_cover_async(path: string, index: number, cacheDbPath: string): Promise<Buffer | null>
 export interface TrackMd {
@@ -183,7 +169,6 @@ export declare function add_play(trackId: string): void
 export declare function add_skip(trackId: string): void
 export declare function add_play_time(id: TrackID, start: MsSinceUnixEpoch, durMs: number): void
 export declare function read_cover_async(trackId: string, index: number): Promise<ArrayBuffer>
-export declare function read_cover_async_path(path: string, index: number): Promise<ArrayBuffer>
 export declare function import_file(path: string, now: MsSinceUnixEpoch): void
 export declare function load_tags(trackId: string): void
 export interface JsImage {

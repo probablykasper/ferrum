@@ -19,9 +19,7 @@
 <script lang="ts">
 	import {
 		filter,
-		paths,
 		methods,
-		track_lists_details_map,
 		move_tracks,
 		remove_from_playlist,
 		tracklist_updated,

@@ -121,7 +121,7 @@ fn remove_child_id(library: &mut Library, parent_id: &String, child_id: &String)
 /// Returns the deleted track lists, including folder children
 #[napi(js_name = "delete_track_list")]
 #[allow(dead_code)]
-pub fn delete_track_list_js(id: String, env: Env) -> Result<()> {
+pub fn delete_track_list(id: String, env: Env) -> Result<()> {
 	let data: &mut Data = get_data(&env)?;
 	let parent_id = data
 		.library
