@@ -246,10 +246,9 @@ export const methods = {
 		})
 	},
 	updateTrackInfo: (id: TrackID, md: TrackMd) => {
-		// call((data) => data.update_track_info(id, md))
-		// tracks_updated.emit()
-		// page.refresh_ids_and_keep_selection()
-		// methods.save()
+		call((data) => data.update_track_info(id, md))
+		tracks_updated.emit()
+		methods.save()
 	},
 	loadTags: (id: TrackID) => {
 		return call((data) => data.load_tags(id))
