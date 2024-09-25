@@ -379,3 +379,59 @@ pub fn move_playlist(
 
 	Ok(())
 }
+
+#[napi(js_name = "move_tracks")]
+#[allow(dead_code)]
+pub fn move_tracks(
+	playlist_id: String,
+	mut item_ids: Vec<ItemId>,
+	to_index: u32,
+	env: Env,
+) -> Result<()> {
+	let data: &mut Data = get_data(&env)?;
+	let playlist = match data.library.get_tracklist_mut(&playlist_id)? {
+		TrackList::Playlist(playlist) => playlist,
+		_ => return Err(nerr!("Cannot rearrange tracks in non-playlist")),
+	};
+
+	let item_ids_set: HashSet<ItemId> = item_ids.iter().cloned().collect();
+	assert_eq!(item_ids_set.len(), item_ids.len());
+
+	let playlist_item_ids_set: HashSet<ItemId> = playlist.tracks.iter().cloned().collect();
+	for item_id in &item_ids {
+		assert!(playlist_item_ids_set.contains(item_id));
+	}
+
+	let mut start_items = playlist.tracks.clone();
+	let mut end_items = start_items.split_off(to_index as usize);
+
+	start_items.retain(|item_id| !item_ids_set.contains(item_id));
+	end_items.retain(|item_id| !item_ids_set.contains(item_id));
+
+	start_items.append(&mut item_ids);
+
+	start_items.append(&mut end_items);
+
+	playlist.tracks = start_items;
+	Ok(())
+}
+
+pub fn get_tracklist_item_ids(library: &Library, playlist_id: &str) -> UniResult<Vec<ItemId>> {
+	match library.get_tracklist(playlist_id)? {
+		TrackList::Playlist(playlist) => Ok(playlist.tracks.clone()),
+		TrackList::Folder(folder) => {
+			let mut ids: HashSet<ItemId> = HashSet::new();
+			for child in &folder.children {
+				let child_ids = get_tracklist_item_ids(library, &child)?;
+				ids.extend(child_ids);
+			}
+			Ok(ids.into_iter().collect())
+		}
+		TrackList::Special(special) => match special.name {
+			SpecialTrackListName::Root => {
+				let item_ids = library.get_track_item_ids().values().cloned().collect();
+				Ok(item_ids)
+			}
+		},
+	}
+}

@@ -1,6 +1,7 @@
 use crate::library::{get_track_field_type, TrackField};
 use crate::library_types::{ItemId, Library, Track, TRACK_ID_MAP};
-use crate::page::{get_tracklist_item_ids, TracksPageOptions};
+use crate::page::TracksPageOptions;
+use crate::playlists::get_tracklist_item_ids;
 use crate::UniResult;
 use alphanumeric_sort::compare_str;
 use std::cmp::Ordering;
