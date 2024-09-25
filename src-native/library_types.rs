@@ -144,6 +144,9 @@ impl Library {
 		self.tracks
 			.remove(id)
 			.expect("Track ID not found when deleting");
+		self.track_item_ids
+			.remove(id)
+			.expect("Track ID not found when deleting (2)");
 		delete_file(&file_path)?;
 		Ok(())
 	}
