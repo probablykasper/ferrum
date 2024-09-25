@@ -145,12 +145,12 @@
 	}
 	async function keydown(e: KeyboardEvent) {
 		if (check_shortcut(e, 'Enter')) {
-			// let first_index = selection.findFirst()
-			// if (first_index !== null) {
-			// 	play_row(first_index)
-			// } else if (!$playing_id) {
-			// 	play_row(0)
-			// }
+			let first_item_id = selection.find_first_index()
+			if (first_item_id !== null) {
+				play_row(first_item_id)
+			} else if (!$playing_id) {
+				play_row(0)
+			}
 		} else if (
 			check_shortcut(e, 'Backspace') &&
 			$selection.size > 0 &&
@@ -180,7 +180,8 @@
 	}
 
 	function play_row(index: number) {
-		// new_playback_instance(page.get_track_ids(), index)
+		const all_track_ids = methods.get_track_ids(tracks_page.itemIds)
+		new_playback_instance(all_track_ids, index)
 	}
 
 	let drag_line: HTMLElement
