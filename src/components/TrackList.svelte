@@ -153,22 +153,21 @@
 			}
 		} else if (
 			check_shortcut(e, 'Backspace') &&
-			$selection.size > 0 &&
-			!$filter &&
+			selection.items.size > 0 &&
+			$filter === '' &&
 			tracks_page.playlistKind === 'playlist'
 		) {
 			e.preventDefault()
-			// const s = $selection.count > 1 ? 's' : ''
-			// const result = ipc_renderer.invoke('showMessageBox', false, {
-			// 	type: 'info',
-			// 	message: `Remove ${$selection.count} song${s} from the list?`,
-			// 	buttons: ['Remove Song' + s, 'Cancel'],
-			// 	defaultId: 0,
-			// })
-			// const indexes = selection.getSelectedIndexes()
-			// if ((await result).response === 0) {
-			// 	remove_from_open_playlist(indexes)
-			// }
+			const s = selection.items.size > 1 ? 's' : ''
+			const result = ipc_renderer.invoke('showMessageBox', false, {
+				type: 'info',
+				message: `Remove ${selection.items.size} song${s} from the list?`,
+				buttons: ['Remove Song' + s, 'Cancel'],
+				defaultId: 0,
+			})
+			if ((await result).response === 0) {
+				remove_from_playlist(params.playlist_id, Array.from(selection.items))
+			}
 		} else if (check_shortcut(e, 'Backspace', { cmd_or_ctrl: true }) && $selection.size > 0) {
 			e.preventDefault()
 			handle_action('Delete from Library')

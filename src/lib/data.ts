@@ -117,10 +117,9 @@ export async function add_tracks_to_playlist(
 	}
 }
 export function remove_from_playlist(playlist_id: TrackListID, item_ids: ItemId[]) {
-	// call((addon) => addon.remove_from_playlist(playlist_id, item_ids))
-	// page.refresh_ids_and_keep_selection()
-	// pageSelection.clear()
-	// methods.save()
+	call((addon) => addon.remove_from_playlist(playlist_id, item_ids))
+	tracklist_items_updated.emit()
+	methods.save()
 }
 export function delete_tracks_with_item_ids(item_ids: ItemId[]) {
 	call((addon) => addon.delete_tracks_with_item_ids(item_ids))
