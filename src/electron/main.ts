@@ -81,11 +81,9 @@ app.whenReady().then(async () => {
 			const url_raw = new URL(request.url)
 			const track_path = decodeURIComponent(url_raw.searchParams.get('path') ?? '')
 			const cache_db_path = decodeURIComponent(url_raw.searchParams.get('cache_db_path') ?? '')
-			const date_modified = decodeURIComponent(url_raw.searchParams.get('date_modified') ?? '')
 
 			addon
-				// .read_cache_cover_async(pathname, 0, Number(date_modified), cache_db_path)
-				.read_cache_cover_async(track_path, 0, parseInt(date_modified), cache_db_path)
+				.read_small_cover_async(track_path, 0, cache_db_path)
 				.then((buffer) => {
 					if (buffer === null) {
 						resolve(new Response(null, { status: 404 }))

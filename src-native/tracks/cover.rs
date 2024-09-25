@@ -49,16 +49,6 @@ fn init_cache_db(path: String) -> Result<()> {
 }
 
 /// Returns `None` if the file does not have an image
-#[napi(js_name = "get_modified_timestamp_ms")]
-#[allow(dead_code)]
-fn get_modified_timestamp_ms_js(path: String) -> Result<Option<i64>> {
-	let modified_timestamp_ms: i64 = match get_modified_timestamp_ms(&path)? {
-		Some(modified_timestamp_ms) => modified_timestamp_ms.try_into().unwrap(),
-		None => return Ok(None),
-	};
-	Ok(Some(modified_timestamp_ms))
-}
-
 fn get_modified_timestamp_ms(path: &str) -> Result<Option<u128>> {
 	let file_metadata = match fs::metadata(path) {
 		Ok(file_metadata) => file_metadata,
@@ -124,17 +114,14 @@ fn write_to_cache(cache_db: &Database, path: &str, value: CacheEntry) -> Result<
 }
 
 /// Returns `None` if the file does not have an image
-#[napi(js_name = "read_cache_cover_async")]
+#[napi(js_name = "read_small_cover_async")]
 #[allow(dead_code)]
-pub async fn read_cache_cover_async(
+pub async fn read_small_cover_async(
 	path: String,
 	index: u16,
-	date_modified_ms: i64,
 	cache_db_path: String,
 ) -> Result<Option<Buffer>> {
-	if date_modified_ms <= 0 {
-		throw!("date_modified_ms must be greater than 0")
-	} else if path == "" {
+	if path == "" {
 		throw!("path must not be empty")
 	} else if cache_db_path == "" {
 		throw!("cache_db_path must not be empty")
@@ -145,8 +132,13 @@ pub async fn read_cache_cover_async(
 	let cache_db_mutex = CACHE_DB.read().unwrap();
 	let cache_db = cache_db_mutex.as_ref().unwrap();
 
-	if let Some(img_bytes) = get_cached_image(cache_db, &path, date_modified_ms)? {
-		return Ok(Some(img_bytes.into()));
+	let date_modified_ms: Option<i64> =
+		get_modified_timestamp_ms(&path)?.map(|n| n.try_into().unwrap());
+
+	if let Some(date_modified_ms) = date_modified_ms {
+		if let Some(img_bytes) = get_cached_image(cache_db, &path, date_modified_ms)? {
+			return Ok(Some(img_bytes.into()));
+		}
 	}
 
 	let tag = Tag::read_from_path(&PathBuf::from(path.clone()))?;
@@ -157,8 +149,10 @@ pub async fn read_cache_cover_async(
 
 	let img_bytes = to_resized_image(image.data, 84)?;
 
-	let value = (date_modified_ms, img_bytes.clone());
-	write_to_cache(cache_db, &path, value)?;
+	if let Some(date_modified_ms) = date_modified_ms {
+		let value = (date_modified_ms, img_bytes.clone());
+		write_to_cache(cache_db, &path, value)?;
+	}
 
 	Ok(Some(img_bytes.into()))
 }
