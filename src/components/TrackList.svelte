@@ -63,7 +63,7 @@
 			groupAlbumTracks: $group_album_tracks,
 		})
 	}
-	$: if ($tracklist_updated || $tracks_updated || true) {
+	$: if ($tracklist_updated || $tracks_updated) {
 		tracks_page = methods.get_tracks_page({
 			playlistId: params.playlist_id,
 			filterQuery: $filter,
