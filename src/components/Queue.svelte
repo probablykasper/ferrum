@@ -77,7 +77,7 @@
 		},
 	})
 	$: selection.update_all_items(full_queue_list)
-	$: $queue, selection.clear()
+	$: $selection, console.log('selection', $selection)
 
 	function remove_from_queue() {
 		if (selection.items.size >= 1) {
@@ -167,12 +167,12 @@
 			const to_user_queue =
 				drag_to_index < autoplay_index || to_user_queue_bottom || create_user_queue
 
-			const new_selection = dragged.tracks.queue_indexes
-				? move_indexes(dragged.tracks.queue_indexes, drag_to_index, to_user_queue)
-				: insert_ids(dragged.tracks.ids, drag_to_index, to_user_queue)
-			for (let i = new_selection.from; i <= new_selection.to; i++) {
-				selection.add_index(i)
+			if (dragged.tracks.queue_indexes) {
+				move_indexes(dragged.tracks.queue_indexes, drag_to_index, to_user_queue)
+			} else {
+				insert_ids(dragged.tracks.ids, drag_to_index, to_user_queue)
 			}
+			selection.clear()
 			drag_to_index = null
 		}
 	}
