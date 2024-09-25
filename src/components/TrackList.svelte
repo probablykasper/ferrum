@@ -88,9 +88,9 @@
 		}
 	}
 
-	let selection = new SvelteSelection(tracks_page.itemIds, {
-		scroll_to_item(i) {
-			tracklist_actions.scroll_to_index?.(i)
+	const selection = new SvelteSelection(tracks_page.itemIds, {
+		scroll_to({ index }) {
+			tracklist_actions.scroll_to_index?.(index)
 		},
 		async on_contextmenu() {
 			const action = await ipc_renderer.invoke('show_tracks_menu', {

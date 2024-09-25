@@ -2,7 +2,7 @@ import { writable, type Writable } from 'svelte/store'
 import { check_mouse_shortcut, check_shortcut } from './helpers'
 
 type SelectionOptions<T> = {
-	scroll_to_item: (index: number) => void
+	scroll_to: (target: { item: T; index: number }) => void
 	on_contextmenu: (items: Set<T>) => void
 }
 
@@ -19,12 +19,12 @@ class Selection<T> {
 	/** Whether the user is current mouseup is a click or a selection update */
 	possible_row_click = false
 
-	scroll_to_item: SelectionOptions<T>['scroll_to_item']
+	scroll_to: SelectionOptions<T>['scroll_to']
 	on_contextmenu: SelectionOptions<T>['on_contextmenu']
 
 	constructor(all_items: T[], options: SelectionOptions<T>) {
 		this.all = all_items
-		this.scroll_to_item = options.scroll_to_item
+		this.scroll_to = options.scroll_to
 		this.on_contextmenu = options.on_contextmenu
 	}
 
@@ -151,7 +151,9 @@ class Selection<T> {
 
 	/** Replace selection with the previous index, like perssing `ArrowUp` in a list. */
 	go_backward() {
-		if (this.items.size === 0) {
+		if (this.all.length === 0) {
+			return
+		} else if (this.items.size === 0) {
 			this.add_index(this.all.length - 1)
 		} else if (this.last_added !== null) {
 			const prev_index = this.last_added.index - 1
@@ -162,7 +164,9 @@ class Selection<T> {
 
 	/** Replace selection with the previous index, like perssing `ArrowDown` in a list. */
 	go_forward() {
-		if (this.items.size === 0) {
+		if (this.all.length === 0) {
+			return
+		} else if (this.items.size === 0) {
 			this.add_index(0)
 		} else if (this.last_added !== null) {
 			const next_index = this.last_added.index + 1
@@ -275,34 +279,34 @@ class Selection<T> {
 			}
 		} else if (check_shortcut(e, 'ArrowUp')) {
 			this.go_backward()
-			this.scroll_to_item(this.last_added?.index || 0)
+			if (this.last_added) this.scroll_to({ ...this.last_added })
 		} else if (check_shortcut(e, 'ArrowUp', { shift: true })) {
 			this.shift_select_backward()
-			this.scroll_to_item(this.last_added?.index || 0)
+			if (this.last_added) this.scroll_to({ ...this.last_added })
 		} else if (check_shortcut(e, 'ArrowUp', { alt: true })) {
 			this.clear()
 			if (this.all.length > 1) {
 				this.add_index(0)
-				this.scroll_to_item(0)
+				if (this.last_added) this.scroll_to({ ...this.last_added })
 			}
 		} else if (check_shortcut(e, 'ArrowUp', { shift: true, alt: true })) {
 			this.shift_select_to(0)
-			this.scroll_to_item(this.last_added?.index || 0)
+			if (this.last_added) this.scroll_to({ ...this.last_added })
 		} else if (check_shortcut(e, 'ArrowDown')) {
 			this.go_forward()
-			this.scroll_to_item(this.last_added?.index || 0)
+			if (this.last_added) this.scroll_to({ ...this.last_added })
 		} else if (check_shortcut(e, 'ArrowDown', { shift: true })) {
 			this.shift_select_forward()
-			this.scroll_to_item(this.last_added?.index || 0)
+			if (this.last_added) this.scroll_to({ ...this.last_added })
 		} else if (check_shortcut(e, 'ArrowDown', { alt: true })) {
 			this.clear()
 			if (this.all.length > 1) {
 				this.add_index(this.all.length - 1)
-				this.scroll_to_item(this.last_added?.index || 0)
+				if (this.last_added) this.scroll_to({ ...this.last_added })
 			}
 		} else if (check_shortcut(e, 'ArrowDown', { shift: true, alt: true })) {
 			this.shift_select_to(this.all.length - 1)
-			this.scroll_to_item(this.last_added?.index || 0)
+			if (this.last_added) this.scroll_to({ ...this.last_added })
 		} else {
 			return
 		}
