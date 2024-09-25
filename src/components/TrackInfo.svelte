@@ -20,13 +20,21 @@
 <script lang="ts">
 	import { check_shortcut } from '@/lib/helpers'
 	import Button from './Button.svelte'
-	import { methods } from '@/lib/data'
 	import type { Track, TrackID } from '../../ferrum-addon'
 	import { ipc_listen, ipc_renderer } from '@/lib/window'
 	import { playing_id, reload } from '@/lib/player'
 	import { onDestroy, tick } from 'svelte'
 	import { get, writable } from 'svelte/store'
 	import Modal, { modal_count } from './Modal.svelte'
+	import {
+		get_image,
+		get_track,
+		load_tags,
+		remove_image,
+		set_image,
+		set_image_data,
+		update_track_info,
+	} from '@/lib/data'
 
 	function cancel() {
 		current_list.set(null)
@@ -45,8 +53,8 @@
 	$: if ($current_list) open_index($current_list)
 	function open_index(list: TrackInfoList) {
 		id = list.ids[list.index]
-		track = methods.getTrack(list.ids[list.index])
-		methods.loadTags(list.ids[list.index])
+		track = get_track(list.ids[list.index])
+		load_tags(list.ids[list.index])
 		load_image(0)
 	}
 	async function load_image(index: number) {
@@ -55,7 +63,7 @@
 		}
 		image = undefined
 		await tick()
-		const image_info = methods.getImage(index)
+		const image_info = get_image(index)
 
 		if (image_info === null) {
 			image = null
@@ -160,7 +168,7 @@
 	}
 	function save(hide_after = true) {
 		if (is_edited()) {
-			methods.updateTrackInfo(id, {
+			update_track_info(id, {
 				name,
 				artist,
 				albumName: album_name,
@@ -256,14 +264,14 @@
 		droppable = false
 		const path = get_file_path(e)
 		if (path !== null) {
-			methods.setImage(image?.index || 0, path)
+			set_image(image?.index || 0, path)
 			image_edited = true
 			load_image(image?.index || 0)
 		}
 	}
 	function cover_keydown(e: KeyboardEvent) {
 		if (check_shortcut(e, 'Backspace') && image) {
-			methods.removeImage(image.index)
+			remove_image(image.index)
 			image_edited = true
 			if (image.index < image.totalImages - 1) {
 				load_image(image.index)
@@ -290,12 +298,12 @@
 		}
 	}
 	function replace_cover(file_path: string) {
-		methods.setImage(image?.index || 0, file_path)
+		set_image(image?.index || 0, file_path)
 		image_edited = true
 		load_image(image?.index || 0)
 	}
 	function replace_cover_data(data: ArrayBuffer) {
-		methods.setImageData(image?.index || 0, data)
+		set_image_data(image?.index || 0, data)
 		image_edited = true
 		load_image(image?.index || 0)
 	}

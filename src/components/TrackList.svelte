@@ -19,14 +19,18 @@
 <script lang="ts">
 	import {
 		filter,
-		methods,
 		move_tracks,
 		remove_from_playlist,
 		tracklist_updated,
 		get_default_sort_desc,
 		delete_tracks_with_item_ids,
 		tracks_updated,
-	} from '../lib/data'
+		get_tracks_page,
+		get_track_ids,
+		load_view_options,
+		save_view_options,
+		get_track_by_item_id,
+	} from '@/lib/data'
 	import { new_playback_instance, playing_id } from '../lib/player'
 	import { get_duration, format_date, check_mouse_shortcut, check_shortcut } from '../lib/helpers'
 	import { tracklist_actions } from '../lib/page'
@@ -51,18 +55,15 @@
 		$current_playlist_id = params.playlist_id
 	}
 
-	let tracks_page = get_tracks_page()
-	function get_tracks_page() {
-		return methods.get_tracks_page({
-			playlistId: params.playlist_id,
-			filterQuery: $filter,
-			sortKey: $sort_key,
-			sortDesc: $sort_desc,
-			groupAlbumTracks: $group_album_tracks,
-		})
-	}
+	let tracks_page = get_tracks_page({
+		playlistId: params.playlist_id,
+		filterQuery: $filter,
+		sortKey: $sort_key,
+		sortDesc: $sort_desc,
+		groupAlbumTracks: $group_album_tracks,
+	})
 	$: if ($tracklist_updated || $tracks_updated) {
-		tracks_page = methods.get_tracks_page({
+		tracks_page = get_tracks_page({
 			playlistId: params.playlist_id,
 			filterQuery: $filter,
 			sortKey: $sort_key,
@@ -80,8 +81,8 @@
 		} else {
 			handle_selected_tracks_action({
 				action,
-				track_ids: methods.get_track_ids(selection.items_as_array()),
-				all_ids: methods.get_track_ids(tracks_page.itemIds),
+				track_ids: get_track_ids(selection.items_as_array()),
+				all_ids: get_track_ids(tracks_page.itemIds),
 				first_index: selection.find_first_index(),
 			})
 		}
@@ -168,7 +169,7 @@
 	}
 
 	function play_row(index: number) {
-		const all_track_ids = methods.get_track_ids(tracks_page.itemIds)
+		const all_track_ids = get_track_ids(tracks_page.itemIds)
 		new_playback_instance(all_track_ids, index)
 	}
 
@@ -179,13 +180,13 @@
 			drag_item_ids = Array.from(selection.items)
 			e.dataTransfer.effectAllowed = 'move'
 			if (drag_item_ids.length === 1) {
-				const { track } = methods.get_track_by_item_id(drag_item_ids[0])
+				const { track } = get_track_by_item_id(drag_item_ids[0])
 				dragGhost.set_inner_text(track.artist + ' - ' + track.name)
 			} else {
 				dragGhost.set_inner_text(drag_item_ids.length + ' items')
 			}
 			dragged.tracks = {
-				ids: methods.get_track_ids(drag_item_ids),
+				ids: get_track_ids(drag_item_ids),
 				playlist_indexes: drag_item_ids,
 			}
 			e.dataTransfer.setDragImage(dragGhost.drag_el, 0, 0)
@@ -235,7 +236,7 @@
 
 	function get_item(item_id: ItemId) {
 		try {
-			return methods.get_track_by_item_id(item_id)
+			return get_track_by_item_id(item_id)
 		} catch (_) {
 			return { id: null, track: null }
 		}
@@ -312,7 +313,7 @@
 	]
 	let columns: Column[] = load_columns()
 	function load_columns(): Column[] {
-		let loaded_columns = methods.load_view_options().columns
+		let loaded_columns = load_view_options().columns
 		if (loaded_columns.length === 0) {
 			loaded_columns = [...default_columns]
 		}
@@ -326,12 +327,12 @@
 			.filter((col) => col !== undefined)
 	}
 	function save_columns() {
-		const view_options = methods.load_view_options()
+		const view_options = load_view_options()
 		view_options.columns = columns.map((col) => col.key)
 		if (JSON.stringify(view_options.columns) === JSON.stringify(default_columns)) {
 			view_options.columns = []
 		}
-		methods.save_view_options(view_options)
+		save_view_options(view_options)
 	}
 	function on_column_context_menu() {
 		ipc_renderer.invoke('show_columns_menu', {

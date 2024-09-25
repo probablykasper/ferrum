@@ -9,7 +9,7 @@
 	import PlaylistInfoModal from './components/PlaylistInfo.svelte'
 	import { queue_visible } from './lib/queue'
 	import { ipc_listen, ipc_renderer } from '@/lib/window'
-	import { import_tracks, type PlaylistInfo, methods } from './lib/data'
+	import { delete_track_list, get_track_list, import_tracks, type PlaylistInfo } from '@/lib/data'
 	import { play_pause } from './lib/player'
 	import DragGhost from './components/DragGhost.svelte'
 	import ItunesImport from './components/ItunesImport.svelte'
@@ -120,7 +120,7 @@
 	let playlist_info: PlaylistInfo | null = null
 	onDestroy(
 		ipc_listen('context.playlist.edit', (_, id) => {
-			const list = methods.getTrackList(id)
+			const list = get_track_list(id)
 			if (list.type !== 'special' && $modal_count === 0) {
 				playlist_info = {
 					name: list.name,
@@ -134,7 +134,7 @@
 	)
 	onDestroy(
 		ipc_listen('context.playlist.delete', async (_, id) => {
-			const list = methods.getTrackList(id)
+			const list = get_track_list(id)
 			const result = await ipc_renderer.invoke('showMessageBox', false, {
 				type: 'info',
 				message: `Delete the ${list.type} "${list.name}"?`,
@@ -143,7 +143,7 @@
 				defaultId: 0,
 			})
 			if (result.response === 0) {
-				methods.deleteTrackList(id)
+				delete_track_list(id)
 			}
 		}),
 	)

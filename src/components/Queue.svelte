@@ -12,7 +12,7 @@
 	import QueueItemComponent from './QueueItem.svelte'
 	import { new_selection } from '@/lib/selection'
 	import { dragged } from '@/lib/drag-drop'
-	import { methods } from '@/lib/data'
+	import { get_track } from '@/lib/data'
 	import * as dragGhost from './DragGhost.svelte'
 	import { ipc_listen, ipc_renderer } from '@/lib/window'
 	import { check_shortcut } from '@/lib/helpers'
@@ -117,7 +117,7 @@
 			}
 			e.dataTransfer.effectAllowed = 'move'
 			if (dagged_indexes.length === 1) {
-				const track = methods.getTrack(get_by_queue_index(dagged_indexes[0]).id)
+				const track = get_track(get_by_queue_index(dagged_indexes[0]).id)
 				dragGhost.set_inner_text(track.artist + ' - ' + track.name)
 			} else {
 				dragGhost.set_inner_text(dagged_indexes.length + ' items')

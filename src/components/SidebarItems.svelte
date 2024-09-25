@@ -1,30 +1,31 @@
 <script lang="ts" context="module">
 	import {
 		track_lists_details_map,
-		methods,
 		add_tracks_to_playlist,
 		move_playlist,
-	} from '../lib/data'
+		shown_playlist_folders,
+		view_folder_set_show,
+	} from '@/lib/data'
 	import Self from './SidebarItems.svelte'
 
 	export type SidebarItemHandle = {
 		handleKey(e: KeyboardEvent): void
 	}
 
-	let shown_folders = writable(new Set(methods.shownPlaylistFolders()))
+	let shown_folders = writable(new Set(shown_playlist_folders()))
 	function show_folder(id: string) {
 		shown_folders.update((folders) => {
 			folders.add(id)
 			return folders
 		})
-		methods.viewFolderSetShow(id, true)
+		view_folder_set_show(id, true)
 	}
 	function hide_folder(id: string) {
 		shown_folders.update((folders) => {
 			folders.delete(id)
 			return folders
 		})
-		methods.viewFolderSetShow(id, false)
+		view_folder_set_show(id, false)
 	}
 </script>
 
