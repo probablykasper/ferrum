@@ -184,29 +184,24 @@
 	}
 
 	let drag_line: HTMLElement
-	let drag_indexes: number[] = []
+	let drag_item_ids: ItemId[] = []
 	function on_drag_start(e: DragEvent) {
-		// if (e.dataTransfer) {
-		// 	drag_indexes = []
-		// 	for (let i = 0; i < $selection.list.length; i++) {
-		// 		if ($selection.list[i]) {
-		// 			drag_indexes.push(i)
-		// 		}
-		// 	}
-		// 	e.dataTransfer.effectAllowed = 'move'
-		// 	if (drag_indexes.length === 1) {
-		// 		const track = page.get_track(drag_indexes[0])
-		// 		dragGhost.set_inner_text(track.artist + ' - ' + track.name)
-		// 	} else {
-		// 		dragGhost.set_inner_text(drag_indexes.length + ' items')
-		// 	}
-		// 	dragged.tracks = {
-		// 		ids: drag_indexes.map((i) => page.get_track_id(i)),
-		// 		playlist_indexes: drag_indexes,
-		// 	}
-		// 	e.dataTransfer.setDragImage(dragGhost.drag_el, 0, 0)
-		// 	e.dataTransfer.setData('ferrum.tracks', '')
-		// }
+		if (e.dataTransfer) {
+			drag_item_ids = Array.from(selection.items)
+			e.dataTransfer.effectAllowed = 'move'
+			if (drag_item_ids.length === 1) {
+				const { track } = methods.get_track_by_item_id(drag_item_ids[0])
+				dragGhost.set_inner_text(track.artist + ' - ' + track.name)
+			} else {
+				dragGhost.set_inner_text(drag_item_ids.length + ' items')
+			}
+			dragged.tracks = {
+				ids: methods.get_track_ids(drag_item_ids),
+				playlist_indexes: drag_item_ids,
+			}
+			e.dataTransfer.setDragImage(dragGhost.drag_el, 0, 0)
+			e.dataTransfer.setData('ferrum.tracks', '')
+		}
 	}
 	let drag_to_index: null | number = null
 	function on_drag_over(e: DragEvent, index: number) {
@@ -241,7 +236,7 @@
 	}
 	async function drop_handler() {
 		if (drag_to_index !== null) {
-			// move_tracks(params.playlist_id, drag_indexes, drag_to_index)
+			move_tracks(params.playlist_id, drag_item_ids, drag_to_index)
 			drag_to_index = null
 		}
 	}
