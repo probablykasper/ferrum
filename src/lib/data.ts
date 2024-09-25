@@ -183,7 +183,7 @@ export async function import_tracks(paths: string[]) {
 }
 
 export function get_default_sort_desc(field: string) {
-	return call((addon) => addon.get_default_sort_desc(field))
+	return call((data) => data.get_default_sort_desc(field))
 }
 
 export const methods = {

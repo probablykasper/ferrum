@@ -3,12 +3,14 @@
 	export const sort_desc = writable(true)
 	export let current_playlist_id = writable('')
 	current_playlist_id.subscribe((id) => {
+		// Cannot call get_default_sort_desc() here because it
+		// would be called before addon gets initialized
 		if (id === 'root') {
 			sort_key.set('dateAdded')
-			sort_desc.set(get_default_sort_desc('dateAdded'))
+			sort_desc.set(true)
 		} else {
 			sort_key.set('index')
-			sort_desc.set(get_default_sort_desc('index'))
+			sort_desc.set(true)
 		}
 	})
 	export const group_album_tracks = writable(true)
