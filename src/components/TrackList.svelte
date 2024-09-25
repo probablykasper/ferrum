@@ -128,16 +128,19 @@
 		}
 	}
 	async function delete_tracks(item_ids: ItemId[]) {
-		// const s = $selection.count > 1 ? 's' : ''
-		// const result = await ipc_renderer.invoke('showMessageBox', false, {
-		// 	type: 'info',
-		// 	message: `Delete ${$selection.count} song${s} from library?`,
-		// 	buttons: [`Delete Song${s}`, 'Cancel'],
-		// 	defaultId: 0,
-		// })
-		// if (result.response === 0) {
-		// 	delete_tracks_in_open(indexes)
-		// }
+		const s = selection.items.size > 1 ? 's' : ''
+		const result = await ipc_renderer.invoke('showMessageBox', false, {
+			type: 'info',
+			message: `Delete ${selection.items.size} song${s} from library?`,
+			buttons: [`Delete Song${s}`, 'Cancel'],
+			defaultId: 0,
+		})
+		if (result.response === 0) {
+			console.log('delete_tracks_with_item_ids(', item_ids)
+
+			delete_tracks_with_item_ids(item_ids)
+			console.log('deleted 👍')
+		}
 	}
 	async function keydown(e: KeyboardEvent) {
 		if (check_shortcut(e, 'Enter')) {
@@ -167,7 +170,7 @@
 			// }
 		} else if (check_shortcut(e, 'Backspace', { cmd_or_ctrl: true }) && $selection.size > 0) {
 			e.preventDefault()
-			// delete_tracks(selection.getSelectedIndexes())
+			handle_action('Delete from Library')
 		} else {
 			selection.handle_keydown(e)
 			return
