@@ -71,7 +71,9 @@
 	}
 
 	function handle_action(action: SelectedTracksAction) {
-		if (action === 'Remove from Playlist') {
+		if (selection.items.size === 0) {
+			return
+		} else if (action === 'Remove from Playlist') {
 			remove_from_playlist($current_playlist_id, selection.items_as_array())
 			return
 		} else if (action === 'Delete from Library') {
