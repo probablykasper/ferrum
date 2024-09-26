@@ -3,8 +3,8 @@
 		track_lists_details_map,
 		add_tracks_to_playlist,
 		move_playlist,
-		shown_playlist_folders,
-		view_folder_set_show,
+		view_options,
+		save_view_options,
 	} from '@/lib/data'
 	import Self from './SidebarItems.svelte'
 
@@ -12,20 +12,14 @@
 		handleKey(e: KeyboardEvent): void
 	}
 
-	let shown_folders = writable(new Set(shown_playlist_folders()))
+	let shown_folders = writable(view_options.shownPlaylistFolders)
 	function show_folder(id: string) {
-		shown_folders.update((folders) => {
-			folders.add(id)
-			return folders
-		})
-		view_folder_set_show(id, true)
+		view_options.shownPlaylistFolders.push(id)
+		save_view_options(view_options)
 	}
 	function hide_folder(id: string) {
-		shown_folders.update((folders) => {
-			folders.delete(id)
-			return folders
-		})
-		view_folder_set_show(id, false)
+		view_options.shownPlaylistFolders.filter((folder_id) => folder_id !== id)
+		save_view_options(view_options)
 	}
 </script>
 
@@ -53,7 +47,7 @@
 
 	function has_showing_children(id: string) {
 		const list = $track_lists_details_map[id]
-		return list.children && list.children.length > 0 && $shown_folders.has(id)
+		return list.children && list.children.length > 0 && $shown_folders.includes(id)
 	}
 
 	export let on_select_down = () => {}
@@ -109,7 +103,7 @@
 		} else if (check_shortcut(e, 'ArrowDown')) {
 			select_down(index)
 		} else if (check_shortcut(e, 'ArrowLeft')) {
-			if (selected_list.kind === 'folder' && $shown_folders.has(selected_list.id)) {
+			if (selected_list.kind === 'folder' && $shown_folders.includes(selected_list.id)) {
 				hide_folder(selected_list.id)
 			} else if (parent_path) {
 				navigate(parent_path)
@@ -156,7 +150,7 @@
 				class:active={child_list.path === $url.pathname}
 				draggable="true"
 				on:dragstart={(e) => on_drag_start(e, child_list)}
-				class:show={$shown_folders.has(child_list.id)}
+				class:show={$shown_folders.includes(child_list.id)}
 				class:droppable={drag_playlist_onto_index === i}
 				on:drop={(e) => {
 					if (
@@ -187,7 +181,7 @@
 					aria-label="Arrow button"
 					on:mousedown|stopPropagation
 					on:click={() => {
-						if ($shown_folders.has(child_list.id)) {
+						if ($shown_folders.includes(child_list.id)) {
 							hide_folder(child_list.id)
 						} else {
 							show_folder(child_list.id)
@@ -224,7 +218,7 @@
 				</div>
 			</a>
 			<Self
-				show={$shown_folders.has(child_list.id)}
+				show={$shown_folders.includes(child_list.id)}
 				parent_path={child_list.path}
 				children={child_list.children?.map((child_id) => ({
 					path: '/playlist/' + child_id,

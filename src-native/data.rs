@@ -2,7 +2,6 @@ use crate::artists::load_artists;
 use crate::library::{load_library, Paths};
 use crate::library_types::Library;
 use crate::tracks::Tag;
-use crate::view_options::ViewOptions;
 use crate::UniResult;
 use atomicwrites::{AllowOverwrite, AtomicFile};
 use dirs_next;
@@ -17,7 +16,6 @@ use std::time::Instant;
 pub struct Data {
 	pub paths: Paths,
 	pub library: Library,
-	pub view_options: ViewOptions,
 	/// Current tag being edited
 	pub current_tag: Option<Tag>,
 	pub artists: HashSet<String>,
@@ -88,14 +86,12 @@ impl Data {
 		};
 
 		let loaded_library = load_library(&paths)?;
-		let loaded_cache = ViewOptions::load(&paths);
 		let artists = load_artists(&loaded_library);
 
 		let data = Data {
 			paths,
 			library: loaded_library,
 			artists,
-			view_options: loaded_cache,
 			current_tag: None,
 		};
 		return Ok(data);

@@ -27,9 +27,9 @@
 		tracks_updated,
 		get_tracks_page,
 		get_track_ids,
-		load_view_options,
 		save_view_options,
 		get_track_by_item_id,
+		view_options,
 	} from '@/lib/data'
 	import { new_playback_instance, playing_id } from '../lib/player'
 	import { get_duration, format_date, check_mouse_shortcut, check_shortcut } from '../lib/helpers'
@@ -313,21 +313,15 @@
 	]
 	let columns: Column[] = load_columns()
 	function load_columns(): Column[] {
-		let loaded_columns = load_view_options().columns
+		let loaded_columns = view_options.columns
 		if (loaded_columns.length === 0) {
 			loaded_columns = [...default_columns]
 		}
 		return loaded_columns
-			.map((key) => {
-				const col = all_columns.find((col) => col.key === key)
-				if (col) {
-					return col
-				}
-			})
+			.map((key) => all_columns.find((col) => col.key === key))
 			.filter((col) => col !== undefined)
 	}
 	function save_columns() {
-		const view_options = load_view_options()
 		view_options.columns = columns.map((col) => col.key)
 		if (JSON.stringify(view_options.columns) === JSON.stringify(default_columns)) {
 			view_options.columns = []

@@ -40,38 +40,17 @@ impl ViewOptions {
 		Ok(())
 	}
 }
-#[napi(js_name = "shown_playlist_folders")]
-#[allow(dead_code)]
-pub fn shown_playlist_folders(env: Env) -> Result<Vec<String>> {
-	let data: &Data = get_data(&env)?;
-	let shown_folders = &data.view_options.shown_playlist_folders;
-	Ok(shown_folders.iter().cloned().collect())
-}
-#[napi(js_name = "view_folder_set_show")]
-#[allow(dead_code)]
-pub fn view_folder_set_show(id: String, show: bool, env: Env) -> Result<()> {
-	let data: &mut Data = get_data(&env)?;
-	data.view_options
-		.shown_playlist_folders
-		.retain(|folder| folder != &id);
-	if show {
-		data.view_options.shown_playlist_folders.push(id);
-	}
-	data.view_options.save(&data.paths)?;
-	Ok(())
-}
 
 #[napi(js_name = "load_view_options")]
 #[allow(dead_code)]
 pub fn load_view_options(env: Env) -> Result<ViewOptions> {
 	let data: &Data = get_data(&env)?;
-	Ok(data.view_options.clone())
+	Ok(ViewOptions::load(&data.paths))
 }
 #[napi(js_name = "save_view_options")]
 #[allow(dead_code)]
 pub fn save_view_options(view_options: ViewOptions, env: Env) -> Result<()> {
 	let data: &mut Data = get_data(&env)?;
-	data.view_options = view_options;
-	data.view_options.save(&data.paths)?;
+	view_options.save(&data.paths)?;
 	Ok(())
 }

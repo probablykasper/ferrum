@@ -187,8 +187,6 @@ export interface ViewOptions {
   /** Empty is treated as default */
   columns: Array<string>
 }
-export declare function shown_playlist_folders(): Array<string>
-export declare function view_folder_set_show(id: string, show: boolean): void
 export declare function load_view_options(): ViewOptions
 export declare function save_view_options(viewOptions: ViewOptions): void
 export declare class ItunesImport {

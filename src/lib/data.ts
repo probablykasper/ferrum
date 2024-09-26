@@ -13,6 +13,7 @@ import type {
 import { queue } from './queue'
 import { current_playlist_id } from '@/components/TrackList.svelte'
 import { navigate } from './router'
+import { call, get_error_message } from './error'
 
 export const is_dev = window.is_dev
 export const local_data_path = window.local_data_path
@@ -24,52 +25,6 @@ const inner_addon = window.addon
 export const ItunesImport = inner_addon.ItunesImport
 
 call((addon) => addon.load_data(is_dev, local_data_path, library_path))
-
-function get_error_message(err: unknown): string {
-	if (typeof err === 'object' && err !== null) {
-		const obj = err as { [key: string]: unknown }
-		if (obj.message) {
-			return String(obj.message)
-		} else if (obj.code) {
-			return 'Code: ' + String(obj.message)
-		}
-	}
-	return 'No reason or code provided'
-}
-function get_error_stack(err: unknown): string {
-	if (typeof err === 'object' && err !== null) {
-		const obj = err as { [key: string]: unknown }
-		if (obj.stack) {
-			return String(obj.stack)
-		}
-	}
-	return ''
-}
-function error_popup(err: unknown) {
-	ipc_renderer.invoke('showMessageBox', false, {
-		type: 'error',
-		message: get_error_message(err),
-		detail: get_error_stack(err),
-	})
-}
-
-export function call<T, P extends T | Promise<T>>(cb: (addon: typeof inner_addon) => P): P {
-	try {
-		const result = cb(inner_addon)
-		if (result instanceof Promise) {
-			return result.catch((err) => {
-				error_popup(err)
-				throw err
-			}) as P
-		} else {
-			return result
-		}
-	} catch (err) {
-		console.error('errorPopup:', err)
-		error_popup(err)
-		throw err
-	}
-}
 
 export const track_lists_details_map = (() => {
 	const initial = call((addon) => addon.get_track_lists_details())
@@ -256,16 +211,9 @@ export function set_image_data(index: number, bytes: ArrayBuffer) {
 export function remove_image(index: number) {
 	return call((data) => data.remove_image(index))
 }
-export function shown_playlist_folders() {
-	return call((data) => data.shown_playlist_folders())
-}
-export function view_folder_set_show(id: string, show: boolean) {
-	return call((data) => data.view_folder_set_show(id, show))
-}
-export function load_view_options() {
-	return call((data) => data.load_view_options())
-}
-export function save_view_options(view_options: ViewOptions) {
+export let view_options = call((data) => data.load_view_options())
+export function save_view_options(options: ViewOptions) {
+	view_options = options
 	return call((data) => data.save_view_options(view_options))
 }
 
