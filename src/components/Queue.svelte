@@ -77,7 +77,6 @@
 		},
 	})
 	$: selection.update_all_items(full_queue_list)
-	$: $selection, console.log('selection', $selection)
 
 	function remove_from_queue() {
 		if (selection.items.size >= 1) {

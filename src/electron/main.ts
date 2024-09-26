@@ -50,6 +50,13 @@ app.on('window-all-closed', () => {
 	app.quit()
 })
 
+protocol.registerSchemesAsPrivileged([
+	{
+		scheme: 'trackimg',
+		privileges: { supportFetchAPI: true },
+	},
+])
+
 app.whenReady().then(async () => {
 	let main_window: BrowserWindow | null = new BrowserWindow({
 		width: 1305,
@@ -92,7 +99,7 @@ app.whenReady().then(async () => {
 					}
 				})
 				.catch((error) => {
-					resolve(new Response(null, { status: 500 }))
+					resolve(new Response(error, { status: 500 }))
 					console.log(`Could not read cover "${track_path}":`, error)
 				})
 		})
