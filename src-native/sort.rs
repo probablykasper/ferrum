@@ -2,8 +2,8 @@ use crate::library::{get_track_field_type, TrackField};
 use crate::library_types::{ItemId, Library, Track, TRACK_ID_MAP};
 use crate::page::TracksPageOptions;
 use crate::playlists::get_tracklist_item_ids;
-use crate::UniResult;
 use alphanumeric_sort::compare_str;
+use anyhow::Result;
 use std::cmp::Ordering;
 use std::time::Instant;
 
@@ -86,7 +86,7 @@ fn get_field_bool(track: &Track, sort_key: &str) -> Option<bool> {
 	}
 }
 
-pub fn sort(options: TracksPageOptions, library: &Library) -> UniResult<Vec<ItemId>> {
+pub fn sort(options: TracksPageOptions, library: &Library) -> Result<Vec<ItemId>> {
 	let now = Instant::now();
 
 	let id_map = TRACK_ID_MAP.read().unwrap();
@@ -104,10 +104,7 @@ pub fn sort(options: TracksPageOptions, library: &Library) -> UniResult<Vec<Item
 	}
 
 	let tracks = library.get_tracks();
-	let field = match get_track_field_type(&options.sort_key) {
-		Some(field) => field,
-		None => throw!("Field type not found for {}", options.sort_key),
-	};
+	let field = get_track_field_type(&options.sort_key)?;
 	let subsort_field = options.group_album_tracks
 		&& match options.sort_key.as_str() {
 			"dateAdded" | "albumName" | "comments" | "genre" | "year" | "artist" => true,

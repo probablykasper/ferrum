@@ -1,21 +1,10 @@
+use anyhow::{Context, Result};
 use serde::de::DeserializeOwned;
 use std::fs::File;
 use std::io::BufReader;
 use std::mem;
 use std::path::PathBuf;
 use std::time::{SystemTime, UNIX_EPOCH};
-
-macro_rules! nerr {
-	($($arg:tt)*) => {
-		napi::Error::from_reason(format!($($arg)*).to_owned())
-	}
-}
-
-macro_rules! throw {
-	($($arg:tt)*) => {
-		return crate::UniResult::Err(format!($($arg)*).into()).map_err(|e| e.into())
-	}
-}
 
 #[macro_use]
 extern crate napi_derive;
@@ -85,18 +74,12 @@ impl From<napi::Error> for UniError {
 	}
 }
 
-fn path_to_json<J>(path: PathBuf) -> UniResult<J>
+fn path_to_json<J>(path: PathBuf) -> Result<J>
 where
 	J: DeserializeOwned,
 {
-	let file = match File::open(path) {
-		Ok(f) => f,
-		Err(err) => throw!("Error opening file: {}", err),
-	};
+	let file = File::open(path).context("Error opening file")?;
 	let reader = BufReader::new(file);
-	let json = match serde_json::from_reader(reader) {
-		Ok(json) => json,
-		Err(err) => throw!("Error parsing file: {:?}", err),
-	};
+	let json = serde_json::from_reader(reader).context("Error parsing file")?;
 	Ok(json)
 }

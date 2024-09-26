@@ -1,10 +1,11 @@
 use crate::data::Data;
 use crate::data_js::get_data;
 use crate::library::Paths;
-use crate::{path_to_json, UniResult};
+use crate::path_to_json;
+use anyhow::{Context, Result};
 use atomicwrites::AtomicFile;
 use atomicwrites::OverwriteBehavior::AllowOverwrite;
-use napi::{Env, Result};
+use napi::Env;
 use serde::{Deserialize, Serialize};
 use std::io::Write;
 
@@ -25,18 +26,12 @@ impl ViewOptions {
 			},
 		}
 	}
-	pub fn save(&self, paths: &Paths) -> UniResult<()> {
-		let json_str = match serde_json::to_string(self) {
-			Ok(json_str) => json_str,
-			Err(_) => throw!("Error saving view.json"),
-		};
+	pub fn save(&self, paths: &Paths) -> Result<()> {
+		let json_str = serde_json::to_string(self).context("Error saving view.json")?;
 		let file_path = paths.local_data_dir.join("view.json");
 		let af = AtomicFile::new(file_path, AllowOverwrite);
-		let result = af.write(|f| f.write_all(json_str.as_bytes()));
-		match result {
-			Ok(_) => {}
-			Err(_) => throw!("Error writing view.json"),
-		};
+		af.write(|f| f.write_all(json_str.as_bytes()))
+			.context("Error writing view.json")?;
 		Ok(())
 	}
 }

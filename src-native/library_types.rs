@@ -1,7 +1,8 @@
 #![allow(non_snake_case)]
 
+use crate::get_now_timestamp;
 use crate::playlists::{delete_file, remove_from_all_playlists};
-use crate::{get_now_timestamp, UniResult};
+use anyhow::{bail, Context, Result};
 use linked_hash_map::{Entry, LinkedHashMap};
 use nanoid::nanoid;
 use serde::{Deserialize, Serialize};
@@ -131,13 +132,13 @@ impl Library {
 		track_id_map.push(id.clone());
 		self.track_item_ids.insert(id, item_id);
 	}
-	pub fn delete_track_and_file(&mut self, id: &TrackID, tracks_dir: &PathBuf) -> UniResult<()> {
+	pub fn delete_track_and_file(&mut self, id: &TrackID, tracks_dir: &PathBuf) -> Result<()> {
 		let file_path = {
 			let track = self.get_track(id)?;
 			tracks_dir.join(&track.file)
 		};
 		if !file_path.exists() {
-			throw!("File does not exist: {}", file_path.to_string_lossy());
+			bail!("File does not exist: {}", file_path.to_string_lossy());
 		}
 
 		remove_from_all_playlists(self, id);
@@ -191,33 +192,29 @@ impl Library {
 			children: Vec::new(),
 		}
 	}
-	pub fn get_track(&self, id: &TrackID) -> UniResult<&Track> {
-		match self.get_tracks().get(id) {
-			Some(track) => Ok(track),
-			None => throw!("Track with ID {} not found", id),
-		}
+	pub fn get_track(&self, id: &TrackID) -> Result<&Track> {
+		self.get_tracks()
+			.get(id)
+			.context("Track with ID {} not found")
 	}
-	pub fn get_track_mut(&mut self, id: &TrackID) -> UniResult<&mut Track> {
-		match self.tracks.get_mut(id) {
-			Some(track) => Ok(track),
-			None => throw!("Track with ID {} not found", id),
-		}
+	pub fn get_track_mut(&mut self, id: &TrackID) -> Result<&mut Track> {
+		self.tracks
+			.get_mut(id)
+			.context("Track with ID {} not found")
 	}
-	pub fn get_tracklist(&self, id: &str) -> UniResult<&TrackList> {
-		let tracklist = self.trackLists.get(id);
-		Ok(tracklist.ok_or("Playlist ID not found")?)
+	pub fn get_tracklist(&self, id: &str) -> Result<&TrackList> {
+		self.trackLists.get(id).context("Playlist ID not found")
 	}
-	pub fn get_tracklist_mut(&mut self, id: &str) -> UniResult<&mut TrackList> {
-		let tracklist = self.trackLists.get_mut(id);
-		Ok(tracklist.ok_or("Playlist ID not found")?)
+	pub fn get_tracklist_mut(&mut self, id: &str) -> Result<&mut TrackList> {
+		self.trackLists.get_mut(id).context("Playlist ID not found")
 	}
-	pub fn get_root_tracklist_mut(&mut self) -> UniResult<&mut Special> {
+	pub fn get_root_tracklist_mut(&mut self) -> Result<&mut Special> {
 		let tracklist = self.trackLists.get_mut("root");
 		match tracklist {
 			Some(TrackList::Special(special)) => match special.name {
 				SpecialTrackListName::Root => Ok(special),
 			},
-			_ => throw!("Root playlist not found"),
+			_ => bail!("Root playlist not found"),
 		}
 	}
 	pub fn get_parent_id(&self, id: &str) -> Option<String> {

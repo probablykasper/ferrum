@@ -1,9 +1,9 @@
 #![allow(non_snake_case)]
 
-use super::tag::SetInfoError;
 use super::{generate_filename, Tag};
 use crate::library_types::Track;
-use crate::{get_now_timestamp, str_to_option, UniResult};
+use crate::{get_now_timestamp, str_to_option};
+use anyhow::{bail, Context, Result};
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::PathBuf;
@@ -36,10 +36,10 @@ pub fn update_track_info(
 	track: &mut Track,
 	tag: &mut Tag,
 	new_info: TrackMD,
-) -> UniResult<()> {
+) -> Result<()> {
 	let old_path = tracks_dir.join(&track.file);
 	if !old_path.exists() {
-		throw!("File does not exist: {}", track.file);
+		bail!("File does not exist: {}", track.file);
 	}
 	let ext = old_path.extension().unwrap_or_default().to_string_lossy();
 
@@ -95,10 +95,7 @@ pub fn update_track_info(
 	// year
 	let new_year_i32 = match new_info.year.as_ref() {
 		"" => None,
-		value => match value.parse() {
-			Ok(n) => Some(n),
-			Err(_) => throw!("Invalid year"),
-		},
+		value => Some(value.parse().context("Invalid year")?),
 	};
 	let new_year_i64 = new_year_i32.map(i64::from);
 	match new_year_i32 {
@@ -109,53 +106,28 @@ pub fn update_track_info(
 	// track_number, track_count
 	let new_track_number: Option<u32> = match new_info.trackNum.as_ref() {
 		"" => None,
-		value => match value.parse() {
-			Ok(n) => Some(n),
-			Err(_) => throw!("Invalid track number"),
-		},
+		value => Some(value.parse().context("Invalid track number")?),
 	};
 	let new_track_count: Option<u32> = match new_info.trackCount.as_ref() {
 		"" => None,
-		value => match value.parse() {
-			Ok(n) => Some(n),
-			Err(_) => throw!("Invalid track count"),
-		},
+		value => Some(value.parse().context("Invalid track count")?),
 	};
-	match tag.set_track_info(new_track_number, new_track_count) {
-		Ok(()) => {}
-		// don't set tag at all if number is required
-		Err(SetInfoError::NumberRequired) => tag.set_track_info(None, None)?,
-		Err(e) => Err(e)?,
-	}
+	tag.set_track_info(new_track_number, new_track_count);
 
 	// disc_number, disc_count
 	let new_disc_number: Option<u32> = match new_info.discNum.as_ref() {
 		"" => None,
-		value => match value.parse() {
-			Ok(n) => Some(n),
-			Err(_) => throw!("Invalid disc number"),
-		},
+		value => Some(value.parse().context("Invalid disc number")?),
 	};
 	let new_disc_count: Option<u32> = match new_info.discCount.as_ref() {
 		"" => None,
-		value => match value.parse() {
-			Ok(n) => Some(n),
-			Err(_) => throw!("Invalid disc count"),
-		},
+		value => Some(value.parse().context("Invalid disc count")?),
 	};
-	match tag.set_disc_info(new_disc_number, new_disc_count) {
-		Ok(()) => {}
-		// don't set tag at all if number is required
-		Err(SetInfoError::NumberRequired) => tag.set_disc_info(None, None)?,
-		Err(e) => Err(e)?,
-	};
+	tag.set_disc_info(new_disc_number, new_disc_count);
 
 	let new_bpm: Option<u16> = match new_info.bpm.as_ref() {
 		"" => None,
-		value => match value.parse() {
-			Ok(n) => Some(n),
-			Err(_) => throw!("Invalid bpm"),
-		},
+		value => Some(value.parse().context("Invalid bpm")?),
 	};
 	match new_bpm {
 		None => tag.remove_bpm(),

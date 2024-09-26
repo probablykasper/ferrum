@@ -1,8 +1,9 @@
 use crate::data::Data;
-use napi::{Env, JsUndefined, Result};
+use anyhow::{Context, Result};
+use napi::{Env, JsUndefined};
 
 pub fn get_data(env: &Env) -> Result<&mut Data> {
-	let data = env.get_instance_data::<Data>()?.ok_or(nerr!("No data"))?;
+	let data = env.get_instance_data::<Data>()?.context("No data")?;
 	return Ok(data);
 }
 
@@ -43,8 +44,8 @@ pub fn get_paths(env: Env) -> Result<PathsJs> {
 
 #[napi(js_name = "save")]
 #[allow(dead_code)]
-pub fn save(env: Env) -> Result<JsUndefined> {
+pub fn save(env: Env) -> napi::Result<JsUndefined> {
 	let data: &mut Data = get_data(&env)?;
 	data.save()?;
-	return env.get_undefined();
+	env.get_undefined()
 }

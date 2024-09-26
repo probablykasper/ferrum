@@ -2,10 +2,9 @@ use crate::artists::load_artists;
 use crate::library::{load_library, Paths};
 use crate::library_types::Library;
 use crate::tracks::Tag;
-use crate::UniResult;
+use anyhow::{Context, Result};
 use atomicwrites::{AllowOverwrite, AtomicFile};
 use dirs_next;
-use napi::Result;
 use serde::Serialize;
 use std::collections::HashSet;
 use std::env;
@@ -34,11 +33,7 @@ impl Data {
 		now = Instant::now();
 		let file_path = &self.paths.library_json;
 		let af = AtomicFile::new(file_path, AllowOverwrite);
-		let result = af.write(|f| f.write_all(&json));
-		match result {
-			Ok(_) => {}
-			Err(err) => throw!("Error saving: {err}"),
-		}
+		af.write(|f| f.write_all(&json)).context("Error saving")?;
 		println!("Write: {}ms", now.elapsed().as_millis());
 		Ok(())
 	}
@@ -46,7 +41,7 @@ impl Data {
 		is_dev: bool,
 		local_data_path: Option<String>,
 		library_path: Option<String>,
-	) -> UniResult<Data> {
+	) -> Result<Data> {
 		if is_dev {
 			println!("Starting in dev mode");
 		}
@@ -61,13 +56,13 @@ impl Data {
 			local_data_dir = appdata_dev.join("LocalData/space.kasper.ferrum");
 		} else {
 			library_dir = dirs_next::audio_dir()
-				.ok_or("Music folder not found")?
+				.context("Music folder not found")?
 				.join("Ferrum");
 			cache_dir = dirs_next::cache_dir()
-				.ok_or("Cache folder not found")?
+				.context("Cache folder not found")?
 				.join("space.kasper.ferrum");
 			local_data_dir = dirs_next::data_local_dir()
-				.ok_or("Local data folder not found")?
+				.context("Local data folder not found")?
 				.join("space.kasper.ferrum");
 		};
 		let paths = Paths {

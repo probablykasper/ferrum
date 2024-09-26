@@ -4,8 +4,9 @@ use crate::library_types::{
 	get_track_ids_from_item_ids, new_item_ids_from_track_ids, ItemId, Library,
 	SpecialTrackListName, TrackID, TrackList, TRACK_ID_MAP,
 };
-use crate::{str_to_option, UniResult};
-use napi::{Env, JsUnknown, Result};
+use crate::str_to_option;
+use anyhow::{bail, Context, Result};
+use napi::{Env, JsUnknown};
 use std::collections::{HashMap, HashSet};
 use std::path::PathBuf;
 
@@ -60,7 +61,7 @@ pub fn get_track_lists_details(env: Env) -> Result<HashMap<String, TrackListDeta
 pub fn get_track_list(id: String, env: Env) -> Result<JsUnknown> {
 	let data: &mut Data = get_data(&env)?;
 	let tracklist = data.library.get_tracklist(&id)?;
-	env.to_js_value(&tracklist)
+	Ok(env.to_js_value(&tracklist)?)
 }
 
 fn get_child_ids_recursive(
@@ -71,8 +72,8 @@ fn get_child_ids_recursive(
 	let folder_children = match library.trackLists.get(id) {
 		Some(TrackList::Playlist(_)) => return Ok(()),
 		Some(TrackList::Folder(folder)) => folder.children.clone(),
-		Some(TrackList::Special(_)) => throw!("Cannot delete special track list"),
-		None => throw!("No track list with id {}", id),
+		Some(TrackList::Special(_)) => bail!("Cannot delete special track list"),
+		None => bail!("No track list with id {}", id),
 	};
 	for child_id in &folder_children {
 		get_child_ids_recursive(library, &child_id, ids)?;
@@ -80,19 +81,19 @@ fn get_child_ids_recursive(
 	for new_id in folder_children {
 		let was_new = ids.insert(new_id.clone());
 		if !was_new {
-			throw!("Duplicate track list id {new_id}");
+			bail!("Duplicate track list id {new_id}");
 		}
 	}
 	Ok(())
 }
 
 fn remove_child_id(library: &mut Library, parent_id: &String, child_id: &String) -> Result<()> {
-	let parent = match library.trackLists.get_mut(parent_id) {
-		Some(tracklist) => tracklist,
-		None => throw!("Parent id {parent_id} not found"),
-	};
+	let parent = library
+		.trackLists
+		.get_mut(parent_id)
+		.with_context(|| format!("Parent id {parent_id} not found"))?;
 	let children = match parent {
-		TrackList::Playlist(_) => throw!("Parent id {parent_id} not found"),
+		TrackList::Playlist(_) => bail!("Parent id {parent_id} not found"),
 		TrackList::Folder(folder) => folder.children.clone(),
 		TrackList::Special(special) => match special.name {
 			SpecialTrackListName::Root => special.children.clone(),
@@ -104,9 +105,9 @@ fn remove_child_id(library: &mut Library, parent_id: &String, child_id: &String)
 		.filter(|id| id != child_id)
 		.collect();
 	match children.len() - new_children.len() {
-		0 => throw!("Parent id {child_id} does not contain child"),
+		0 => bail!("Parent id {child_id} does not contain child"),
 		1 => (),
-		_ => throw!("Child id {child_id} found multiple times"),
+		_ => bail!("Child id {child_id} found multiple times"),
 	};
 	match parent {
 		TrackList::Playlist(_) => panic!(),
@@ -123,17 +124,14 @@ fn remove_child_id(library: &mut Library, parent_id: &String, child_id: &String)
 #[allow(dead_code)]
 pub fn delete_track_list(id: String, env: Env) -> Result<()> {
 	let data: &mut Data = get_data(&env)?;
-	let parent_id = data
-		.library
-		.get_parent_id(&id)
-		.ok_or(nerr!("No parent found"))?;
+	let parent_id = data.library.get_parent_id(&id).context("No parent found")?;
 
 	let mut ids = HashSet::new();
 	ids.insert(id.clone());
 	get_child_ids_recursive(&mut data.library, &id, &mut ids)?;
 
 	if ids.contains(&parent_id) {
-		throw!("Parent id {parent_id} contains itself");
+		bail!("Parent id {parent_id} contains itself");
 	}
 	remove_child_id(&mut data.library, &parent_id, &id)?;
 	for id in &ids {
@@ -148,8 +146,8 @@ pub fn add_tracks(playlist_id: String, track_ids: Vec<String>, env: Env) -> Resu
 	let data: &mut Data = get_data(&env)?;
 	let playlist = match data.library.get_tracklist_mut(&playlist_id)? {
 		TrackList::Playlist(playlist) => playlist,
-		TrackList::Folder(_) => throw!("Cannot add track to folder"),
-		TrackList::Special(_) => throw!("Cannot add track to special playlist"),
+		TrackList::Folder(_) => bail!("Cannot add track to folder"),
+		TrackList::Special(_) => bail!("Cannot add track to special playlist"),
 	};
 	let mut new_item_ids = new_item_ids_from_track_ids(&track_ids);
 	playlist.tracks.append(&mut new_item_ids);
@@ -163,7 +161,7 @@ pub fn filter_duplicates(playlist_id: TrackID, ids: Vec<String>, env: Env) -> Re
 	let mut track_ids: HashSet<String> = HashSet::from_iter(ids);
 	let playlist = match data.library.get_tracklist_mut(&playlist_id)? {
 		TrackList::Playlist(playlist) => playlist,
-		_ => throw!("Cannot check if folder/special contains track"),
+		_ => bail!("Cannot check if folder/special contains track"),
 	};
 	for track in &playlist.get_track_ids() {
 		if track_ids.contains(track) {
@@ -180,7 +178,7 @@ pub fn remove_from_playlist(playlist_id: TrackID, item_ids: Vec<ItemId>, env: En
 	let data: &mut Data = get_data(&env)?;
 	let playlist = match data.library.get_tracklist_mut(&playlist_id)? {
 		TrackList::Playlist(playlist) => playlist,
-		_ => throw!("Cannot remove track from non-playlist"),
+		_ => bail!("Cannot remove track from non-playlist"),
 	};
 	let items_to_remove: HashSet<ItemId> = item_ids.into_iter().collect();
 
@@ -204,17 +202,16 @@ pub fn remove_from_all_playlists(library: &mut Library, id: &TrackID) {
 	}
 }
 
-pub fn delete_file(path: &PathBuf) -> UniResult<()> {
+pub fn delete_file(path: &PathBuf) -> Result<()> {
 	#[allow(unused_mut)]
 	let mut trash_context = trash::TrashContext::new();
 
 	#[cfg(target_os = "macos")]
 	trash_context.set_delete_method(trash::macos::DeleteMethod::NsFileManager);
 
-	match trash_context.delete(&path) {
-		Ok(_) => Ok(()),
-		Err(_) => throw!("Failed moving file to trash: {}", path.to_string_lossy()),
-	}
+	trash_context
+		.delete(&path)
+		.with_context(|| format!("Failed moving file to trash: {}", path.to_string_lossy()))
 }
 
 #[napi(js_name = "delete_tracks_with_item_ids")]
@@ -252,13 +249,13 @@ pub fn new_playlist(
 		}
 	};
 
-	let parent = match library.trackLists.get_mut(&parent_id) {
-		Some(parent) => parent,
-		None => throw!("Parent not found"),
-	};
+	let parent = library
+		.trackLists
+		.get_mut(&parent_id)
+		.context("Parent not found")?;
 
 	match parent {
-		TrackList::Playlist(_) => throw!("Parent cannot be playlist"),
+		TrackList::Playlist(_) => bail!("Parent cannot be playlist"),
 		TrackList::Folder(folder) => {
 			folder.children.push(list.id().to_string());
 			library.trackLists.insert(list.id().to_string(), list);
@@ -280,7 +277,7 @@ pub fn update_playlist(id: String, name: String, description: String, env: Env) 
 	let data: &mut Data = get_data(&env)?;
 
 	match data.library.trackLists.get_mut(&id) {
-		Some(TrackList::Special(_)) => throw!("Cannot edit special playlists"),
+		Some(TrackList::Special(_)) => bail!("Cannot edit special playlists"),
 		Some(TrackList::Playlist(playlist)) => {
 			playlist.name = name;
 			playlist.description = str_to_option(description);
@@ -289,13 +286,13 @@ pub fn update_playlist(id: String, name: String, description: String, env: Env) 
 			folder.name = name;
 			folder.description = str_to_option(description);
 		}
-		None => throw!("Playlist not found"),
+		None => bail!("Playlist not found"),
 	};
 
 	return Ok(());
 }
 
-fn get_all_tracklist_children(data: &Data, playlist_id: &str) -> UniResult<Vec<TrackID>> {
+fn get_all_tracklist_children(data: &Data, playlist_id: &str) -> Result<Vec<TrackID>> {
 	let direct_children = match data.library.get_tracklist(playlist_id)? {
 		TrackList::Folder(folder) => &folder.children,
 		TrackList::Special(special) => &special.children,
@@ -320,14 +317,14 @@ fn get_all_tracklist_children(data: &Data, playlist_id: &str) -> UniResult<Vec<T
 fn get_children_if_user_editable<'a>(
 	library: &'a mut Library,
 	id: &'a str,
-) -> UniResult<&'a mut Vec<String>> {
+) -> Result<&'a mut Vec<String>> {
 	let children = match library.trackLists.get_mut(id) {
 		Some(TrackList::Folder(folder)) => &mut folder.children,
 		Some(TrackList::Special(special)) => match special.name {
 			SpecialTrackListName::Root => &mut special.children,
 		},
-		None => throw!("Attempted to move from/to non-existant folder"),
-		_ => throw!("Attempted to move from/to non-folder"),
+		None => bail!("Attempted to move from/to non-existant folder"),
+		_ => bail!("Attempted to move from/to non-folder"),
 	};
 	Ok(children)
 }
@@ -344,8 +341,8 @@ pub fn move_playlist(
 	let data: &mut Data = get_data(&env)?;
 
 	match data.library.trackLists.get(&id) {
-		Some(TrackList::Special(_)) => throw!("Cannot move special playlist"),
-		None => throw!("List not found"),
+		Some(TrackList::Special(_)) => bail!("Cannot move special playlist"),
+		None => bail!("List not found"),
 		_ => {}
 	};
 
@@ -353,19 +350,19 @@ pub fn move_playlist(
 	get_children_if_user_editable(&mut data.library, &to_id)?;
 
 	if id == to_id {
-		throw!("Cannot move playlist into itself");
+		bail!("Cannot move playlist into itself");
 	}
 
 	let from_id_children = get_all_tracklist_children(&data, &id)?;
 	if from_id_children.contains(&to_id) {
-		throw!("Cannot move playlist to a child of itself");
+		bail!("Cannot move playlist to a child of itself");
 	}
 
 	let children = get_children_if_user_editable(&mut data.library, &from_id)?;
-	let i = match children.iter().position(|child_id| child_id == &id) {
-		None => throw!("Could not find playlist"),
-		Some(i) => i,
-	};
+	let i = children
+		.iter()
+		.position(|child_id| child_id == &id)
+		.context("Could not find playlist")?;
 	children.remove(i);
 
 	let to_folder_children = get_children_if_user_editable(&mut data.library, &to_id)?;
@@ -391,7 +388,7 @@ pub fn move_tracks(
 	let data: &mut Data = get_data(&env)?;
 	let playlist = match data.library.get_tracklist_mut(&playlist_id)? {
 		TrackList::Playlist(playlist) => playlist,
-		_ => return Err(nerr!("Cannot rearrange tracks in non-playlist")),
+		_ => bail!("Cannot rearrange tracks in non-playlist"),
 	};
 
 	let item_ids_set: HashSet<ItemId> = item_ids.iter().cloned().collect();
@@ -416,7 +413,7 @@ pub fn move_tracks(
 	Ok(())
 }
 
-pub fn get_tracklist_item_ids(library: &Library, playlist_id: &str) -> UniResult<Vec<ItemId>> {
+pub fn get_tracklist_item_ids(library: &Library, playlist_id: &str) -> Result<Vec<ItemId>> {
 	match library.get_tracklist(playlist_id)? {
 		TrackList::Playlist(playlist) => Ok(playlist.tracks.clone()),
 		TrackList::Folder(folder) => {

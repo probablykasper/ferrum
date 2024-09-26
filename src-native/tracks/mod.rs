@@ -2,7 +2,8 @@ use crate::data::Data;
 use crate::data_js::get_data;
 use crate::get_now_timestamp;
 use crate::library_types::{ItemId, MsSinceUnixEpoch, Track, TrackID, TRACK_ID_MAP};
-use napi::{Env, JsArrayBuffer, JsBuffer, JsObject, Result, Task};
+use anyhow::{anyhow, bail, Context, Result};
+use napi::{Env, JsArrayBuffer, JsBuffer, JsObject, Task};
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -102,7 +103,7 @@ pub fn add_skip(track_id: String, env: Env) -> Result<()> {
 pub fn add_play_time(id: TrackID, start: MsSinceUnixEpoch, dur_ms: i64, env: Env) -> Result<()> {
 	let data: &mut Data = get_data(&env)?;
 	let tracks = data.library.get_tracks();
-	tracks.get(&id).ok_or(nerr!("Track ID not found"))?;
+	tracks.get(&id).context("Track ID not found")?;
 	data.library.playTime.push((id, start, dur_ms));
 	Ok(())
 }
@@ -112,7 +113,7 @@ struct ReadCover(PathBuf, usize);
 impl Task for ReadCover {
 	type Output = Vec<u8>;
 	type JsValue = JsBuffer;
-	fn compute(&mut self) -> Result<Self::Output> {
+	fn compute(&mut self) -> napi::Result<Self::Output> {
 		let path = &self.0;
 		let index = self.1;
 
@@ -120,20 +121,20 @@ impl Task for ReadCover {
 		let image = match tag.get_image_consume(index)? {
 			Some(image) => image,
 			None => {
-				return Err(nerr!("No image"));
+				return Err(anyhow!("No image").into());
 			}
 		};
 
 		Ok(image.data)
 	}
-	fn resolve(&mut self, env: Env, output: Self::Output) -> Result<Self::JsValue> {
+	fn resolve(&mut self, env: Env, output: Self::Output) -> napi::Result<Self::JsValue> {
 		let result = env.create_buffer_copy(output)?;
 		return Ok(result.into_raw());
 	}
 }
 #[napi(js_name = "read_cover_async", ts_return_type = "Promise<ArrayBuffer>")]
 #[allow(dead_code)]
-pub fn read_cover_async(track_id: String, index: u16, env: Env) -> Result<JsObject> {
+pub fn read_cover_async(track_id: String, index: u16, env: Env) -> napi::Result<JsObject> {
 	let data: &mut Data = get_data(&env)?;
 	let track = id_to_track(&env, &track_id)?;
 	let tracks_dir = &data.paths.tracks_dir;
@@ -239,16 +240,12 @@ pub fn get_image(index: u32, env: Env) -> Result<Option<JsImage>> {
 pub fn set_image(index: u32, path_str: String, env: Env) -> Result<()> {
 	let data: &mut Data = get_data(&env)?;
 	let path = data.paths.tracks_dir.join(path_str);
-	match &mut data.current_tag {
-		Some(tag) => {
-			let new_bytes = match fs::read(&path) {
-				Ok(b) => b,
-				Err(e) => throw!("Error reading that file: {}", e),
-			};
-			tag.set_image(index as usize, new_bytes)?;
-		}
-		None => throw!("No tag loaded"),
+	let tag = match &mut data.current_tag {
+		Some(tag) => tag,
+		None => bail!("No tag loaded"),
 	};
+	let new_bytes = fs::read(&path).context("Error reading that file")?;
+	tag.set_image(index as usize, new_bytes)?;
 	Ok(())
 }
 
@@ -257,10 +254,11 @@ pub fn set_image(index: u32, path_str: String, env: Env) -> Result<()> {
 pub fn set_image_data(index: u32, bytes: JsArrayBuffer, env: Env) -> Result<()> {
 	let bytes: Vec<u8> = bytes.into_value()?.to_vec();
 	let data: &mut Data = get_data(&env)?;
-	match &mut data.current_tag {
-		Some(tag) => tag.set_image(index as usize, bytes)?,
-		None => throw!("No tag loaded"),
+	let tag = match &mut data.current_tag {
+		Some(tag) => tag,
+		None => bail!("No tag loaded"),
 	};
+	tag.set_image(index as usize, bytes)?;
 	Ok(())
 }
 
@@ -285,7 +283,7 @@ pub fn update_track_info(track_id: String, info: md::TrackMD, env: Env) -> Resul
 
 	let tag = match &mut data.current_tag {
 		Some(tag) => tag,
-		None => throw!("No tag loaded"),
+		None => bail!("No tag loaded"),
 	};
 	md::update_track_info(&data.paths.tracks_dir, track, tag, info)?;
 

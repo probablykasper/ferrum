@@ -1,5 +1,5 @@
 use super::Tag;
-use anyhow::Context;
+use anyhow::{anyhow, bail, Context, Result};
 use fast_image_resize::images::Image;
 use fast_image_resize::{IntoImageView, Resizer};
 use image::codecs::jpeg::JpegEncoder;
@@ -7,7 +7,6 @@ use image::codecs::png::PngEncoder;
 use image::{ImageEncoder, ImageFormat, ImageReader};
 use lazy_static::lazy_static;
 use napi::bindgen_prelude::Buffer;
-use napi::Result;
 use redb::{Database, TableDefinition};
 use std::fs;
 use std::io::{BufWriter, Cursor};
@@ -121,11 +120,11 @@ pub async fn read_small_cover_async(
 	path: String,
 	index: u16,
 	cache_db_path: String,
-) -> Result<Option<Buffer>> {
+) -> napi::Result<Option<Buffer>> {
 	if path == "" {
-		throw!("path must not be empty")
+		return Err(anyhow!("path must not be empty").into());
 	} else if cache_db_path == "" {
-		throw!("cache_db_path must not be empty")
+		return Err(anyhow!("cache_db_path must not be empty").into());
 	}
 
 	init_cache_db(cache_db_path)?;
@@ -210,7 +209,7 @@ fn to_resized_image(image_bytes: Vec<u8>, max_size: u32) -> Result<Vec<u8>> {
 				.into_inner()
 				.context("Error getting inner img buffer")?
 		}
-		_ => throw!("Unsupported image type"),
+		_ => bail!("Unsupported image type"),
 	};
 	Ok(img_bytes)
 }

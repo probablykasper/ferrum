@@ -5,8 +5,9 @@ use crate::library_types::{
 };
 use crate::tracks::generate_filename;
 use crate::tracks::import::{read_file_metadata, FileType};
+use anyhow::{bail, Context, Result};
 use lofty::file::{AudioFile, TaggedFileExt};
-use napi::{Env, Result};
+use napi::Env;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
@@ -61,10 +62,8 @@ impl XmlLibrary {
 				continue;
 			}
 
-			let track: XmlTrack = match plist::from_value(&value) {
-				Ok(track) => track,
-				Err(e) => throw!("Could not read track with id \"{key}\": {e}"),
-			};
+			let track: XmlTrack = plist::from_value(&value)
+				.with_context(|| format!("Could not read track with id \"{key}"))?;
 			tracks.insert(key, track);
 		}
 		let mut playlists = Vec::new();
@@ -75,10 +74,8 @@ impl XmlLibrary {
 				.and_then(|v| v.as_string())
 				.unwrap_or_default()
 				.to_string();
-			let playlist: XmlPlaylist = match plist::from_value(value) {
-				Ok(playlist) => playlist,
-				Err(e) => throw!("Could not read playlist \"{name}\": {e}"),
-			};
+			let playlist: XmlPlaylist = plist::from_value(value)
+				.with_context(|| format!("Could not read playlist \"{name}\""))?;
 			playlists.push(playlist);
 		}
 		Ok(XmlLibraryProps { tracks, playlists })
@@ -96,13 +93,13 @@ impl XmlLibraryProps {
 		for xml_playlist in playlists {
 			if xml_playlist.distinguished_kind == Some(4) {
 				if xml_music_playlist.is_some() {
-					throw!("Found two iTunes-generated Music playlists");
+					bail!("Found two iTunes-generated Music playlists");
 				} else {
 					xml_music_playlist = Some(xml_playlist);
 				}
 			}
 		}
-		xml_music_playlist.ok_or(nerr!("No Music playlist found"))
+		xml_music_playlist.context("No Music playlist found")
 	}
 	fn take_importable_playlists(&mut self) -> Vec<XmlPlaylist> {
 		let playlists = std::mem::take(&mut self.playlists);
@@ -310,17 +307,14 @@ impl CountInfo {
 }
 
 fn parse_file_url(value: &str) -> Result<PathBuf> {
-	let file_url = match url::Url::parse(value) {
-		Ok(url) => url,
-		Err(e) => throw!("Invalid track location: {}", e),
-	};
+	let file_url = url::Url::parse(value).context("Invalid track location")?;
 	match file_url.scheme() {
 		"file" => {}
-		_ => throw!("Invalid track location scheme: {}", value),
+		_ => bail!("Invalid track location scheme: {}", value),
 	}
 	match file_url.to_file_path() {
 		Ok(path) => Ok(path),
-		Err(()) => throw!("Invalid track location host: {}", value),
+		Err(()) => bail!("Invalid track location host: {}", value),
 	}
 }
 
@@ -330,15 +324,12 @@ fn parse_track(
 	start_time: i64,
 	tracks_dir: &Path,
 ) -> Result<(PathBuf, Track)> {
-	let xml_location = match xml_track.location {
-		Some(ref location) => location,
-		None => throw!("Missing track location"),
-	};
+	let xml_location = xml_track.location.context("Missing track location")?;
 	if xml_track.track_type != Some("File".to_string()) {
-		return Err(nerr!(
+		bail!(
 			"Track with type {}, expected \"File\"",
 			xml_track.track_type.as_deref().unwrap_or("unknown"),
-		));
+		);
 	}
 
 	// Unlike "Skip Date" etc, "Play Date" is a non-UTC Mac HFS+ timestamp, but
@@ -347,15 +338,13 @@ fn parse_track(
 
 	let skip = CountInfo::new(xml_track.skip_count, xml_track.skip_date);
 
-	let xml_track_path = parse_file_url(xml_location)?;
+	let xml_track_path = parse_file_url(&xml_location)?;
 
 	// this will also checks if the file exists
 	let file_md = read_file_metadata(&xml_track_path)?;
 
-	let tagged_file = match lofty::read_from_path(&xml_track_path) {
-		Ok(tagged_file) => tagged_file,
-		Err(e) => throw!("Failed to read file information: {}", e),
-	};
+	let tagged_file =
+		lofty::read_from_path(&xml_track_path).context("Failed to read file information")?;
 	let audio_properties = tagged_file.properties();
 
 	let file_type = FileType::from_path(&xml_track_path)?;
@@ -376,11 +365,11 @@ fn parse_track(
 		duration: audio_properties.duration().as_secs_f64(),
 		bitrate: audio_properties
 			.audio_bitrate()
-			.ok_or(nerr!("Unknown bitrate"))?
+			.context("Unknown bitrate")?
 			.into(),
 		sampleRate: audio_properties
 			.audio_bitrate()
-			.ok_or(nerr!("Unknown sample rate"))?
+			.context("Unknown sample rate")?
 			.into(),
 		file: filename,
 		dateModified: datetime_to_timestamp_millis(xml_track.date_modified),
@@ -436,7 +425,7 @@ fn parse_track(
 				let float: f32 = volume_adjustment.into();
 				let vol = (float / 2.55).round() as i8;
 				if vol < -100 || vol > 100 {
-					throw!("Invalid volume adjustment: {}", volume_adjustment);
+					bail!("Invalid volume adjustment: {}", volume_adjustment);
 				}
 				Some(vol)
 			}
@@ -599,7 +588,7 @@ pub struct ItunesImport {
 #[napi]
 impl ItunesImport {
 	#[napi(factory)]
-	pub fn new(env: Env) -> Result<Self> {
+	pub fn new(env: Env) -> napi::Result<Self> {
 		let data = get_data(&env)?;
 		Ok(Self {
 			new_library: Some(data.library.clone()).into(),
@@ -607,19 +596,19 @@ impl ItunesImport {
 		})
 	}
 	#[napi]
-	pub async fn start(&self, path: String, tracks_dir: String) -> Result<ImportStatus> {
-		import_itunes(self, path, tracks_dir).await
+	pub async fn start(&self, path: String, tracks_dir: String) -> napi::Result<ImportStatus> {
+		Ok(import_itunes(self, path, tracks_dir).await?)
 	}
 	#[napi]
-	pub fn finish(&mut self, env: Env) -> Result<()> {
+	pub fn finish(&mut self, env: Env) -> napi::Result<()> {
 		let data = get_data(&env)?;
 		let itunes_track_paths = &mut *self.itunes_track_paths.lock().unwrap();
 		for (itunes_path, ferrum_file) in itunes_track_paths {
 			let new_path = data.paths.tracks_dir.join(ferrum_file);
-			fs::copy(itunes_path, new_path).or(Err(nerr!("Error copying file")))?;
+			fs::copy(itunes_path, new_path).context("Error copying file")?;
 		}
 		let new_library = &mut self.new_library.lock().unwrap();
-		data.library = new_library.take().ok_or(nerr!("Not initialized"))?;
+		data.library = new_library.take().context("Not initialized")?;
 		Ok(())
 	}
 }
@@ -632,15 +621,12 @@ pub async fn import_itunes(
 	let new_library_lock = &mut *itunes_import.new_library.lock().unwrap();
 	let mut library = match new_library_lock {
 		Some(library) => library,
-		None => throw!("Not initialized"),
+		None => bail!("Not initialized"),
 	};
 	let mut itunes_track_paths = itunes_import.itunes_track_paths.lock().unwrap();
 	let original_tracks_count = library.get_tracks().len();
 	let original_tracklists_count = library.trackLists.len();
-	let xml_lib: XmlLibrary = match plist::from_file(path) {
-		Ok(book) => book,
-		Err(e) => throw!("Unable to parse: {e}"),
-	};
+	let xml_lib: XmlLibrary = plist::from_file(path).context("Unable to parse")?;
 	let mut errors = Vec::new();
 	let start_time = get_now_timestamp();
 
@@ -667,7 +653,7 @@ pub async fn import_itunes(
 		let xml_track = xml
 			.tracks
 			.remove(&xml_id)
-			.ok_or(nerr!("Track with id {} not found", playlist_item.track_id))?;
+			.with_context(|| format!("Track with id {} not found", playlist_item.track_id))?;
 		let artist_title = xml_track.artist_title();
 
 		if matches!(xml_track.name.as_deref(), Some("") | None) {

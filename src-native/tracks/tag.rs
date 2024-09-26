@@ -1,32 +1,9 @@
-use crate::{UniError, UniResult};
+use anyhow::{bail, Context, Result};
 use lofty::picture::{MimeType, Picture};
 use lofty::tag::ItemKey;
 use lofty::{file::TaggedFileExt, tag::Accessor, tag::TagExt};
 use std::io::Cursor;
 use std::path::{Path, PathBuf};
-
-pub enum SetInfoError {
-	NumberRequired,
-	Other(String),
-}
-impl ToString for SetInfoError {
-	fn to_string(self: &SetInfoError) -> String {
-		match self {
-			SetInfoError::NumberRequired => "Number required".to_string(),
-			SetInfoError::Other(s) => s.to_string(),
-		}
-	}
-}
-impl From<SetInfoError> for napi::Error {
-	fn from(err: SetInfoError) -> napi::Error {
-		napi::Error::from_reason(err.to_string())
-	}
-}
-impl From<SetInfoError> for UniError {
-	fn from(err: SetInfoError) -> UniError {
-		err.to_string().into()
-	}
-}
 
 pub struct Image {
 	pub data: Vec<u8>,
@@ -43,28 +20,22 @@ pub struct Tag {
 	tag: lofty::tag::Tag,
 }
 impl Tag {
-	pub fn read_from_path(path: &PathBuf) -> UniResult<Tag> {
+	pub fn read_from_path(path: &PathBuf) -> Result<Tag> {
 		if !path.exists() {
-			throw!("File does not exist: {}", path.to_string_lossy());
+			bail!("File does not exist: {}", path.to_string_lossy());
 		}
 		let ext = path.extension().unwrap_or_default().to_string_lossy();
 
 		let tag = match ext.as_ref() {
 			"mp3" | "m4a" | "opus" => {
-				let probe = match lofty::probe::Probe::open(path) {
-					Ok(f) => {
-						let parse_options = lofty::config::ParseOptions::new()
-							.read_properties(false)
-							.parsing_mode(lofty::config::ParsingMode::Strict);
-						f.options(parse_options)
-					}
-					Err(e) => throw!("File does not exist: {}", e),
-				};
+				let parse_options = lofty::config::ParseOptions::new()
+					.read_properties(false)
+					.parsing_mode(lofty::config::ParsingMode::Strict);
+				let probe = lofty::probe::Probe::open(path)
+					.context("File does not exist")?
+					.options(parse_options);
 
-				let mut tagged_file = match probe.read() {
-					Ok(f) => f,
-					Err(e) => throw!("Unable to read file: {}", e),
-				};
+				let mut tagged_file = probe.read().context("Unable to read file")?;
 
 				let tag = match tagged_file.remove(tagged_file.primary_tag_type()) {
 					Some(t) => t.clone(),
@@ -73,19 +44,14 @@ impl Tag {
 
 				Tag { tag }
 			}
-			_ => throw!("Unsupported file extension: {}", ext),
+			_ => bail!("Unsupported file extension: {}", ext),
 		};
 		Ok(tag)
 	}
-	pub fn write_to_path(&mut self, path: &Path) -> UniResult<()> {
-		match self
-			.tag
+	pub fn write_to_path(&mut self, path: &Path) -> Result<()> {
+		self.tag
 			.save_to_path(path, lofty::config::WriteOptions::default())
-		{
-			Ok(_) => {}
-			Err(e) => throw!("Unable to tag file: {}", e),
-		};
-		Ok(())
+			.context("Unable to tag file")
 	}
 	pub fn remove_title(&mut self) {
 		self.tag.remove_title()
@@ -143,13 +109,7 @@ impl Tag {
 		let u = if value < 0 { 0 } else { value as u32 };
 		self.tag.set_year(u);
 	}
-	/// For some tag types, `total` cannot exist without `number`. In those
-	/// cases, `total` is assumed to be `None`.
-	pub fn set_track_info(
-		&mut self,
-		number: Option<u32>,
-		total: Option<u32>,
-	) -> Result<(), SetInfoError> {
+	pub fn set_track_info(&mut self, number: Option<u32>, total: Option<u32>) -> () {
 		match number {
 			Some(number) => self.tag.set_track(number),
 			None => self.tag.remove_track(),
@@ -158,16 +118,8 @@ impl Tag {
 			Some(total) => self.tag.set_track_total(total),
 			None => self.tag.remove_track_total(),
 		}
-
-		Ok(())
 	}
-	/// For some tag types, `total` cannot exist without `number`. In those
-	/// cases, `total` is assumed to be `None`.
-	pub fn set_disc_info(
-		&mut self,
-		number: Option<u32>,
-		total: Option<u32>,
-	) -> Result<(), SetInfoError> {
+	pub fn set_disc_info(&mut self, number: Option<u32>, total: Option<u32>) -> () {
 		match number {
 			Some(number) => self.tag.set_disk(number),
 			None => self.tag.remove_disk(),
@@ -176,8 +128,6 @@ impl Tag {
 			Some(total) => self.tag.set_disk_total(total),
 			None => self.tag.remove_disk_total(),
 		}
-
-		Ok(())
 	}
 	pub fn remove_bpm(&mut self) {
 		self.tag.remove_key(&ItemKey::Bpm);
@@ -195,22 +145,20 @@ impl Tag {
 	pub fn set_comment(&mut self, value: &str) {
 		self.tag.set_comment(value.to_string())
 	}
-	pub fn set_image(&mut self, index: usize, data: Vec<u8>) -> UniResult<()> {
+	pub fn set_image(&mut self, index: usize, data: Vec<u8>) -> Result<()> {
 		let mut reader = Cursor::new(data);
-		let picture = match lofty::picture::Picture::from_reader(&mut reader) {
-			Ok(picture) => picture,
-			Err(e) => throw!("Unable to read picture: {}", e),
-		};
+		let picture =
+			lofty::picture::Picture::from_reader(&mut reader).context("Unable to read picture")?;
 		match picture.mime_type() {
 			Some(lofty::picture::MimeType::Png | lofty::picture::MimeType::Jpeg) => {
 				self.tag.set_picture(index, picture);
 			}
-			_ => throw!("Unsupported picture type"),
+			_ => bail!("Unsupported picture type"),
 		}
 
 		Ok(())
 	}
-	pub fn get_image_ref(&self, index: usize) -> UniResult<Option<ImageRef>> {
+	pub fn get_image_ref(&self, index: usize) -> Result<Option<ImageRef>> {
 		let pictures = self.tag.pictures();
 		match pictures.get(index) {
 			Some(pic) => {
@@ -219,16 +167,13 @@ impl Tag {
 					index: index.try_into().expect("usize conv"),
 					total_images: pictures.len().try_into().expect("usize conv"),
 					data,
-					mime_type: match pic.mime_type() {
-						Some(mime_type) => mime_type.clone(),
-						_ => throw!("No mime type"),
-					},
+					mime_type: pic.mime_type().context("No mime type")?.clone(),
 				}))
 			}
 			None => Ok(None),
 		}
 	}
-	pub fn get_image_consume(mut self, index: usize) -> UniResult<Option<Image>> {
+	pub fn get_image_consume(mut self, index: usize) -> Result<Option<Image>> {
 		if self.tag.picture_count() <= index.try_into().expect("usize conv") {
 			return Ok(None);
 		}

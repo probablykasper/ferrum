@@ -1,7 +1,8 @@
 use crate::data::Data;
 use crate::library_types::Track;
+use crate::sys_time_to_timestamp;
 use crate::tracks::generate_filename;
-use crate::{sys_time_to_timestamp, UniResult};
+use anyhow::{bail, Context, Result};
 use lofty::file::{AudioFile, TaggedFileExt};
 use lofty::tag::{Accessor, ItemKey, TagExt};
 use std::fs;
@@ -14,21 +15,21 @@ pub enum FileType {
 	Opus,
 }
 impl FileType {
-	pub fn from_path(path: &Path) -> UniResult<Self> {
+	pub fn from_path(path: &Path) -> Result<Self> {
 		let ext = path.extension().unwrap_or_default().to_string_lossy();
 		match ext.as_ref() {
 			"mp3" => Ok(FileType::Mp3),
 			"m4a" => Ok(FileType::M4a),
 			"opus" => Ok(FileType::Opus),
-			_ => throw!("Unsupported file extension {}", ext),
+			_ => bail!("Unsupported file extension {}", ext),
 		}
 	}
-	pub fn from_lofty_file_type(lofty_type: lofty::file::FileType) -> UniResult<Self> {
+	pub fn from_lofty_file_type(lofty_type: lofty::file::FileType) -> Result<Self> {
 		match lofty_type {
 			lofty::file::FileType::Mpeg => Ok(FileType::Mp3),
 			lofty::file::FileType::Mp4 => Ok(FileType::M4a),
 			lofty::file::FileType::Opus => Ok(FileType::Opus),
-			_ => throw!("Unsupported file type {:?}", lofty_type),
+			_ => bail!("Unsupported file type {:?}", lofty_type),
 		}
 	}
 	pub fn file_extension(&self) -> &'static str {
@@ -45,17 +46,17 @@ impl std::fmt::Display for FileType {
 	}
 }
 
-pub fn read_file_metadata(path: &Path) -> UniResult<fs::Metadata> {
+pub fn read_file_metadata(path: &Path) -> Result<fs::Metadata> {
 	match std::fs::metadata(path) {
 		Ok(file_md) => Ok(file_md),
 		Err(err) => match err.kind() {
-			std::io::ErrorKind::NotFound => throw!("File does not exist"),
-			_ => throw!("Unable to access file: {}", err),
+			std::io::ErrorKind::NotFound => bail!("File does not exist"),
+			_ => bail!("Unable to access file: {}", err),
 		},
 	}
 }
 
-pub fn import(data: &Data, track_path: &Path, now: i64) -> UniResult<Track> {
+pub fn import(data: &Data, track_path: &Path, now: i64) -> Result<Track> {
 	let file_md = read_file_metadata(track_path)?;
 
 	let mut date_modified = match file_md.modified() {
@@ -63,19 +64,13 @@ pub fn import(data: &Data, track_path: &Path, now: i64) -> UniResult<Track> {
 		Err(_) => now,
 	};
 
-	let probe = match lofty::probe::Probe::open(track_path) {
-		Ok(f) => {
-			let parse_options = lofty::config::ParseOptions::new()
-				.read_properties(true)
-				.parsing_mode(lofty::config::ParsingMode::Strict);
-			f.options(parse_options)
-		}
-		Err(e) => throw!("File does not exist: {}", e),
-	};
-	let mut tagged_file = match probe.read() {
-		Ok(f) => f,
-		Err(e) => throw!("Unable to read file: {}", e),
-	};
+	let parse_options = lofty::config::ParseOptions::new()
+		.read_properties(true)
+		.parsing_mode(lofty::config::ParsingMode::Strict);
+	let probe = lofty::probe::Probe::open(track_path)
+		.context("File does not exist")?
+		.options(parse_options);
+	let mut tagged_file = probe.read().context("Unable to read file")?;
 	let properties = tagged_file.properties().clone();
 
 	let mut tag_changed = false;
@@ -108,10 +103,7 @@ pub fn import(data: &Data, track_path: &Path, now: i64) -> UniResult<Track> {
 	let filename = generate_filename(tracks_dir, &artist, &title, extension);
 	let dest_path = tracks_dir.join(&filename);
 
-	match fs::copy(track_path, &dest_path) {
-		Ok(_) => (),
-		Err(e) => throw!("Error copying file: {e}"),
-	};
+	fs::copy(track_path, &dest_path).context("Error copying file")?;
 	println!(
 		"{} -> {}",
 		track_path.to_string_lossy(),
@@ -119,10 +111,10 @@ pub fn import(data: &Data, track_path: &Path, now: i64) -> UniResult<Track> {
 	);
 
 	if tag_changed {
-		println!("Writing:::::::");
+		println!("Writing tag to imported file");
 		match tag.save_to_path(&dest_path, lofty::config::WriteOptions::default()) {
 			Ok(_) => (),
-			Err(e) => throw!("Unable to tag file {}: {e}", dest_path.to_string_lossy()),
+			Err(e) => bail!("Unable to tag file {}: {e}", dest_path.to_string_lossy()),
 		};
 		// manually set date_modified because the date_modified doens't seem to
 		// immediately update after tag.write_to_path().
