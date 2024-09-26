@@ -6,6 +6,7 @@ use crate::library_types::{
 };
 use crate::str_to_option;
 use anyhow::{bail, Context, Result};
+use linked_hash_map::LinkedHashMap;
 use napi::{Env, JsUnknown};
 use std::collections::{HashMap, HashSet};
 use std::path::PathBuf;
@@ -417,12 +418,14 @@ pub fn get_tracklist_item_ids(library: &Library, playlist_id: &str) -> Result<Ve
 	match library.get_tracklist(playlist_id)? {
 		TrackList::Playlist(playlist) => Ok(playlist.tracks.clone()),
 		TrackList::Folder(folder) => {
-			let mut ids: HashSet<ItemId> = HashSet::new();
+			let mut ids: LinkedHashMap<ItemId, ()> = LinkedHashMap::new();
 			for child in &folder.children {
 				let child_ids = get_tracklist_item_ids(library, &child)?;
-				ids.extend(child_ids);
+				for child_id in child_ids {
+					ids.insert(child_id, ());
+				}
 			}
-			Ok(ids.into_iter().collect())
+			Ok(ids.into_iter().map(|(id, _)| id).collect())
 		}
 		TrackList::Special(special) => match special.name {
 			SpecialTrackListName::Root => {
