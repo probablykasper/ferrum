@@ -31,6 +31,9 @@
 	let start_index = 0
 	let visible_count = 0
 
+	// Workaround for svelte not updating the indexes when the keys change
+	$: visible_count_obj = { length: visible_count }
+
 	$: {
 		items, item_height, buffer
 		if (scroll_container && main_element) refresh()
@@ -71,6 +74,7 @@
 
 		start_index = Math.floor(start_pixel / item_height)
 		visible_count = Math.ceil(end_pixel / item_height) - start_index
+		visible_count_obj = { length: visible_count }
 	}
 
 	$: apply_scroll_event_handler(scroll_container)
@@ -103,7 +107,7 @@
 	style:padding-top={start_index * item_height + 'px'}
 	style:height={items.length * item_height + 'px'}
 >
-	{#each { length: visible_count } as _, i (get_key(items[i + start_index], i + start_index))}
+	{#each visible_count_obj as _, i (get_key(items[i + start_index], i + start_index))}
 		<slot item={items[i + start_index]} i={i + start_index} />
 	{/each}
 </div>
