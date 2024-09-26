@@ -101,14 +101,14 @@ export function init_menu_bar(app: App, main_window: BrowserWindow) {
 					label: 'Play Next',
 					accelerator: '',
 					click: () => {
-						web_contents.send('selectedTracksAction', 'Play Next')
+						web_contents.send('selected_tracks_action', 'Play Next')
 					},
 				},
 				{
 					label: 'Add to Queue',
 					accelerator: '',
 					click: () => {
-						web_contents.send('selectedTracksAction', 'Add to Queue')
+						web_contents.send('selected_tracks_action', 'Add to Queue')
 					},
 				},
 				{ type: 'separator' },
@@ -116,7 +116,7 @@ export function init_menu_bar(app: App, main_window: BrowserWindow) {
 					label: 'Get Info',
 					accelerator: 'CmdOrCtrl+I',
 					click: () => {
-						web_contents.send('selectedTracksAction', 'Get Info')
+						web_contents.send('selected_tracks_action', 'Get Info')
 					},
 				},
 				{ type: 'separator' },
@@ -128,7 +128,7 @@ export function init_menu_bar(app: App, main_window: BrowserWindow) {
 					})(),
 					accelerator: 'Shift+CmdOrCtrl+R',
 					click: () => {
-						web_contents.send('selectedTracksAction', 'revealTrackFile')
+						web_contents.send('selected_tracks_action', 'reveal_track_file')
 					},
 				},
 				{ type: 'separator' },
@@ -136,14 +136,14 @@ export function init_menu_bar(app: App, main_window: BrowserWindow) {
 					label: 'Remove from Playlist',
 					accelerator: '',
 					click: () => {
-						web_contents.send('selectedTracksAction', 'Remove from Playlist')
+						web_contents.send('selected_tracks_action', 'Remove from Playlist')
 					},
 				},
 				{
 					label: 'Delete from Library',
 					accelerator: 'CmdOrCtrl+Backspace',
 					click: () => {
-						web_contents.send('selectedTracksAction', 'Delete from Library')
+						web_contents.send('selected_tracks_action', 'Delete from Library')
 					},
 				},
 			],

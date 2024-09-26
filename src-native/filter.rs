@@ -1,19 +1,8 @@
-use crate::data::Data;
-use crate::data_js::get_data;
-use crate::library_types::TrackID;
-use napi::{Env, Result};
+use crate::library_types::{ItemId, Library, TRACK_ID_MAP};
 use rayon::prelude::*;
 use std::str::Chars;
 use std::time::Instant;
 use unicode_normalization::{Recompositions, UnicodeNormalization};
-
-#[napi(js_name = "filter_open_playlist")]
-#[allow(dead_code)]
-pub fn filter_js(query: String, env: Env) -> Result<()> {
-	let data: &mut Data = get_data(&env)?;
-	filter(data, query);
-	return Ok(());
-}
 
 fn match_at_start(mut text: Recompositions<Chars>, keyword: Chars) -> bool {
 	for keyword_char in keyword {
@@ -68,13 +57,17 @@ fn find_match_opt(text: &Option<String>, keyword: &str) -> bool {
 	}
 }
 
-fn filter_keyword(data: &Data, ids: &Vec<TrackID>, keyword: &str) -> Vec<TrackID> {
-	let tracks = &data.library.tracks;
+fn filter_keyword(ids: Vec<ItemId>, keyword: &str, library: &Library) -> Vec<ItemId> {
+	let id_map = TRACK_ID_MAP.read().unwrap();
 	let filtered_tracks: Vec<_> = ids
 		.into_par_iter()
 		.with_min_len(2000)
-		.filter(|id| {
-			let track = tracks.get(*id).expect("Track ID not found");
+		.filter(|item_id| {
+			let track_id = &id_map[*item_id as usize];
+			let track = match library.get_track(track_id) {
+				Ok(track) => track,
+				Err(_) => panic!("Track ID {} not found", track_id),
+			};
 			let is_match = find_match(&track.name, keyword)
 				|| find_match(&track.artist, keyword)
 				|| find_match_opt(&track.albumName, keyword)
@@ -87,24 +80,21 @@ fn filter_keyword(data: &Data, ids: &Vec<TrackID>, keyword: &str) -> Vec<TrackID
 	filtered_tracks
 }
 
-pub fn filter(data: &mut Data, query: String) {
+pub fn filter(mut item_ids: Vec<ItemId>, query: String, library: &Library) -> Vec<ItemId> {
 	let now = Instant::now();
-	data.page_track_ids = if query == "" {
-		None
-	} else {
-		let query: String = query.nfc().collect();
-		let mut keywords_iter = query.split(' ');
-		let mut filtered_tracks = match keywords_iter.next() {
-			Some(keyword) => filter_keyword(data, &data.open_playlist_track_ids, keyword),
-			None => return,
-		};
-		for keyword in keywords_iter {
-			filtered_tracks = filter_keyword(data, &filtered_tracks, keyword);
+	if query == "" {
+		return item_ids;
+	}
+	let query: String = query.nfc().collect();
+
+	for keyword in query.split(' ') {
+		if keyword == "" {
+			continue;
 		}
-		Some(filtered_tracks)
-	};
-	data.filter = query;
+		item_ids = filter_keyword(item_ids, keyword, &library);
+	}
 	println!("Filter: {}ms", now.elapsed().as_millis());
+	item_ids
 }
 
 enum Eq {

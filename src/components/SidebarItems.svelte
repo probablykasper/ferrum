@@ -1,31 +1,31 @@
 <script lang="ts" context="module">
 	import {
 		track_lists_details_map,
-		page,
-		methods,
-		add_track_to_playlist,
+		add_tracks_to_playlist,
 		move_playlist,
-	} from '../lib/data'
+		shown_playlist_folders,
+		view_folder_set_show,
+	} from '@/lib/data'
 	import Self from './SidebarItems.svelte'
 
 	export type SidebarItemHandle = {
 		handleKey(e: KeyboardEvent): void
 	}
 
-	let shown_folders = writable(new Set(methods.shownPlaylistFolders()))
+	let shown_folders = writable(new Set(shown_playlist_folders()))
 	function show_folder(id: string) {
 		shown_folders.update((folders) => {
 			folders.add(id)
 			return folders
 		})
-		methods.viewFolderSetShow(id, true)
+		view_folder_set_show(id, true)
 	}
 	function hide_folder(id: string) {
 		shown_folders.update((folders) => {
 			folders.delete(id)
 			return folders
 		})
-		methods.viewFolderSetShow(id, false)
+		view_folder_set_show(id, false)
 	}
 </script>
 
@@ -38,6 +38,7 @@
 	import { ipc_renderer } from '@/lib/window'
 	import { check_shortcut } from '@/lib/helpers'
 	import { navigate, url } from '@/lib/router'
+	import { current_playlist_id } from './TrackList.svelte'
 
 	export let show = true
 	export let parent_path: string | null
@@ -98,7 +99,7 @@
 			return
 		}
 
-		const selected_list = $track_lists_details_map[$page.tracklist.id]
+		const selected_list = $track_lists_details_map[$current_playlist_id]
 		if (check_shortcut(e, 'ArrowUp')) {
 			select_up(index)
 		} else if (check_shortcut(e, 'ArrowUp', { alt: true })) {
@@ -256,7 +257,7 @@
 				class:droppable-below={drag_playlist_onto_index === i && !drop_above}
 				on:drop={(e) => {
 					if (e.currentTarget && e.dataTransfer?.types[0] === 'ferrum.tracks' && dragged.tracks) {
-						add_track_to_playlist(child_list.id, dragged.tracks.ids)
+						add_tracks_to_playlist(child_list.id, dragged.tracks.ids)
 						drag_track_onto_index = null
 					} else if (
 						e.currentTarget &&

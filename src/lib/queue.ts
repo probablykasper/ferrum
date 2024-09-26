@@ -1,8 +1,8 @@
 import type { TrackID } from '../../ferrum-addon'
 import { get, writable } from 'svelte/store'
-import { methods } from './data'
 import { getter_writable } from './helpers'
 import { ipc_renderer } from './window'
+import { track_exists } from '@/lib/data'
 
 export const queue_visible = writable(false)
 export function toggle_queue_visibility() {
@@ -232,10 +232,10 @@ export function remove_indexes(indexes: number[]) {
 }
 export function remove_deleted() {
 	const q = queue.get()
-	const past = q.past.filter((qi) => methods.trackExists(qi.id))
-	const current = q.current && methods.trackExists(q.current.item.id) ? q.current : null
-	const user_queue = q.user_queue.filter((qi) => methods.trackExists(qi.id))
-	const auto_queue = q.auto_queue.filter((qi) => methods.trackExists(qi.id))
+	const past = q.past.filter((qi) => track_exists(qi.id))
+	const current = q.current && track_exists(q.current.item.id) ? q.current : null
+	const user_queue = q.user_queue.filter((qi) => track_exists(qi.id))
+	const auto_queue = q.auto_queue.filter((qi) => track_exists(qi.id))
 	if (
 		past.length !== q.past.length ||
 		current !== null ||

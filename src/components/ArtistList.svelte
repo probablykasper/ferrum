@@ -1,11 +1,13 @@
 <script lang="ts">
-	import { filter, page } from '@/lib/data'
+	import { filter, get_artists } from '@/lib/data'
 	import fuzzysort from 'fuzzysort'
+	import Header from './Header.svelte'
 
-	$: all_artists = page.get_artists()
+	$: all_artists = get_artists()
 	$: artists = fuzzysort.go($filter, all_artists, { all: true })
 </script>
 
+<Header title="Artists" subtitle="{all_artists.length} artists" description={undefined} />
 <div class="w-full border-b border-b-slate-500/30">
 	<p class="px-3">(Work in progress)</p>
 </div>

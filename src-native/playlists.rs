@@ -1,6 +1,9 @@
 use crate::data::Data;
 use crate::data_js::get_data;
-use crate::library_types::{Library, SpecialTrackListName, TrackID, TrackList};
+use crate::library_types::{
+	get_track_ids_from_item_ids, new_item_ids_from_track_ids, ItemId, Library,
+	SpecialTrackListName, TrackID, TrackList, TRACK_ID_MAP,
+};
 use crate::{str_to_option, UniResult};
 use napi::{Env, JsUnknown, Result};
 use std::collections::{HashMap, HashSet};
@@ -115,7 +118,11 @@ fn remove_child_id(library: &mut Library, parent_id: &String, child_id: &String)
 	Ok(())
 }
 
-fn delete_track_list(data: &mut Data, id: String) -> Result<()> {
+/// Returns the deleted track lists, including folder children
+#[napi(js_name = "delete_track_list")]
+#[allow(dead_code)]
+pub fn delete_track_list(id: String, env: Env) -> Result<()> {
+	let data: &mut Data = get_data(&env)?;
 	let parent_id = data
 		.library
 		.get_parent_id(&id)
@@ -132,43 +139,33 @@ fn delete_track_list(data: &mut Data, id: String) -> Result<()> {
 	for id in &ids {
 		data.library.trackLists.remove(id);
 	}
-	if ids.contains(&data.open_playlist_id) {
-		data.open_playlist("root".to_string(), None)?;
-	}
 	Ok(())
-}
-
-/// Returns the deleted track lists, including folder children
-#[napi(js_name = "delete_track_list")]
-#[allow(dead_code)]
-pub fn delete_track_list_js(id: String, env: Env) -> Result<()> {
-	let data: &mut Data = get_data(&env)?;
-	delete_track_list(data, id)
 }
 
 #[napi(js_name = "add_tracks_to_playlist")]
 #[allow(dead_code)]
-pub fn add_tracks(playlist_id: String, mut track_ids: Vec<String>, env: Env) -> Result<()> {
+pub fn add_tracks(playlist_id: String, track_ids: Vec<String>, env: Env) -> Result<()> {
 	let data: &mut Data = get_data(&env)?;
 	let playlist = match data.library.get_tracklist_mut(&playlist_id)? {
 		TrackList::Playlist(playlist) => playlist,
 		TrackList::Folder(_) => throw!("Cannot add track to folder"),
 		TrackList::Special(_) => throw!("Cannot add track to special playlist"),
 	};
-	playlist.tracks.append(&mut track_ids);
+	let mut new_item_ids = new_item_ids_from_track_ids(&track_ids);
+	playlist.tracks.append(&mut new_item_ids);
 	return Ok(());
 }
 
 #[napi(js_name = "playlist_filter_duplicates")]
 #[allow(dead_code)]
-pub fn filter_duplicates(playlist_id: String, ids: Vec<String>, env: Env) -> Result<Vec<TrackID>> {
+pub fn filter_duplicates(playlist_id: TrackID, ids: Vec<String>, env: Env) -> Result<Vec<TrackID>> {
 	let data: &mut Data = get_data(&env)?;
 	let mut track_ids: HashSet<String> = HashSet::from_iter(ids);
 	let playlist = match data.library.get_tracklist_mut(&playlist_id)? {
 		TrackList::Playlist(playlist) => playlist,
 		_ => throw!("Cannot check if folder/special contains track"),
 	};
-	for track in &playlist.tracks {
+	for track in &playlist.get_track_ids() {
 		if track_ids.contains(track) {
 			track_ids.remove(track);
 		}
@@ -177,62 +174,37 @@ pub fn filter_duplicates(playlist_id: String, ids: Vec<String>, env: Env) -> Res
 	Ok(track_ids)
 }
 
-#[napi(js_name = "remove_from_open_playlist")]
+#[napi(js_name = "remove_from_playlist")]
 #[allow(dead_code)]
-pub fn remove_from_open(mut indexes_to_remove: Vec<u32>, env: Env) -> Result<()> {
+pub fn remove_from_playlist(playlist_id: TrackID, item_ids: Vec<ItemId>, env: Env) -> Result<()> {
 	let data: &mut Data = get_data(&env)?;
-	indexes_to_remove.sort_unstable();
-	indexes_to_remove.dedup();
-	let playlist = match data.library.get_tracklist_mut(&data.open_playlist_id)? {
+	let playlist = match data.library.get_tracklist_mut(&playlist_id)? {
 		TrackList::Playlist(playlist) => playlist,
-		TrackList::Folder(_) => throw!("Cannot remove track from folder"),
-		TrackList::Special(_) => throw!("Cannot remove track from special playlist"),
+		_ => throw!("Cannot remove track from non-playlist"),
 	};
-	if data.sort_key != "index" || !data.sort_desc {
-		throw!("Cannot remove track when custom sorting is used");
-	}
-	if data.filter != "" {
-		throw!("Cannot remove track when filter is used");
-	}
-	let mut new_list = Vec::new();
-	let mut indexes_to_remove = indexes_to_remove.iter();
-	let mut next_index = indexes_to_remove.next().map(|n| *n as usize);
-	for i in 0..playlist.tracks.len() {
-		let id = playlist.tracks.remove(0);
-		if Some(i) == next_index {
-			next_index = indexes_to_remove.next().map(|n| *n as usize);
-		} else {
-			new_list.push(id);
-		}
-	}
-	playlist.tracks = new_list;
+	let items_to_remove: HashSet<ItemId> = item_ids.into_iter().collect();
+
+	playlist
+		.tracks
+		.retain(|item_id| !items_to_remove.contains(item_id));
+
 	return Ok(());
 }
 
-fn remove_from_all_playlists(library: &mut Library, id: &str) {
+pub fn remove_from_all_playlists(library: &mut Library, id: &TrackID) {
+	let track_id_map = TRACK_ID_MAP.read().unwrap();
 	for (_, tracklist) in &mut library.trackLists {
 		let playlist = match tracklist {
 			TrackList::Playlist(playlist) => playlist,
 			_ => continue,
 		};
-		playlist.tracks.retain(|current_id| current_id != id);
+		playlist
+			.tracks
+			.retain(|current_id| track_id_map[*current_id as usize] != *id);
 	}
 }
 
-fn get_page_ids(data: &mut Data, indexes: Vec<u32>) -> UniResult<Vec<String>> {
-	let mut ids = Vec::new();
-	let page_track_ids = data.get_page_tracks();
-	for index in indexes {
-		let id = match page_track_ids.get(index as usize) {
-			Some(id) => id,
-			None => throw!("Track index not found"),
-		};
-		ids.push(id.clone());
-	}
-	Ok(ids)
-}
-
-fn delete_file(path: &PathBuf) -> UniResult<()> {
+pub fn delete_file(path: &PathBuf) -> UniResult<()> {
 	#[allow(unused_mut)]
 	let mut trash_context = trash::TrashContext::new();
 
@@ -245,30 +217,14 @@ fn delete_file(path: &PathBuf) -> UniResult<()> {
 	}
 }
 
-#[napi(js_name = "delete_tracks_in_open")]
+#[napi(js_name = "delete_tracks_with_item_ids")]
 #[allow(dead_code)]
-pub fn delete_tracks_in_open(mut indexes_to_delete: Vec<u32>, env: Env) -> Result<()> {
+pub fn delete_tracks_with_item_ids(item_ids: Vec<ItemId>, env: Env) -> Result<()> {
 	let data: &mut Data = get_data(&env)?;
-	indexes_to_delete.sort_unstable();
-	indexes_to_delete.dedup();
-	let ids_to_delete = get_page_ids(data, indexes_to_delete)?;
 	let library = &mut data.library;
-
-	for id_to_delete in &ids_to_delete {
-		let file_path = {
-			let track = library.get_track(id_to_delete)?;
-			data.paths.tracks_dir.join(&track.file)
-		};
-		if !file_path.exists() {
-			throw!("File does not exist: {}", file_path.to_string_lossy());
-		}
-
-		remove_from_all_playlists(library, &id_to_delete);
-		library
-			.tracks
-			.remove(id_to_delete)
-			.expect("Track ID not found when deleting");
-		delete_file(&file_path)?;
+	let track_ids = get_track_ids_from_item_ids(&item_ids);
+	for track_id in &track_ids {
+		library.delete_track_and_file(track_id, &data.paths.tracks_dir)?;
 	}
 	return Ok(());
 }
@@ -422,4 +378,60 @@ pub fn move_playlist(
 	}
 
 	Ok(())
+}
+
+#[napi(js_name = "move_tracks")]
+#[allow(dead_code)]
+pub fn move_tracks(
+	playlist_id: String,
+	mut item_ids: Vec<ItemId>,
+	to_index: u32,
+	env: Env,
+) -> Result<()> {
+	let data: &mut Data = get_data(&env)?;
+	let playlist = match data.library.get_tracklist_mut(&playlist_id)? {
+		TrackList::Playlist(playlist) => playlist,
+		_ => return Err(nerr!("Cannot rearrange tracks in non-playlist")),
+	};
+
+	let item_ids_set: HashSet<ItemId> = item_ids.iter().cloned().collect();
+	assert_eq!(item_ids_set.len(), item_ids.len());
+
+	let playlist_item_ids_set: HashSet<ItemId> = playlist.tracks.iter().cloned().collect();
+	for item_id in &item_ids {
+		assert!(playlist_item_ids_set.contains(item_id));
+	}
+
+	let mut start_items = playlist.tracks.clone();
+	let mut end_items = start_items.split_off(to_index as usize);
+
+	start_items.retain(|item_id| !item_ids_set.contains(item_id));
+	end_items.retain(|item_id| !item_ids_set.contains(item_id));
+
+	start_items.append(&mut item_ids);
+
+	start_items.append(&mut end_items);
+
+	playlist.tracks = start_items;
+	Ok(())
+}
+
+pub fn get_tracklist_item_ids(library: &Library, playlist_id: &str) -> UniResult<Vec<ItemId>> {
+	match library.get_tracklist(playlist_id)? {
+		TrackList::Playlist(playlist) => Ok(playlist.tracks.clone()),
+		TrackList::Folder(folder) => {
+			let mut ids: HashSet<ItemId> = HashSet::new();
+			for child in &folder.children {
+				let child_ids = get_tracklist_item_ids(library, &child)?;
+				ids.extend(child_ids);
+			}
+			Ok(ids.into_iter().collect())
+		}
+		TrackList::Special(special) => match special.name {
+			SpecialTrackListName::Root => {
+				let item_ids = library.get_track_item_ids().values().cloned().collect();
+				Ok(item_ids)
+			}
+		},
+	}
 }

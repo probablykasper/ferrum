@@ -67,7 +67,6 @@
 		"@sveltejs/vite-plugin-svelte": "^3.1.2",
 		"@tailwindcss/vite": "4.0.0-alpha.23",
 		"@tsconfig/svelte": "^5.0.4",
-		"concurrently": "^8.2.2",
 		"electron": "^28.3.3",
 		"electron-builder": "^25.0.5",
 		"eslint": "^9.10.0",

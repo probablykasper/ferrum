@@ -2,7 +2,7 @@ import { derived, writable } from 'svelte/store'
 import type { Writable } from 'svelte/store'
 import { clamp } from './helpers'
 import quit from './quit'
-import { methods, paths } from './data'
+import { add_play, add_play_time, add_skip, get_track, paths, read_cover_async } from '@/lib/data'
 import type { Track, TrackID } from '../../ferrum-addon'
 import { ipc_renderer, join_paths } from './window'
 import { queue, set_new_queue, next as queueNext, prev as queuePrev } from './queue'
@@ -79,7 +79,7 @@ export const cover_src = (() => {
 	return {
 		async newFromTrackId(id: TrackID) {
 			try {
-				const buf = await methods.readCoverAsync(id, 0)
+				const buf = await read_cover_async(id, 0)
 				const url = URL.createObjectURL(new Blob([buf], {}))
 				set(url)
 			} catch (_) {
@@ -126,7 +126,7 @@ function start_playback() {
 }
 
 function set_playing_file(id: TrackID, paused = false) {
-	const track = methods.getTrack(id)
+	const track = get_track(id)
 	const file_url = 'track:' + join_paths(paths.tracksDir, track.file)
 	waiting_to_play = !paused
 	audio.src = file_url
@@ -156,7 +156,7 @@ audio.ondurationchange = update_time_details
 function reset_and_save_play_time() {
 	const current_id = queue.getCurrent()?.id
 	if (set_play_time() >= 1000 && current_id) {
-		methods.addPlayTime(current_id, start_time, set_play_time())
+		add_play_time(current_id, start_time, set_play_time())
 	}
 	start_time = Date.now()
 }
@@ -225,9 +225,9 @@ function next(skip: boolean) {
 	const current_id = queue.getCurrent()?.id
 	if (current_id) {
 		if (skip) {
-			methods.addSkip(current_id)
+			add_skip(current_id)
 		} else {
-			methods.addPlay(current_id)
+			add_play(current_id)
 		}
 		reset_and_save_play_time()
 		queueNext()

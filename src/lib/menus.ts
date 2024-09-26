@@ -1,49 +1,43 @@
-import {
-	add_track_to_playlist,
-	methods,
-	paths,
-	remove_from_open_playlist,
-	track_lists_details_map,
-} from '@/lib/data'
+import { add_tracks_to_playlist, get_track, paths, track_lists_details_map } from '@/lib/data'
 import { flatten_child_lists } from '@/lib/helpers'
 import { ipc_renderer } from '@/lib/window'
 import type { TrackID } from '../../ferrum-addon'
 import { get } from 'svelte/store'
 import { append_to_user_queue, prepend_to_user_queue } from './queue'
-import type { ShowTrackMenuOptions } from '@/electron/typed_ipc'
+import type { SelectedTracksAction } from '@/electron/typed_ipc'
+import { open_track_info } from '@/components/TrackInfo.svelte'
 
-export async function show_track_menu(
-	all_id: string[],
-	selected_indexes: number[],
-	playlist?: { editable: boolean },
-	queue = false,
-) {
+export function get_flattened_tracklists() {
 	const track_lists = get(track_lists_details_map)
-	const flat = flatten_child_lists(track_lists.root, track_lists, '')
-	const args: ShowTrackMenuOptions = {
-		allIds: all_id,
-		selectedIndexes: selected_indexes,
-		playlist,
-		queue,
-		lists: flat,
-	}
-
-	await ipc_renderer.invoke('showTrackMenu', args)
+	return flatten_child_lists(track_lists.root, track_lists, '')
 }
 
-ipc_renderer.on('context.Play Next', (e, ids: TrackID[]) => {
-	prepend_to_user_queue(ids)
-})
-ipc_renderer.on('context.Add to Queue', (e, ids: TrackID[]) => {
-	append_to_user_queue(ids)
-})
-ipc_renderer.on('context.Add to Playlist', (e, id: TrackID, track_ids: TrackID[]) => {
-	add_track_to_playlist(id, track_ids)
-})
-ipc_renderer.on('context.revealTrackFile', (e, id: TrackID) => {
-	const track = methods.getTrack(id)
-	ipc_renderer.invoke('revealTrackFile', paths.tracksDir, track.file)
-})
-ipc_renderer.on('context.Remove from Playlist', (e, indexes: number[]) => {
-	remove_from_open_playlist(indexes)
-})
+export function handle_selected_tracks_action({
+	action,
+	track_ids,
+	all_ids,
+	first_index,
+}: {
+	action: SelectedTracksAction
+	track_ids: TrackID[]
+	all_ids: TrackID[]
+	first_index: number | null
+}) {
+	if (track_ids.length === 0 || first_index === null) {
+		return
+	}
+	const first_track_id = track_ids[0]
+
+	if (action === 'Play Next') {
+		prepend_to_user_queue(track_ids)
+	} else if (action === 'Add to Queue') {
+		append_to_user_queue(track_ids)
+	} else if (action === 'Get Info') {
+		open_track_info(all_ids, first_index)
+	} else if (action === 'reveal_track_file') {
+		const track = get_track(first_track_id)
+		ipc_renderer.invoke('revealTrackFile', paths.tracksDir, track.file)
+	} else if (typeof action === 'object' && action.action === 'Add to Playlist') {
+		add_tracks_to_playlist(action.playlist_id, track_ids)
+	}
+}

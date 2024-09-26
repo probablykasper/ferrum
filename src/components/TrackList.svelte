@@ -1,68 +1,117 @@
+<script lang="ts" context="module">
+	export const sort_key = writable('index')
+	export const sort_desc = writable(true)
+	export let current_playlist_id = writable('')
+	current_playlist_id.subscribe((id) => {
+		// Cannot call get_default_sort_desc() here because it
+		// would be called before addon gets initialized
+		if (id === 'root') {
+			sort_key.set('dateAdded')
+			sort_desc.set(true)
+		} else {
+			sort_key.set('index')
+			sort_desc.set(true)
+		}
+	})
+	export const group_album_tracks = writable(true)
+</script>
+
 <script lang="ts">
 	import {
-		page,
-		remove_from_open_playlist,
 		filter,
-		delete_tracks_in_open,
-		paths,
-		view_as_songs,
-		methods,
-	} from '../lib/data'
+		move_tracks,
+		remove_from_playlist,
+		tracklist_updated,
+		get_default_sort_desc,
+		delete_tracks_with_item_ids,
+		tracks_updated,
+		get_tracks_page,
+		get_track_ids,
+		load_view_options,
+		save_view_options,
+		get_track_by_item_id,
+	} from '@/lib/data'
 	import { new_playback_instance, playing_id } from '../lib/player'
-	import {
-		get_duration,
-		format_date,
-		check_mouse_shortcut,
-		check_shortcut,
-		assert_unreachable,
-	} from '../lib/helpers'
-	import { append_to_user_queue, prepend_to_user_queue } from '../lib/queue'
-	import { selection, tracklist_actions } from '../lib/page'
+	import { get_duration, format_date, check_mouse_shortcut, check_shortcut } from '../lib/helpers'
+	import { tracklist_actions } from '../lib/page'
 	import { ipc_listen, ipc_renderer } from '../lib/window'
 	import { onDestroy, onMount } from 'svelte'
 	import { dragged } from '../lib/drag-drop'
 	import * as dragGhost from './DragGhost.svelte'
 	import VirtualListBlock, { scroll_container_keydown } from './VirtualListBlock.svelte'
-	import { open_track_info } from './TrackInfo.svelte'
-	import type { Track } from 'ferrum-addon/addon'
+	import type { ItemId, Track } from 'ferrum-addon/addon'
 	import Cover from './Cover.svelte'
+	import Header from './Header.svelte'
+	import { writable } from 'svelte/store'
+	import { SvelteSelection } from '@/lib/selection'
+	import { get_flattened_tracklists, handle_selected_tracks_action } from '@/lib/menus'
+	import type { SelectedTracksAction } from '@/electron/typed_ipc'
 
 	let tracklist_element: HTMLDivElement
+
 	export let params: { playlist_id: string }
+	$: $current_playlist_id = params.playlist_id
 
-	$: page.open_playlist(params.playlist_id, view_as_songs)
+	let tracks_page = get_tracks_page({
+		playlistId: params.playlist_id,
+		filterQuery: $filter,
+		sortKey: $sort_key,
+		sortDesc: $sort_desc,
+		groupAlbumTracks: $group_album_tracks,
+	})
+	// eslint-disable-next-line no-constant-condition
+	$: if ($tracklist_updated || $tracks_updated || true) {
+		tracks_page = get_tracks_page({
+			playlistId: params.playlist_id,
+			filterQuery: $filter,
+			sortKey: $sort_key,
+			sortDesc: $sort_desc,
+			groupAlbumTracks: $group_album_tracks,
+		})
+	}
 
-	const track_action_unlisten = ipc_listen('selectedTracksAction', (_, action) => {
-		let first_index = selection.findFirst()
-		if (first_index === null || !tracklist_element.contains(document.activeElement)) {
+	function handle_action(action: SelectedTracksAction) {
+		if (action === 'Remove from Playlist') {
+			remove_from_playlist($current_playlist_id, selection.items_as_array())
 			return
-		}
-		if (action === 'Play Next') {
-			const ids = selection.getSelectedIndexes().map((i) => page.get_track_id(i))
-			prepend_to_user_queue(ids)
-		} else if (action === 'Add to Queue') {
-			const ids = selection.getSelectedIndexes().map((i) => page.get_track_id(i))
-			append_to_user_queue(ids)
-		} else if (action === 'Get Info') {
-			open_track_info(page.get_track_ids(), first_index)
-		} else if (action === 'revealTrackFile') {
-			const track = page.get_track(first_index)
-			ipc_renderer.invoke('revealTrackFile', paths.tracksDir, track.file)
-		} else if (action === 'Remove from Playlist') {
-			remove_from_open_playlist(selection.getSelectedIndexes())
 		} else if (action === 'Delete from Library') {
-			delete_indexes(selection.getSelectedIndexes())
+			delete_tracks(selection.items_as_array())
 		} else {
-			assert_unreachable(action)
+			handle_selected_tracks_action({
+				action,
+				track_ids: get_track_ids(selection.items_as_array()),
+				all_ids: get_track_ids(tracks_page.itemIds),
+				first_index: selection.find_first_index(),
+			})
+		}
+	}
+
+	const selection = new SvelteSelection(tracks_page.itemIds, {
+		scroll_to({ index }) {
+			tracklist_actions.scroll_to_index?.(index)
+		},
+		async on_contextmenu() {
+			const action = await ipc_renderer.invoke('show_tracks_menu', {
+				is_editable_playlist: tracks_page.playlistKind === 'playlist',
+				queue: false,
+				lists: get_flattened_tracklists(),
+			})
+			if (action !== null) {
+				handle_action(action)
+			}
+		},
+	})
+	$: selection.update_all_items(tracks_page.itemIds)
+
+	const track_action_unlisten = ipc_listen('selected_tracks_action', (_, action) => {
+		if (tracklist_element.contains(document.activeElement)) {
+			handle_action(action)
 		}
 	})
 	onDestroy(track_action_unlisten)
 
-	const sort_by = page.sort_by
-	$: sort_key = $page.sortKey
-
 	ipc_renderer.on('Group Album Tracks', (_, checked) => {
-		page.set_group_album_tracks(checked)
+		group_album_tracks.set(checked)
 	})
 
 	function double_click(e: MouseEvent, index: number) {
@@ -70,78 +119,73 @@
 			play_row(index)
 		}
 	}
-	async function delete_indexes(indexes: number[]) {
-		const s = $selection.count > 1 ? 's' : ''
+	async function delete_tracks(item_ids: ItemId[]) {
+		const s = selection.items.size > 1 ? 's' : ''
 		const result = await ipc_renderer.invoke('showMessageBox', false, {
 			type: 'info',
-			message: `Delete ${$selection.count} song${s} from library?`,
+			message: `Delete ${selection.items.size} song${s} from library?`,
 			buttons: [`Delete Song${s}`, 'Cancel'],
 			defaultId: 0,
 		})
 		if (result.response === 0) {
-			delete_tracks_in_open(indexes)
+			delete_tracks_with_item_ids(item_ids)
 		}
 	}
 	async function keydown(e: KeyboardEvent) {
 		if (check_shortcut(e, 'Enter')) {
-			let first_index = selection.findFirst()
-			if (first_index !== null) {
-				play_row(first_index)
+			let first_item_id = selection.find_first_index()
+			if (first_item_id !== null) {
+				play_row(first_item_id)
 			} else if (!$playing_id) {
 				play_row(0)
 			}
 		} else if (
 			check_shortcut(e, 'Backspace') &&
-			$selection.count > 0 &&
-			!$filter &&
-			$page.tracklist.type === 'playlist'
+			selection.items.size > 0 &&
+			$filter === '' &&
+			tracks_page.playlistKind === 'playlist'
 		) {
 			e.preventDefault()
-			const s = $selection.count > 1 ? 's' : ''
+			const s = selection.items.size > 1 ? 's' : ''
 			const result = ipc_renderer.invoke('showMessageBox', false, {
 				type: 'info',
-				message: `Remove ${$selection.count} song${s} from the list?`,
+				message: `Remove ${selection.items.size} song${s} from the list?`,
 				buttons: ['Remove Song' + s, 'Cancel'],
 				defaultId: 0,
 			})
-			const indexes = selection.getSelectedIndexes()
 			if ((await result).response === 0) {
-				remove_from_open_playlist(indexes)
+				remove_from_playlist(params.playlist_id, Array.from(selection.items))
 			}
-		} else if (check_shortcut(e, 'Backspace', { cmd_or_ctrl: true }) && $selection.count > 0) {
+		} else if (check_shortcut(e, 'Backspace', { cmd_or_ctrl: true }) && $selection.size > 0) {
 			e.preventDefault()
-			delete_indexes(selection.getSelectedIndexes())
+			handle_action('Delete from Library')
 		} else {
-			selection.handleKeyDown(e)
+			selection.handle_keydown(e)
 			return
 		}
 		e.preventDefault()
 	}
 
 	function play_row(index: number) {
-		new_playback_instance(page.get_track_ids(), index)
+		const all_track_ids = get_track_ids(tracks_page.itemIds)
+		new_playback_instance(all_track_ids, index)
 	}
 
 	let drag_line: HTMLElement
-	let drag_indexes: number[] = []
+	let drag_item_ids: ItemId[] = []
 	function on_drag_start(e: DragEvent) {
 		if (e.dataTransfer) {
-			drag_indexes = []
-			for (let i = 0; i < $selection.list.length; i++) {
-				if ($selection.list[i]) {
-					drag_indexes.push(i)
-				}
-			}
+			drag_item_ids = Array.from(selection.items)
 			e.dataTransfer.effectAllowed = 'move'
-			if (drag_indexes.length === 1) {
-				const track = page.get_track(drag_indexes[0])
+			if (drag_item_ids.length === 1) {
+				const { track } = get_track_by_item_id(drag_item_ids[0])
 				dragGhost.set_inner_text(track.artist + ' - ' + track.name)
 			} else {
-				dragGhost.set_inner_text(drag_indexes.length + ' items')
+				dragGhost.set_inner_text(drag_item_ids.length + ' items')
 			}
 			dragged.tracks = {
-				ids: drag_indexes.map((i) => page.get_track_id(i)),
-				playlist_indexes: drag_indexes,
+				ids: get_track_ids(drag_item_ids),
+				playlist_indexes: drag_item_ids,
 			}
 			e.dataTransfer.setDragImage(dragGhost.drag_el, 0, 0)
 			e.dataTransfer.setData('ferrum.tracks', '')
@@ -150,10 +194,10 @@
 	let drag_to_index: null | number = null
 	function on_drag_over(e: DragEvent, index: number) {
 		if (
-			!$page.sortDesc ||
-			$page.sortKey !== 'index' ||
+			!$sort_desc ||
+			$sort_key !== 'index' ||
 			$filter ||
-			$page.tracklist.type !== 'playlist'
+			tracks_page.playlistKind !== 'playlist'
 		) {
 			drag_to_index = null
 			return
@@ -180,7 +224,7 @@
 	}
 	async function drop_handler() {
 		if (drag_to_index !== null) {
-			page.move_tracks(drag_indexes, drag_to_index)
+			move_tracks(params.playlist_id, drag_item_ids, drag_to_index)
 			drag_to_index = null
 		}
 	}
@@ -188,18 +232,17 @@
 		drag_to_index = null
 	}
 
-	function get_item(index: number) {
+	function get_item(item_id: ItemId) {
 		try {
-			const track = page.get_track(index)
-			return { ...track, id: page.get_track_id(index) }
+			return get_track_by_item_id(item_id)
 		} catch (_) {
-			return null
+			return { id: null, track: null }
 		}
 	}
 
-	let virtual_list: VirtualListBlock<number>
+	let virtual_list: VirtualListBlock<ItemId>
 
-	$: if ($page && virtual_list) {
+	$: if (virtual_list) {
 		virtual_list.refresh()
 	}
 
@@ -268,7 +311,7 @@
 	]
 	let columns: Column[] = load_columns()
 	function load_columns(): Column[] {
-		let loaded_columns = methods.load_view_options().columns
+		let loaded_columns = load_view_options().columns
 		if (loaded_columns.length === 0) {
 			loaded_columns = [...default_columns]
 		}
@@ -282,12 +325,12 @@
 			.filter((col) => col !== undefined)
 	}
 	function save_columns() {
-		const view_options = methods.load_view_options()
+		const view_options = load_view_options()
 		view_options.columns = columns.map((col) => col.key)
 		if (JSON.stringify(view_options.columns) === JSON.stringify(default_columns)) {
 			view_options.columns = []
 		}
-		methods.save_view_options(view_options)
+		save_view_options(view_options)
 	}
 	function on_column_context_menu() {
 		ipc_renderer.invoke('show_columns_menu', {
@@ -358,17 +401,21 @@
 	}
 </script>
 
+<Header
+	title={params.playlist_id === 'root' ? 'Songs' : tracks_page.playlistName}
+	subtitle="{tracks_page.itemIds.length} songs"
+	description={tracks_page.playlistDescription}
+/>
 <div
 	bind:this={tracklist_element}
 	class="tracklist h-full"
 	role="table"
 	on:dragleave={() => (drag_to_index = null)}
-	class:no-selection={$selection.count === 0}
 >
 	<!-- svelte-ignore a11y-interactive-supports-focus -->
 	<div
 		class="row table-header border-b border-b-slate-500/30"
-		class:desc={$page.sortDesc}
+		class:desc={$sort_desc}
 		role="row"
 		on:contextmenu={on_column_context_menu}
 		on:dragleave={() => (col_drag_to_index = null)}
@@ -379,10 +426,22 @@
 			<!-- svelte-ignore a11y-click-events-have-key-events -->
 			<div
 				class="c {column.key}"
-				class:sort={sort_key === column.key}
+				class:sort={$sort_key === column.key}
 				style:width={column.width}
 				role="button"
-				on:click={() => sort_by(column.key)}
+				on:click={() => {
+					if (tracks_page.playlistKind === 'special' && column.key === 'index') {
+						return
+					} else if (column.key === 'image') {
+						return
+					}
+					if ($sort_key === column.key) {
+						sort_desc.set(!$sort_desc)
+					} else {
+						sort_key.set(column.key)
+						sort_desc.set(get_default_sort_desc(column.key))
+					}
+				}}
 				draggable="true"
 				on:dragstart={(e) => on_col_drag_start(e, i)}
 				on:dragend={col_drag_end_handler}
@@ -404,20 +463,21 @@
 		bind:this={scroll_container}
 		class="main-focus-element relative h-full overflow-y-auto outline-none"
 		on:keydown={keydown}
-		on:mousedown|self={selection.clear}
+		on:mousedown|self={() => selection.clear()}
 		tabindex="0"
 		on:keydown={scroll_container_keydown}
 	>
-		<!-- Using `let:item={i}` instead of `let:i` fixes drag-and-drop -->
 		<VirtualListBlock
 			bind:this={virtual_list}
-			items={Array.from({ length: $page.length }).map((_, i) => i)}
+			items={tracks_page.itemIds}
+			get_key={(item) => item}
 			item_height={24}
 			{scroll_container}
-			let:item={i}
+			let:item={item_id}
+			let:i
 			buffer={5}
 		>
-			{@const track = get_item(i)}
+			{@const { id: track_id, track } = get_item(item_id)}
 			{#if track !== null}
 				<!-- svelte-ignore a11y-click-events-have-key-events -->
 				<!-- svelte-ignore a11y-interactive-supports-focus -->
@@ -425,22 +485,22 @@
 					class="row"
 					role="row"
 					on:dblclick={(e) => double_click(e, i)}
-					on:mousedown={(e) => selection.handleMouseDown(e, i)}
-					on:contextmenu={(e) => selection.handleContextMenu(e, i)}
-					on:click={(e) => selection.handleClick(e, i)}
+					on:mousedown={(e) => selection.handle_mousedown(e, i)}
+					on:contextmenu={(e) => selection.handle_contextmenu(e, i)}
+					on:click={(e) => selection.handle_click(e, i)}
 					draggable="true"
 					on:dragstart={on_drag_start}
 					on:dragover={(e) => on_drag_over(e, i)}
 					on:drop={drop_handler}
 					on:dragend={drag_end_handler}
 					class:odd={i % 2 === 0}
-					class:selected={$selection.list[i] === true}
-					class:playing={track.id === $playing_id}
+					class:selected={$selection.has(item_id)}
+					class:playing={track_id === $playing_id}
 				>
 					{#each columns as column}
 						<div class="c {column.key}" style:width={column.width}>
 							{#if column.key === 'index'}
-								{#if track.id === $playing_id}
+								{#if track_id === $playing_id}
 									<svg
 										class="playing-icon inline"
 										xmlns="http://www.w3.org/2000/svg"

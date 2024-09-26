@@ -1,10 +1,17 @@
 <script lang="ts">
-	import { ItunesImport, paths, call, methods, page, track_lists_details_map } from '@/lib/data'
+	import {
+		ItunesImport,
+		paths,
+		call,
+		tracklist_updated,
+		track_lists_details_map,
+		save,
+	} from '@/lib/data'
 	import { ipc_renderer } from '@/lib/window'
 	import type { ImportStatus } from 'ferrum-addon/addon'
 	import Button from './Button.svelte'
 	import Modal from './Modal.svelte'
-	import { selection as pageSelection } from '@/lib/page'
+	// import { selection as pageSelection } from '@/lib/page'
 
 	export let cancel: () => void
 	let itunes_import = ItunesImport.new()
@@ -35,9 +42,8 @@
 	}
 	async function finish() {
 		itunes_import.finish()
-		methods.save()
-		page.refresh_ids_and_keep_selection()
-		pageSelection.clear()
+		save()
+		tracklist_updated.emit()
 		track_lists_details_map.refresh()
 		cancel()
 	}

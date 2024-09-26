@@ -13,7 +13,7 @@ use std::fs;
 use std::io::{BufWriter, Cursor};
 use std::path::PathBuf;
 use std::sync::{Arc, RwLock};
-use std::time::UNIX_EPOCH;
+use std::time::{Instant, UNIX_EPOCH};
 
 // (modified_timestamp_ms, image_bytes)
 type CacheEntry = (i64, Vec<u8>);
@@ -25,6 +25,7 @@ lazy_static! {
 }
 
 fn init_cache_db(path: String) -> Result<()> {
+	let now = Instant::now();
 	let cache_db_mutex = CACHE_DB.read().unwrap();
 	if cache_db_mutex.is_none() {
 		drop(cache_db_mutex);
@@ -42,7 +43,7 @@ fn init_cache_db(path: String) -> Result<()> {
 			}
 			init_txn.commit().context("Could not commit cache: {}")?;
 			*cache_db_mutex = Some(db);
-			println!("Initialized Cache.redb");
+			println!("Initialized Cache.redb: {}ms", now.elapsed().as_millis());
 		}
 	}
 	Ok(())

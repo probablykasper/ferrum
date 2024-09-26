@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onDestroy } from 'svelte'
-	import { filter } from '../lib/data'
+	import { filter } from '@/lib/data'
 	import { ipc_listen } from '../lib/window'
 
 	let filter_input: HTMLInputElement

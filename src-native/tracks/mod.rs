@@ -1,8 +1,7 @@
 use crate::data::Data;
 use crate::data_js::get_data;
 use crate::get_now_timestamp;
-use crate::js::nerr;
-use crate::library_types::{MsSinceUnixEpoch, Track, TrackID};
+use crate::library_types::{ItemId, MsSinceUnixEpoch, Track, TrackID, TRACK_ID_MAP};
 use napi::{Env, JsArrayBuffer, JsBuffer, JsObject, Result, Task};
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -16,8 +15,7 @@ pub use tag::Tag;
 
 fn id_to_track<'a>(env: &'a Env, id: &String) -> Result<&'a mut Track> {
 	let data: &mut Data = get_data(env)?;
-	let tracks = &mut data.library.tracks;
-	let track = tracks.get_mut(id).ok_or(nerr("Track ID not found"))?;
+	let track = data.library.get_track_mut(id)?;
 	return Ok(track);
 }
 
@@ -25,16 +23,45 @@ fn id_to_track<'a>(env: &'a Env, id: &String) -> Result<&'a mut Track> {
 #[allow(dead_code)]
 pub fn get_track(id: String, env: Env) -> Result<Track> {
 	let data: &mut Data = get_data(&env)?;
-	let tracks = &data.library.tracks;
-	let track = tracks.get(&id).ok_or(nerr("Track ID not found"))?;
+	let track = data.library.get_track(&id)?;
 	Ok(track.clone())
+}
+
+#[napi(object)]
+pub struct KeyedTrack {
+	pub id: TrackID,
+	pub track: Track,
+}
+
+#[napi(js_name = "get_track_by_item_id")]
+#[allow(dead_code)]
+pub fn get_track_by_item_id(item_id: ItemId, env: Env) -> Result<KeyedTrack> {
+	let data: &mut Data = get_data(&env)?;
+	let id_map = TRACK_ID_MAP.read().unwrap();
+	let track_id = &id_map[item_id as usize];
+	let track = data.library.get_track(&track_id)?;
+	Ok(KeyedTrack {
+		id: track_id.clone(),
+		track: track.clone(),
+	})
+}
+
+#[napi(js_name = "get_track_ids")]
+#[allow(dead_code)]
+pub fn get_track_ids(item_ids: Vec<ItemId>) -> Result<Vec<TrackID>> {
+	let id_map = TRACK_ID_MAP.read().unwrap();
+	let track_ids = item_ids.into_iter().map(|item_id| {
+		let track_id = &id_map[item_id as usize];
+		track_id.clone()
+	});
+	Ok(track_ids.collect())
 }
 
 #[napi(js_name = "track_exists")]
 #[allow(dead_code)]
 pub fn track_exists(id: String, env: Env) -> Result<bool> {
 	let data: &mut Data = get_data(&env)?;
-	let tracks = &data.library.tracks;
+	let tracks = &data.library.get_tracks();
 	Ok(tracks.contains_key(&id))
 }
 
@@ -74,8 +101,8 @@ pub fn add_skip(track_id: String, env: Env) -> Result<()> {
 #[allow(dead_code)]
 pub fn add_play_time(id: TrackID, start: MsSinceUnixEpoch, dur_ms: i64, env: Env) -> Result<()> {
 	let data: &mut Data = get_data(&env)?;
-	let tracks = &mut data.library.tracks;
-	tracks.get_mut(&id).ok_or(nerr("Track ID not found"))?;
+	let tracks = data.library.get_tracks();
+	tracks.get(&id).ok_or(nerr!("Track ID not found"))?;
 	data.library.playTime.push((id, start, dur_ms));
 	Ok(())
 }
@@ -112,15 +139,6 @@ pub fn read_cover_async(track_id: String, index: u16, env: Env) -> Result<JsObje
 	let tracks_dir = &data.paths.tracks_dir;
 	let file_path = tracks_dir.join(&track.file);
 	let task = ReadCover(file_path, index.into());
-	env.spawn(task).map(|t| t.promise_object())
-}
-#[napi(
-	js_name = "read_cover_async_path",
-	ts_return_type = "Promise<ArrayBuffer>"
-)]
-#[allow(dead_code)]
-pub fn read_cover_async_path(path: String, index: u16, env: Env) -> Result<JsObject> {
-	let task = ReadCover(path.into(), index.into());
 	env.spawn(task).map(|t| t.promise_object())
 }
 
@@ -168,7 +186,7 @@ pub fn import_file(path: String, now: MsSinceUnixEpoch, env: Env) -> Result<()> 
 	let data: &mut Data = get_data(&env)?;
 	let id = data.library.generate_id();
 	let track = import::import(&data, Path::new(&path), now)?;
-	data.library.tracks.insert(id, track);
+	data.library.insert_track(id, track);
 	Ok(())
 }
 

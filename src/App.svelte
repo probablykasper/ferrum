@@ -9,15 +9,7 @@
 	import PlaylistInfoModal from './components/PlaylistInfo.svelte'
 	import { queue_visible } from './lib/queue'
 	import { ipc_listen, ipc_renderer } from '@/lib/window'
-	import {
-		import_tracks,
-		type PlaylistInfo,
-		methods,
-		page,
-		is_mac,
-		view_as_songs,
-		view_as_artists,
-	} from './lib/data'
+	import { delete_track_list, get_track_list, import_tracks, type PlaylistInfo } from '@/lib/data'
 	import { play_pause } from './lib/player'
 	import DragGhost from './components/DragGhost.svelte'
 	import ItunesImport from './components/ItunesImport.svelte'
@@ -128,7 +120,7 @@
 	let playlist_info: PlaylistInfo | null = null
 	onDestroy(
 		ipc_listen('context.playlist.edit', (_, id) => {
-			const list = methods.getTrackList(id)
+			const list = get_track_list(id)
 			if (list.type !== 'special' && $modal_count === 0) {
 				playlist_info = {
 					name: list.name,
@@ -142,7 +134,7 @@
 	)
 	onDestroy(
 		ipc_listen('context.playlist.delete', async (_, id) => {
-			const list = methods.getTrackList(id)
+			const list = get_track_list(id)
 			const result = await ipc_renderer.invoke('showMessageBox', false, {
 				type: 'info',
 				message: `Delete the ${list.type} "${list.name}"?`,
@@ -151,7 +143,7 @@
 				defaultId: 0,
 			})
 			if (result.response === 0) {
-				methods.deleteTrackList(id)
+				delete_track_list(id)
 			}
 		}),
 	)
@@ -198,32 +190,6 @@
 	<div class="meat">
 		<Sidebar />
 		<div class="flex size-full min-w-0 flex-col">
-			<div class="relative pt-4 px-5 pb-5">
-				<div
-					class="absolute top-0 left-0 h-10 w-full"
-					class:dragbar={$modal_count === 0 && is_mac}
-					class:queue-visible={$queue_visible}
-				/>
-				<h3 class="m-0 pb-0.5 text-[19px] font-medium leading-none">
-					{#if $page.tracklist.id === 'root'}
-						{#if $page.viewAs === view_as_songs}
-							Songs
-							<div class="text-[13px] leading-4 opacity-70">{$page.length} songs</div>
-						{:else if $page.viewAs === view_as_artists}
-							Artists
-							<div class="text-[13px] leading-4 opacity-70">
-								{page.get_artists().length} artists
-							</div>
-						{/if}
-					{:else if $page.tracklist.type !== 'special'}
-						{$page.tracklist.name}
-						<div class="text-[13px] leading-4 opacity-70">{$page.length} songs</div>
-					{/if}
-				</h3>
-				{#if 'description' in $page.tracklist && $page.tracklist.description !== ''}
-					<div class="mt-2.5 text-sm text-[13px] opacity-70">{$page.tracklist.description}</div>
-				{/if}
-			</div>
 			<Route route="/playlist/:playlist_id" component={TrackList} />
 			<Route route="/artists" component={ArtistList} />
 		</div>
@@ -304,10 +270,6 @@
 		height: 100%
 		top: 0px
 		left: 0px
-	.dragbar
-		-webkit-app-region: drag
-		&.queue-visible
-			width: calc(100% - var(--right-sidebar-width))
 	.drag-overlay
 		display: flex
 		align-items: center

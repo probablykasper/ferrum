@@ -8,13 +8,14 @@
 <script lang="ts">
 	import SidebarItems, { type SidebarItemHandle } from './SidebarItems.svelte'
 	import Filter from './Filter.svelte'
-	import { is_mac, track_lists_details_map, page, move_playlist } from '../lib/data'
+	import { is_mac, track_lists_details_map, move_playlist } from '@/lib/data'
 	import { ipc_listen, ipc_renderer } from '../lib/window'
 	import { writable } from 'svelte/store'
 	import { onDestroy, setContext, tick } from 'svelte'
 	import { dragged } from '../lib/drag-drop'
 	import { tracklist_actions } from '@/lib/page'
 	import { navigate } from '@/lib/router'
+	import { current_playlist_id } from './TrackList.svelte'
 
 	let viewport: HTMLElement
 	const item_handle = setContext('itemHandle', writable(null as SidebarItemHandle | null))
@@ -61,8 +62,7 @@
 
 	let content_element: HTMLDivElement
 
-	$: page_id = $page.id
-	$: page_id, scroll_to_active()
+	$: $current_playlist_id, scroll_to_active()
 	async function scroll_to_active() {
 		await tick()
 		const active = content_element?.querySelector('.active')
