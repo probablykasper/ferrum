@@ -80,6 +80,10 @@ export const cover_src = (() => {
 		async newFromTrackId(id: TrackID) {
 			try {
 				const buf = await read_cover_async(id, 0)
+				if (buf === null) {
+					set(null)
+					return
+				}
 				const url = URL.createObjectURL(new Blob([buf], {}))
 				set(url)
 			} catch (_) {

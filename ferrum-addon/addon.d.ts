@@ -141,6 +141,7 @@ export declare function move_playlist(id: string, fromId: string, toId: string, 
 export declare function move_tracks(playlistId: string, itemIds: Array<ItemId>, toIndex: number): void
 /** Returns `None` if the file does not have an image */
 export declare function read_small_cover_async(path: string, index: number, cacheDbPath: string): Promise<Buffer | null>
+export declare function read_cover_async(trackId: string, index: number): Promise<ArrayBuffer | null>
 export interface TrackMd {
   name: string
   artist: string
@@ -168,7 +169,6 @@ export declare function track_exists(id: string): boolean
 export declare function add_play(trackId: string): void
 export declare function add_skip(trackId: string): void
 export declare function add_play_time(id: TrackID, start: MsSinceUnixEpoch, durMs: number): void
-export declare function read_cover_async(trackId: string, index: number): Promise<ArrayBuffer>
 export declare function import_file(path: string, now: MsSinceUnixEpoch): void
 export declare function load_tags(trackId: string): void
 export interface JsImage {

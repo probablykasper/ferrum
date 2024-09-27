@@ -221,8 +221,8 @@ fn to_resized_image(image_bytes: Vec<u8>, max_size: u32) -> Result<Vec<u8>> {
 /// File path, artwork index
 struct ReadCover(PathBuf, usize);
 impl Task for ReadCover {
-	type Output = Vec<u8>;
-	type JsValue = JsBuffer;
+	type Output = Option<Vec<u8>>;
+	type JsValue = Option<JsBuffer>;
 	fn compute(&mut self) -> napi::Result<Self::Output> {
 		let path = &self.0;
 		let index = self.1;
@@ -231,18 +231,23 @@ impl Task for ReadCover {
 		let image = match tag.get_image_consume(index)? {
 			Some(image) => image,
 			None => {
-				return Err(anyhow!("No image").into());
+				return Ok(None);
 			}
 		};
 
-		Ok(image.data)
+		Ok(Some(image.data))
 	}
 	fn resolve(&mut self, env: Env, output: Self::Output) -> napi::Result<Self::JsValue> {
-		let result = env.create_buffer_copy(output)?;
-		return Ok(result.into_raw());
+		match output {
+			Some(output) => Ok(Some(env.create_buffer_copy(output)?.into_raw())),
+			None => Ok(None),
+		}
 	}
 }
-#[napi(js_name = "read_cover_async", ts_return_type = "Promise<ArrayBuffer>")]
+#[napi(
+	js_name = "read_cover_async",
+	ts_return_type = "Promise<ArrayBuffer | null>"
+)]
 #[allow(dead_code)]
 pub fn read_cover_async(track_id: String, index: u16, env: Env) -> napi::Result<JsObject> {
 	let data: &mut Data = get_data(&env)?;
