@@ -39,10 +39,12 @@ function update_time_details() {
 export const playing_track: Writable<Track | null> = writable(null)
 export const playing_id = derived(queue, () => {
 	const current_id = queue.getCurrent()?.id
+	return current_id
+})
+playing_id.subscribe((current_id) => {
 	if (current_id) {
 		cover_src.newFromTrackId(current_id)
 	}
-	return current_id
 })
 let waiting_to_play = false
 const media_session = navigator.mediaSession
