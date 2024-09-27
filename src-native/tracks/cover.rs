@@ -1,4 +1,7 @@
-use super::Tag;
+use crate::data::Data;
+use crate::data_js::get_data;
+
+use super::{id_to_track, Tag};
 use anyhow::{anyhow, bail, Context, Result};
 use fast_image_resize::images::Image;
 use fast_image_resize::{IntoImageView, Resizer};
@@ -7,6 +10,7 @@ use image::codecs::png::PngEncoder;
 use image::{ImageEncoder, ImageFormat, ImageReader};
 use lazy_static::lazy_static;
 use napi::bindgen_prelude::Buffer;
+use napi::{Env, JsBuffer, JsObject, Task};
 use redb::{Database, TableDefinition};
 use std::fs;
 use std::io::{BufWriter, Cursor};
@@ -212,4 +216,39 @@ fn to_resized_image(image_bytes: Vec<u8>, max_size: u32) -> Result<Vec<u8>> {
 		_ => bail!("Unsupported image type"),
 	};
 	Ok(img_bytes)
+}
+
+/// File path, artwork index
+struct ReadCover(PathBuf, usize);
+impl Task for ReadCover {
+	type Output = Vec<u8>;
+	type JsValue = JsBuffer;
+	fn compute(&mut self) -> napi::Result<Self::Output> {
+		let path = &self.0;
+		let index = self.1;
+
+		let tag = Tag::read_from_path(path)?;
+		let image = match tag.get_image_consume(index)? {
+			Some(image) => image,
+			None => {
+				return Err(anyhow!("No image").into());
+			}
+		};
+
+		Ok(image.data)
+	}
+	fn resolve(&mut self, env: Env, output: Self::Output) -> napi::Result<Self::JsValue> {
+		let result = env.create_buffer_copy(output)?;
+		return Ok(result.into_raw());
+	}
+}
+#[napi(js_name = "read_cover_async", ts_return_type = "Promise<ArrayBuffer>")]
+#[allow(dead_code)]
+pub fn read_cover_async(track_id: String, index: u16, env: Env) -> napi::Result<JsObject> {
+	let data: &mut Data = get_data(&env)?;
+	let track = id_to_track(&env, &track_id)?;
+	let tracks_dir = &data.paths.tracks_dir;
+	let file_path = tracks_dir.join(&track.file);
+	let task = ReadCover(file_path, index.into());
+	env.spawn(task).map(|t| t.promise_object())
 }

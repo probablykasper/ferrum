@@ -2,10 +2,10 @@ use crate::data::Data;
 use crate::data_js::get_data;
 use crate::get_now_timestamp;
 use crate::library_types::{ItemId, MsSinceUnixEpoch, Track, TrackID, TRACK_ID_MAP};
-use anyhow::{anyhow, bail, Context, Result};
-use napi::{Env, JsArrayBuffer, JsBuffer, JsObject, Task};
+use anyhow::{bail, Context, Result};
+use napi::{Env, JsArrayBuffer, JsBuffer};
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 pub mod cover;
 pub mod import;
@@ -106,41 +106,6 @@ pub fn add_play_time(id: TrackID, start: MsSinceUnixEpoch, dur_ms: i64, env: Env
 	tracks.get(&id).context("Track ID not found")?;
 	data.library.playTime.push((id, start, dur_ms));
 	Ok(())
-}
-
-/// File path, artwork index
-struct ReadCover(PathBuf, usize);
-impl Task for ReadCover {
-	type Output = Vec<u8>;
-	type JsValue = JsBuffer;
-	fn compute(&mut self) -> napi::Result<Self::Output> {
-		let path = &self.0;
-		let index = self.1;
-
-		let tag = Tag::read_from_path(path)?;
-		let image = match tag.get_image_consume(index)? {
-			Some(image) => image,
-			None => {
-				return Err(anyhow!("No image").into());
-			}
-		};
-
-		Ok(image.data)
-	}
-	fn resolve(&mut self, env: Env, output: Self::Output) -> napi::Result<Self::JsValue> {
-		let result = env.create_buffer_copy(output)?;
-		return Ok(result.into_raw());
-	}
-}
-#[napi(js_name = "read_cover_async", ts_return_type = "Promise<ArrayBuffer>")]
-#[allow(dead_code)]
-pub fn read_cover_async(track_id: String, index: u16, env: Env) -> napi::Result<JsObject> {
-	let data: &mut Data = get_data(&env)?;
-	let track = id_to_track(&env, &track_id)?;
-	let tracks_dir = &data.paths.tracks_dir;
-	let file_path = tracks_dir.join(&track.file);
-	let task = ReadCover(file_path, index.into());
-	env.spawn(task).map(|t| t.promise_object())
 }
 
 fn sanitize_filename(input: &String) -> String {
