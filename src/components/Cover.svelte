@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { paths } from '@/lib/data'
 	import type { Track } from '../../ferrum-addon'
-	import { join_paths } from '@/lib/window'
+	import { ipc_renderer, join_paths } from '@/lib/window'
 
 	export let track: Track
 	$: src =
@@ -29,21 +29,32 @@
 			/>
 		</svg>
 	{:else}
-		<svg
-			class="cover error"
-			xmlns="http://www.w3.org/2000/svg"
-			height="24px"
-			width="24px"
-			viewBox="0 0 24 24"
-			fill="#e8eaed"
-			><path d="M0 0h24v24H0z" fill="none" /><path
-				d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"
-			/></svg
-		>
+		{@const error_msg = error.message}
+		<!-- svelte-ignore a11y-click-events-have-key-events -->
+		<!-- svelte-ignore a11y-no-static-element-interactions -->
 		<div
-			class="error-msg duratin-100 pointer-events-none absolute fixed top-1/2 left-1/2 z-10 -translate-1/2 scale-95 rounded-md border border-white bg-black py-2 px-2.5 px-4 opacity-0 transition ease-out"
+			class="h-full cursor-pointer"
+			title={error.message}
+			on:mousedown|stopPropagation
+			on:click={() => {
+				ipc_renderer.invoke('showMessageBox', false, {
+					type: 'error',
+					message: 'Failed to load cover',
+					detail: error_msg,
+				})
+			}}
 		>
-			{error.message}
+			<svg
+				class="cover error"
+				xmlns="http://www.w3.org/2000/svg"
+				height="24px"
+				width="24px"
+				viewBox="0 0 24 24"
+				fill="#e8eaed"
+				><path d="M0 0h24v24H0z" fill="none" /><path
+					d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"
+				/></svg
+			>
 		</div>
 	{/if}
 {:else}
@@ -96,7 +107,5 @@
 		fill: #ef4444
 		background: transparent
 		padding: 3px
-	:global(.image:hover) .error-msg
-		scale: 1
-		opacity: 100
+		display: inline-block
 </style>
