@@ -460,10 +460,10 @@
 	<div
 		bind:this={scroll_container}
 		class="main-focus-element relative h-full overflow-y-auto outline-none"
-		on:keydown={keydown}
-		on:mousedown|self={() => selection.clear()}
 		tabindex="0"
+		on:mousedown|self={() => selection.clear()}
 		on:keydown={scroll_container_keydown}
+		on:keydown={keydown}
 	>
 		<VirtualListBlock
 			bind:this={virtual_list}

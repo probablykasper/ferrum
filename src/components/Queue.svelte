@@ -184,6 +184,7 @@
 		bind:this={queue_element}
 		class="content relative -mt-px border-l outline-none"
 		tabindex="-1"
+		on:mousedown|self={() => selection.clear()}
 		on:keydown={scroll_container_keydown}
 		on:keydown={(e) => {
 			if (check_shortcut(e, 'Backspace') && selection.items.size >= 1) {
@@ -193,7 +194,6 @@
 				selection.handle_keydown(e)
 			}
 		}}
-		on:mousedown|self={selection.clear}
 	>
 		{#if $queue.past.length || $queue.current}
 			<div class="relative">
@@ -281,7 +281,7 @@
 				<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
 				<h4
 					class="sticky top-0 z-1 flex h-[40px] items-center justify-between bg-black/50 px-7 font-semibold backdrop-blur-md"
-					on:mousedown|self={selection.clear}
+					on:mousedown|self={() => selection.clear()}
 				>
 					Up Next
 					{#if $queue.user_queue.length > 0}
@@ -343,7 +343,7 @@
 				<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
 				<h4
 					class="sticky top-0 z-1 flex h-[40px] items-center bg-black/50 px-7 font-semibold backdrop-blur-md"
-					on:mousedown={selection.clear}
+					on:mousedown={() => selection.clear()}
 				>
 					Autoplay
 				</h4>
