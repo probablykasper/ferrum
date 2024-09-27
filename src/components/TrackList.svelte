@@ -14,6 +14,7 @@
 		}
 	})
 	export const group_album_tracks = writable(true)
+	export const tracks_page_item_ids = writable<TracksPage['itemIds']>([])
 </script>
 
 <script lang="ts">
@@ -39,7 +40,7 @@
 	import { dragged } from '../lib/drag-drop'
 	import * as dragGhost from './DragGhost.svelte'
 	import VirtualListBlock, { scroll_container_keydown } from './VirtualListBlock.svelte'
-	import type { ItemId, Track } from 'ferrum-addon/addon'
+	import type { ItemId, Track, TracksPage } from 'ferrum-addon/addon'
 	import Cover from './Cover.svelte'
 	import Header from './Header.svelte'
 	import { writable } from 'svelte/store'
@@ -69,6 +70,7 @@
 			groupAlbumTracks: $group_album_tracks,
 		})
 	}
+	$: $tracks_page_item_ids = tracks_page.itemIds
 
 	function handle_action(action: SelectedTracksAction) {
 		if (selection.items.size === 0) {

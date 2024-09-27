@@ -19,6 +19,7 @@
 	import Slider from './Slider.svelte'
 	import { get_flattened_tracklists, handle_selected_tracks_action } from '@/lib/menus'
 	import { ipc_renderer } from '@/lib/window'
+	import { tracks_page_item_ids } from './TrackList.svelte'
 
 	async function playing_context_menu() {
 		const playing = queue.getCurrent()
@@ -110,7 +111,7 @@
 					>
 				</div>
 			</button>
-			<button on:click={previous} tabindex="-1" on:mousedown|preventDefault>
+			<button class="previous" on:click={previous} tabindex="-1" on:mousedown|preventDefault>
 				<svg
 					xmlns="http://www.w3.org/2000/svg"
 					class="parent-active-zoom"
@@ -124,7 +125,13 @@
 				</svg>
 			</button>
 
-			<button class="play-pause" on:click={play_pause} tabindex="-1" on:mousedown|preventDefault>
+			<button
+				class="play-pause"
+				on:click={play_pause}
+				class:cannot-play={$tracks_page_item_ids.length === 0}
+				tabindex="-1"
+				on:mousedown|preventDefault
+			>
 				{#if $time_record.paused}
 					<svg
 						xmlns="http://www.w3.org/2000/svg"
@@ -152,7 +159,7 @@
 				{/if}
 			</button>
 
-			<button on:click={skip_to_next} tabindex="-1" on:mousedown|preventDefault>
+			<button class="next" on:click={skip_to_next} tabindex="-1" on:mousedown|preventDefault>
 				<svg
 					xmlns="http://www.w3.org/2000/svg"
 					class="parent-active-zoom"
@@ -281,9 +288,10 @@
 		background-color: var(--player-bg-color)
 		&:not(:hover).dev
 			background: linear-gradient(90deg, hsl(205deg 60% 15%), hsl(280deg 60% 15%))
-	.stopped .middle
-		pointer-events: none
-		opacity: 0.25
+	.stopped
+		.time-bar, .side-controls, .previous, .next, .play-pause.cannot-play
+			pointer-events: none
+			opacity: 0.35
 	.left
 		width: 30%
 		display: flex

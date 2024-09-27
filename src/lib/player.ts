@@ -1,11 +1,20 @@
-import { derived, writable } from 'svelte/store'
+import { derived, get, writable } from 'svelte/store'
 import type { Writable } from 'svelte/store'
 import { clamp } from './helpers'
 import quit from './quit'
-import { add_play, add_play_time, add_skip, get_track, paths, read_cover_async } from '@/lib/data'
+import {
+	add_play,
+	add_play_time,
+	add_skip,
+	get_track,
+	get_track_ids,
+	paths,
+	read_cover_async,
+} from '@/lib/data'
 import type { Track, TrackID } from '../../ferrum-addon'
 import { ipc_renderer, join_paths } from './window'
 import { queue, set_new_queue, next as queueNext, prev as queuePrev } from './queue'
+import { tracks_page_item_ids } from '@/components/TrackList.svelte'
 
 const audio = new Audio()
 let is_stopped = true
@@ -185,9 +194,16 @@ export function new_playback_instance(new_queue: TrackID[], index: number) {
 }
 
 export function play_pause() {
-	if (is_stopped) return
-	else if (audio.paused) start_playback()
-	else pause_playback()
+	if (is_stopped) {
+		if (get(tracks_page_item_ids).length > 0) {
+			const all_track_ids = get_track_ids(get(tracks_page_item_ids))
+			new_playback_instance(all_track_ids, 0)
+		}
+	} else if (audio.paused) {
+		start_playback()
+	} else {
+		pause_playback()
+	}
 }
 
 export function reload() {
