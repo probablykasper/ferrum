@@ -30,35 +30,37 @@
 
 	let show_history = false
 	$: current_index = $queue.past.length
-	$: up_next_index = current_index + Number(!!$queue.current)
+	$: up_next_index = show_history ? current_index + Number(!!$queue.current) : 0
 	$: autoplay_index = up_next_index + $queue.user_queue.length
 
 	let history_list: VirtualListBlock<QueueItem>
 	let up_next_list: VirtualListBlock<QueueItem>
 	let autoplay_list: VirtualListBlock<QueueItem>
 
-	let full_queue_list = [
+	let visible_qids = [
 		...(show_history ? $queue.past : []),
 		...(show_history && $queue.current ? [$queue.current.item] : []),
 		...$queue.user_queue,
 		...$queue.auto_queue,
 	].map((item) => item.qId)
-	$: full_queue_list = [
+	$: visible_qids = [
 		...(show_history ? $queue.past : []),
-		...($queue.current ? [$queue.current.item] : []),
+		...(show_history && $queue.current ? [$queue.current.item] : []),
 		...$queue.user_queue,
 		...$queue.auto_queue,
 	].map((item) => item.qId)
-	const selection = new SvelteSelection(full_queue_list, {
+	const selection = new SvelteSelection(visible_qids, {
 		scroll_to: ({ index }) => {
-			if (index < $queue.past.length) {
-				return history_list.scroll_to_index(index, 40)
+			if (show_history) {
+				if (index < $queue.past.length) {
+					return history_list.scroll_to_index(index, 40)
+				}
+				index -= $queue.past.length
+				if ($queue.current && index === 0) {
+					return history_list.scroll_to_index(index, 40)
+				}
+				index -= Number(!!$queue.current)
 			}
-			index -= $queue.past.length
-			if ($queue.current && index === 0) {
-				return history_list.scroll_to_index(index, 40)
-			}
-			index -= Number(!!$queue.current)
 			if (index < $queue.user_queue.length) {
 				return up_next_list.scroll_to_index(index, 40)
 			}
@@ -76,7 +78,7 @@
 			}
 		},
 	})
-	$: selection.update_all_items(full_queue_list)
+	$: selection.update_all_items(visible_qids)
 
 	function remove_from_queue() {
 		if (selection.items.size >= 1) {
@@ -90,18 +92,17 @@
 	function handle_action(action: SelectedTracksAction) {
 		const first_index = selection.find_first_index()
 		const indexes = selection.get_selected_indexes()
-		const track_ids = indexes.map((i) => queue.getByQueueIndex(i).id)
-		const all_items = [
-			...$queue.past,
-			...($queue.current ? [$queue.current.item] : []),
+		const visible_track_ids = [
+			...(show_history ? $queue.past : []),
+			...(show_history && $queue.current ? [$queue.current.item] : []),
 			...$queue.user_queue,
 			...$queue.auto_queue,
-		]
-		const all_ids = all_items.map((item) => item.id)
+		].map((item) => item.id)
+		const selected_visible_track_ids = indexes.map((i) => visible_track_ids[i])
 		handle_selected_tracks_action({
 			action,
-			track_ids: track_ids,
-			all_ids,
+			track_ids: selected_visible_track_ids,
+			all_ids: visible_track_ids,
 			first_index,
 		})
 	}
