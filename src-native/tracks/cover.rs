@@ -10,7 +10,7 @@ use image::codecs::png::PngEncoder;
 use image::{ImageEncoder, ImageFormat, ImageReader};
 use lazy_static::lazy_static;
 use napi::bindgen_prelude::{Buffer, PromiseRaw};
-use napi::{Env, JsBuffer, JsObject, Task};
+use napi::{Env, JsBuffer, Task};
 use redb::{Database, TableDefinition};
 use std::fs;
 use std::io::{BufWriter, Cursor};

@@ -477,7 +477,7 @@ pub struct Special {
 	pub children: Vec<TrackListID>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 #[non_exhaustive]
 #[napi]
 pub enum SpecialTrackListName {
