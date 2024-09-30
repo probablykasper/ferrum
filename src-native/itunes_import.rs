@@ -588,7 +588,7 @@ pub struct ItunesImport {
 #[napi]
 impl ItunesImport {
 	#[napi(factory)]
-	pub fn new(env: Env) -> napi::Result<Self> {
+	pub fn new(env: Env) -> Result<Self> {
 		let data = get_data(&env)?;
 		Ok(Self {
 			new_library: Some(data.library.clone()).into(),
@@ -596,11 +596,11 @@ impl ItunesImport {
 		})
 	}
 	#[napi]
-	pub async fn start(&self, path: String, tracks_dir: String) -> napi::Result<ImportStatus> {
+	pub async fn start(&self, path: String, tracks_dir: String) -> Result<ImportStatus> {
 		Ok(import_itunes(self, path, tracks_dir).await?)
 	}
 	#[napi]
-	pub fn finish(&mut self, env: Env) -> napi::Result<()> {
+	pub fn finish(&mut self, env: Env) -> Result<()> {
 		let data = get_data(&env)?;
 		let itunes_track_paths = &mut *self.itunes_track_paths.lock().unwrap();
 		for (itunes_path, ferrum_file) in itunes_track_paths {

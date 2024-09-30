@@ -9,7 +9,7 @@ use image::codecs::jpeg::JpegEncoder;
 use image::codecs::png::PngEncoder;
 use image::{ImageEncoder, ImageFormat, ImageReader};
 use lazy_static::lazy_static;
-use napi::bindgen_prelude::Buffer;
+use napi::bindgen_prelude::{Buffer, PromiseRaw};
 use napi::{Env, JsBuffer, JsObject, Task};
 use redb::{Database, TableDefinition};
 use std::fs;
@@ -223,7 +223,7 @@ struct ReadCover(PathBuf, usize);
 impl Task for ReadCover {
 	type Output = Option<Vec<u8>>;
 	type JsValue = Option<JsBuffer>;
-	fn compute(&mut self) -> napi::Result<Self::Output> {
+	fn compute(&mut self) -> napi::Result<Option<Vec<u8>>> {
 		let path = &self.0;
 		let index = self.1;
 
@@ -237,7 +237,7 @@ impl Task for ReadCover {
 
 		Ok(Some(image.data))
 	}
-	fn resolve(&mut self, env: Env, output: Self::Output) -> napi::Result<Self::JsValue> {
+	fn resolve(&mut self, env: Env, output: Self::Output) -> napi::Result<Option<JsBuffer>> {
 		match output {
 			Some(output) => Ok(Some(env.create_buffer_copy(output)?.into_raw())),
 			None => Ok(None),
@@ -249,11 +249,15 @@ impl Task for ReadCover {
 	ts_return_type = "Promise<ArrayBuffer | null>"
 )]
 #[allow(dead_code)]
-pub fn read_cover_async(track_id: String, index: u16, env: Env) -> napi::Result<JsObject> {
+pub fn read_cover_async(
+	track_id: String,
+	index: u16,
+	env: Env,
+) -> Result<PromiseRaw<Option<JsBuffer>>> {
 	let data: &mut Data = get_data(&env)?;
 	let track = id_to_track(&env, &track_id)?;
 	let tracks_dir = &data.paths.tracks_dir;
 	let file_path = tracks_dir.join(&track.file);
 	let task = ReadCover(file_path, index.into());
-	env.spawn(task).map(|t| t.promise_object())
+	Ok(env.spawn(task).map(|t| t.promise_object())?)
 }
