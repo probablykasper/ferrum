@@ -3,7 +3,8 @@ use crate::data_js::get_data;
 use crate::get_now_timestamp;
 use crate::library_types::{ItemId, MsSinceUnixEpoch, Track, TrackID, TRACK_ID_MAP};
 use anyhow::{bail, Context, Result};
-use napi::{Env, JsArrayBuffer, JsBuffer};
+use napi::bindgen_prelude::Buffer;
+use napi::{Env, JsArrayBuffer};
 use std::fs;
 use std::path::Path;
 
@@ -174,7 +175,7 @@ pub struct JsImage {
 	pub index: i64,
 	pub total_images: i64,
 	pub mime_type: String,
-	pub data: JsBuffer,
+	pub data: Buffer,
 }
 
 #[napi(js_name = "get_image")]
@@ -195,7 +196,7 @@ pub fn get_image(index: u32, env: Env) -> Result<Option<JsImage>> {
 		index: img.index,
 		total_images: img.total_images,
 		mime_type: img.mime_type.to_string(),
-		data: env.create_buffer_copy(img.data)?.into_raw(),
+		data: Buffer::from(img.data),
 	};
 	Ok(Some(js_image))
 }

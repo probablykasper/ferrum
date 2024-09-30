@@ -10,7 +10,7 @@ use image::codecs::png::PngEncoder;
 use image::{ImageEncoder, ImageFormat, ImageReader};
 use lazy_static::lazy_static;
 use napi::bindgen_prelude::{Buffer, PromiseRaw};
-use napi::{Env, JsBuffer, Task};
+use napi::{Env, Task};
 use redb::{Database, TableDefinition};
 use std::fs;
 use std::io::{BufWriter, Cursor};
@@ -222,7 +222,7 @@ fn to_resized_image(image_bytes: Vec<u8>, max_size: u32) -> Result<Vec<u8>> {
 struct ReadCover(PathBuf, usize);
 impl Task for ReadCover {
 	type Output = Option<Vec<u8>>;
-	type JsValue = Option<JsBuffer>;
+	type JsValue = Option<Buffer>;
 	fn compute(&mut self) -> napi::Result<Option<Vec<u8>>> {
 		let path = &self.0;
 		let index = self.1;
@@ -237,9 +237,9 @@ impl Task for ReadCover {
 
 		Ok(Some(image.data))
 	}
-	fn resolve(&mut self, env: Env, output: Self::Output) -> napi::Result<Option<JsBuffer>> {
+	fn resolve(&mut self, _env: Env, output: Self::Output) -> napi::Result<Option<Buffer>> {
 		match output {
-			Some(output) => Ok(Some(env.create_buffer_copy(output)?.into_raw())),
+			Some(output) => Ok(Some(Buffer::from(output))),
 			None => Ok(None),
 		}
 	}
@@ -253,7 +253,7 @@ pub fn read_cover_async(
 	track_id: String,
 	index: u16,
 	env: Env,
-) -> Result<PromiseRaw<Option<JsBuffer>>> {
+) -> Result<PromiseRaw<Option<Buffer>>> {
 	let data: &mut Data = get_data(&env)?;
 	let track = id_to_track(&env, &track_id)?;
 	let tracks_dir = &data.paths.tracks_dir;
