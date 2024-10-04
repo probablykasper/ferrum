@@ -28,6 +28,7 @@ function error_popup(err: unknown) {
 	})
 }
 
+/** @deprecated */
 export function call<T, P extends T | Promise<T>>(cb: (addon: typeof window.addon) => P): P {
 	try {
 		const result = cb(window.addon)
@@ -43,5 +44,30 @@ export function call<T, P extends T | Promise<T>>(cb: (addon: typeof window.addo
 		console.error('errorPopup:', err)
 		error_popup(err)
 		throw err
+	}
+}
+
+export function safe_call<T>(
+	cb: (addon: typeof window.addon) => T,
+): T extends Promise<unknown> ? Promise<Awaited<T> | Error> : T | Error {
+	try {
+		const result = cb(window.addon)
+
+		// Handle asynchronous result (Promise)
+		if (result instanceof Promise) {
+			return result.catch((err) => {
+				error_popup(err)
+				return err as Error
+			}) as T extends Promise<unknown> ? Promise<Awaited<T> | Error> : never
+		}
+
+		// Handle synchronous result
+		return result as T extends Promise<unknown> ? never : T | Error
+	} catch (err) {
+		// Handle synchronous errors
+		console.error('errorPopup:', err)
+		error_popup(err)
+		// Correct return type for synchronous calls
+		return err as T extends Promise<unknown> ? never : Error
 	}
 }
