@@ -12,6 +12,14 @@
 
 ![Screenshot](assets/screenshot.png)
 
+## Features
+- Playlists & folders
+- Filtering
+- Queue
+- Metadata editing
+- Fast. Navigation, sorting & filtering should be instant even for libraries with 100 000 tracks
+- Quick playlist navigation with <kbd>Cmd</kbd><kbd>K</kbd> or <kbd>Ctrl</kbd><kbd>K</kbd>
+
 ## Dev instructions
 
 ### Get started
