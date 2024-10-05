@@ -20,6 +20,7 @@
 - Respect user's locale time
 - Allow pressing play to start the current playlist
 - Make sidebar not focusable by mouse
+- Make sorting 3-4x faster
 - Fix covers updates sometimes not being reflected in the queue panel
 - Fix dragging tracks to up next/autoplay queue boundary
 - Fix button edge not clickable due to zoom
