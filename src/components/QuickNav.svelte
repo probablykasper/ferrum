@@ -24,7 +24,6 @@
 				playlists.push(playlist)
 			}
 		}
-		playlists.push(...special_playlists_nav)
 		return playlists
 	}
 
