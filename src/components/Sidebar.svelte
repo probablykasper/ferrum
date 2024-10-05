@@ -1,7 +1,7 @@
 <script lang="ts" context="module">
 	export const special_playlists_nav = [
 		{ id: 'root', name: 'Songs', kind: 'special', path: '/playlist/root' },
-		{ id: 'root', name: 'Artists', kind: 'special', path: '/artists' },
+		// { id: 'root', name: 'Artists', kind: 'special', path: '/artists' },
 	]
 </script>
 
@@ -145,7 +145,7 @@
 			/>
 			<div class="spacer" />
 			<SidebarItems
-				parent_path="/artists"
+				parent_path="/playlist/root"
 				children={($track_lists_details_map['root'].children || []).map((child_id) => ({
 					path: '/playlist/' + child_id,
 					...$track_lists_details_map[child_id],
