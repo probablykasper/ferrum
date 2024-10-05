@@ -91,53 +91,80 @@ pub fn sort(options: TracksPageOptions, library: &Library) -> Result<Vec<ItemId>
 
 	let id_map = TRACK_ID_MAP.read().unwrap();
 
-	let mut track_ids = get_tracklist_item_ids(library, &options.playlist_id)?;
+	let mut item_ids = get_tracklist_item_ids(library, &options.playlist_id)?;
+	let item_count = item_ids.len();
 
 	if options.sort_key == "index" {
 		// Note: Indexes descend from "first to last", unlike
 		// other numbers which ascend from "high to low"
 		if !options.sort_desc {
-			track_ids.reverse();
+			item_ids.reverse();
 		}
 		println!("Sort: {}ms", now.elapsed().as_millis());
-		return Ok(track_ids);
+		return Ok(item_ids);
 	}
 
 	let tracks = library.get_tracks();
 	let field = get_track_field_type(&options.sort_key)?;
-	let subsort_field = options.group_album_tracks
+	let group_album_tracks = options.group_album_tracks
 		&& match options.sort_key.as_str() {
 			"dateAdded" | "albumName" | "comments" | "genre" | "year" | "artist" => true,
 			_ => false,
 		};
-	track_ids.sort_by(|id_a, id_b| {
-		let track_id_a = &id_map[*id_a as usize];
-		let track_id_b = &id_map[*id_b as usize];
+	item_ids.sort_by(|&id_a, &id_b| {
+		let track_id_a = &id_map[id_a as usize];
+		let track_id_b = &id_map[id_b as usize];
 		let track_a = tracks.get(track_id_a).expect("Track ID non-existant (1)");
 		let track_b = tracks.get(track_id_b).expect("Track ID non-existant (2)");
-		if subsort_field
-			&& track_a.albumName.is_some()
-			&& track_a.albumName == track_b.albumName
-			&& track_a.albumArtist.is_some()
-			&& track_a.albumArtist == track_b.albumArtist
-		{
-			match compare_track_field(track_a, track_b, "discNum", &TrackField::U32) {
-				Ordering::Equal => {}
-				order => return order,
-			};
-			match compare_track_field(track_a, track_b, "trackNum", &TrackField::U32) {
-				Ordering::Equal => {}
-				order => return order,
-			};
-		}
-		let order = compare_track_field(track_a, track_b, &options.sort_key, &field);
-		return match options.sort_desc {
-			true => order.reverse(),
-			false => order,
-		};
+		compare_track_field(track_a, track_b, &options.sort_key, &field)
 	});
-	println!("Sort: {}ms", now.elapsed().as_millis());
-	return Ok(track_ids);
+
+	if options.sort_desc {
+		item_ids.reverse();
+	}
+
+	if group_album_tracks {
+		let mut grouped_track_ids: Vec<ItemId> = Vec::with_capacity(item_ids.len());
+		let mut item_ids_iter = item_ids.into_iter().peekable();
+
+		// Process the first track in the next album
+		while let Some(first_item_id) = item_ids_iter.next() {
+			// We need to get the first track to compare with the later tracks
+			let first_track_id = &id_map[first_item_id as usize];
+			let first_track = tracks.get(first_track_id).unwrap();
+			let mut current_album_buffer: Vec<ItemId> = vec![first_item_id];
+
+			// Collect the rest of the tracks from the same album
+			while let Some(item_id) = item_ids_iter.peek() {
+				let track_id = &id_map[*item_id as usize];
+				let track = tracks.get(track_id).unwrap();
+				if !track.is_same_album(first_track) {
+					break;
+				}
+				current_album_buffer.push(*item_id);
+				item_ids_iter.next();
+			}
+
+			// Sort album tracks by discNum, then trackNum
+			current_album_buffer.sort_by(|&id_a, &id_b| {
+				let track_a = tracks.get(&id_map[id_a as usize]).unwrap();
+				let track_b = tracks.get(&id_map[id_b as usize]).unwrap();
+				let mut order = compare_track_field(track_a, track_b, "discNum", &TrackField::U32);
+				if order == Ordering::Equal {
+					order = compare_track_field(track_a, track_b, "trackNum", &TrackField::U32);
+				}
+				order
+			});
+
+			grouped_track_ids.append(&mut current_album_buffer);
+		}
+
+		assert_eq!(item_count, grouped_track_ids.len());
+		item_ids = grouped_track_ids;
+	}
+
+	println!("Sort group: {}ms", now.elapsed().as_millis());
+	return Ok(item_ids);
 }
 
 pub fn compare_track_field(a: &Track, b: &Track, sort_key: &str, field: &TrackField) -> Ordering {
