@@ -34,3 +34,4 @@ jobs:
       - run: npm run napi
       - run: npm run build:web
       - run: npm run electron-builder -- ${{ matrix.arg }} --publish never
+      - run: npm run generate-update-json

@@ -36,6 +36,13 @@ jobs:
       - run: npm install
       - run: npm run napi -- --target ${{ matrix.target }}
       - run: npm run build:web
-      - run: npm run electron-builder -- ${{ matrix.arg }} --publish always --config.publish.provider github --config.publish.publishAutoUpdate false
+      - run: npm run electron-builder -- ${{ matrix.arg }} --publish always --config.publish.provider github --config.publish.publishAutoUpdate true
         env:
           GH_TOKEN: ${{ secrets.github_token }}
+      - run: npm run generate-update-json
+
+      - name: Upload updater JSON
+        uses: actions/upload-artifact@v4
+        with:
+          name: update.json
+          path: build/update.json
