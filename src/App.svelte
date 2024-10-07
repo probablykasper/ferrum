@@ -9,13 +9,7 @@
 	import PlaylistInfoModal from './components/PlaylistInfo.svelte'
 	import { queue_visible } from './lib/queue'
 	import { ipc_listen, ipc_renderer } from '@/lib/window'
-	import {
-		delete_track_list,
-		get_track_list,
-		import_tracks,
-		view_options,
-		type PlaylistInfo,
-	} from '@/lib/data'
+	import { delete_track_list, get_track_list, import_tracks, type PlaylistInfo } from '@/lib/data'
 	import { play_pause } from './lib/player'
 	import DragGhost from './components/DragGhost.svelte'
 	import ItunesImport from './components/ItunesImport.svelte'
@@ -27,6 +21,7 @@
 	import Route from './lib/Route.svelte'
 	import { navigate_back, navigate_forward } from './lib/router'
 	import './lib/router'
+	import CheckForUpdates from './components/CheckForUpdates.svelte'
 
 	ipc_renderer.invoke('app_loaded').catch(() => {
 		ipc_renderer.invoke('showMessageBox', false, {
@@ -35,10 +30,6 @@
 			detail: 'Graceful shutdown will not be possible.',
 		})
 	})
-
-	if (window.navigator.onLine) {
-		ipc_renderer.invoke('check_for_updates')
-	}
 
 	async function open_import_dialog() {
 		if ($modal_count !== 0) {
@@ -110,7 +101,8 @@
 	}
 	function keydown(e: KeyboardEvent) {
 		let el = e.target as HTMLAudioElement
-		if (el && el.tagName !== 'INPUT' && el.tagName !== 'TEXTAREA') {
+		const space_tags = ['INPUT', 'TEXTAREA', 'BUTTON', 'SELECT']
+		if (el && !space_tags.includes(el.tagName)) {
 			if (e.key === ' ') {
 				e.preventDefault()
 				play_pause()
@@ -235,6 +227,7 @@
 	<ItunesImport cancel={() => (show_itunes_import = false)} />
 {/if}
 <QuickNav />
+<CheckForUpdates />
 
 <DragGhost />
 

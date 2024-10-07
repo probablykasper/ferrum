@@ -139,7 +139,7 @@
 	.items-container
 		width: 90vw
 		max-width: 580px
-		height: 300px
+		height: 305px
 		max-height: 100%
 	input
 		font-size: inherit

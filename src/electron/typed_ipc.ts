@@ -10,6 +10,7 @@ import type {
 } from 'electron'
 import { ipcMain as electronIpcMain } from 'electron'
 import type { TrackID } from '../../ferrum-addon'
+import type { UpdateJson } from './update'
 
 type InputMap = {
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -139,10 +140,14 @@ export type ShowTrackMenuOptions = {
 	queue: boolean
 }
 
-type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue }
-
 type Commands = {
 	app_loaded: () => void
+	check_for_updates: () => Promise<{
+		channel: UpdateJson[string]
+		app_version: string
+		body: string
+	} | null>
+	open_url: (url: string) => void
 	showMessageBox: (
 		attached: boolean,
 		options: Parameters<typeof dialog.showMessageBox>[0],
@@ -151,7 +156,6 @@ type Commands = {
 		attached: boolean,
 		options: Parameters<typeof dialog.showOpenDialog>[0],
 	) => ReturnType<typeof dialog.showOpenDialog>
-	check_for_updates: () => void
 	revealTrackFile: (...paths: string[]) => void
 	show_tracks_menu: (options: ShowTrackMenuOptions) => Promise<null | SelectedTracksAction>
 	showTracklistMenu: (options: { id: string; isFolder: boolean; isRoot: boolean }) => void

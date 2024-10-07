@@ -76,7 +76,7 @@
 		role="none"
 	>
 		{#if title !== null}
-			<h3>{title}</h3>
+			<h3 class="text-lg">{title}</h3>
 		{/if}
 		<slot />
 		{#if $$slots.buttons}
@@ -89,7 +89,8 @@
 
 <style lang="sass">
 	h3
-		margin-bottom: 15px
+		font-weight: 500
+		margin-bottom: 0.875rem
 	::backdrop
 		background-color: rgba(#000000, 0.4)
 	dialog
@@ -102,7 +103,9 @@
 		border: 1px solid rgba(#ffffff, 0.2)
 		border-radius: 7px
 	.padded
-		padding: 1em
+		padding: 1.125rem
+		.buttons
+			margin-top: 1.125rem
 	.buttons
 		display: flex
 		justify-content: flex-end

@@ -1,4 +1,4 @@
-import { app, dialog, shell } from 'electron'
+import { app, dialog } from 'electron'
 import package_json from '../../package.json'
 
 export type UpdateJson = {
@@ -23,6 +23,7 @@ function popup(message: string, detail: string) {
 		message,
 		detail,
 	})
+	return null
 }
 
 async function fetch_json(url: string) {
@@ -73,20 +74,9 @@ export async function check_for_updates() {
 		return popup('Failed to check for updates', 'Could not find update channel')
 	}
 
-	const app_version = app.getVersion()
-
-	if (channel.version === app_version) {
-		return
-	}
-
-	const result = await dialog.showMessageBox({
-		type: 'info',
-		message: 'A new version of Ferrum is available!',
-		detail: `Ferrum ${channel.version} is available. You are currently on ${app_version}`,
-		buttons: ['Update', 'Cancel'],
-		defaultId: 0,
-	})
-	if (result.response === 0) {
-		await shell.openExternal(channel.url)
+	return {
+		channel,
+		app_version: app.getVersion(),
+		body: typeof release.body === 'string' ? release.body : 'Changelog not available',
 	}
 }

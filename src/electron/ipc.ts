@@ -4,8 +4,14 @@ import path from 'path'
 import is from './is'
 import { check_for_updates } from './update'
 
-ipc_main.handle('check_for_updates', async (_e) => {
-	check_for_updates()
+ipc_main.handle('check_for_updates', (_e) => {
+	return check_for_updates() ?? null
+})
+
+ipc_main.handle('open_url', (_e, url) => {
+	console.log('open_url', url)
+
+	shell.openExternal(url)
 })
 
 ipc_main.handle('showMessageBox', async (e, attached, options) => {

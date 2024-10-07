@@ -35,7 +35,7 @@
 	on:keydown={form_keydown}
 	title={(info.editMode ? 'Edit' : 'New') + ' Playlist' + (info.isFolder ? ' Folder' : '')}
 >
-	<main>
+	<main class="space-y-1">
 		<input type="text" bind:value={info.name} placeholder="Title" />
 		<textarea
 			rows={rows(info.description)}
@@ -53,12 +53,10 @@
 	main
 		display: flex
 		flex-direction: column
-		margin-bottom: 15px
 	input, textarea
 		resize: none
 		line-height: normal
 		width: 300px
-		margin: 2px 0px
 		flex-grow: 1
 		font-size: 13px
 		font-family: inherit
