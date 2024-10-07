@@ -1,5 +1,6 @@
 import { app, dialog } from 'electron'
 import package_json from '../../package.json'
+import is from './is'
 
 export type UpdateJson = {
 	[channel: string]: {

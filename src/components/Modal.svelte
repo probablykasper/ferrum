@@ -39,6 +39,8 @@
 	}}
 />
 
+<div class="dragbar absolute top-0 left-0 w-full" />
+
 <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
 <dialog
 	class="modal m-auto"
@@ -88,12 +90,16 @@
 </dialog>
 
 <style lang="sass">
+	.dragbar
+		-webkit-app-region: drag
+		height: 25px
 	h3
 		font-weight: 500
 		margin-bottom: 0.875rem
 	::backdrop
 		background-color: rgba(#000000, 0.4)
 	dialog
+		max-height: calc(100% - 40px)
 		color: inherit
 		box-sizing: border-box
 		box-shadow: 0px 0px 30px 0px rgba(#000000, 0.5)
