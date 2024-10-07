@@ -114,7 +114,7 @@ pub fn sort(options: TracksPageOptions, library: &Library) -> Result<Vec<ItemId>
 		if !options.sort_desc {
 			items.reverse();
 		}
-		println!("Sort: {:.3}ms", now.elapsed().as_secs_f32() * 1000.0);
+		println!("Sort: {}ms", now.elapsed().as_millis());
 		let item_ids = items.into_iter().map(|item| item.item_id).collect();
 		return Ok(item_ids);
 	}

@@ -2,6 +2,11 @@ import { dialog, Menu, shell, BrowserWindow } from 'electron'
 import { ipc_main } from './typed_ipc'
 import path from 'path'
 import is from './is'
+import { check_for_updates } from './update'
+
+ipc_main.handle('check_for_updates', async (_e) => {
+	check_for_updates()
+})
 
 ipc_main.handle('showMessageBox', async (e, attached, options) => {
 	const window = BrowserWindow.fromWebContents(e.sender)

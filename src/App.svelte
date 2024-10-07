@@ -9,7 +9,13 @@
 	import PlaylistInfoModal from './components/PlaylistInfo.svelte'
 	import { queue_visible } from './lib/queue'
 	import { ipc_listen, ipc_renderer } from '@/lib/window'
-	import { delete_track_list, get_track_list, import_tracks, type PlaylistInfo } from '@/lib/data'
+	import {
+		delete_track_list,
+		get_track_list,
+		import_tracks,
+		view_options,
+		type PlaylistInfo,
+	} from '@/lib/data'
 	import { play_pause } from './lib/player'
 	import DragGhost from './components/DragGhost.svelte'
 	import ItunesImport from './components/ItunesImport.svelte'
@@ -18,9 +24,9 @@
 	import { check_shortcut } from './lib/helpers'
 	import ArtistList from './components/ArtistList.svelte'
 	import { tracklist_actions } from './lib/page'
-	import './lib/router'
 	import Route from './lib/Route.svelte'
 	import { navigate_back, navigate_forward } from './lib/router'
+	import './lib/router'
 
 	ipc_renderer.invoke('app_loaded').catch(() => {
 		ipc_renderer.invoke('showMessageBox', false, {
@@ -29,6 +35,10 @@
 			detail: 'Graceful shutdown will not be possible.',
 		})
 	})
+
+	if (window.navigator.onLine) {
+		ipc_renderer.invoke('check_for_updates')
+	}
 
 	async function open_import_dialog() {
 		if ($modal_count !== 0) {

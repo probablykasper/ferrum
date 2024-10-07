@@ -11,7 +11,6 @@ import type {
 import { ipcMain as electronIpcMain } from 'electron'
 import type { TrackID } from '../../ferrum-addon'
 
-type OptionalPromise<T> = T | Promise<T>
 type InputMap = {
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	[key: string]: (...args: any[]) => any
@@ -45,14 +44,14 @@ interface TypedIpcMain<IpcEvents extends InputMap, IpcCommands extends InputMap>
 		listener: (
 			event: TypedIpcMainInvokeEvent<IpcEvents>,
 			...args: Parameters<IpcCommands[K]>
-		) => OptionalPromise<ReturnType<IpcCommands[K]>>,
+		) => ReturnType<IpcCommands[K]>,
 	): void
 	handleOnce<K extends keyof IpcCommands>(
 		channel: K,
 		listener: (
 			event: TypedIpcMainInvokeEvent<IpcEvents>,
 			...args: Parameters<IpcCommands[K]>
-		) => OptionalPromise<ReturnType<IpcCommands[K]>>,
+		) => ReturnType<IpcCommands[K]>,
 	): void
 	removeHandler<K extends keyof IpcCommands>(channel: K): void
 }
@@ -140,6 +139,8 @@ export type ShowTrackMenuOptions = {
 	queue: boolean
 }
 
+type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue }
+
 type Commands = {
 	app_loaded: () => void
 	showMessageBox: (
@@ -150,10 +151,11 @@ type Commands = {
 		attached: boolean,
 		options: Parameters<typeof dialog.showOpenDialog>[0],
 	) => ReturnType<typeof dialog.showOpenDialog>
+	check_for_updates: () => void
 	revealTrackFile: (...paths: string[]) => void
-	show_tracks_menu: (options: ShowTrackMenuOptions) => null | SelectedTracksAction
+	show_tracks_menu: (options: ShowTrackMenuOptions) => Promise<null | SelectedTracksAction>
 	showTracklistMenu: (options: { id: string; isFolder: boolean; isRoot: boolean }) => void
-	show_columns_menu: (options: { menu: Electron.MenuItemConstructorOptions[] }) => void
+	show_columns_menu: (options: { menu: MenuItemConstructorOptions[] }) => void
 	volume_change: (up: boolean) => void
 
 	'update:Shuffle': (checked: boolean) => void

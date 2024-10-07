@@ -7,6 +7,7 @@
 	"version": "0.18.0",
 	"repository": "https://github.com/probablykasper/ferrum",
 	"updates_url_prefix": "https://github.com/probablykasper/ferrum/releases",
+	"latest-release-api-url": "https://api.github.com/repos/probablykasper/ferrum/releases/latest",
 	"scripts": {
 		"dev": "npm run napi:dev && vite dev",
 		"dev-release": "npm run napi && vite dev",
