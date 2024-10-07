@@ -5,7 +5,7 @@
 </script>
 
 <svelte:head>
-	<title>Changelog • Kadium</title>
+	<title>Changelog • Ferrum</title>
 </svelte:head>
 
 <div class="changelog mx-auto mb-24 max-w-3xl p-6">
@@ -38,16 +38,16 @@
 				animation: show-gradient 1s ease-out forwards
 				opacity: 0
 				animation-delay: 200ms
-				@keyframes show-gradient
-					0%
-						opacity: 0
-					100%
-						opacity: 0.7
 				width: 100%
 				height: 100%
 				filter: blur(80px)
 				transform: scale(1.2)
 				background: conic-gradient(from 150deg at 50% 50%,#d000ff 0deg,#f51971 90deg,#ff781f 180deg,#ff0059 270deg,#6d1fff 360deg)
+				@keyframes show-gradient
+					0%
+						opacity: 0
+					100%
+						opacity: 0.7
 		:global(h2)
 			font-size: 1.5rem
 			font-weight: 500

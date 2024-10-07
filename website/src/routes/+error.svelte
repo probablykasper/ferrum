@@ -4,12 +4,12 @@
 </script>
 
 <svelte:head>
-	<title>Changelog • Kadium</title>
+	<title>{$page.status} • Ferrum</title>
 </svelte:head>
 
 <main class="relative mx-auto mb-24 max-w-3xl p-6">
 	<Revealed
-		class="mb-4 mt-20 text-center transition-all ease-out"
+		class="mt-20 mb-4 text-center transition-all ease-out"
 		options={{ opacity: 0, scale: 0.9, duration: 1000 }}
 	>
 		<h1 class="text-7xl font-extrabold">{$page.status}</h1>
@@ -48,14 +48,14 @@
 		animation: show-gradient 1s ease-out forwards
 		opacity: 0
 		animation-delay: 300ms
-		@keyframes show-gradient
-			0%
-				opacity: 0
-			100%
-				opacity: 0.7
 		width: 100%
 		height: 100%
 		filter: blur(80px)
 		transform: scale(1.2)
 		background: conic-gradient(from 150deg at 50% 50%,#00ff4d 0deg,#19e7f5 90deg,#1fa2ff 180deg,#00ffee 270deg,#1fffbf 360deg)
+		@keyframes show-gradient
+			0%
+				opacity: 0
+			100%
+				opacity: 0.7
 </style>

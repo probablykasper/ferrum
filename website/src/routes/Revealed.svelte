@@ -14,8 +14,12 @@
 		scale?: number
 	}
 	export let options: Options = {}
-	$: baseStyle = options.duration == null ? '' : `transition-duration: ${options.duration}ms;`
-	$: baseStyle += options.delay == null ? '' : `transition-delay: ${options.delay}ms;`
+	$: baseStyle =
+		(options.duration == null ? '' : `transition-duration: ${options.duration}ms;`) +
+			options.delay ==
+		null
+			? ''
+			: `transition-delay: ${options.delay}ms;`
 
 	$: style = baseStyle || null
 	$: if (loaded) {

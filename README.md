@@ -5,7 +5,7 @@
 <p align="center">
 	Music library and player
 	<br/>
-	<a href="https://github.com/probablykasper/ferrum/releases"><b>Download for Mac, Windows or Linux</b></a>
+	<a href="https://ferrum.kasper.space"><b>Download for Mac, Windows or Linux</b></a>
 </p>
 
 <br/>

@@ -5,28 +5,25 @@
 </script>
 
 <svelte:head>
-	<title>Kadium</title>
-	<meta name="description" content="An app for staying ontop of YouTube channels' uploads" />
+	<title>Ferrum</title>
+	<meta name="description" content="Music library and player" />
 
 	<meta property="og:type" content="website" />
-	<meta property="og:url" content="https://kadium.kasper.space/" />
-	<meta property="og:title" content="Kadium" />
-	<meta property="og:description" content="An app for staying ontop of YouTube channels' uploads" />
-	<meta property="og:image" content="https://kadium.kasper.space/website-screenshot.jpg" />
+	<meta property="og:url" content="https://ferrum.kasper.space/" />
+	<meta property="og:title" content="Ferrum" />
+	<meta property="og:description" content="Music library and player" />
+	<meta property="og:image" content="https://ferrum.kasper.space/website-screenshot.jpg" />
 
 	<meta name="twitter:card" content="summary_large_image" />
-	<meta property="twitter:domain" content="kadium.kasper.space" />
-	<meta property="twitter:url" content="https://kadium.kasper.space/" />
-	<meta name="twitter:title" content="Kadium" />
-	<meta
-		name="twitter:description"
-		content="An app for staying ontop of YouTube channels' uploads"
-	/>
-	<meta name="twitter:image" content="https://kadium.kasper.space/website-screenshot.jpg" />
+	<meta property="twitter:domain" content="ferrum.kasper.space" />
+	<meta property="twitter:url" content="https://ferrum.kasper.space/" />
+	<meta name="twitter:title" content="Ferrum" />
+	<meta name="twitter:description" content="Music library and player" />
+	<meta name="twitter:image" content="https://ferrum.kasper.space/website-screenshot.jpg" />
 </svelte:head>
 
 <nav
-	class="mx-auto flex max-w-5xl items-center px-3 py-4 text-base text-white text-opacity-60 sm:justify-between sm:px-6"
+	class="mx-auto flex max-w-5xl items-center py-4 px-3 text-base text-white/60 sm:justify-between sm:px-6"
 >
 	<Revealed
 		class="ease-out-cubic sm:w-32"
@@ -37,8 +34,8 @@
 			class="flex items-center text-lg font-medium text-white sm:p-1.5 sm:text-xl"
 			style="-webkit-tap-highlight-color: hsla(0, 0%, 100%, 0.1);"
 		>
-			<img class="mr-2 h-8" src="/android-chrome-192x192.png" alt="" />
-			<span class="mr-1.5 max-[350px]:hidden">Kadium</span>
+			<img class="mr-2 h-8" src="/favicon.svg" alt="" />
+			<span class="mr-1.5 max-[350px]:hidden">Ferrum</span>
 		</a>
 	</Revealed>
 	<Revealed
@@ -64,7 +61,7 @@
 	>
 		<a
 			class="icon github sm:p-1.5"
-			href="https://github.com/probablykasper/kadium"
+			href="https://github.com/probablykasper/ferrum"
 			aria-label="GitHub"
 			style="-webkit-tap-highlight-color: hsla(0, 0%, 100%, 0.1);"
 			><svg height="24" width="24" viewBox="-2 -2 28 28" xmlns="http://www.w3.org/2000/svg"
