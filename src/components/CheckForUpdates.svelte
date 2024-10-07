@@ -2,12 +2,13 @@
 	import { ipc_renderer } from '@/lib/window'
 	import Modal from './Modal.svelte'
 	import Button from './Button.svelte'
+	import { is_dev } from '@/lib/data'
 
 	let latest_update: Awaited<ReturnType<typeof check>> | null = null
 
 	check()
 	async function check() {
-		if (!window.navigator.onLine) {
+		if (is_dev || !window.navigator.onLine) {
 			return
 		}
 		const result = await ipc_renderer.invoke('check_for_updates')
