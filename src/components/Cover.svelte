@@ -5,7 +5,7 @@
 
 	export let track: Track
 	$: src =
-		'trackimg:?path=' +
+		'app://trackimg?path=' +
 		encodeURIComponent(join_paths(paths.tracksDir, track.file)) +
 		'&cache_db_path=' +
 		encodeURIComponent(paths.cacheDb) +

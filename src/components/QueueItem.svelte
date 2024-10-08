@@ -9,7 +9,7 @@
 	$: $tracks_updated, (track = get_track(id))
 
 	$: src =
-		'trackimg:?path=' +
+		'app://trackimg?path=' +
 		encodeURIComponent(join_paths(paths.tracksDir, track.file)) +
 		'&cache_db_path=' +
 		encodeURIComponent(paths.cacheDb) +

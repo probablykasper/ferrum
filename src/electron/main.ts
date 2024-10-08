@@ -86,28 +86,6 @@ app.whenReady().then(async () => {
 		callback(path)
 	})
 
-	protocol.handle('trackimg', (request) => {
-		return new Promise((resolve) => {
-			const url_raw = new URL(request.url)
-			const track_path = decodeURIComponent(url_raw.searchParams.get('path') ?? '')
-			const cache_db_path = decodeURIComponent(url_raw.searchParams.get('cache_db_path') ?? '')
-
-			addon
-				.read_small_cover_async(track_path, 0, cache_db_path)
-				.then((buffer) => {
-					if (buffer === null) {
-						resolve(new Response(null, { status: 404 }))
-					} else {
-						resolve(new Response(Buffer.from(buffer)))
-					}
-				})
-				.catch((error) => {
-					resolve(new Response(error, { status: 500 }))
-					console.log(`Could not read cover "${track_path}":`, error)
-				})
-		})
-	})
-
 	session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
 		callback({
 			responseHeaders: {
@@ -123,29 +101,54 @@ app.whenReady().then(async () => {
 	}
 
 	const web_folder = path.join(path.dirname(__dirname), 'web')
+	const origin = 'app://app'
 
 	protocol.handle('app', (request) => {
-		const accepts_html =
-			request.headers
-				.get('accept')
-				?.split(',')
-				.map((mime_type) => mime_type.trim())
-				.includes('text/html') ?? false
+		const req_url = new URL(request.url)
+		if (req_url.hostname === 'trackimg') {
+			return new Promise((resolve) => {
+				const track_path = decodeURIComponent(req_url.searchParams.get('path') ?? '')
+				const cache_db_path = decodeURIComponent(req_url.searchParams.get('cache_db_path') ?? '')
 
-		if (request.method === 'GET' && accepts_html) {
-			const html_path = url.pathToFileURL(path.join(web_folder, 'index.html')).toString()
-			return net.fetch(html_path)
+				addon
+					.read_small_cover_async(track_path, 0, cache_db_path)
+					.then((buffer) => {
+						if (buffer === null) {
+							resolve(new Response(null, { status: 404 }))
+						} else {
+							resolve(new Response(Buffer.from(buffer)))
+						}
+					})
+					.catch((error) => {
+						resolve(new Response(error, { status: 500 }))
+						console.log(`Could not read cover "${track_path}":`, error)
+					})
+			})
+		} else if (req_url.hostname === 'app') {
+			const accepts_html =
+				request.headers
+					.get('accept')
+					?.split(',')
+					.map((mime_type) => mime_type.trim())
+					.includes('text/html') ?? false
+
+			if (request.method === 'GET' && accepts_html) {
+				const html_path = url.pathToFileURL(path.join(web_folder, 'index.html')).toString()
+				return net.fetch(html_path)
+			}
+
+			const file_path = path.join(web_folder, req_url.pathname)
+			const file_url = url.pathToFileURL(file_path).toString()
+			return net.fetch(file_url)
+		} else {
+			return new Response('Unknown protocol', { status: 400 })
 		}
-
-		const file_path = request.url.slice('app:'.length)
-		const file_url = url.pathToFileURL(path.join(web_folder, file_path)).toString()
-		return net.fetch(file_url)
 	})
 
 	if (is.dev) {
 		main_window.loadURL(new URL(vite_dev_server_url).origin + '/playlist/root')
 	} else {
-		main_window.loadURL('app:/playlist/root')
+		main_window.loadURL(`${origin}/playlist/root`)
 	}
 
 	if (is.dev) main_window.webContents.openDevTools()
