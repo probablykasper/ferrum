@@ -3,6 +3,7 @@
 	import Modal from './Modal.svelte'
 	import Button from './Button.svelte'
 	import { is_dev, save_view_options, view_options } from '@/lib/data'
+	import { check_shortcut } from '@/lib/helpers'
 
 	let latest_update: Awaited<ReturnType<typeof check>> | null = null
 
@@ -35,10 +36,19 @@
 	<Modal
 		on_cancel={() => (latest_update = null)}
 		cancel_on_escape
-		form={() => ipc_renderer.invoke('open_url', channel.url)}
+		form={() => {
+			ipc_renderer.invoke('open_url', channel.url)
+			latest_update = null
+		}}
 		title="A new version of Ferrum is available!"
+		on:keydown={(e) => {
+			if (check_shortcut(e, 'Enter')) {
+				ipc_renderer.invoke('open_url', channel.url)
+				latest_update = null
+			}
+		}}
 	>
-		<div class="max-w-xl text-sm">
+		<div class="w-md max-w-xl text-sm outline-none" autofocus tabindex="-1">
 			<p class="pb-3">
 				Ferrum {latest_update.channel.version} is available. You are currently on {latest_update.app_version}
 			</p>
@@ -56,10 +66,8 @@
 				}}>Skip This Version</Button
 			>
 			<div class="grow"></div>
-			<Button secondary autofocus on:click={() => (latest_update = null)}>Later</Button>
-			<Button type="submit" on:click={() => ipc_renderer.invoke('open_url', channel.url)}
-				>Update</Button
-			>
+			<Button secondary on:click={() => (latest_update = null)}>Later</Button>
+			<Button type="submit">Update</Button>
 		</svelte:fragment>
 	</Modal>
 {/if}

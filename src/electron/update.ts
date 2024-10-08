@@ -32,7 +32,7 @@ async function fetch_json(url: string) {
 	if (response instanceof Error) {
 		return { error: response.message, data: null }
 	} else if (response.status !== 200) {
-		return { error: `${response.status}: ${response.statusText}`, data: null }
+		return { error: `${response.status}: ${response.statusText}\n\n${url}`, data: null }
 	}
 
 	const value: JsonValue = await response.json().catch(() => {
@@ -55,12 +55,13 @@ export async function check_for_updates() {
 	if (
 		!release ||
 		typeof release !== 'object' ||
-		!('name' in release) ||
-		typeof release.name !== 'string'
+		!('tag_name' in release) ||
+		typeof release.tag_name !== 'string'
 	) {
 		return popup('Failed to check for updates', 'Could not parse JSON')
 	}
-	const update_json_url = `${package_json.repository}/releases/download/${release.name}/update.json`
+
+	const update_json_url = `${package_json.repository}/releases/download/${release.tag_name}/update.json`
 
 	const update_result = await fetch_json(update_json_url)
 	if (update_result.error) {
