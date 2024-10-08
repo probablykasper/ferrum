@@ -1,16 +1,16 @@
 <script lang="ts">
 	import type { SvelteComponent } from 'svelte'
-	import { url } from './router'
+	import { url_pathname } from './router'
 
 	export let route: string
 	$: route_segments = route.split('/')
-	$: params = parse($url.pathname)
+	$: params = parse($url_pathname)
 
 	export let component: typeof SvelteComponent<Record<string, unknown>, Record<string, unknown>>
 
-	function parse(path: string) {
+	function parse(pathname: string) {
 		const params: Record<string, string> = {}
-		const path_segments = path.split('/')
+		const path_segments = pathname.split('/')
 		if (route_segments.length !== path_segments.length) {
 			return null
 		}

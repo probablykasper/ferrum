@@ -31,7 +31,7 @@
 	import * as dragGhost from './DragGhost.svelte'
 	import { ipc_renderer } from '@/lib/window'
 	import { check_shortcut } from '@/lib/helpers'
-	import { navigate, url } from '@/lib/router'
+	import { navigate, url_pathname } from '@/lib/router'
 	import { current_playlist_id } from './TrackList.svelte'
 
 	export let show = true
@@ -87,7 +87,7 @@
 
 	export function handle_key(e: KeyboardEvent) {
 		const index = children.findIndex((child) => {
-			return child.path === $url.pathname
+			return child.path === $url_pathname
 		})
 		if (index < 0) {
 			return
@@ -115,7 +115,7 @@
 		}
 		e.preventDefault()
 	}
-	$: if (children.find((child) => child.path === $url.pathname)) {
+	$: if (children.find((child) => child.path === $url_pathname)) {
 		const item_handle = getContext<Writable<SidebarItemHandle | null>>('itemHandle')
 		item_handle.set({ handleKey: handle_key })
 	}
@@ -147,7 +147,7 @@
 				tabindex="-1"
 				class="item rounded-r-[5px]"
 				style:padding-left={14 * level + 'px'}
-				class:active={child_list.path === $url.pathname}
+				class:active={child_list.path === $url_pathname}
 				draggable="true"
 				on:dragstart={(e) => on_drag_start(e, child_list)}
 				class:show={$shown_folders.includes(child_list.id)}
@@ -244,7 +244,7 @@
 				style:padding-left={14 * level + 'px'}
 				draggable="true"
 				on:dragstart={(e) => on_drag_start(e, child_list)}
-				class:active={child_list.path === $url.pathname}
+				class:active={child_list.path === $url_pathname}
 				on:mousedown={() => navigate(child_list.path)}
 				class:droppable={drag_track_onto_index === i}
 				class:droppable-above={drag_playlist_onto_index === i && drop_above}
@@ -308,7 +308,7 @@
 				class="item rounded-r-[5px]"
 				style:padding-left={14 * level + 'px'}
 				on:mousedown={() => navigate(child_list.path)}
-				class:active={child_list.path === $url.pathname}
+				class:active={child_list.path === $url_pathname}
 			>
 				<div class="arrow" />
 				<div class="text">

@@ -48,6 +48,7 @@
 			}
 		}}
 	>
+		<!-- svelte-ignore a11y-autofocus -->
 		<div class="w-md max-w-xl text-sm outline-none" autofocus tabindex="-1">
 			<p class="pb-3">
 				Ferrum {latest_update.channel.version} is available. You are currently on {latest_update.app_version}

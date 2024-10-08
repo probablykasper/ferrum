@@ -1,16 +1,15 @@
 import { writable } from 'svelte/store'
 
-export const url = writable(new URL(window.location.href))
+export const url_pathname = writable(window.location.pathname)
 
-export function navigate(to_url: string, options: { replace?: boolean } = {}) {
-	const new_url = new URL(to_url, window.location.href)
-	if (new_url.href !== window.location.href) {
+export function navigate(to_pathname: string, options: { replace?: boolean } = {}) {
+	if (to_pathname !== window.location.pathname + window.location.search) {
 		if (options.replace) {
-			window.history.replaceState({}, '', new_url)
+			window.history.replaceState({}, '', to_pathname)
 		} else {
-			window.history.pushState({}, '', new_url)
+			window.history.pushState({}, '', to_pathname)
 		}
-		url.set(new_url)
+		url_pathname.set(to_pathname)
 	}
 }
 
@@ -35,5 +34,5 @@ export function navigate_forward() {
 	window.history.forward()
 }
 window.addEventListener('popstate', () => {
-	url.set(new URL(window.location.href))
+	url_pathname.set(window.location.pathname)
 })
