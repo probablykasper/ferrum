@@ -36,13 +36,14 @@ jobs:
       - run: npm install
       - run: npm run napi -- --target ${{ matrix.target }}
       - run: npm run build:web
-      - run: npm run electron-builder -- ${{ matrix.arg }} --publish always --config.publish.provider github --config.publish.publishAutoUpdate true
+      - run: npm run electron-builder -- ${{ matrix.arg }} --publish always --config.publish.provider github --config.publish.publishAutoUpdate false
         env:
           GH_TOKEN: ${{ secrets.github_token }}
       - run: npm run generate-update-json
 
-      - name: Upload updater JSON
-        uses: actions/upload-artifact@v4
-        with:
-          name: update.json
-          path: build/update.json
+      # Do not run in parallel - It can cause errors even with --clobber
+      - name: Upload update.json
+        if: matrix.target == 'aarch64-apple-darwin'
+        run: gh release upload ${{ github.ref_name }} build/update.json
+        env:
+          GH_TOKEN: ${{ github.token }}
