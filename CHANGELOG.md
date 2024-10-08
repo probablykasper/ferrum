@@ -1,6 +1,6 @@
 # Changelog
 
-## Next
+## 0.19.0 - 2024 Oct 8
 - Drop support for Windows 7 and 8
 - Drop support for macOS 10.13 and 10.14
 - Add playback history to queue panel
