@@ -52,8 +52,11 @@ app.on('window-all-closed', () => {
 
 protocol.registerSchemesAsPrivileged([
 	{
-		scheme: 'trackimg',
-		privileges: { supportFetchAPI: true },
+		scheme: 'app',
+		privileges: {
+			standard: true, // standard URLs have origins, which is required for history.pushState
+			supportFetchAPI: true,
+		},
 	},
 ])
 
