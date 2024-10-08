@@ -186,6 +186,7 @@ export interface ViewOptions {
   shownPlaylistFolders: Array<string>
   /** Empty is treated as default */
   columns: Array<string>
+  skipUpdatingToVersion?: string
 }
 export declare function load_view_options(): ViewOptions
 export declare function save_view_options(viewOptions: ViewOptions): void

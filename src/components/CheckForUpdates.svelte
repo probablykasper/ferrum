@@ -2,7 +2,7 @@
 	import { ipc_renderer } from '@/lib/window'
 	import Modal from './Modal.svelte'
 	import Button from './Button.svelte'
-	import { is_dev } from '@/lib/data'
+	import { is_dev, save_view_options, view_options } from '@/lib/data'
 
 	let latest_update: Awaited<ReturnType<typeof check>> | null = null
 
@@ -12,23 +12,33 @@
 			return
 		}
 		const result = await ipc_renderer.invoke('check_for_updates')
-		if (!result || result.channel.version === result.app_version) {
+		if (
+			!result ||
+			result.channel.version === result.app_version ||
+			result.channel.version === view_options.skipUpdatingToVersion
+		) {
 			return
 		}
 
 		latest_update = result
 		return result
 	}
+
+	function skip_update(version: string) {
+		view_options.skipUpdatingToVersion = version
+		save_view_options(view_options)
+	}
 </script>
 
 {#if latest_update}
-	{@const url = latest_update.channel.url}
+	{@const channel = latest_update.channel}
 	<Modal
 		on_cancel={() => (latest_update = null)}
 		cancel_on_escape
-		form={() => ipc_renderer.invoke('open_url', url)}
+		form={() => ipc_renderer.invoke('open_url', channel.url)}
 		title="A new version of Ferrum is available!"
 	>
+		<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
 		<div class="max-w-xl text-sm">
 			<p class="pb-3">
 				Ferrum {latest_update.channel.version} is available. You are currently on {latest_update.app_version}
@@ -39,8 +49,16 @@
 			</p>
 		</div>
 		<svelte:fragment slot="buttons">
-			<Button secondary on:click={() => (latest_update = null)}>Later</Button>
-			<Button on:click={() => ipc_renderer.invoke('open_url', url)}>Update</Button>
+			<Button
+				secondary
+				on:click={() => {
+					skip_update(channel.version)
+					latest_update = null
+				}}>Skip This Version</Button
+			>
+			<div class="grow"></div>
+			<Button secondary autofocus on:click={() => (latest_update = null)}>Later</Button>
+			<Button on:click={() => ipc_renderer.invoke('open_url', channel.url)}>Update</Button>
 		</svelte:fragment>
 	</Modal>
 {/if}

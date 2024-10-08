@@ -1,4 +1,13 @@
 <script lang="ts">
+	import type { HTMLBaseAttributes } from 'svelte/elements'
+
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	interface $$Props extends HTMLBaseAttributes {
+		secondary?: boolean
+		danger?: boolean
+		type?: 'button' | 'submit' | 'reset'
+	}
+
 	export let secondary = false
 	export let danger = false
 	export let type: 'button' | 'submit' | 'reset' = 'button'
@@ -6,7 +15,7 @@
 	$: normal = !danger && !secondary
 </script>
 
-<button on:click on:mousedown class:normal class:secondary class:danger {type}>
+<button on:click on:mousedown class:normal class:secondary class:danger {type} {...$$restProps}>
 	<slot />
 </button>
 
