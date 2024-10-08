@@ -103,6 +103,7 @@ type Events = {
 	gonnaQuit: () => void
 
 	newPlaylist: (id: string, isFolder: boolean) => void
+	show_settings: () => void
 	itunesImport: () => void
 	import: () => void
 	filter: () => void

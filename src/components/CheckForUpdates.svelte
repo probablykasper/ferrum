@@ -8,7 +8,7 @@
 
 	check()
 	async function check() {
-		if (is_dev || !window.navigator.onLine) {
+		if (is_dev || !window.navigator.onLine || view_options.noAutoUpdate) {
 			return
 		}
 		const result = await ipc_renderer.invoke('check_for_updates')
@@ -38,7 +38,6 @@
 		form={() => ipc_renderer.invoke('open_url', channel.url)}
 		title="A new version of Ferrum is available!"
 	>
-		<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
 		<div class="max-w-xl text-sm">
 			<p class="pb-3">
 				Ferrum {latest_update.channel.version} is available. You are currently on {latest_update.app_version}
@@ -58,7 +57,9 @@
 			>
 			<div class="grow"></div>
 			<Button secondary autofocus on:click={() => (latest_update = null)}>Later</Button>
-			<Button on:click={() => ipc_renderer.invoke('open_url', channel.url)}>Update</Button>
+			<Button type="submit" on:click={() => ipc_renderer.invoke('open_url', channel.url)}
+				>Update</Button
+			>
 		</svelte:fragment>
 	</Modal>
 {/if}

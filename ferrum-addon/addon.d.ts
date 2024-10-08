@@ -186,6 +186,8 @@ export interface ViewOptions {
   shownPlaylistFolders: Array<string>
   /** Empty is treated as default */
   columns: Array<string>
+  /** Auto update checking */
+  noAutoUpdate: boolean
   skipUpdatingToVersion?: string
 }
 export declare function load_view_options(): ViewOptions

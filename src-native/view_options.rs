@@ -15,6 +15,9 @@ pub struct ViewOptions {
 	pub shown_playlist_folders: Vec<String>,
 	/// Empty is treated as default
 	pub columns: Vec<String>,
+	/// Auto update checking
+	#[serde(default)]
+	pub no_auto_update: bool,
 	pub skip_updating_to_version: Option<String>,
 }
 impl ViewOptions {
@@ -24,6 +27,7 @@ impl ViewOptions {
 			Err(_) => ViewOptions {
 				shown_playlist_folders: Vec::new(),
 				columns: Vec::new(),
+				no_auto_update: false,
 				skip_updating_to_version: None,
 			},
 		}

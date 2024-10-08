@@ -21,6 +21,14 @@ export function init_menu_bar(app: App, main_window: BrowserWindow) {
 			submenu: [
 				{ role: 'about' },
 				{ type: 'separator' },
+				{
+					label: 'Settings...',
+					accelerator: 'CmdOrCtrl+,',
+					click() {
+						web_contents.send('show_settings')
+					},
+				},
+				{ type: 'separator' },
 				{ role: 'services' },
 				{ type: 'separator' },
 				{ role: 'hide' },
@@ -37,13 +45,13 @@ export function init_menu_bar(app: App, main_window: BrowserWindow) {
 				{
 					label: 'New Playlist',
 					accelerator: 'CmdOrCtrl+N',
-					click: () => {
+					click() {
 						web_contents.send('newPlaylist', 'root', false)
 					},
 				},
 				{
 					label: 'New Playlist Folder',
-					click: () => {
+					click() {
 						web_contents.send('newPlaylist', 'root', true)
 					},
 				},
@@ -51,18 +59,27 @@ export function init_menu_bar(app: App, main_window: BrowserWindow) {
 				{
 					label: 'Import...',
 					accelerator: 'CmdOrCtrl+O',
-					click: () => {
+					click() {
 						web_contents.send('import')
 					},
 				},
 				{ type: 'separator' },
 				{
 					label: 'Import iTunes Library...',
-					click: () => {
+					click() {
 						web_contents.send('itunesImport')
 					},
 				},
 				{ type: 'separator' },
+				{
+					label: 'Settings...',
+					accelerator: 'CmdOrCtrl+,',
+					click() {
+						web_contents.send('show_settings')
+					},
+					visible: !is.mac,
+				},
+				{ type: 'separator', visible: !is.mac },
 				is.mac ? { role: 'close' } : { role: 'quit' },
 			],
 		},
@@ -87,7 +104,7 @@ export function init_menu_bar(app: App, main_window: BrowserWindow) {
 				menu.push({
 					label: 'Filter',
 					accelerator: 'CmdOrCtrl+F',
-					click: () => {
+					click() {
 						web_contents.send('filter')
 					},
 				})
@@ -100,14 +117,14 @@ export function init_menu_bar(app: App, main_window: BrowserWindow) {
 				{
 					label: 'Play Next',
 					accelerator: '',
-					click: () => {
+					click() {
 						web_contents.send('selected_tracks_action', 'Play Next')
 					},
 				},
 				{
 					label: 'Add to Queue',
 					accelerator: '',
-					click: () => {
+					click() {
 						web_contents.send('selected_tracks_action', 'Add to Queue')
 					},
 				},
@@ -115,7 +132,7 @@ export function init_menu_bar(app: App, main_window: BrowserWindow) {
 				{
 					label: 'Get Info',
 					accelerator: 'CmdOrCtrl+I',
-					click: () => {
+					click() {
 						web_contents.send('selected_tracks_action', 'Get Info')
 					},
 				},
@@ -127,7 +144,7 @@ export function init_menu_bar(app: App, main_window: BrowserWindow) {
 						else return 'Reveal in File Manager'
 					})(),
 					accelerator: 'Shift+CmdOrCtrl+R',
-					click: () => {
+					click() {
 						web_contents.send('selected_tracks_action', 'reveal_track_file')
 					},
 				},
@@ -135,14 +152,14 @@ export function init_menu_bar(app: App, main_window: BrowserWindow) {
 				{
 					label: 'Remove from Playlist',
 					accelerator: '',
-					click: () => {
+					click() {
 						web_contents.send('selected_tracks_action', 'Remove from Playlist')
 					},
 				},
 				{
 					label: 'Delete from Library',
 					accelerator: 'CmdOrCtrl+Backspace',
-					click: () => {
+					click() {
 						web_contents.send('selected_tracks_action', 'Delete from Library')
 					},
 				},
@@ -156,7 +173,7 @@ export function init_menu_bar(app: App, main_window: BrowserWindow) {
 					id: 'Show Queue',
 					type: 'checkbox',
 					accelerator: 'CmdOrCtrl+U',
-					click: () => {
+					click() {
 						web_contents.send('Show Queue')
 					},
 				},
@@ -164,7 +181,7 @@ export function init_menu_bar(app: App, main_window: BrowserWindow) {
 					label: 'Toggle Quick Nav',
 					type: 'checkbox',
 					accelerator: 'CmdOrCtrl+K',
-					click: () => {
+					click() {
 						web_contents.send('ToggleQuickNav')
 					},
 				},
@@ -194,21 +211,21 @@ export function init_menu_bar(app: App, main_window: BrowserWindow) {
 				{
 					label: 'Pause',
 					// no accelerator because it's unreliable
-					click: () => {
+					click() {
 						web_contents.send('playPause')
 					},
 				},
 				{
 					label: 'Next',
 					accelerator: 'CmdOrCtrl+Right',
-					click: () => {
+					click() {
 						web_contents.send('Next')
 					},
 				},
 				{
 					label: 'Previous',
 					accelerator: 'CmdOrCtrl+Left',
-					click: () => {
+					click() {
 						web_contents.send('Previous')
 					},
 				},
@@ -218,7 +235,7 @@ export function init_menu_bar(app: App, main_window: BrowserWindow) {
 					id: 'Shuffle',
 					type: 'checkbox',
 					accelerator: 'CmdOrCtrl+S',
-					click: () => {
+					click() {
 						web_contents.send('Shuffle')
 					},
 				},
@@ -227,7 +244,7 @@ export function init_menu_bar(app: App, main_window: BrowserWindow) {
 					id: 'Repeat',
 					type: 'checkbox',
 					accelerator: 'CmdOrCtrl+R',
-					click: () => {
+					click() {
 						web_contents.send('Repeat')
 					},
 				},
@@ -236,7 +253,7 @@ export function init_menu_bar(app: App, main_window: BrowserWindow) {
 					id: 'Volume Up',
 					label: 'Volume Up',
 					accelerator: 'CmdOrCtrl+Up',
-					click: () => {
+					click() {
 						web_contents.send('volumeUp')
 					},
 				},
@@ -244,7 +261,7 @@ export function init_menu_bar(app: App, main_window: BrowserWindow) {
 					id: 'Volume Down',
 					label: 'Volume Down',
 					accelerator: 'CmdOrCtrl+Down',
-					click: () => {
+					click() {
 						web_contents.send('volumeDown')
 					},
 				},
@@ -257,7 +274,7 @@ export function init_menu_bar(app: App, main_window: BrowserWindow) {
 					id: 'Back',
 					label: 'Back',
 					accelerator: 'CmdOrCtrl+[',
-					click: () => {
+					click() {
 						web_contents.send('Back')
 					},
 				},
@@ -265,7 +282,7 @@ export function init_menu_bar(app: App, main_window: BrowserWindow) {
 					id: 'Forward',
 					label: 'Forward',
 					accelerator: 'CmdOrCtrl+]',
-					click: () => {
+					click() {
 						web_contents.send('Forward')
 					},
 				},
@@ -274,7 +291,7 @@ export function init_menu_bar(app: App, main_window: BrowserWindow) {
 					id: 'Select Next List',
 					label: 'Select Next List',
 					accelerator: 'Ctrl+Tab',
-					click: () => {
+					click() {
 						web_contents.send('Select Next List')
 					},
 				},
@@ -282,7 +299,7 @@ export function init_menu_bar(app: App, main_window: BrowserWindow) {
 					id: 'Select Previous List',
 					label: 'Select Previous List',
 					accelerator: 'Ctrl+Shift+Tab',
-					click: () => {
+					click() {
 						web_contents.send('Select Previous List')
 					},
 				},

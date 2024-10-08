@@ -22,6 +22,7 @@
 	import { navigate_back, navigate_forward } from './lib/router'
 	import './lib/router'
 	import CheckForUpdates from './components/CheckForUpdates.svelte'
+	import Settings from './components/Settings.svelte'
 
 	ipc_renderer.invoke('app_loaded').catch(() => {
 		ipc_renderer.invoke('showMessageBox', false, {
@@ -109,6 +110,15 @@
 			}
 		}
 	}
+
+	let show_settings = false
+	onDestroy(
+		ipc_listen('show_settings', () => {
+			if ($modal_count === 0) {
+				show_settings = true
+			}
+		}),
+	)
 
 	let show_itunes_import = false
 	onDestroy(
@@ -217,6 +227,7 @@
 	{/if}
 </main>
 
+<QuickNav />
 {#if $current_list}
 	<TrackInfo />
 {/if}
@@ -226,7 +237,9 @@
 {#if show_itunes_import}
 	<ItunesImport cancel={() => (show_itunes_import = false)} />
 {/if}
-<QuickNav />
+{#if show_settings}
+	<Settings on_close={() => (show_settings = false)} />
+{/if}
 <CheckForUpdates />
 
 <DragGhost />
