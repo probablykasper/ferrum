@@ -19,13 +19,11 @@
 	$modal_count += 1
 	onDestroy(() => {
 		$modal_count -= 1
+		dialog_el.close()
 	})
 
 	onMount(() => {
 		dialog_el.showModal()
-		return () => {
-			dialog_el.close()
-		}
 	})
 
 	// Prevent clicks where the mousedown or mouseup happened on a child element. This could've
@@ -53,8 +51,11 @@
 	}}
 	on:keydown
 	on:keydown={(e) => {
-		if (check_shortcut(e, 'Escape') && cancel_on_escape) {
-			on_cancel()
+		if (check_shortcut(e, 'Escape')) {
+			e.preventDefault()
+			if (cancel_on_escape) {
+				on_cancel()
+			}
 		}
 	}}
 	on:keydown|self={(e) => {
