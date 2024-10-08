@@ -102,7 +102,7 @@
 	function keydown(e: KeyboardEvent) {
 		let el = e.target as HTMLAudioElement
 		const space_tags = ['INPUT', 'TEXTAREA', 'BUTTON', 'SELECT']
-		if (el && !space_tags.includes(el.tagName)) {
+		if (el && !space_tags.includes(el.tagName) && $modal_count === 0) {
 			if (e.key === ' ') {
 				e.preventDefault()
 				play_pause()
