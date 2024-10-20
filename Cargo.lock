@@ -334,13 +334,10 @@ dependencies = [
  "atomicwrites",
  "dirs-next",
  "fast_image_resize",
- "id3",
  "image",
  "lazy_static",
  "linked-hash-map",
  "lofty",
- "mp3-metadata",
- "mp4ameta",
  "nanoid",
  "napi",
  "napi-build",
@@ -420,17 +417,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f31827a206f56af32e590ba56d5d2d085f558508192593743f16b2306495269f"
 dependencies = [
  "cc",
-]
-
-[[package]]
-name = "id3"
-version = "1.14.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "55f4e785f2c700217ee82a1c727c720449421742abd5fcb2f1df04e1244760e9"
-dependencies = [
- "bitflags 2.6.0",
- "byteorder",
- "flate2",
 ]
 
 [[package]]
@@ -591,28 +577,6 @@ checksum = "e2d80299ef12ff69b16a84bb182e3b9df68b5a91574d3d4fa6e41b65deec4df1"
 dependencies = [
  "adler2",
 ]
-
-[[package]]
-name = "mp3-metadata"
-version = "0.3.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e4eaa3a228dc218005d769b88ce3a0310f49152f2029125289e94c49474c9cc4"
-
-[[package]]
-name = "mp4ameta"
-version = "0.11.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "eb23d62e8eb5299a3f79657c70ea9269eac8f6239a76952689bcd06a74057e81"
-dependencies = [
- "lazy_static",
- "mp4ameta_proc",
-]
-
-[[package]]
-name = "mp4ameta_proc"
-version = "0.6.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "07dcca13d1740c0a665f77104803360da0bdb3323ecce2e93fa2c959a6d52806"
 
 [[package]]
 name = "nanoid"
