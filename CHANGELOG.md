@@ -1,6 +1,6 @@
 # Changelog
 
-## Next
+## 0.19.1 - 2024 Oct 25
 - Fix folder playlists not closing
 - Fix outline glitch
 
