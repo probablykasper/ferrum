@@ -2,6 +2,7 @@
 
 ## Next
 - Fix folder playlists not closing
+- Fix outline glitch
 
 ## 0.19.0 - 2024 Oct 8
 - Drop support for Windows 7 and 8

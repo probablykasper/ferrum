@@ -150,7 +150,7 @@
 			<a
 				href="/playlist/{child_list.id}"
 				tabindex="-1"
-				class="item rounded-r-[5px]"
+				class="item rounded-r-[5px] outline-none"
 				style:padding-left={14 * level + 'px'}
 				class:active={child_list.path === $url_pathname}
 				draggable="true"
