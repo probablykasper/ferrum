@@ -12,13 +12,18 @@
 		handleKey(e: KeyboardEvent): void
 	}
 
-	let shown_folders = writable(view_options.shownPlaylistFolders)
+	const shown_folders = writable(view_options.shownPlaylistFolders)
+
 	function show_folder(id: string) {
 		view_options.shownPlaylistFolders.push(id)
+		shown_folders.set(view_options.shownPlaylistFolders)
 		save_view_options(view_options)
 	}
 	function hide_folder(id: string) {
-		view_options.shownPlaylistFolders.filter((folder_id) => folder_id !== id)
+		view_options.shownPlaylistFolders = view_options.shownPlaylistFolders.filter(
+			(folder_id) => folder_id !== id,
+		)
+		shown_folders.set(view_options.shownPlaylistFolders)
 		save_view_options(view_options)
 	}
 </script>
