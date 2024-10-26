@@ -1,5 +1,8 @@
 # Changelog
 
+## Next
+- Fix queue panel deleting/moving incorrect tracks
+
 ## 0.19.1 - 2024 Oct 25
 - Fix folder playlists not closing
 - Fix outline glitch

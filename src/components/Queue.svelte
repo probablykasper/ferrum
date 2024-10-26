@@ -30,7 +30,8 @@
 
 	let show_history = false
 	$: current_index = $queue.past.length
-	$: up_next_index = show_history ? current_index + Number(!!$queue.current) : 0
+	$: up_next_index = current_index + Number(!!$queue.current)
+	$: first_visible_index = show_history ? 0 : up_next_index
 	$: autoplay_index = up_next_index + $queue.user_queue.length
 
 	let history_list: VirtualListBlock<QueueItem>
@@ -82,7 +83,8 @@
 
 	function remove_from_queue() {
 		if (selection.items.size >= 1) {
-			queue.removeIndexes(selection.get_selected_indexes())
+			const indexes = selection.get_selected_indexes().map((i) => i + first_visible_index)
+			queue.removeIndexes(indexes)
 		}
 	}
 	onDestroy(ipc_listen('context.Remove from Queue', remove_from_queue))
@@ -118,7 +120,7 @@
 	let dragged_indexes: number[] = []
 	function on_drag_start(e: DragEvent) {
 		if (e.dataTransfer) {
-			dragged_indexes = selection.get_selected_indexes()
+			dragged_indexes = selection.get_selected_indexes().map((i) => i + first_visible_index)
 			e.dataTransfer.effectAllowed = 'move'
 			if (dragged_indexes.length === 1) {
 				const track = get_track(get_by_queue_index(dragged_indexes[0]).id)
@@ -253,7 +255,7 @@
 						</div>
 					</VirtualListBlock>
 					{#if $queue.current}
-						{@const qi = $queue.past.length}
+						{@const qi = current_index}
 						<!-- svelte-ignore a11y-click-events-have-key-events -->
 						<!-- svelte-ignore a11y-interactive-supports-focus -->
 						<div
@@ -323,9 +325,9 @@
 						class="row"
 						role="row"
 						class:selected={$selection.has(item.qId)}
-						on:mousedown={(e) => selection.handle_mousedown(e, qi)}
-						on:contextmenu={(e) => selection.handle_contextmenu(e, qi)}
-						on:click={(e) => selection.handle_click(e, qi)}
+						on:mousedown={(e) => selection.handle_mousedown(e, qi - first_visible_index)}
+						on:contextmenu={(e) => selection.handle_contextmenu(e, qi - first_visible_index)}
+						on:click={(e) => selection.handle_click(e, qi - first_visible_index)}
 						draggable="true"
 						on:dragstart={on_drag_start}
 						on:dragover={(e) => on_drag_over(e, qi)}
@@ -364,9 +366,9 @@
 						class="row"
 						role="row"
 						class:selected={$selection.has(item.qId)}
-						on:mousedown={(e) => selection.handle_mousedown(e, qi)}
-						on:contextmenu={(e) => selection.handle_contextmenu(e, qi)}
-						on:click={(e) => selection.handle_click(e, qi)}
+						on:mousedown={(e) => selection.handle_mousedown(e, qi - first_visible_index)}
+						on:contextmenu={(e) => selection.handle_contextmenu(e, qi - first_visible_index)}
+						on:click={(e) => selection.handle_click(e, qi - first_visible_index)}
 						draggable="true"
 						on:dragstart={on_drag_start}
 						on:dragover={(e) => on_drag_over(e, qi)}
