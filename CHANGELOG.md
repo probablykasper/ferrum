@@ -1,6 +1,6 @@
 # Changelog
 
-## Next
+## 0.19.2 - 2024 Oct 26
 - Fix queue panel deleting/moving incorrect tracks
 - Fix queue not refreshing after toggling history
 
