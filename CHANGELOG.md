@@ -2,6 +2,7 @@
 
 ## Next
 - Fix queue panel deleting/moving incorrect tracks
+- Fix queue not refreshing after toggling history
 
 ## 0.19.1 - 2024 Oct 25
 - Fix folder playlists not closing

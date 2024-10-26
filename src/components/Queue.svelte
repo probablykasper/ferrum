@@ -7,7 +7,7 @@
 		queue,
 		type QueueItem,
 	} from '../lib/queue'
-	import { onDestroy } from 'svelte'
+	import { onDestroy, tick } from 'svelte'
 	import QueueItemComponent from './QueueItem.svelte'
 	import { dragged } from '@/lib/drag-drop'
 	import { get_track } from '@/lib/data'
@@ -34,8 +34,8 @@
 	$: first_visible_index = show_history ? 0 : up_next_index
 	$: autoplay_index = up_next_index + $queue.user_queue.length
 
-	let history_list: VirtualListBlock<QueueItem>
-	let up_next_list: VirtualListBlock<QueueItem>
+	let history_list: VirtualListBlock<QueueItem> | null
+	let up_next_list: VirtualListBlock<QueueItem> | null
 	let autoplay_list: VirtualListBlock<QueueItem>
 
 	let visible_qids = [
@@ -54,16 +54,16 @@
 		scroll_to: ({ index }) => {
 			if (show_history) {
 				if (index < $queue.past.length) {
-					return history_list.scroll_to_index(index, 40)
+					return history_list?.scroll_to_index(index, 40)
 				}
 				index -= $queue.past.length
 				if ($queue.current && index === 0) {
-					return history_list.scroll_to_index(index, 40)
+					return history_list?.scroll_to_index(index, 40)
 				}
 				index -= Number(!!$queue.current)
 			}
 			if (index < $queue.user_queue.length) {
-				return up_next_list.scroll_to_index(index, 40)
+				return up_next_list?.scroll_to_index(index, 40)
 			}
 			index -= $queue.user_queue.length
 			autoplay_list.scroll_to_index(index, 40)
@@ -202,7 +202,13 @@
 			<div class="relative">
 				<div class="sticky top-0 z-1 flex flex h-[40px] items-center bg-black/50 backdrop-blur-md">
 					<button
-						on:click={() => (show_history = !show_history)}
+						on:click={() => {
+							show_history = !show_history
+							tick().then(() => {
+								up_next_list?.refresh()
+								autoplay_list.refresh()
+							})
+						}}
 						class="group ml-1.5 flex h-full items-center pl-1 font-semibold"
 						tabindex="-1"
 						on:mousedown|preventDefault
