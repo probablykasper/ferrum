@@ -1,6 +1,6 @@
 # Changelog
 
-## Next
+## 0.19.3 - 2024 Nov 26
 - Fixes rare .ogg metadata corruption (https://github.com/Serial-ATA/lofty-rs/issues/469)
 
 ## 0.19.2 - 2024 Oct 26
