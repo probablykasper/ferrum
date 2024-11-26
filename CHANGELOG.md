@@ -1,5 +1,8 @@
 # Changelog
 
+## Next
+- Fixes rare .ogg metadata corruption (https://github.com/Serial-ATA/lofty-rs/issues/469)
+
 ## 0.19.2 - 2024 Oct 26
 - Fix queue panel deleting/moving incorrect tracks
 - Fix queue not refreshing after toggling history
