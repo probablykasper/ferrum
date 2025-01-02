@@ -10,6 +10,7 @@
 	"latest-release-api-url": "https://api.github.com/repos/probablykasper/ferrum/releases/latest",
 	"scripts": {
 		"dev": "npm run napi:dev && vite dev",
+		"dev-prod": "npm run napi && APP_ENV=prod vite dev",
 		"dev-release": "npm run napi && vite dev",
 		"napi": "napi build ferrum-addon --dts addon.d.ts --release",
 		"napi:dev": "napi build ferrum-addon --dts addon.d.ts",
