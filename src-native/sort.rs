@@ -3,7 +3,7 @@ use crate::library_types::{ItemId, Library, Track, TRACK_ID_MAP};
 use crate::page::TracksPageOptions;
 use crate::playlists::get_tracklist_item_ids;
 use alphanumeric_sort::compare_str;
-use anyhow::Result;
+use anyhow::{Context, Result};
 use std::cmp::Ordering;
 use std::time::Instant;
 
@@ -97,15 +97,20 @@ pub fn sort(options: TracksPageOptions, library: &Library) -> Result<Vec<ItemId>
 	let id_map = TRACK_ID_MAP.read().unwrap();
 	let tracks = library.get_tracks();
 
-	let mut items: Vec<_> = get_tracklist_item_ids(library, &options.playlist_id)?
+	let items: Result<Vec<SortItem>> = get_tracklist_item_ids(library, &options.playlist_id)?
 		.into_iter()
-		.map(|id| SortItem {
-			item_id: id,
-			track: tracks
-				.get(&id_map[id as usize])
-				.expect("Track ID non-existant"),
+		.enumerate()
+		.map(|(i, id)| {
+			Ok(SortItem {
+				item_id: id,
+				track: tracks.get(&id_map[id as usize]).context(format!(
+					"Track {i} ({}) does not exist",
+					id_map[id as usize]
+				))?,
+			})
 		})
 		.collect();
+	let mut items = items?;
 	let item_count = items.len();
 
 	if options.sort_key == "index" {

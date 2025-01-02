@@ -377,6 +377,7 @@ fn is_false(value: &bool) -> bool {
 
 // These are used to give each playlist entry an ID. This is for example helpful to keep track of a user's selection. These IDs are unique across the entire library, so that it works for folders folders.
 pub type ItemId = u32;
+/// Track IDs indexed by item IDs
 pub static TRACK_ID_MAP: RwLock<Vec<String>> = RwLock::new(Vec::new());
 
 pub fn new_item_ids_from_track_ids(track_ids: &[TrackID]) -> Vec<ItemId> {
@@ -400,6 +401,11 @@ pub fn get_track_ids_from_item_ids(playlist_item_ids: &[ItemId]) -> Vec<TrackID>
 		.iter()
 		.map(|playlist_item_id| playlist_track_id_map[*playlist_item_id as usize].clone())
 		.collect()
+}
+
+pub fn get_track_id_from_item_id(playlist_item_id: ItemId) -> TrackID {
+	let playlist_track_id_map = TRACK_ID_MAP.read().unwrap();
+	playlist_track_id_map[playlist_item_id as usize].clone()
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
