@@ -72,10 +72,10 @@
 		"@tailwindcss/vite": "4.0.0-alpha.23",
 		"@tsconfig/svelte": "^5.0.4",
 		"electron": "^28.3.3",
-		"electron-builder": "^25.1.8",
+		"electron-builder": "^26.0.12",
 		"eslint": "^9.27.0",
-		"eslint-config-prettier": "^9.1.0",
-		"eslint-plugin-svelte": "^2.46.1",
+		"eslint-config-prettier": "^10.1.5",
+		"eslint-plugin-svelte": "^3.9.0",
 		"fuzzysort": "^3.1.0",
 		"prettier": "^3.5.3",
 		"prettier-plugin-svelte": "^3.4.0",
@@ -85,10 +85,10 @@
 		"svelte-check": "^4.2.1",
 		"svelte-preprocess": "^6.0.3",
 		"tailwindcss": "4.0.0-alpha.23",
-		"typescript": "~5.5.4",
+		"typescript": "~5.8.3",
 		"typescript-eslint": "^8.32.1",
 		"vite": "^5.4.19",
-		"vite-plugin-electron": "^0.28.8"
+		"vite-plugin-electron": "^0.29.0"
 	},
 	"prettier": {
 		"useTabs": true,
