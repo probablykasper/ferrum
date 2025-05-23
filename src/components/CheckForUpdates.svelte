@@ -54,7 +54,7 @@
 				Ferrum {latest_update.channel.version} is available. You are currently on {latest_update.app_version}
 			</p>
 			<p class="pb-1 font-semibold">Release notes:</p>
-			<p class="max-h-72 overflow-y-auto whitespace-pre-wrap rounded bg-black/30 py-2 px-3">
+			<p class="max-h-72 overflow-y-auto rounded bg-black/30 px-3 py-2 whitespace-pre-wrap">
 				{latest_update.body}
 			</p>
 		</div>

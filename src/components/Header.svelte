@@ -8,13 +8,13 @@
 	export let description: string | undefined
 </script>
 
-<div class="relative pt-4 px-5 pb-5">
+<div class="relative px-5 pt-4 pb-5">
 	<div
 		class="absolute top-0 left-0 h-10 w-full"
 		class:dragbar={$modal_count === 0 && is_mac}
 		class:queue-visible={$queue_visible}
-	/>
-	<h3 class="m-0 pb-0.5 text-[19px] font-medium leading-none">
+	></div>
+	<h3 class="m-0 pb-0.5 text-[19px] leading-none font-medium">
 		{title}
 		<div class="text-[13px] leading-4 opacity-70">{subtitle}</div>
 	</h3>

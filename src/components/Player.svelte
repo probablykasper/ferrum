@@ -92,6 +92,8 @@
 	<div class="middle">
 		<div class="controls">
 			<button
+				type="button"
+				aria-label="Shuffle"
 				class="side-controls shuffle"
 				class:on={$shuffle}
 				tabindex="-1"
@@ -111,7 +113,14 @@
 					>
 				</div>
 			</button>
-			<button class="previous" on:click={previous} tabindex="-1" on:mousedown|preventDefault>
+			<button
+				type="button"
+				aria-label="Previous"
+				class="previous"
+				on:click={previous}
+				tabindex="-1"
+				on:mousedown|preventDefault
+			>
 				<svg
 					xmlns="http://www.w3.org/2000/svg"
 					class="parent-active-zoom"
@@ -126,6 +135,7 @@
 			</button>
 
 			<button
+				type="button"
 				class="play-pause"
 				on:click={play_pause}
 				class:cannot-play={$tracks_page_item_ids.length === 0}
@@ -159,7 +169,14 @@
 				{/if}
 			</button>
 
-			<button class="next" on:click={skip_to_next} tabindex="-1" on:mousedown|preventDefault>
+			<button
+				type="button"
+				aria-label="Next"
+				class="next"
+				on:click={skip_to_next}
+				tabindex="-1"
+				on:mousedown|preventDefault
+			>
 				<svg
 					xmlns="http://www.w3.org/2000/svg"
 					class="parent-active-zoom"
@@ -174,6 +191,8 @@
 			</button>
 
 			<button
+				type="button"
+				aria-label="Repeat"
 				class="side-controls repeat"
 				class:on={$repeat}
 				tabindex="-1"
@@ -210,7 +229,7 @@
 		</div>
 	</div>
 	<div class="right">
-		<button class="volume-icon" tabindex="-1" on:click={volume.toggle}>
+		<button type="button" class="volume-icon" tabindex="-1" on:click={volume.toggle}>
 			{#if $volume > 0.5}
 				<svg
 					class="high parent-active-zoom"
@@ -254,6 +273,8 @@
 		</button>
 		<Slider class="mr-2 w-[110px]" bind:value={$volume} max={1} />
 		<button
+			type="button"
+			aria-label="Toggle queue"
 			tabindex="-1"
 			on:mousedown|preventDefault
 			on:click={toggle_queue_visibility}

@@ -28,7 +28,7 @@ type ShortcutOptions = {
 	alt?: boolean
 	cmd_or_ctrl?: boolean
 }
-const is_mac = navigator.userAgent.indexOf('Mac') != -1
+const is_mac = navigator.userAgent.indexOf('Mac') !== -1
 
 function check_modifiers(e: KeyboardEvent | MouseEvent, options: ShortcutOptions) {
 	const target = {

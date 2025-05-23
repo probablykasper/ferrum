@@ -21,7 +21,6 @@ export const library_path = window.library_path
 export const is_mac = window.is_mac
 export const is_windws = window.is_windows
 const inner_addon = window.addon
-// eslint-disable-next-line @typescript-eslint/naming-convention
 export const ItunesImport = inner_addon.ItunesImport
 
 call((addon) => addon.load_data(is_dev, local_data_path, library_path))

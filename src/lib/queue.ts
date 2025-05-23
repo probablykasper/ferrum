@@ -63,7 +63,7 @@ function shuffle_array<T>(array: Array<T>) {
 		random_index
 
 	// While there remain elements to shuffle.
-	while (current_index != 0) {
+	while (current_index !== 0) {
 		// Pick a remaining element.
 		random_index = Math.floor(Math.random() * current_index)
 		current_index--

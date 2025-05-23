@@ -1,13 +1,13 @@
 <script lang="ts" context="module">
 	export let drag_el: HTMLElement
-	let drag_el_div: HTMLElement
-	export function set_inner_text(text: string) {
-		drag_el_div.innerText = text
+	let text = ''
+	export function set_inner_text(new_text: string) {
+		text = new_text
 	}
 </script>
 
 <div class="drag-ghost" bind:this={drag_el}>
-	<div bind:this={drag_el_div} />
+	<div>{text}</div>
 </div>
 
 <style lang="sass">

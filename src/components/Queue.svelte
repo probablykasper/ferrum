@@ -181,7 +181,7 @@
 </script>
 
 <aside transition:fly={{ x: '100%', duration: 150, opacity: 1 }}>
-	<div class="shadow" />
+	<div class="shadow"></div>
 	<!-- svelte-ignore a11y-no-static-element-interactions -->
 	<div
 		bind:this={queue_element}
@@ -202,6 +202,7 @@
 			<div class="relative">
 				<div class="sticky top-0 z-1 flex flex h-[40px] items-center bg-black/50 backdrop-blur-md">
 					<button
+						type="button"
 						on:click={() => {
 							show_history = !show_history
 							tick().then(() => {
@@ -229,7 +230,7 @@
 						>
 						History
 					</button>
-					<div class="h-full w-0 grow" style:-webkit-app-region="drag" />
+					<div class="h-full w-0 grow" style:-webkit-app-region="drag"></div>
 				</div>
 				{#if show_history}
 					<VirtualListBlock
@@ -391,7 +392,7 @@
 			bind:this={drag_line}
 			class="drag-line pointer-events-none absolute z-10 h-[2px] w-full bg-[var(--drag-line-color)]"
 			class:hidden={drag_to_index === null}
-		/>
+		></div>
 	</div>
 </aside>
 

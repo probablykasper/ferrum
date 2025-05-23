@@ -36,7 +36,7 @@ export default [
 				'error',
 				{
 					selector: 'variableLike',
-					format: ['snake_case', 'UPPER_CASE'],
+					format: ['snake_case', 'UPPER_CASE', 'PascalCase'],
 					leadingUnderscore: 'allow',
 				},
 				{
@@ -59,6 +59,9 @@ export default [
 					varsIgnorePattern: '^_',
 				},
 			],
+			eqeqeq: ['error', 'always'],
+			'svelte/button-has-type': 'error',
+			'svelte/require-each-key': 'off', // Unnecessary each key probably has performance downside
 		},
 	},
 ]

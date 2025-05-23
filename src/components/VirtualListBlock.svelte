@@ -13,14 +13,11 @@
 <script lang="ts" generics="T">
 	import { onDestroy } from 'svelte'
 
-	// eslint-disable-next-line no-undef
-	type X = T
-
-	export let items: X[]
+	export let items: T[]
 	export let item_height: number
 	/** Must be a positioned element, like `position: relative` */
 	export let scroll_container: HTMLElement
-	export let get_key: (item: X, i: number) => number | string
+	export let get_key: (item: T, i: number) => number | string
 	export let buffer = 3
 
 	$: height = items.length * item_height
@@ -32,6 +29,7 @@
 	let visible_count = 0
 
 	// Workaround for svelte not updating the indexes when the keys change
+	let visible_count_obj = { length: visible_count }
 	$: visible_count_obj = { length: visible_count }
 
 	$: {
@@ -96,6 +94,7 @@
 		dummy.style.top = index * item_height + 'px'
 		// For some reason we apply the offset to the bottom
 		dummy.style.scrollMarginBottom = offset + 'px'
+		// eslint-disable-next-line svelte/no-dom-manipulating
 		main_element.prepend(dummy)
 		dummy.scrollIntoView({ behavior: 'instant', block: 'nearest' })
 		dummy.remove()

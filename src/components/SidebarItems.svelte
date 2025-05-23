@@ -278,7 +278,7 @@
 				}}
 				on:contextmenu={() => tracklist_context_menu(child_list.id, false)}
 			>
-				<div class="arrow" />
+				<div class="arrow"></div>
 				<div
 					class="text"
 					role="link"
@@ -315,7 +315,7 @@
 				on:mousedown={() => navigate(child_list.path)}
 				class:active={child_list.path === $url_pathname}
 			>
-				<div class="arrow" />
+				<div class="arrow"></div>
 				<div class="text">
 					{child_list.name}
 				</div>

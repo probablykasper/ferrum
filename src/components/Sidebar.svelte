@@ -91,7 +91,7 @@
 <!-- NOTE: aside is used as css selector in SidebarItems -->
 <aside on:mousedown|self|preventDefault role="none">
 	{#if is_mac}
-		<div class="titlebar" on:mousedown|self|preventDefault role="none" />
+		<div class="titlebar" on:mousedown|self|preventDefault role="none"></div>
 	{/if}
 	<div class="content" bind:this={content_element}>
 		<Filter
@@ -118,7 +118,12 @@
 				if (e.key === 'Escape') {
 					e.preventDefault()
 					tracklist_actions.focus()
-				} else if (e.key == 'Home' || e.key == 'End' || e.key == 'PageUp' || e.key == 'PageDown') {
+				} else if (
+					e.key === 'Home' ||
+					e.key === 'End' ||
+					e.key === 'PageUp' ||
+					e.key === 'PageDown'
+				) {
 					e.preventDefault()
 				} else {
 					$item_handle?.handleKey(e)
@@ -132,8 +137,8 @@
 			on:drop|self={drop}
 		>
 			<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
-			<div class="focuser" tabindex="0" on:focus={focuser} />
-			<div class="spacer" />
+			<div class="focuser" tabindex="0" on:focus={focuser}></div>
+			<div class="spacer"></div>
 			<SidebarItems
 				parent_path={null}
 				children={special_playlists_nav}
@@ -143,7 +148,7 @@
 					}
 				}}
 			/>
-			<div class="spacer" />
+			<div class="spacer"></div>
 			<SidebarItems
 				parent_path="/playlist/root"
 				children={($track_lists_details_map['root'].children || []).map((child_id) => ({

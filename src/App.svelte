@@ -215,6 +215,7 @@
 		<div class="drag-overlay" transition:fade={{ duration: 100 }}>
 			<h1>Drop files to import</h1>
 		</div>
+		<!-- svelte-ignore a11y_interactive_supports_focus -->
 		<div
 			class="dropzone"
 			on:dragleave={drag_leave}
@@ -223,7 +224,7 @@
 			role="dialog"
 			aria-label="Drop files to import"
 			aria-dropeffect="copy"
-		/>
+		></div>
 	{/if}
 </main>
 

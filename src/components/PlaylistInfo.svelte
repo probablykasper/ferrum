@@ -37,11 +37,8 @@
 >
 	<main class="space-y-1">
 		<input type="text" bind:value={info.name} placeholder="Title" />
-		<textarea
-			rows={rows(info.description)}
-			bind:value={info.description}
-			placeholder="Description"
-		/>
+		<textarea rows={rows(info.description)} bind:value={info.description} placeholder="Description"
+		></textarea>
 	</main>
 	<svelte:fragment slot="buttons">
 		<Button secondary on:click={cancel}>Cancel</Button>

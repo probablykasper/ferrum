@@ -37,9 +37,8 @@
 	}}
 />
 
-<div class="dragbar absolute top-0 left-0 w-full" />
+<div class="dragbar absolute top-0 left-0 w-full"></div>
 
-<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
 <dialog
 	class="modal m-auto"
 	bind:this={dialog_el}

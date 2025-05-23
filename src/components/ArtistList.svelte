@@ -3,7 +3,7 @@
 	import fuzzysort from 'fuzzysort'
 	import Header from './Header.svelte'
 
-	$: all_artists = get_artists()
+	let all_artists = get_artists()
 	$: artists = fuzzysort.go($filter, all_artists, { all: true })
 </script>
 
@@ -14,7 +14,7 @@
 
 <div class="size-full overflow-y-auto text-sm">
 	{#each artists as artist}
-		<p class="block py-1 px-3 text-current">
+		<p class="block px-3 py-1 text-current">
 			{#if artist.target}
 				{artist.target}
 			{:else}

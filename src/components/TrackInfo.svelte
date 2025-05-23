@@ -421,7 +421,7 @@
 				<div class="artist">{artist}</div>
 			</div>
 		</div>
-		<div class="spacer" />
+		<div class="spacer"></div>
 		<div class="row">
 			<div class="label">Title</div>
 			<!-- svelte-ignore a11y-autofocus -->
@@ -487,7 +487,7 @@
 			<div class="label">Comments</div>
 			<input type="text" bind:value={comments} />
 		</div>
-		<div class="spacer" />
+		<div class="spacer"></div>
 	</main>
 	<svelte:fragment slot="buttons">
 		<Button secondary on:click={cancel}>Cancel</Button>

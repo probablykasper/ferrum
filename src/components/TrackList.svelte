@@ -453,7 +453,7 @@
 			class="col-drag-line"
 			class:hidden={col_drag_to_index === null}
 			bind:this={col_drag_line}
-		/>
+		></div>
 	</div>
 	<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
 	<!-- svelte-ignore a11y-no-static-element-interactions -->
@@ -528,7 +528,7 @@
 				</div>
 			{/if}
 		</VirtualListBlock>
-		<div class="drag-line" class:hidden={drag_to_index === null} bind:this={drag_line} />
+		<div class="drag-line" class:hidden={drag_to_index === null} bind:this={drag_line}></div>
 	</div>
 </div>
 
