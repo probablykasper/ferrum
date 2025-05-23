@@ -16,13 +16,20 @@
 	export let title: string | null = null
 	let dialog_el: HTMLDialogElement
 
+	let last_focused_el: Element | undefined | null
+
 	$modal_count += 1
 	onDestroy(() => {
 		$modal_count -= 1
 		dialog_el.close()
+		if (last_focused_el instanceof HTMLElement) {
+			// For some reason necessary with Svelte 5, maybe onDestroy runs too early
+			last_focused_el?.focus()
+		}
 	})
 
 	onMount(() => {
+		last_focused_el = document.activeElement
 		dialog_el.showModal()
 	})
 
