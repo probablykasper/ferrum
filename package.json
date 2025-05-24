@@ -66,8 +66,13 @@
 	"napi": {
 		"name": "addon"
 	},
+	"//": [
+		"@stencil/core is required by @revolist/revogrid"
+	],
 	"devDependencies": {
 		"@napi-rs/cli": "^2.18.4",
+		"@revolist/revogrid": "^4.15.8",
+		"@stencil/core": "^4.31.0",
 		"@sveltejs/vite-plugin-svelte": "^5.0.3",
 		"@tailwindcss/vite": "^4.1.7",
 		"@tsconfig/svelte": "^5.0.4",
