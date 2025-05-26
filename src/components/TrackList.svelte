@@ -376,6 +376,7 @@
 			return {
 				...get_item(item_id).track,
 				index: i + 1,
+				odd: i % 2 === 0 ? 'odd' : null,
 			}
 		})
 		.filter((track) => track !== null)
@@ -385,6 +386,7 @@
 	grid.canDrag = false
 	grid.canMoveColumns = false
 	grid.hideAttribution = true
+	grid.rowClass = 'odd'
 
 	// let col_container: HTMLElement
 	// let col_drag_line: HTMLElement
@@ -519,7 +521,6 @@
 					on:dragover={(e) => on_drag_over(e, i)}
 					on:drop={drop_handler}
 					on:dragend={drag_end_handler}
-					class:odd={i % 2 === 0}
 					class:selected={$selection.has(item_id)}
 					class:playing={track_id === $playing_id}
 				>
@@ -566,10 +567,11 @@
 		:global(revogr-data .rgRow)
 			line-height: 24px
 			font-size: 12px
+			box-shadow: none
+		:global(.rgRow.odd)
+			background-color: hsla(0, 0%, 90%, 0.06)
 		:global(revogr-header .rgHeaderCell .resizable)
 			display: none
-	// .odd
-	// 	background-color: hsla(0, 0%, 90%, 0.06)
 	// .selected
 	// 	background-color: hsla(var(--hue), 20%, 42%, 0.8)
 	// :global(:focus)
