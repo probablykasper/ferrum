@@ -261,43 +261,43 @@
 
 	const all_columns: ColumnRegular[] = [
 		// sorted alphabetically
-		{ name: '#', prop: 'index' },
+		{ name: '#', prop: 'index', width_px: 46 },
 		// { name: 'Size', prop: 'size' },
-		{ name: 'Album', prop: 'albumName', width: '90%' },
-		{ name: 'Album Artist', prop: 'albumArtist', width: '90%' },
-		{ name: 'Artist', prop: 'artist', width: '120%' },
+		{ name: 'Album', prop: 'albumName', width_pct: 0.9 },
+		{ name: 'Album Artist', prop: 'albumArtist', width_pct: 0.9 },
+		{ name: 'Artist', prop: 'artist', width_pct: 1.2 },
 		// { name: 'Bitrate', prop: 'bitrate' },
-		{ name: 'BPM', prop: 'bpm' },
-		{ name: 'Comments', prop: 'comments', width: '65%' },
+		{ name: 'BPM', prop: 'bpm', width_px: 43 },
+		{ name: 'Comments', prop: 'comments', width_pct: 0.65 },
 		// { name: 'Compilation', prop: 'compilation' },
-		{ name: 'Composer', prop: 'composer', width: '65%' },
-		{ name: 'Date Added', prop: 'dateAdded' },
+		{ name: 'Composer', prop: 'composer', width_pct: 0.65 },
+		{ name: 'Date Added', prop: 'dateAdded', width_px: 140 },
 		// { name: 'DateImported', prop: 'dateImported' },
 		// { name: 'DateModified', prop: 'dateModified' },
 		// { name: 'Disabled', prop: 'disabled' },
 		// { name: 'DiscCount', prop: 'discCount' },
 		// { name: 'DiscNum', prop: 'discNum' },
 		// { name: 'Disliked', prop: 'disliked' },
-		{ name: 'Time', prop: 'duration' },
-		{ name: 'Genre', prop: 'genre', width: '65%' },
-		{ name: 'Grouping', prop: 'grouping', width: '65%' },
-		{ name: 'Image', prop: 'image' },
+		{ name: 'Time', prop: 'duration', width_px: 50 },
+		{ name: 'Genre', prop: 'genre', width_pct: 0.65 },
+		{ name: 'Grouping', prop: 'grouping', width_pct: 0.65 },
+		{ name: 'Image', prop: 'image', width_px: 28 },
 		// { name: 'ImportedFrom', prop: 'importedFrom' },
 		// { name: 'Liked', prop: 'liked' },
-		{ name: 'Name', prop: 'name', width: '170%' },
-		{ name: 'Plays', prop: 'playCount' },
+		{ name: 'Name', prop: 'name', width_pct: 1.7 },
+		{ name: 'Plays', prop: 'playCount', width_px: 52 },
 		// { name: 'Rating', prop: 'rating' },
 		// { name: 'SampleRate', prop: 'sampleRate' },
-		{ name: 'Skips', prop: 'skipCount' },
-		// { name: 'Sort Album', prop: 'sortAlbumName', width: '65%' },
-		// { name: 'Sort Album Artist', prop: 'sortAlbumArtist', width: '65%' },
-		// { name: 'Sort Artist', prop: 'sortArtist', width: '65%' },
-		// { name: 'Sort Composer', prop: 'sortComposer', width: '65%' },
-		// { name: 'Sort Name', prop: 'sortName', width: '65%' },
+		{ name: 'Skips', prop: 'skipCount', width_px: 52 },
+		// { name: 'Sort Album', prop: 'sortAlbumName', width_pct: 0.65 },
+		// { name: 'Sort Album Artist', prop: 'sortAlbumArtist', width_pct: 0.65 },
+		// { name: 'Sort Artist', prop: 'sortArtist', width_pct: 0.65 },
+		// { name: 'Sort Composer', prop: 'sortComposer', width_pct: 0.65 },
+		// { name: 'Sort Name', prop: 'sortName', width_pct: 0.65 },
 		// { name: 'TrackCount', prop: 'trackCount' },
 		// { name: 'TrackNum', prop: 'trackNum' },
 		// { name: 'Volume', prop: 'volume' },
-		{ name: 'Year', prop: 'year' },
+		{ name: 'Year', prop: 'year', width_px: 47 },
 	]
 	const default_columns: ('index' | 'image' | keyof Track)[] = [
 		'index',
@@ -312,7 +312,9 @@
 		'dateAdded',
 		'year',
 	]
+	let container_el: HTMLElement
 	let columns: ColumnRegular[] = load_columns()
+	onMount(() => (columns = load_columns()))
 	function load_columns(): ColumnRegular[] {
 		let loaded_columns = view_options.columns
 		if (loaded_columns.length === 0) {
@@ -321,11 +323,30 @@
 		const columns = loaded_columns
 			.map((key) => all_columns.find((col) => col.prop === key))
 			.filter((col) => col !== undefined)
+		const total_fixed_width = columns.reduce((sum, col) => sum + (col.width_px || 0), 0)
+		const total_percent_pct = columns.reduce((sum, col) => sum + (col.width_pct || 0), 0)
+		const container_width = container_el?.clientWidth ?? total_fixed_width
+		const total_percent_width = container_width - total_fixed_width
 		return columns.map((col) => {
+			const size_pct = col.width_pct / total_percent_pct
+			const size = (col.width_px ?? size_pct * total_percent_width) || 0
 			return {
 				...col,
-				cellTemplate(create_element, props, additional_data) {
-					return create_element('div', {}, props.model[props.prop])
+				name: col.name === 'Image' ? '' : col.name,
+				size,
+				columnProperties() {
+					const classes: Record<string, boolean> = {}
+					classes[col.prop] = true
+					return {
+						class: classes,
+					}
+				},
+				cellProperties() {
+					const classes: Record<string, boolean> = {}
+					classes[col.prop] = true
+					return {
+						class: classes,
+					}
 				},
 			}
 		})
@@ -338,7 +359,7 @@
 		save_view_options(view_options)
 	}
 	// function on_column_context_menu() {
-	// 	ipc_renderer.invoke('show_columns_menu', {
+	// 	ipc_renderer.invoke(show_columns_menu', {
 	// 		menu: all_columns.map((col) => {
 	// 			return {
 	// 				id: col.key,
@@ -368,13 +389,15 @@
 	const grid = document.createElement('revo-grid')
 	grid.setAttribute('theme', 'darkCompact')
 	grid.readonly = true
-	grid.columns = load_columns()
+	$: grid.columns = columns
 	grid.rowSize = 24
 	grid.style.lineHeight = '24px'
 	const tracks = tracks_page.itemIds
 		.map((item_id, i) => {
+			const track = get_item(item_id).track
+			if (track === null) return null
 			return {
-				...get_item(item_id).track,
+				...track,
 				index: i + 1,
 				odd: i % 2 === 0 ? 'odd' : null,
 			}
@@ -434,7 +457,13 @@
 	subtitle="{tracks_page.itemIds.length} songs"
 	description={tracks_page.playlistDescription}
 />
+<svelte:window
+	on:resize={() => {
+		columns = load_columns()
+	}}
+/>
 <div
+	bind:this={container_el}
 	class="grow"
 	{@attach (element) => {
 		element.appendChild(grid)
@@ -562,22 +591,34 @@
 </div> -->
 
 <style lang="sass">
-	:global(revo-grid[theme=darkCompact])
-		--revo-grid-focused-bg: hsla(var(--hue), 70%, 46%, 1)
-		:global(revogr-header .header-rgRow)
-			height: 24px
-			line-height: 24px
-			font-size: 12px
-			box-shadow: none
-			font-weight: 400
-		:global(revogr-data .rgRow)
-			line-height: 24px
-			font-size: 12px
-			box-shadow: none
-		:global(.rgRow.odd)
-			background-color: hsla(0, 0%, 90%, 0.06)
-		:global(revogr-header .rgHeaderCell .resizable)
-			display: none
+	:global revo-grid[theme=darkCompact]
+			--revo-grid-focused-bg: hsla(var(--hue), 70%, 46%, 1)
+			revogr-data, revogr-header
+				.rgCell, .rgHeaderCell
+					padding: 0 5px
+					&:first-child
+						padding-left: 10px
+					&:last-child
+						padding-right: 0px
+					&.index, &.playCount, &.skipCount, &.duration
+						padding-left: 0px
+						padding-right: 10px
+						text-align: right
+						flex-shrink: 0
+				.rgRow
+					line-height: 24px
+					font-size: 12px
+					box-shadow: none
+				.rgRow.odd
+					background-color: hsla(0, 0%, 90%, 0.06)
+			revogr-header .header-rgRow
+				height: 24px
+				line-height: 24px
+				font-size: 12px
+				box-shadow: none
+				font-weight: 400
+			revogr-header .rgHeaderCell .resizable
+				display: none
 	// .selected
 	// 	background-color: hsla(var(--hue), 20%, 42%, 0.8)
 	// :global(:focus)
@@ -626,41 +667,15 @@
 	// 	text-overflow: ellipsis
 	// 	padding-left: 5px
 	// 	padding-right: 5px
-	// 	&:first-child
-	// 		padding-left: 10px
-	// 	&:last-child
-	// 		padding-right: 0px
-	// 	&.index, &.playCount, &.skipCount, &.duration
-	// 		padding-left: 0px
-	// 		padding-right: 10px
-	// 		text-align: right
-	// 		flex-shrink: 0
 	// .selected .index svg.playing-icon
 	// 	fill: var(--icon-color)
 	// .index
-	// 	width: 46px
 	// 	svg.playing-icon
 	// 		fill: #00ffff
 	// 		width: 16px
 	// 		height: 100%
-	// .image
-	// 	width: 18px
-	// 	flex-shrink: 0
-	// 	box-sizing: content-box
-	// .playCount, .skipCount
-	// 	width: 52px
-	// .duration
-	// 	width: 50px
 	// .dateAdded
-	// 	width: 140px
-	// 	flex-shrink: 0
 	// 	font-variant-numeric: tabular-nums
-	// .year
-	// 	width: 0px
-	// 	min-width: 47px
-	// .bpm
-	// 	width: 0px
-	// 	min-width: 43px
 	// .drag-line
 	// 	position: absolute
 	// 	width: 100%
