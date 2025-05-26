@@ -1,4 +1,4 @@
-<script lang="ts" context="module">
+<script lang="ts" module>
 	export type TrackInfoList = {
 		ids: TrackID[]
 		index: number
@@ -18,6 +18,8 @@
 </script>
 
 <script lang="ts">
+	import { run, self } from 'svelte/legacy';
+
 	import { check_shortcut } from '@/lib/helpers'
 	import Button from './Button.svelte'
 	import type { Track, TrackID } from '../../ferrum-addon'
@@ -40,7 +42,7 @@
 		current_list.set(null)
 	}
 	let id: TrackID
-	let track: Track
+	let track: Track = $state()
 	type ImageStuff = {
 		index: number
 		totalImages: number
@@ -48,9 +50,8 @@
 		objectUrl: string
 	}
 	/** Undefined when loading, null when no image exists */
-	let image: ImageStuff | null | undefined
+	let image: ImageStuff | null | undefined = $state()
 
-	$: if ($current_list) open_index($current_list)
 	function open_index(list: TrackInfoList) {
 		id = list.ids[list.index]
 		track = get_track(list.ids[list.index])
@@ -101,25 +102,24 @@
 	}
 
 	let image_edited = false
-	let name = ''
-	let artist = ''
-	let album_name = ''
-	let album_artist = ''
-	let composer = ''
-	let grouping = ''
-	let genre = ''
-	let year = ''
-	$: year = uint_filter(year)
-	let track_num = ''
-	let track_count = ''
-	let disc_num = ''
-	let disc_count = ''
-	let bpm = ''
-	let compilation = false
-	let rating = 0
-	let liked = false
-	let play_count = 0
-	let comments = ''
+	let name = $state('')
+	let artist = $state('')
+	let album_name = $state('')
+	let album_artist = $state('')
+	let composer = $state('')
+	let grouping = $state('')
+	let genre = $state('')
+	let year = $state('')
+	let track_num = $state('')
+	let track_count = $state('')
+	let disc_num = $state('')
+	let disc_count = $state('')
+	let bpm = $state('')
+	let compilation = $state(false)
+	let rating = $state(0)
+	let liked = $state(false)
+	let play_count = $state(0)
+	let comments = $state('')
 	function set_info(track: Track) {
 		image_edited = false
 		name = track.name
@@ -141,7 +141,6 @@
 		play_count = track.playCount || 0
 		comments = to_string(track.comments || '')
 	}
-	$: if (track) set_info(track)
 
 	function is_edited() {
 		const is_unedited =
@@ -227,7 +226,7 @@
 		}
 	}
 
-	let droppable = false
+	let droppable = $state(false)
 	const allowed_mimes = ['image/jpeg', 'image/png']
 	function get_file_path(e: DragEvent): string | null {
 		if (e.dataTransfer && has_file(e)) {
@@ -323,10 +322,19 @@
 			}
 		}
 	}
+	run(() => {
+		if ($current_list) open_index($current_list)
+	});
+	run(() => {
+		year = uint_filter(year)
+	});
+	run(() => {
+		if (track) set_info(track)
+	});
 </script>
 
-<svelte:window on:keydown={keydown} />
-<svelte:body on:keydown|self={keydown_none_selected} on:paste={cover_paste} />
+<svelte:window onkeydown={keydown} />
+<svelte:body onkeydown={self(keydown_none_selected)} onpaste={cover_paste} />
 <Modal on_cancel={cancel} cancel_on_escape form={save}>
 	<main class="modal">
 		<div class="header" class:has-subtitle={image && image.totalImages >= 2}>
@@ -334,18 +342,18 @@
 				class="cover-area"
 				class:droppable
 				tabindex="0"
-				on:keydown={cover_keydown}
+				onkeydown={cover_keydown}
 				role="button"
 				aria-label="Cover artwork"
 			>
-				<!-- svelte-ignore a11y-no-static-element-interactions -->
+				<!-- svelte-ignore a11y_no_static_element_interactions -->
 				<div
 					class="cover"
-					on:dragenter={drag_enter_or_over}
-					on:dragover={drag_enter_or_over}
-					on:dragleave={drag_leave}
-					on:drop={drop}
-					on:dblclick={pick_cover}
+					ondragenter={drag_enter_or_over}
+					ondragover={drag_enter_or_over}
+					ondragleave={drag_leave}
+					ondrop={drop}
+					ondblclick={pick_cover}
 				>
 					{#if image}
 						<img class="outline-element" alt="" src={image.objectUrl} />
@@ -369,9 +377,9 @@
 					{@const image_index = image.index}
 					<div class="cover-subtitle">
 						<div class="arrow" class:unclickable={image_index <= 0}>
-							<!-- svelte-ignore a11y-click-events-have-key-events -->
+							<!-- svelte-ignore a11y_click_events_have_key_events -->
 							<svg
-								on:click={prev_image}
+								onclick={prev_image}
 								tabindex="-1"
 								role="button"
 								aria-label="Previous image"
@@ -393,9 +401,9 @@
 							{image.index + 1} / {image.totalImages}
 						</div>
 						<div class="arrow" class:unclickable={image_index >= image.totalImages - 1}>
-							<!-- svelte-ignore a11y-click-events-have-key-events -->
+							<!-- svelte-ignore a11y_click_events_have_key_events -->
 							<svg
-								on:click={next_image}
+								onclick={next_image}
 								tabindex="-1"
 								role="button"
 								aria-label="Next image"
@@ -424,7 +432,7 @@
 		<div class="spacer"></div>
 		<div class="row">
 			<div class="label">Title</div>
-			<!-- svelte-ignore a11y-autofocus -->
+			<!-- svelte-ignore a11y_autofocus -->
 			<input type="text" bind:value={name} autofocus />
 		</div>
 		<div class="row">
@@ -489,10 +497,12 @@
 		</div>
 		<div class="spacer"></div>
 	</main>
-	<svelte:fragment slot="buttons">
-		<Button secondary on:click={cancel}>Cancel</Button>
-		<Button type="submit" on:click={() => save()}>Save</Button>
-	</svelte:fragment>
+	{#snippet buttons()}
+	
+			<Button secondary on:click={cancel}>Cancel</Button>
+			<Button type="submit" on:click={() => save()}>Save</Button>
+		
+	{/snippet}
 </Modal>
 
 <style lang="sass">

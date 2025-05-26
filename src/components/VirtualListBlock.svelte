@@ -1,4 +1,4 @@
-<script lang="ts" context="module">
+<script lang="ts" module>
 	export function scroll_container_keydown(e: KeyboardEvent & { currentTarget: HTMLElement }) {
 		let prevent = true
 		if (e.key === 'Home') e.currentTarget.scrollTop = 0
@@ -13,28 +13,24 @@
 <script lang="ts" generics="T">
 	import { onDestroy } from 'svelte'
 
-	export let items: T[]
-	export let item_height: number
-	/** Must be a positioned element, like `position: relative` */
-	export let scroll_container: HTMLElement
-	export let buffer = 3
+	interface Props {
+		items: T[]
+		item_height: number
+		/** Must be a positioned element, like `position: relative` */
+		scroll_container: HTMLElement
+		buffer?: number
+		children?: import('svelte').Snippet<[any]>
+	}
 
-	$: height = items.length * item_height
-	$: buffer_height = buffer * item_height
+	let { items, item_height, scroll_container, buffer = 3, children }: Props = $props()
 
-	let main_element: HTMLDivElement
+	let main_element: HTMLDivElement = $state()
 	let start_pixel = 0
 	let start_index = 0
 	let visible_count = 0
-	let visible_indexes: number[] = []
-
-	$: {
-		items, item_height, buffer
-		if (scroll_container && main_element) refresh()
-	}
+	let visible_indexes: number[] = $state([])
 
 	const resize_observer = new ResizeObserver(refresh)
-	$: observe(scroll_container)
 	function observe(scroll_container: HTMLElement | undefined) {
 		resize_observer.disconnect()
 		if (scroll_container) {
@@ -42,13 +38,13 @@
 		}
 	}
 
-	let ticking = false
+	let frame: number | null = null
 	export function refresh() {
-		if (ticking || !main_element || !scroll_container) {
+		if (frame !== null || !main_element || !scroll_container) {
 			return
 		}
-		ticking = true
-		requestAnimationFrame(() => {
+		frame = requestIdleCallback(() => {
+			frame = null
 			let element_top = main_element.offsetTop
 			let offset_parent = main_element.offsetParent
 			while (offset_parent !== scroll_container && offset_parent instanceof HTMLElement) {
@@ -100,12 +96,8 @@
 			// add new visible indexes
 			visible_indexes.push(...new_visible_indexes)
 			visible_indexes = visible_indexes
-
-			ticking = false
 		})
 	}
-
-	$: apply_scroll_event_handler(scroll_container)
 
 	let scroll_event_element: HTMLElement | undefined = scroll_container
 	function apply_scroll_event_handler(container: HTMLElement | undefined) {
@@ -129,8 +121,22 @@
 		dummy.scrollIntoView({ behavior: 'instant', block: 'nearest' })
 		dummy.remove()
 	}
+	let height = $derived(items.length * item_height)
+	let buffer_height = $derived(buffer * item_height)
+	$effect(() => {
+		items
+		item_height
+		buffer
+		if (scroll_container && main_element) refresh()
+	})
+	$effect(() => {
+		observe(scroll_container)
+	})
+	$effect(() => {
+		apply_scroll_event_handler(scroll_container)
+	})
 </script>
 
 <div bind:this={main_element} style:height={items.length * item_height + 'px'}>
-	<slot {visible_indexes} />
+	{@render children?.({ visible_indexes })}
 </div>

@@ -10,7 +10,7 @@ export function get_duration(dur: number) {
 	return mins + ':' + secs_text
 }
 
-export function format_date(timestamp: number) {
+export async function format_date(timestamp: number) {
 	const date = new Date(timestamp)
 	const month = date.getMonth() + 1
 	const month_text = (month < 10 ? '0' : '') + month

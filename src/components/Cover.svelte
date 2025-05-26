@@ -1,18 +1,25 @@
 <script lang="ts">
+	import { createBubbler, stopPropagation } from 'svelte/legacy';
+
+	const bubble = createBubbler();
 	import { paths } from '@/lib/data'
 	import type { Track } from '../../ferrum-addon'
 	import { ipc_renderer, join_paths } from '@/lib/window'
 
-	export let track: Track
-	$: src =
-		'app://trackimg?path=' +
+	interface Props {
+		track: Track;
+	}
+
+	let { track }: Props = $props();
+	let src =
+		$derived('app://trackimg?path=' +
 		encodeURIComponent(join_paths(paths.tracksDir, track.file)) +
 		'&cache_db_path=' +
 		encodeURIComponent(paths.cacheDb) +
 		'&date_modified=' +
-		encodeURIComponent(track.dateModified)
+		encodeURIComponent(track.dateModified))
 
-	let error: { src: string; message: 404 | string | null } | false | null = null
+	let error: { src: string; message: 404 | string | null } | false | null = $state(null)
 </script>
 
 {#if error}
@@ -30,13 +37,13 @@
 		</svg>
 	{:else}
 		{@const error_msg = error.message}
-		<!-- svelte-ignore a11y-click-events-have-key-events -->
-		<!-- svelte-ignore a11y-no-static-element-interactions -->
+		<!-- svelte-ignore a11y_click_events_have_key_events -->
+		<!-- svelte-ignore a11y_no_static_element_interactions -->
 		<div
 			class="h-full cursor-pointer"
 			title={error.message}
-			on:mousedown|stopPropagation
-			on:click={() => {
+			onmousedown={stopPropagation(bubble('mousedown'))}
+			onclick={() => {
 				ipc_renderer.invoke('showMessageBox', false, {
 					type: 'error',
 					message: 'Failed to load cover',
@@ -63,10 +70,10 @@
 		class:invisible={error === null}
 		{src}
 		alt=""
-		on:load={() => {
+		onload={() => {
 			error = false
 		}}
-		on:error={async () => {
+		onerror={async () => {
 			// Yes this is dumb, but there's no way to get an error code from <img src="" />
 			error = { message: null, src }
 			try {

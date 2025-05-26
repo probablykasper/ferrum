@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { run } from 'svelte/legacy';
+
 	import { onDestroy, onMount } from 'svelte'
 	import { fade } from 'svelte/transition'
 	import TrackList from './components/TrackList.svelte'
@@ -52,13 +54,15 @@
 	function toggle_queue() {
 		$queue_visible = !$queue_visible
 	}
-	$: ipc_renderer.invoke('update:Show Queue', $queue_visible)
+	run(() => {
+		ipc_renderer.invoke('update:Show Queue', $queue_visible)
+	});
 	ipc_renderer.on('Show Queue', toggle_queue)
 	onDestroy(() => {
 		ipc_renderer.removeListener('Show Queue', toggle_queue)
 	})
 
-	let droppable = false
+	let droppable = $state(false)
 	const allowed_mimes = ['audio/mpeg', 'audio/x-m4a', 'audio/ogg'] // mp3, m4a
 	function get_file_paths(e: DragEvent): string[] {
 		if (!e.dataTransfer) return []
@@ -111,7 +115,7 @@
 		}
 	}
 
-	let show_settings = false
+	let show_settings = $state(false)
 	onDestroy(
 		ipc_listen('show_settings', () => {
 			if ($modal_count === 0) {
@@ -120,7 +124,7 @@
 		}),
 	)
 
-	let show_itunes_import = false
+	let show_itunes_import = $state(false)
 	onDestroy(
 		ipc_listen('itunesImport', () => {
 			if ($modal_count === 0) {
@@ -129,7 +133,7 @@
 		}),
 	)
 
-	let playlist_info: PlaylistInfo | null = null
+	let playlist_info: PlaylistInfo | null = $state(null)
 	onDestroy(
 		ipc_listen('context.playlist.edit', (_, id) => {
 			const list = get_track_list(id)
@@ -179,15 +183,15 @@
 	})
 </script>
 
-<svelte:window on:keydown={keydown} />
+<svelte:window onkeydown={keydown} />
 <svelte:head>
 	<title>Ferrum</title>
 </svelte:head>
 
-<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
+<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 <main
-	on:dragenter|capture={drag_enter_or_over}
-	on:keydown={(e) => {
+	ondragentercapture={drag_enter_or_over}
+	onkeydown={(e) => {
 		if (e.target) {
 			if (check_shortcut(e, 'ArrowUp', { cmd_or_ctrl: true })) {
 				e.preventDefault()
@@ -218,9 +222,9 @@
 		<!-- svelte-ignore a11y_interactive_supports_focus -->
 		<div
 			class="dropzone"
-			on:dragleave={drag_leave}
-			on:drop={drop}
-			on:dragover={drag_enter_or_over}
+			ondragleave={drag_leave}
+			ondrop={drop}
+			ondragover={drag_enter_or_over}
 			role="dialog"
 			aria-label="Drop files to import"
 			aria-dropeffect="copy"

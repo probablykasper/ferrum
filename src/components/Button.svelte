@@ -1,22 +1,35 @@
 <script lang="ts">
+	import { run, createBubbler } from 'svelte/legacy';
+
+	const bubble = createBubbler();
 	import type { HTMLBaseAttributes } from 'svelte/elements'
 
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	interface $$Props extends HTMLBaseAttributes {
-		secondary?: boolean
-		danger?: boolean
-		type?: 'button' | 'submit' | 'reset'
+	
+
+	interface Props {
+		secondary?: boolean;
+		danger?: boolean;
+		type?: 'button' | 'submit' | 'reset';
+		children?: import('svelte').Snippet;
+		[key: string]: any
 	}
 
-	export let secondary = false
-	export let danger = false
-	export let type: 'button' | 'submit' | 'reset' = 'button'
-	let normal = !danger && !secondary
-	$: normal = !danger && !secondary
+	let {
+		secondary = false,
+		danger = false,
+		type = 'button',
+		children,
+		...rest
+	}: Props = $props();
+	let normal = $state(!danger && !secondary)
+	run(() => {
+		normal = !danger && !secondary
+	});
 </script>
 
-<button on:click on:mousedown class:normal class:secondary class:danger {type} {...$$restProps}>
-	<slot />
+<button onclick={bubble('click')} onmousedown={bubble('mousedown')} class:normal class:secondary class:danger {type} {...rest}>
+	{@render children?.()}
 </button>
 
 <style lang="sass">

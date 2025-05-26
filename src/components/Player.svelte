@@ -1,4 +1,7 @@
 <script lang="ts">
+	import { createBubbler, preventDefault } from 'svelte/legacy';
+
+	const bubble = createBubbler();
 	import {
 		stopped,
 		play_pause,
@@ -60,8 +63,8 @@
 			<div
 				class="cover"
 				role="none"
-				on:contextmenu={playing_context_menu}
-				on:dragstart={drag_start}
+				oncontextmenu={playing_context_menu}
+				ondragstart={drag_start}
 				draggable="true"
 			>
 				{#if $cover_src}
@@ -75,8 +78,8 @@
 				{/if}
 			</div>
 			<div
-				on:contextmenu={playing_context_menu}
-				on:dragstart={drag_start}
+				oncontextmenu={playing_context_menu}
+				ondragstart={drag_start}
 				draggable="true"
 				role="none"
 			>
@@ -97,8 +100,8 @@
 				class="side-controls shuffle"
 				class:on={$shuffle}
 				tabindex="-1"
-				on:mousedown|preventDefault
-				on:click={() => ($shuffle = !$shuffle)}
+				onmousedown={preventDefault(bubble('mousedown'))}
+				onclick={() => ($shuffle = !$shuffle)}
 			>
 				<div class="parent-active-zoom">
 					<svg
@@ -117,9 +120,9 @@
 				type="button"
 				aria-label="Previous"
 				class="previous"
-				on:click={previous}
+				onclick={previous}
 				tabindex="-1"
-				on:mousedown|preventDefault
+				onmousedown={preventDefault(bubble('mousedown'))}
 			>
 				<svg
 					xmlns="http://www.w3.org/2000/svg"
@@ -137,10 +140,10 @@
 			<button
 				type="button"
 				class="play-pause"
-				on:click={play_pause}
+				onclick={play_pause}
 				class:cannot-play={$tracks_page_item_ids.length === 0}
 				tabindex="-1"
-				on:mousedown|preventDefault
+				onmousedown={preventDefault(bubble('mousedown'))}
 			>
 				{#if $time_record.paused}
 					<svg
@@ -173,9 +176,9 @@
 				type="button"
 				aria-label="Next"
 				class="next"
-				on:click={skip_to_next}
+				onclick={skip_to_next}
 				tabindex="-1"
-				on:mousedown|preventDefault
+				onmousedown={preventDefault(bubble('mousedown'))}
 			>
 				<svg
 					xmlns="http://www.w3.org/2000/svg"
@@ -196,8 +199,8 @@
 				class="side-controls repeat"
 				class:on={$repeat}
 				tabindex="-1"
-				on:mousedown|preventDefault
-				on:click={() => ($repeat = !$repeat)}
+				onmousedown={preventDefault(bubble('mousedown'))}
+				onclick={() => ($repeat = !$repeat)}
 			>
 				<div class="parent-active-zoom">
 					<svg
@@ -229,7 +232,7 @@
 		</div>
 	</div>
 	<div class="right">
-		<button type="button" class="volume-icon" tabindex="-1" on:click={volume.toggle}>
+		<button type="button" class="volume-icon" tabindex="-1" onclick={volume.toggle}>
 			{#if $volume > 0.5}
 				<svg
 					class="high parent-active-zoom"
@@ -276,8 +279,8 @@
 			type="button"
 			aria-label="Toggle queue"
 			tabindex="-1"
-			on:mousedown|preventDefault
-			on:click={toggle_queue_visibility}
+			onmousedown={preventDefault(bubble('mousedown'))}
+			onclick={toggle_queue_visibility}
 			class:on={$queue_visible}
 		>
 			<svg

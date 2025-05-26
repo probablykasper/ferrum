@@ -1,4 +1,4 @@
-<script lang="ts" context="module">
+<script lang="ts" module>
 	export const sort_key = writable('index')
 	export const sort_desc = writable(true)
 	export let current_playlist_id = writable('')
@@ -18,6 +18,8 @@
 </script>
 
 <script lang="ts">
+	import { self } from 'svelte/legacy'
+
 	import {
 		filter,
 		move_tracks,
@@ -48,29 +50,40 @@
 	import { get_flattened_tracklists, handle_selected_tracks_action } from '@/lib/menus'
 	import type { SelectedTracksAction } from '@/electron/typed_ipc'
 
-	let tracklist_element: HTMLDivElement
+	let tracklist_element: HTMLDivElement = $state()
 
-	export let params: { playlist_id: string }
-	$: $current_playlist_id = params.playlist_id
+	interface Props {
+		params: { playlist_id: string }
+	}
 
-	let tracks_page = get_tracks_page({
-		playlistId: params.playlist_id,
-		filterQuery: $filter,
-		sortKey: $sort_key,
-		sortDesc: $sort_desc,
-		groupAlbumTracks: $group_album_tracks,
+	let { params }: Props = $props()
+	$effect(() => {
+		$current_playlist_id = params.playlist_id
 	})
-	// eslint-disable-next-line no-constant-condition
-	$: if ($tracklist_updated || $tracks_updated || true) {
-		tracks_page = get_tracks_page({
+
+	let tracks_page = $state(
+		get_tracks_page({
 			playlistId: params.playlist_id,
 			filterQuery: $filter,
 			sortKey: $sort_key,
 			sortDesc: $sort_desc,
 			groupAlbumTracks: $group_album_tracks,
-		})
-	}
-	$: $tracks_page_item_ids = tracks_page.itemIds
+		}),
+	)
+	$effect(() => {
+		if ($tracklist_updated || $tracks_updated || true) {
+			tracks_page = get_tracks_page({
+				playlistId: params.playlist_id,
+				filterQuery: $filter,
+				sortKey: $sort_key,
+				sortDesc: $sort_desc,
+				groupAlbumTracks: $group_album_tracks,
+			})
+		}
+	})
+	$effect(() => {
+		$tracks_page_item_ids = tracks_page.itemIds
+	})
 
 	function handle_action(action: SelectedTracksAction) {
 		if (selection.items.size === 0) {
@@ -105,7 +118,9 @@
 			}
 		},
 	})
-	$: selection.update_all_items(tracks_page.itemIds)
+	$effect.pre(() => {
+		selection.update_all_items(tracks_page.itemIds)
+	})
 
 	const track_action_unlisten = ipc_listen('selected_tracks_action', (_, action) => {
 		if (tracklist_element.contains(document.activeElement)) {
@@ -175,7 +190,7 @@
 		new_playback_instance(all_track_ids, index)
 	}
 
-	let drag_line: HTMLElement
+	let drag_line: HTMLElement = $state()
 	let drag_item_ids: ItemId[] = []
 	function on_drag_start(e: DragEvent) {
 		if (e.dataTransfer) {
@@ -195,7 +210,7 @@
 			e.dataTransfer.setData('ferrum.tracks', '')
 		}
 	}
-	let drag_to_index: null | number = null
+	let drag_to_index: null | number = $state(null)
 	function on_drag_over(e: DragEvent, index: number) {
 		if (
 			!$sort_desc ||
@@ -244,13 +259,15 @@
 		}
 	}
 
-	let virtual_list: VirtualListBlock<ItemId>
+	let virtual_list: VirtualListBlock<ItemId> = $state()
 
-	$: if (virtual_list) {
-		virtual_list.refresh()
-	}
+	$effect(() => {
+		if (virtual_list) {
+			virtual_list.refresh()
+		}
+	})
 
-	let scroll_container: HTMLElement
+	let scroll_container: HTMLElement = $state()
 	onMount(() => {
 		tracklist_actions.scroll_to_index = virtual_list.scroll_to_index
 	})
@@ -315,7 +332,7 @@
 		'dateAdded',
 		'year',
 	]
-	let columns: Column[] = load_columns()
+	let columns: Column[] = $state(load_columns())
 	onMount(() => {
 		columns = load_columns()
 	})
@@ -378,15 +395,15 @@
 		}),
 	)
 
-	let col_container: HTMLElement
-	let col_drag_line: HTMLElement
+	let col_container: HTMLElement = $state()
+	let col_drag_line: HTMLElement = $state()
 	let col_drag_index: number | null = null
 	function on_col_drag_start(e: DragEvent, index: number) {
 		if (e.dataTransfer) {
 			col_drag_index = index
 		}
 	}
-	let col_drag_to_index: null | number = null
+	let col_drag_to_index: null | number = $state(null)
 	function on_col_drag_over(e: DragEvent, index: number) {
 		if (col_drag_index !== null && e.currentTarget instanceof HTMLElement) {
 			e.preventDefault()
@@ -428,27 +445,27 @@
 	bind:this={tracklist_element}
 	class="tracklist h-full"
 	role="table"
-	on:dragleave={() => (drag_to_index = null)}
+	ondragleave={() => (drag_to_index = null)}
 >
-	<!-- svelte-ignore a11y-interactive-supports-focus -->
+	<!-- svelte-ignore a11y_interactive_supports_focus -->
 	<div
 		class="row table-header border-b border-b-slate-500/30"
 		class:desc={$sort_desc}
 		role="row"
-		on:contextmenu={on_column_context_menu}
-		on:dragleave={() => (col_drag_to_index = null)}
+		oncontextmenu={on_column_context_menu}
+		ondragleave={() => (col_drag_to_index = null)}
 		bind:this={col_container}
 	>
 		{#each columns as column, i}
-			<!-- svelte-ignore a11y-interactive-supports-focus -->
-			<!-- svelte-ignore a11y-click-events-have-key-events -->
+			<!-- svelte-ignore a11y_interactive_supports_focus -->
+			<!-- svelte-ignore a11y_click_events_have_key_events -->
 			<div
 				class="c {column.key}"
 				class:sort={$sort_key === column.key}
 				style:width="{column.width}px"
 				style:translate="{column.offset}px 0"
 				role="button"
-				on:click={() => {
+				onclick={() => {
 					if (tracks_page.playlistKind === 'special' && column.key === 'index') {
 						return
 					} else if (column.key === 'image') {
@@ -462,10 +479,10 @@
 					}
 				}}
 				draggable="true"
-				on:dragstart={(e) => on_col_drag_start(e, i)}
-				on:dragend={col_drag_end_handler}
-				on:dragover={(e) => on_col_drag_over(e, i)}
-				on:drop={col_drop_handler}
+				ondragstart={(e) => on_col_drag_start(e, i)}
+				ondragend={col_drag_end_handler}
+				ondragover={(e) => on_col_drag_over(e, i)}
+				ondrop={col_drop_handler}
 			>
 				<span>{column.key === 'image' ? '' : column.name}</span>
 			</div>
@@ -476,84 +493,93 @@
 			bind:this={col_drag_line}
 		></div>
 	</div>
-	<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
-	<!-- svelte-ignore a11y-no-static-element-interactions -->
+	<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+	<!-- svelte-ignore a11y_no_static_element_interactions -->
 	<div
 		bind:this={scroll_container}
 		class="main-focus-element relative h-full overflow-y-auto outline-none"
 		tabindex="0"
-		on:mousedown|self={() => selection.clear()}
-		on:keydown={scroll_container_keydown}
-		on:keydown={keydown}
+		onmousedown={(e) => {
+			if (e.target === e.currentTarget) {
+				selection.clear()
+			}
+		}}
+		onkeydown={(e) => {
+			scroll_container_keydown(e)
+			keydown(e)
+		}}
 	>
 		<VirtualListBlock
 			bind:this={virtual_list}
 			items={tracks_page.itemIds}
 			item_height={24}
 			{scroll_container}
-			let:visible_indexes
 			buffer={5}
 		>
-			{#each visible_indexes as i (tracks_page.itemIds[i])}
-				{@const item_id = tracks_page.itemIds[i]}
-				{@const { id: track_id, track } = get_item(item_id)}
-				{#if track !== null}
-					<!-- svelte-ignore a11y-click-events-have-key-events -->
-					<!-- svelte-ignore a11y-interactive-supports-focus -->
-					<div
-						class="row"
-						role="row"
-						style:translate="0 {i * 24}px"
-						on:dblclick={(e) => double_click(e, i)}
-						on:mousedown={(e) => selection.handle_mousedown(e, i)}
-						on:contextmenu={(e) => selection.handle_contextmenu(e, i)}
-						on:click={(e) => selection.handle_click(e, i)}
-						draggable="true"
-						on:dragstart={on_drag_start}
-						on:dragover={(e) => on_drag_over(e, i)}
-						on:drop={drop_handler}
-						on:dragend={drag_end_handler}
-						class:odd={i % 2 === 0}
-						class:selected={$selection.has(item_id)}
-						class:playing={track_id === $playing_id}
-					>
-						{#each columns as column}
-							<div
-								class="c {column.key}"
-								style:width="{column.width}px"
-								style:translate="{column.offset}px 0"
-							>
-								{#if column.key === 'index'}
-									{#if track_id === $playing_id}
-										<svg
-											class="playing-icon inline"
-											xmlns="http://www.w3.org/2000/svg"
-											height="24"
-											viewBox="0 0 24 24"
-											width="24"
-										>
-											<path d="M0 0h24v24H0z" fill="none" />
-											<path
-												d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"
-											/>
-										</svg>
+			{#snippet children({ visible_indexes })}
+				{#each visible_indexes as i (tracks_page.itemIds[i])}
+					{@const item_id = tracks_page.itemIds[i]}
+					{@const { id: track_id, track } = get_item(item_id)}
+					{#if track !== null}
+						<!-- svelte-ignore a11y_click_events_have_key_events -->
+						<!-- svelte-ignore a11y_interactive_supports_focus -->
+						<div
+							class="row"
+							role="row"
+							style:translate="0 {i * 24}px"
+							ondblclick={(e) => double_click(e, i)}
+							onmousedown={(e) => selection.handle_mousedown(e, i)}
+							oncontextmenu={(e) => selection.handle_contextmenu(e, i)}
+							onclick={(e) => selection.handle_click(e, i)}
+							draggable="true"
+							ondragstart={on_drag_start}
+							ondragover={(e) => on_drag_over(e, i)}
+							ondrop={drop_handler}
+							ondragend={drag_end_handler}
+							class:odd={i % 2 === 0}
+							class:selected={$selection.has(item_id)}
+							class:playing={track_id === $playing_id}
+						>
+							{#each columns as column}
+								<div
+									class={['c', column.key]}
+									style:width="{column.width}px"
+									style:translate="{column.offset}px 0"
+								>
+									{#if column.key === 'index'}
+										{#if track_id === $playing_id}
+											<!-- <svg
+												class="playing-icon inline"
+												xmlns="http://www.w3.org/2000/svg"
+												height="24"
+												viewBox="0 0 24 24"
+												width="24"
+											>
+												<path d="M0 0h24v24H0z" fill="none" />
+												<path
+													d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"
+												/>
+											</svg> -->
+										{:else}
+											{i + 1}
+										{/if}
+									{:else if column.key === 'duration'}
+										{track.duration ? get_duration(track.duration) : ''}
+									{:else if column.key === 'dateAdded'}
+										{#await format_date(track.dateAdded) then value}
+											{value}
+										{/await}
+									{:else if column.key === 'image'}
+										<Cover {track} />
 									{:else}
-										{i + 1}
+										{track[column.key] || ''}
 									{/if}
-								{:else if column.key === 'duration'}
-									{track.duration ? get_duration(track.duration) : ''}
-								{:else if column.key === 'dateAdded'}
-									{format_date(track.dateAdded)}
-								{:else if column.key === 'image'}
-									<Cover {track} />
-								{:else}
-									{track[column.key] || ''}
-								{/if}
-							</div>
-						{/each}
-					</div>
-				{/if}
-			{/each}
+								</div>
+							{/each}
+						</div>
+					{/if}
+				{/each}
+			{/snippet}
 		</VirtualListBlock>
 		<div class="drag-line" class:hidden={drag_to_index === null} bind:this={drag_line}></div>
 	</div>

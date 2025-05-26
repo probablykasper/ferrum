@@ -5,13 +5,18 @@
 	import Button from './Button.svelte'
 	import Modal from './Modal.svelte'
 	import { call } from '@/lib/error'
-	// import { selection as pageSelection } from '@/lib/page'
+	
 
-	export let cancel: () => void
+	interface Props {
+		// import { selection as pageSelection } from '@/lib/page'
+		cancel: () => void;
+	}
+
+	let { cancel }: Props = $props();
 	let itunes_import = ItunesImport.new()
 
 	type Stage = 'select' | 'fileSelect' | 'scanning' | ImportStatus
-	let stage: Stage = 'select'
+	let stage: Stage = $state('select')
 
 	function cancel_handler() {
 		if (stage === 'fileSelect' || stage === 'scanning') {
