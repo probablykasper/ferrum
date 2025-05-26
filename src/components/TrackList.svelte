@@ -564,6 +564,12 @@
 <style lang="sass">
 	:global(revo-grid[theme=darkCompact])
 		--revo-grid-focused-bg: hsla(var(--hue), 70%, 46%, 1)
+		:global(revogr-header .header-rgRow)
+			height: 24px
+			line-height: 24px
+			font-size: 12px
+			box-shadow: none
+			font-weight: 400
 		:global(revogr-data .rgRow)
 			line-height: 24px
 			font-size: 12px
