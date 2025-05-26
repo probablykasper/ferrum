@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { run } from 'svelte/legacy';
+	import { run } from 'svelte/legacy'
 
 	import { onDestroy } from 'svelte'
 	import { check_shortcut } from '../lib/helpers'
@@ -74,14 +74,15 @@
 		if (show) {
 			playlists = get_playlists()
 		}
-	});
+	})
 	run(() => {
 		filtered_items = fuzzysort.go(value, playlists, { key: 'name', all: true })
 		clamp_index()
-	});
+	})
 	run(() => {
-		list_items, clamp_index()
-	});
+		list_items
+		clamp_index()
+	})
 </script>
 
 {#if show}

@@ -1,3 +1,5 @@
+<svelte:options customElement="track-list" />
+
 <script lang="ts" module>
 	export const sort_key = writable('index')
 	export const sort_desc = writable(true)
@@ -15,11 +17,19 @@
 	})
 	export const group_album_tracks = writable(true)
 	export const tracks_page_item_ids = writable<TracksPage['itemIds']>([])
+
+	export function scroll_container_keydown(e: KeyboardEvent & { currentTarget: HTMLElement }) {
+		let prevent = true
+		if (e.key === 'Home') e.currentTarget.scrollTop = 0
+		else if (e.key === 'End') e.currentTarget.scrollTop = e.currentTarget.scrollHeight
+		else if (e.key === 'PageUp') e.currentTarget.scrollTop -= e.currentTarget.clientHeight
+		else if (e.key === 'PageDown') e.currentTarget.scrollTop += e.currentTarget.clientHeight
+		else prevent = false
+		if (prevent) e.preventDefault()
+	}
 </script>
 
 <script lang="ts">
-	import { self } from 'svelte/legacy'
-
 	import {
 		filter,
 		move_tracks,
@@ -41,7 +51,6 @@
 	import { onDestroy, onMount } from 'svelte'
 	import { dragged } from '../lib/drag-drop'
 	import * as dragGhost from './DragGhost.svelte'
-	import VirtualListBlock, { scroll_container_keydown } from './VirtualListBlock.svelte'
 	import type { ItemId, Track, TracksPage } from 'ferrum-addon/addon'
 	import Cover from './Cover.svelte'
 	import Header from './Header.svelte'
@@ -259,17 +268,143 @@
 		}
 	}
 
-	let virtual_list: VirtualListBlock<ItemId> = $state()
+	let scroll_container: HTMLElement | null = $state(null)
+
+	// Virtual list variables and functions (integrated from VirtualListBlock)
+	let main_element: HTMLDivElement | null = $state(null)
+	let start_pixel = 0
+	let start_index = 0
+	let visible_count = 0
+	let visible_indexes: number[] = $state([])
+	let item_height = 24
+	let buffer = 5
+
+	const resize_observer = new ResizeObserver(refresh)
+	function observe(container: HTMLElement | null) {
+		resize_observer.disconnect()
+		if (container) {
+			resize_observer.observe(container)
+		}
+	}
+
+	let frame: number | null = null
+	function refresh() {
+		console.log('refresh')
+		if (frame !== null || !main_element || !scroll_container) {
+			return
+		}
+		frame = requestAnimationFrame(() => {
+			frame = null
+			if (!main_element || !scroll_container) return
+			let element_top = main_element.offsetTop
+			let offset_parent = main_element.offsetParent
+			while (offset_parent !== scroll_container && offset_parent instanceof HTMLElement) {
+				element_top += offset_parent.offsetTop
+				offset_parent = offset_parent.offsetParent
+			}
+
+			const element_bottom = element_top + height
+
+			// The currently visible area of the container
+			const scroll_top = scroll_container.scrollTop - buffer_height
+			const scroll_bottom =
+				scroll_container.scrollTop + scroll_container.clientHeight + buffer_height
+
+			// The first visible pixel
+			start_pixel = Math.min(element_bottom, Math.max(element_top, scroll_top)) - element_top
+
+			// The last visible pixel
+			const end_pixel = Math.max(element_top, Math.min(element_bottom, scroll_bottom)) - element_top
+
+			const total_pixels = end_pixel - start_pixel
+
+			start_index = Math.floor(start_pixel / item_height)
+			visible_count = Math.ceil(total_pixels / item_height)
+			const end_index = start_index + visible_count
+
+			// first, figure out which new indexes are now visible
+			const new_visible_indexes = []
+			for (let i = start_index; i < end_index; i++) {
+				if (!visible_indexes.includes(i)) {
+					new_visible_indexes.push(i)
+				}
+			}
+			// then, update the visible indexes
+			for (let i = 0; i < visible_indexes.length; i++) {
+				// if the index is no longer visible
+				if (visible_indexes[i] > end_index || visible_indexes[i] < start_index) {
+					const new_index = new_visible_indexes.pop()
+					// update it to a new visible index
+					if (new_index !== undefined) {
+						visible_indexes[i] = new_index
+					} else {
+						// if there are no new visible indexes left, remove it
+						visible_indexes.splice(i, 1)
+						i--
+					}
+				}
+			}
+			// add new visible indexes
+			visible_indexes.push(...new_visible_indexes)
+			visible_indexes = visible_indexes
+			console.log('visible_indexes', visible_indexes)
+		})
+	}
+
+	let scroll_event_element: HTMLElement | null = null
+	function apply_scroll_event_handler(container: HTMLElement | null) {
+		if (scroll_event_element) {
+			scroll_event_element.removeEventListener('scroll', refresh)
+		}
+		scroll_event_element = container
+		if (scroll_event_element) {
+			scroll_event_element.addEventListener('scroll', refresh)
+		}
+	}
+
+	function scroll_to_index(index: number, offset = 0) {
+		if (!main_element) return
+
+		const dummy = document.createElement('div')
+		dummy.style.height = item_height + 'px'
+		dummy.style.position = 'absolute'
+		dummy.style.top = index * item_height + 'px'
+		// For some reason we apply the offset to the bottom
+		dummy.style.scrollMarginBottom = offset + 'px'
+		// eslint-disable-next-line svelte/no-dom-manipulating
+		main_element.prepend(dummy)
+		dummy.scrollIntoView({ behavior: 'instant', block: 'nearest' })
+		dummy.remove()
+	}
+
+	let height = $derived(tracks_page.itemIds ? tracks_page.itemIds.length * item_height : 0)
+	let buffer_height = $derived(buffer * item_height)
 
 	$effect(() => {
-		if (virtual_list) {
-			virtual_list.refresh()
+		tracks_page.itemIds
+		item_height
+		buffer
+		if (scroll_container && main_element) {
+			refresh()
 		}
 	})
 
-	let scroll_container: HTMLElement = $state()
+	$effect(() => {
+		observe(scroll_container)
+	})
+
+	$effect(() => {
+		apply_scroll_event_handler(scroll_container)
+	})
+
+	onDestroy(() => {
+		if (scroll_event_element) {
+			scroll_event_element.removeEventListener('scroll', refresh)
+		}
+	})
+
 	onMount(() => {
-		tracklist_actions.scroll_to_index = virtual_list.scroll_to_index
+		tracklist_actions.scroll_to_index = scroll_to_index
 	})
 
 	type Column = {
@@ -444,12 +579,15 @@
 <div
 	bind:this={tracklist_element}
 	class="tracklist h-full"
+	style:height="100%"
 	role="table"
 	ondragleave={() => (drag_to_index = null)}
 >
 	<!-- svelte-ignore a11y_interactive_supports_focus -->
 	<div
 		class="row table-header border-b border-b-slate-500/30"
+		style:height={item_height + 'px'}
+		style:position="absolute"
 		class:desc={$sort_desc}
 		role="row"
 		oncontextmenu={on_column_context_menu}
@@ -497,7 +635,10 @@
 	<!-- svelte-ignore a11y_no_static_element_interactions -->
 	<div
 		bind:this={scroll_container}
-		class="main-focus-element relative h-full overflow-y-auto outline-none"
+		class="main-focus-element relative h-full outline-none"
+		style:overflow-y="auto"
+		style:position="relative"
+		style:height="100%"
 		tabindex="0"
 		onmousedown={(e) => {
 			if (e.target === e.currentTarget) {
@@ -509,46 +650,42 @@
 			keydown(e)
 		}}
 	>
-		<VirtualListBlock
-			bind:this={virtual_list}
-			items={tracks_page.itemIds}
-			item_height={24}
-			{scroll_container}
-			buffer={5}
-		>
-			{#snippet children({ visible_indexes })}
-				{#each visible_indexes as i (tracks_page.itemIds[i])}
-					{@const item_id = tracks_page.itemIds[i]}
-					{@const { id: track_id, track } = get_item(item_id)}
-					{#if track !== null}
-						<!-- svelte-ignore a11y_click_events_have_key_events -->
-						<!-- svelte-ignore a11y_interactive_supports_focus -->
-						<div
-							class="row"
-							role="row"
-							style:translate="0 {i * 24}px"
-							ondblclick={(e) => double_click(e, i)}
-							onmousedown={(e) => selection.handle_mousedown(e, i)}
-							oncontextmenu={(e) => selection.handle_contextmenu(e, i)}
-							onclick={(e) => selection.handle_click(e, i)}
-							draggable="true"
-							ondragstart={on_drag_start}
-							ondragover={(e) => on_drag_over(e, i)}
-							ondrop={drop_handler}
-							ondragend={drag_end_handler}
-							class:odd={i % 2 === 0}
-							class:selected={$selection.has(item_id)}
-							class:playing={track_id === $playing_id}
-						>
-							{#each columns as column}
-								<div
-									class={['c', column.key]}
-									style:width="{column.width}px"
-									style:translate="{column.offset}px 0"
-								>
-									{#if column.key === 'index'}
-										{#if track_id === $playing_id}
-											<!-- <svg
+		<div bind:this={main_element} style:height={tracks_page.itemIds.length * item_height + 'px'}>
+			{#each visible_indexes as i (tracks_page.itemIds[i])}
+				{@const item_id = tracks_page.itemIds[i]}
+				{@const { id: track_id, track } = get_item(item_id)}
+				{#if track !== null}
+					<!-- svelte-ignore a11y_click_events_have_key_events -->
+					<!-- svelte-ignore a11y_interactive_supports_focus -->
+					<div
+						class="row"
+						role="row"
+						style:height={item_height + 'px'}
+						style:width="100%"
+						style:position="absolute"
+						style:translate="0 {i * 24}px"
+						ondblclick={(e) => double_click(e, i)}
+						onmousedown={(e) => selection.handle_mousedown(e, i)}
+						oncontextmenu={(e) => selection.handle_contextmenu(e, i)}
+						onclick={(e) => selection.handle_click(e, i)}
+						draggable="true"
+						ondragstart={on_drag_start}
+						ondragover={(e) => on_drag_over(e, i)}
+						ondrop={drop_handler}
+						ondragend={drag_end_handler}
+						class:odd={i % 2 === 0}
+						class:selected={$selection.has(item_id)}
+						class:playing={track_id === $playing_id}
+					>
+						{#each columns as column}
+							<div
+								class={['c', column.key]}
+								style:width="{column.width}px"
+								style:translate="{column.offset}px 0"
+							>
+								{#if column.key === 'index'}
+									{#if track_id === $playing_id}
+										<!-- <svg
 												class="playing-icon inline"
 												xmlns="http://www.w3.org/2000/svg"
 												height="24"
@@ -560,27 +697,26 @@
 													d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"
 												/>
 											</svg> -->
-										{:else}
-											{i + 1}
-										{/if}
-									{:else if column.key === 'duration'}
-										{track.duration ? get_duration(track.duration) : ''}
-									{:else if column.key === 'dateAdded'}
-										{#await format_date(track.dateAdded) then value}
-											{value}
-										{/await}
-									{:else if column.key === 'image'}
-										<Cover {track} />
 									{:else}
-										{track[column.key] || ''}
+										{i + 1}
 									{/if}
-								</div>
-							{/each}
-						</div>
-					{/if}
-				{/each}
-			{/snippet}
-		</VirtualListBlock>
+								{:else if column.key === 'duration'}
+									{track.duration ? get_duration(track.duration) : ''}
+								{:else if column.key === 'dateAdded'}
+									{#await format_date(track.dateAdded) then value}
+										{value}
+									{/await}
+								{:else if column.key === 'image'}
+									<!-- <Cover {track} /> -->
+								{:else}
+									{track[column.key] || ''}
+								{/if}
+							</div>
+						{/each}
+					</div>
+				{/if}
+			{/each}
+		</div>
 		<div class="drag-line" class:hidden={drag_to_index === null} bind:this={drag_line}></div>
 	</div>
 </div>
@@ -615,6 +751,8 @@
 				display: inline-block
 			&.desc .c.sort span::after
 				content: '▼'
+	.main-focus-element
+		overflow-y: auto
 	.row
 		width: 100%
 		$row-height: 24px

@@ -1,9 +1,7 @@
 <script lang="ts">
-	import { run } from 'svelte/legacy';
-
+	import { run } from 'svelte/legacy'
 	import { onDestroy, onMount } from 'svelte'
 	import { fade } from 'svelte/transition'
-	import TrackList from './components/TrackList.svelte'
 	import Player from './components/Player.svelte'
 	import Sidebar from './components/Sidebar.svelte'
 	import Queue from './components/Queue.svelte'
@@ -25,6 +23,7 @@
 	import './lib/router'
 	import CheckForUpdates from './components/CheckForUpdates.svelte'
 	import Settings from './components/Settings.svelte'
+	import TrackListRoute from './components/TrackListRoute.svelte'
 
 	ipc_renderer.invoke('app_loaded').catch(() => {
 		ipc_renderer.invoke('showMessageBox', false, {
@@ -56,7 +55,7 @@
 	}
 	run(() => {
 		ipc_renderer.invoke('update:Show Queue', $queue_visible)
-	});
+	})
 	ipc_renderer.on('Show Queue', toggle_queue)
 	onDestroy(() => {
 		ipc_renderer.removeListener('Show Queue', toggle_queue)
@@ -206,7 +205,7 @@
 	<div class="meat">
 		<Sidebar />
 		<div class="flex size-full min-w-0 flex-col">
-			<Route route="/playlist/:playlist_id" component={TrackList} />
+			<Route route="/playlist/:playlist_id" component={TrackListRoute} />
 			<Route route="/artists" component={ArtistList} />
 		</div>
 		{#if $queue_visible}
