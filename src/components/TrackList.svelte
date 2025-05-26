@@ -258,47 +258,49 @@
 	type Column = {
 		name: string
 		key: 'index' | 'image' | keyof Track
-		width?: string
+		width: number
+		is_pct?: true
+		offset?: number
 	}
 	const all_columns: Column[] = [
 		// sorted alphabetically
-		{ name: '#', key: 'index' },
+		{ name: '#', key: 'index', width: 46 },
 		// { name: 'Size', key: 'size' },
-		{ name: 'Album', key: 'albumName', width: '90%' },
-		{ name: 'Album Artist', key: 'albumArtist', width: '90%' },
-		{ name: 'Artist', key: 'artist', width: '120%' },
+		{ name: 'Album', key: 'albumName', width: 0.9, is_pct: true },
+		{ name: 'Album Artist', key: 'albumArtist', width: 0.9, is_pct: true },
+		{ name: 'Artist', key: 'artist', width: 1.2, is_pct: true },
 		// { name: 'Bitrate', key: 'bitrate' },
-		{ name: 'BPM', key: 'bpm' },
-		{ name: 'Comments', key: 'comments', width: '65%' },
+		{ name: 'BPM', key: 'bpm', width: 43 },
+		{ name: 'Comments', key: 'comments', width: 0.65, is_pct: true },
 		// { name: 'Compilation', key: 'compilation' },
-		{ name: 'Composer', key: 'composer', width: '65%' },
-		{ name: 'Date Added', key: 'dateAdded' },
+		{ name: 'Composer', key: 'composer', width: 0.65, is_pct: true },
+		{ name: 'Date Added', key: 'dateAdded', width: 140 },
 		// { name: 'DateImported', key: 'dateImported' },
 		// { name: 'DateModified', key: 'dateModified' },
 		// { name: 'Disabled', key: 'disabled' },
 		// { name: 'DiscCount', key: 'discCount' },
 		// { name: 'DiscNum', key: 'discNum' },
 		// { name: 'Disliked', key: 'disliked' },
-		{ name: 'Time', key: 'duration' },
-		{ name: 'Genre', key: 'genre', width: '65%' },
-		{ name: 'Grouping', key: 'grouping', width: '65%' },
-		{ name: 'Image', key: 'image' },
+		{ name: 'Time', key: 'duration', width: 50 },
+		{ name: 'Genre', key: 'genre', width: 0.65, is_pct: true },
+		{ name: 'Grouping', key: 'grouping', width: 0.65, is_pct: true },
+		{ name: 'Image', key: 'image', width: 28 },
 		// { name: 'ImportedFrom', key: 'importedFrom' },
 		// { name: 'Liked', key: 'liked' },
-		{ name: 'Name', key: 'name', width: '170%' },
-		{ name: 'Plays', key: 'playCount' },
+		{ name: 'Name', key: 'name', width: 1.7, is_pct: true },
+		{ name: 'Plays', key: 'playCount', width: 52 },
 		// { name: 'Rating', key: 'rating' },
 		// { name: 'SampleRate', key: 'sampleRate' },
-		{ name: 'Skips', key: 'skipCount' },
-		// { name: 'Sort Album', key: 'sortAlbumName', width: '65%' },
-		// { name: 'Sort Album Artist', key: 'sortAlbumArtist', width: '65%' },
-		// { name: 'Sort Artist', key: 'sortArtist', width: '65%' },
-		// { name: 'Sort Composer', key: 'sortComposer', width: '65%' },
-		// { name: 'Sort Name', key: 'sortName', width: '65%' },
+		{ name: 'Skips', key: 'skipCount', width: 52 },
+		// { name: 'Sort Album', key: 'sortAlbumName', width: 0.65, is_pct: true },
+		// { name: 'Sort Album Artist', key: 'sortAlbumArtist', width: 0.65, is_pct: true },
+		// { name: 'Sort Artist', key: 'sortArtist', width: 0.65, is_pct: true },
+		// { name: 'Sort Composer', key: 'sortComposer', width: 0.65, is_pct: true },
+		// { name: 'Sort Name', key: 'sortName', width: 0.65, is_pct: true },
 		// { name: 'TrackCount', key: 'trackCount' },
 		// { name: 'TrackNum', key: 'trackNum' },
 		// { name: 'Volume', key: 'volume' },
-		{ name: 'Year', key: 'year' },
+		{ name: 'Year', key: 'year', width: 47 },
 	]
 	const default_columns: Column['key'][] = [
 		'index',
@@ -314,14 +316,32 @@
 		'year',
 	]
 	let columns: Column[] = load_columns()
+	onMount(() => {
+		columns = load_columns()
+	})
 	function load_columns(): Column[] {
 		let loaded_columns = view_options.columns
 		if (loaded_columns.length === 0) {
 			loaded_columns = [...default_columns]
 		}
-		return loaded_columns
+		const columns = loaded_columns
 			.map((key) => all_columns.find((col) => col.key === key))
 			.filter((col) => col !== undefined)
+		const total_fixed_width = columns.reduce((sum, col) => sum + (col.is_pct ? 0 : col.width), 0)
+		const total_percent_pct = columns.reduce((sum, col) => sum + (col.is_pct ? col.width : 0), 0)
+		const container_width = tracklist_element?.clientWidth ?? total_fixed_width
+		const total_percent_width = container_width - total_fixed_width
+		let offset = 0
+		return columns.map((col) => {
+			col = { ...col }
+			if (col.is_pct) {
+				const pct = col.width / total_percent_pct
+				col.width = pct * total_percent_width
+			}
+			col.offset = offset
+			offset += col.width
+			return col
+		})
 	}
 	function save_columns() {
 		view_options.columns = columns.map((col) => col.key)
@@ -425,7 +445,8 @@
 			<div
 				class="c {column.key}"
 				class:sort={$sort_key === column.key}
-				style:width={column.width}
+				style:width="{column.width}px"
+				style:translate="{column.offset}px 0"
 				role="button"
 				on:click={() => {
 					if (tracks_page.playlistKind === 'special' && column.key === 'index') {
@@ -468,65 +489,71 @@
 		<VirtualListBlock
 			bind:this={virtual_list}
 			items={tracks_page.itemIds}
-			get_key={(item) => item}
 			item_height={24}
 			{scroll_container}
-			let:item={item_id}
-			let:i
+			let:visible_indexes
 			buffer={5}
 		>
-			{@const { id: track_id, track } = get_item(item_id)}
-			{#if track !== null}
-				<!-- svelte-ignore a11y-click-events-have-key-events -->
-				<!-- svelte-ignore a11y-interactive-supports-focus -->
-				<div
-					class="row"
-					role="row"
-					on:dblclick={(e) => double_click(e, i)}
-					on:mousedown={(e) => selection.handle_mousedown(e, i)}
-					on:contextmenu={(e) => selection.handle_contextmenu(e, i)}
-					on:click={(e) => selection.handle_click(e, i)}
-					draggable="true"
-					on:dragstart={on_drag_start}
-					on:dragover={(e) => on_drag_over(e, i)}
-					on:drop={drop_handler}
-					on:dragend={drag_end_handler}
-					class:odd={i % 2 === 0}
-					class:selected={$selection.has(item_id)}
-					class:playing={track_id === $playing_id}
-				>
-					{#each columns as column}
-						<div class="c {column.key}" style:width={column.width}>
-							{#if column.key === 'index'}
-								{#if track_id === $playing_id}
-									<svg
-										class="playing-icon inline"
-										xmlns="http://www.w3.org/2000/svg"
-										height="24"
-										viewBox="0 0 24 24"
-										width="24"
-									>
-										<path d="M0 0h24v24H0z" fill="none" />
-										<path
-											d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"
-										/>
-									</svg>
+			{#each visible_indexes as i (tracks_page.itemIds[i])}
+				{@const item_id = tracks_page.itemIds[i]}
+				{@const { id: track_id, track } = get_item(item_id)}
+				{#if track !== null}
+					<!-- svelte-ignore a11y-click-events-have-key-events -->
+					<!-- svelte-ignore a11y-interactive-supports-focus -->
+					<div
+						class="row"
+						role="row"
+						style:translate="0 {i * 24}px"
+						on:dblclick={(e) => double_click(e, i)}
+						on:mousedown={(e) => selection.handle_mousedown(e, i)}
+						on:contextmenu={(e) => selection.handle_contextmenu(e, i)}
+						on:click={(e) => selection.handle_click(e, i)}
+						draggable="true"
+						on:dragstart={on_drag_start}
+						on:dragover={(e) => on_drag_over(e, i)}
+						on:drop={drop_handler}
+						on:dragend={drag_end_handler}
+						class:odd={i % 2 === 0}
+						class:selected={$selection.has(item_id)}
+						class:playing={track_id === $playing_id}
+					>
+						{#each columns as column}
+							<div
+								class="c {column.key}"
+								style:width="{column.width}px"
+								style:translate="{column.offset}px 0"
+							>
+								{#if column.key === 'index'}
+									{#if track_id === $playing_id}
+										<svg
+											class="playing-icon inline"
+											xmlns="http://www.w3.org/2000/svg"
+											height="24"
+											viewBox="0 0 24 24"
+											width="24"
+										>
+											<path d="M0 0h24v24H0z" fill="none" />
+											<path
+												d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"
+											/>
+										</svg>
+									{:else}
+										{i + 1}
+									{/if}
+								{:else if column.key === 'duration'}
+									{track.duration ? get_duration(track.duration) : ''}
+								{:else if column.key === 'dateAdded'}
+									{format_date(track.dateAdded)}
+								{:else if column.key === 'image'}
+									<Cover {track} />
 								{:else}
-									{i + 1}
+									{track[column.key] || ''}
 								{/if}
-							{:else if column.key === 'duration'}
-								{track.duration ? get_duration(track.duration) : ''}
-							{:else if column.key === 'dateAdded'}
-								{format_date(track.dateAdded)}
-							{:else if column.key === 'image'}
-								<Cover {track} />
-							{:else}
-								{track[column.key] || ''}
-							{/if}
-						</div>
-					{/each}
-				</div>
-			{/if}
+							</div>
+						{/each}
+					</div>
+				{/if}
+			{/each}
 		</VirtualListBlock>
 		<div class="drag-line" class:hidden={drag_to_index === null} bind:this={drag_line}></div>
 	</div>
@@ -548,6 +575,7 @@
 		background-color: rgba(0, 0, 0, 0.01)
 		overflow: hidden
 		.table-header
+			position: relative
 			.c
 				overflow: visible
 				*
@@ -562,20 +590,20 @@
 			&.desc .c.sort span::after
 				content: '▼'
 	.row
-		display: flex
-		max-width: 100%
+		width: 100%
 		$row-height: 24px
 		height: $row-height
 		font-size: 12px
 		line-height: $row-height
 		box-sizing: border-box
-		position: relative
+		position: absolute
 		&.playing.selected
 			color: #ffffff
 		&.playing
 			color: #00ffff
 	.c
-		display: inline-block
+		display: block
+		position: absolute
 		vertical-align: top
 		width: 100%
 		white-space: nowrap
