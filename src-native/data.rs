@@ -46,7 +46,7 @@ impl Data {
 			println!("Starting in dev mode");
 		}
 
-		let library_dir;
+		let mut library_dir;
 		let cache_dir;
 		let local_data_dir;
 		if is_dev {
@@ -65,11 +65,11 @@ impl Data {
 				.context("Local data folder not found")?
 				.join("space.kasper.ferrum");
 		};
+		if let Some(library_path) = library_path {
+			library_dir = PathBuf::from(library_path);
+		}
 		let paths = Paths {
-			library_dir: match library_path {
-				Some(path) => PathBuf::from(path),
-				None => library_dir.clone(),
-			},
+			library_dir: library_dir.clone(),
 			tracks_dir: library_dir.join("Tracks"),
 			library_json: library_dir.join("Library.json"),
 			cache_dir: cache_dir.clone(),
