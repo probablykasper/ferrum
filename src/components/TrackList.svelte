@@ -398,6 +398,8 @@
 			if (track === null) return null
 			return {
 				...track,
+				duration: track.duration ? get_duration(track.duration) : '',
+				dateAdded: format_date(track.dateAdded),
 				index: i + 1,
 				odd: i % 2 === 0 ? 'odd' : null,
 			}
