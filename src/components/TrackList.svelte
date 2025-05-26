@@ -39,7 +39,6 @@
 	import { onDestroy, onMount } from 'svelte'
 	import { dragged } from '../lib/drag-drop'
 	import * as dragGhost from './DragGhost.svelte'
-	import VirtualListBlock, { scroll_container_keydown } from './VirtualListBlock.svelte'
 	import type { ItemId, Track, TracksPage } from 'ferrum-addon/addon'
 	import Cover from './Cover.svelte'
 	import Header from './Header.svelte'
@@ -138,6 +137,17 @@
 		if (result.response === 0) {
 			delete_tracks_with_item_ids(item_ids)
 		}
+	}
+	function scroll_container_keydown(e: KeyboardEvent & { currentTarget: HTMLElement }) {
+		let prevent = true
+		const scroll_area = e.currentTarget.querySelector('.vertical-inner.scroll-rgRow')
+		if (!scroll_area) return
+		if (e.key === 'Home') scroll_area.scrollTop = 0
+		else if (e.key === 'End') scroll_area.scrollTop = scroll_area.scrollHeight
+		else if (e.key === 'PageUp') scroll_area.scrollTop -= scroll_area.clientHeight
+		else if (e.key === 'PageDown') scroll_area.scrollTop += scroll_area.clientHeight
+		else prevent = false
+		if (prevent) e.preventDefault()
 	}
 	// async function keydown(e: KeyboardEvent) {
 	// 	if (check_shortcut(e, 'Enter')) {
@@ -464,11 +474,15 @@
 		columns = load_columns()
 	}}
 />
+<!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
 	bind:this={container_el}
 	class="grow"
 	{@attach (element) => {
 		element.appendChild(grid)
+	}}
+	onkeydown={(e) => {
+		scroll_container_keydown(e)
 	}}
 ></div>
 
@@ -525,7 +539,6 @@
 		class="main-focus-element relative h-full overflow-y-auto outline-none"
 		tabindex="0"
 		on:mousedown|self={() => selection.clear()}
-		on:keydown={scroll_container_keydown}
 		on:keydown={keydown}
 	>
 		<VirtualListBlock
