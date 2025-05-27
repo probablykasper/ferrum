@@ -404,32 +404,26 @@
 	grid.hideAttribution = true
 	grid.rowClass = 'row_class'
 	$: grid.columns = columns
-	$: tracks_data = tracks_page.itemIds
+	$: grid.source = tracks_page.itemIds
 		.map((item_id, i) => {
-			const track = get_item(item_id).track
+			const { track } = get_item(item_id)
 			if (track === null) return null
+			let row_class = []
+			if (i % 2 === 0) {
+				row_class.push('odd')
+			}
+			if (selection.items.has(item_id)) {
+				row_class.push(' selected')
+			}
 			return {
 				...track,
-				item_id,
 				duration: track.duration ? get_duration(track.duration) : '',
 				dateAdded: format_date(track.dateAdded),
+				index: i + 1,
+				row_class: row_class.trim(),
 			}
 		})
 		.filter((track) => track !== null)
-	$: grid.source = tracks_data.map((track, i) => {
-		let row_class = ''
-		if (i % 2 === 0) {
-			row_class += 'odd'
-		}
-		if (selection.items.has(track.item_id)) {
-			row_class += ' selected'
-		}
-		return {
-			...track,
-			index: i + 1,
-			row_class: row_class.trim(),
-		}
-	})
 
 	onMount(() => {
 		tracklist_actions.scroll_to_index = (index) => {
@@ -454,7 +448,7 @@
 		for (const row of rows) {
 			const row_index = parseInt(row.getAttribute('data-rgrow') ?? '')
 			if (Number.isInteger(row_index)) {
-				const is_selected = selection.items.has(tracks_data[row_index].item_id)
+				const is_selected = selection.items.has(tracks_page.itemIds[row_index])
 				row.classList.toggle('selected', is_selected)
 			} else {
 				throw new Error(`Row index ${row_index} not integer`)
