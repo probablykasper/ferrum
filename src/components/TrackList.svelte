@@ -55,6 +55,7 @@
 
 	export let params: { playlist_id: string }
 	$: $current_playlist_id = params.playlist_id
+	const item_height = 24
 
 	let tracks_page = get_tracks_page({
 		playlistId: params.playlist_id,
@@ -394,8 +395,8 @@
 	const grid = document.createElement('revo-grid')
 	grid.setAttribute('theme', 'darkCompact')
 	grid.readonly = true
-	grid.rowSize = 24
-	grid.style.lineHeight = '24px'
+	grid.rowSize = item_height
+	grid.style.lineHeight = 'item_height' + 'px'
 	grid.canFocus = false
 	grid.resize = false
 	grid.canDrag = false
@@ -424,6 +425,23 @@
 			...track,
 			index: i + 1,
 			row_class,
+		}
+	})
+
+	onMount(() => {
+		tracklist_actions.scroll_to_index = (index) => {
+			const dummy = document.createElement('div')
+			dummy.style.height = item_height + 'px'
+			dummy.style.position = 'absolute'
+			dummy.style.top = index * item_height + 'px'
+			const scroll_area = grid.querySelector('.vertical-inner.scroll-rgRow')
+			if (!scroll_area) {
+				throw new Error('Scroll area not found')
+			}
+			// eslint-disable-next-line svelte/no-dom-manipulating
+			scroll_area.prepend(dummy)
+			dummy.scrollIntoView({ behavior: 'instant', block: 'nearest' })
+			dummy.remove()
 		}
 	})
 
