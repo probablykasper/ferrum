@@ -48,7 +48,6 @@
 	import type { SelectedTracksAction } from '@/electron/typed_ipc'
 	import { defineCustomElement } from '@revolist/revogrid/standalone'
 	import type { ColumnRegular } from '@revolist/revogrid'
-	import playing_svg from '@/assets/playing.svg?raw'
 
 	defineCustomElement()
 
@@ -475,15 +474,6 @@
 				throw new Error(`Row index ${row_index} not integer`)
 			}
 			const id = source_rows[row_index].track_id
-			const is_playing = id === $playing_id
-			const index_cell = row.querySelector('.rgCell.index')
-			if (index_cell) {
-				if (row.classList.contains('playing') && !is_playing) {
-					index_cell.innerHTML = String(row_index + 1)
-				} else if (!row.classList.contains('playing') && is_playing) {
-					index_cell.innerHTML = playing_svg
-				}
-			}
 			row.classList.toggle('playing', id === $playing_id)
 		}
 	}
@@ -712,7 +702,6 @@
 						padding-left: 0px
 						padding-right: 10px
 						text-align: right
-						flex-shrink: 0
 				.rgRow
 					line-height: 24px
 					font-size: 12px
@@ -736,10 +725,20 @@
 	.grid-container:focus-within :global revo-grid
 		revogr-data .rgRow.selected
 			background-color: hsla(var(--hue), 70%, 46%, 1)
-	:global
-		svg.playing-icon
-			margin-left: auto
-			width: 16px
+	.grid-container :global
+		.playing > .index
+			background-repeat: no-repeat
+			background-size: 16px
+			background-position-y: center
+			background-position-x: calc(100% - 10px)
+			color: transparent
+			// #00ffff
+			background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2300ffff'%3E%3Cpath d='M0 0h24v24H0z' fill='none'/%3E%3Cpath d='M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z'/%3E%3C/svg%3E")
+		.playing.selected > .index
+			// #ffffff
+			background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ffffff'%3E%3Cpath d='M0 0h24v24H0z' fill='none'/%3E%3Cpath d='M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z'/%3E%3C/svg%3E")
+
+
 	// .tracklist
 	// 	display: flex
 	// 	flex-direction: column
