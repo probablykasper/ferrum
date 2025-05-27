@@ -410,6 +410,7 @@
 		display: flex
 		pointer-events: none
 		overflow: hidden
+		z-index: 1
 	.shadow
 		height: 100%
 		width: 20px
