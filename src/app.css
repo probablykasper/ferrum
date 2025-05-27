@@ -3,6 +3,9 @@
 input:focus-visible {
 	outline: none;
 }
+input::placeholder {
+	opacity: 0.5;
+}
 
 @theme {
 	--default-transition-timing-function: cubic-bezier(0.33, 1, 0.68, 1); /* cubic-out */
