@@ -399,29 +399,41 @@
 	const grid = document.createElement('revo-grid')
 	grid.setAttribute('theme', 'darkCompact')
 	grid.readonly = true
-	$: grid.columns = columns
 	grid.rowSize = 24
 	grid.style.lineHeight = '24px'
-	const tracks = tracks_page.itemIds
-		.map((item_id, i) => {
-			const track = get_item(item_id).track
-			if (track === null) return null
-			return {
-				...track,
-				duration: track.duration ? get_duration(track.duration) : '',
-				dateAdded: format_date(track.dateAdded),
-				index: i + 1,
-				odd: i % 2 === 0 ? 'odd' : null,
-			}
-		})
-		.filter((track) => track !== null)
-	grid.source = tracks
 	grid.canFocus = false
 	grid.resize = false
 	grid.canDrag = false
 	grid.canMoveColumns = false
 	grid.hideAttribution = true
-	grid.rowClass = 'odd'
+	grid.rowClass = 'row_class'
+	$: grid.columns = columns
+	$: tracks_data = tracks_page.itemIds
+		.map((item_id, i) => {
+			const track = get_item(item_id).track
+			if (track === null) return null
+			return {
+				...track,
+				item_id,
+				duration: track.duration ? get_duration(track.duration) : '',
+				dateAdded: format_date(track.dateAdded),
+			}
+		})
+		.filter((track) => track !== null)
+	$: grid.source = tracks_data.map((track, i) => {
+		let row_class = ''
+		if (i % 2 === 0) {
+			row_class += 'odd'
+		}
+		if ($selection.has(track.item_id)) {
+			row_class += ' selected'
+		}
+		return {
+			...track,
+			index: i + 1,
+			row_class,
+		}
+	})
 
 	// let col_container: HTMLElement
 	// let col_drag_line: HTMLElement
@@ -462,6 +474,20 @@
 	// function col_drag_end_handler() {
 	// 	col_drag_to_index = null
 	// }
+
+	function get_row(e: Event) {
+		if (!(e.target instanceof Element)) {
+			return null
+		}
+		const row = e.target?.closest('[data-rgrow]')
+		const row_index_str = parseInt(row?.getAttribute('data-rgrow') ?? '')
+		if (!Number.isInteger(row_index_str)) {
+			return null
+		}
+		return {
+			index: row_index_str,
+		}
+	}
 </script>
 
 <Header
@@ -477,12 +503,27 @@
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
 	bind:this={container_el}
-	class="grow"
+	class="grid-container grow"
 	{@attach (element) => {
 		element.appendChild(grid)
 	}}
 	onkeydown={(e) => {
 		scroll_container_keydown(e)
+	}}
+	onmousedown={(e) => {
+		if (e.target instanceof HTMLElement && e.target.tagName === 'REVOGR-VIEWPORT-SCROLL') {
+			selection.clear()
+			return
+		}
+		const row = get_row(e)
+		if (row) {
+			selection.handle_mousedown(e, row.index)
+			setTimeout(() => {
+				// Prevent cell focus
+				grid.focus()
+			})
+			return
+		}
 	}}
 ></div>
 
@@ -538,7 +579,6 @@
 		bind:this={scroll_container}
 		class="main-focus-element relative h-full overflow-y-auto outline-none"
 		tabindex="0"
-		on:mousedown|self={() => selection.clear()}
 		on:keydown={keydown}
 	>
 		<VirtualListBlock
@@ -557,7 +597,6 @@
 					class="row"
 					role="row"
 					on:dblclick={(e) => double_click(e, i)}
-					on:mousedown={(e) => selection.handle_mousedown(e, i)}
 					on:contextmenu={(e) => selection.handle_contextmenu(e, i)}
 					on:click={(e) => selection.handle_click(e, i)}
 					draggable="true"
@@ -565,7 +604,6 @@
 					on:dragover={(e) => on_drag_over(e, i)}
 					on:drop={drop_handler}
 					on:dragend={drag_end_handler}
-					class:selected={$selection.has(item_id)}
 					class:playing={track_id === $playing_id}
 				>
 					{#each columns as column}
@@ -606,8 +644,9 @@
 </div> -->
 
 <style lang="sass">
-	:global revo-grid[theme=darkCompact]
+	.grid-container :global revo-grid
 			--revo-grid-focused-bg: hsla(var(--hue), 70%, 46%, 1)
+			outline: none
 			revogr-data, revogr-header
 				.rgCell, .rgHeaderCell
 					padding: 0 5px
@@ -626,6 +665,8 @@
 					box-shadow: none
 				.rgRow.odd
 					background-color: hsla(0, 0%, 90%, 0.06)
+				.rgRow.selected
+					background-color: hsla(var(--hue), 20%, 42%, 0.8)
 			revogr-header .header-rgRow
 				height: 24px
 				line-height: 24px
@@ -634,11 +675,9 @@
 				font-weight: 400
 			revogr-header .rgHeaderCell .resizable
 				display: none
-	// .selected
-	// 	background-color: hsla(var(--hue), 20%, 42%, 0.8)
-	// :global(:focus)
-	// 	.selected
-	// 		background-color: hsla(var(--hue), 70%, 46%, 1)
+	.grid-container:focus-within :global revo-grid
+		revogr-data .rgRow.selected
+			background-color: hsla(var(--hue), 70%, 46%, 1)
 	// .tracklist
 	// 	display: flex
 	// 	flex-direction: column
