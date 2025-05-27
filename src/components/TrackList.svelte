@@ -122,11 +122,11 @@
 		group_album_tracks.set(checked)
 	})
 
-	// function double_click(e: MouseEvent, index: number) {
-	// 	if (e.button === 0 && check_mouse_shortcut(e)) {
-	// 		play_row(index)
-	// 	}
-	// }
+	function double_click(e: MouseEvent, index: number) {
+		if (e.button === 0 && check_mouse_shortcut(e)) {
+			play_row(index)
+		}
+	}
 	async function delete_tracks(item_ids: ItemId[]) {
 		const s = selection.items.size > 1 ? 's' : ''
 		const result = await ipc_renderer.invoke('showMessageBox', false, {
@@ -558,6 +558,24 @@
 			return
 		}
 	}}
+	onclick={(e) => {
+		const row = get_row(e)
+		if (row) {
+			selection.handle_click(e, row.index)
+		}
+	}}
+	ondblclick={(e) => {
+		const row = get_row(e)
+		if (row) {
+			double_click(e, row.index)
+		}
+	}}
+	oncontextmenu={(e) => {
+		const row = get_row(e)
+		if (row) {
+			selection.handle_contextmenu(e, row.index)
+		}
+	}}
 ></div>
 
 <!-- <div
@@ -628,9 +646,6 @@
 				<div
 					class="row"
 					role="row"
-					on:dblclick={(e) => double_click(e, i)}
-					on:contextmenu={(e) => selection.handle_contextmenu(e, i)}
-					on:click={(e) => selection.handle_click(e, i)}
 					draggable="true"
 					on:dragstart={on_drag_start}
 					on:dragover={(e) => on_drag_over(e, i)}
