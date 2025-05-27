@@ -265,7 +265,18 @@
 	// 	virtual_list.refresh()
 	// }
 
-	const all_columns: ColumnRegular[] = [
+	type ColumnDef = ColumnRegular &
+		(
+			| {
+					width_px: number
+					width_pct?: undefined
+			  }
+			| {
+					width_pct: number
+					width_px?: undefined
+			  }
+		)
+	const all_columns: ColumnDef[] = [
 		// sorted alphabetically
 		{ name: '#', prop: 'index', width_px: 46 },
 		// { name: 'Size', prop: 'size' },
@@ -334,8 +345,12 @@
 		const container_width = container_el?.clientWidth ?? total_fixed_width
 		const total_percent_width = container_width - total_fixed_width
 		return columns.map((col) => {
-			const size_pct = col.width_pct / total_percent_pct
-			const size = (col.width_px ?? size_pct * total_percent_width) || 0
+			let size: number
+			if (col.width_px !== undefined) {
+				size = col.width_px
+			} else {
+				size = (col.width_pct / total_percent_pct) * total_percent_width
+			}
 			return {
 				...col,
 				name: col.name === 'Image' ? '' : col.name,
