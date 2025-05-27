@@ -149,45 +149,45 @@
 		else prevent = false
 		if (prevent) e.preventDefault()
 	}
-	// async function keydown(e: KeyboardEvent) {
-	// 	if (check_shortcut(e, 'Enter')) {
-	// 		let first_item_id = selection.find_first_index()
-	// 		if (first_item_id !== null) {
-	// 			play_row(first_item_id)
-	// 		} else if (!$playing_id) {
-	// 			play_row(0)
-	// 		}
-	// 	} else if (
-	// 		check_shortcut(e, 'Backspace') &&
-	// 		selection.items.size > 0 &&
-	// 		$filter === '' &&
-	// 		tracks_page.playlistKind === 'playlist'
-	// 	) {
-	// 		e.preventDefault()
-	// 		const s = selection.items.size > 1 ? 's' : ''
-	// 		const result = ipc_renderer.invoke('showMessageBox', false, {
-	// 			type: 'info',
-	// 			message: `Remove ${selection.items.size} song${s} from the list?`,
-	// 			buttons: ['Remove Song' + s, 'Cancel'],
-	// 			defaultId: 0,
-	// 		})
-	// 		if ((await result).response === 0) {
-	// 			remove_from_playlist(params.playlist_id, Array.from(selection.items))
-	// 		}
-	// 	} else if (check_shortcut(e, 'Backspace', { cmd_or_ctrl: true }) && $selection.size > 0) {
-	// 		e.preventDefault()
-	// 		handle_action('Delete from Library')
-	// 	} else {
-	// 		selection.handle_keydown(e)
-	// 		return
-	// 	}
-	// 	e.preventDefault()
-	// }
+	async function keydown(e: KeyboardEvent) {
+		if (check_shortcut(e, 'Enter')) {
+			let first_item_id = selection.find_first_index()
+			if (first_item_id !== null) {
+				play_row(first_item_id)
+			} else if (!$playing_id) {
+				play_row(0)
+			}
+		} else if (
+			check_shortcut(e, 'Backspace') &&
+			selection.items.size > 0 &&
+			$filter === '' &&
+			tracks_page.playlistKind === 'playlist'
+		) {
+			e.preventDefault()
+			const s = selection.items.size > 1 ? 's' : ''
+			const result = ipc_renderer.invoke('showMessageBox', false, {
+				type: 'info',
+				message: `Remove ${selection.items.size} song${s} from the list?`,
+				buttons: ['Remove Song' + s, 'Cancel'],
+				defaultId: 0,
+			})
+			if ((await result).response === 0) {
+				remove_from_playlist(params.playlist_id, Array.from(selection.items))
+			}
+		} else if (check_shortcut(e, 'Backspace', { cmd_or_ctrl: true }) && $selection.size > 0) {
+			e.preventDefault()
+			handle_action('Delete from Library')
+		} else {
+			selection.handle_keydown(e)
+			return
+		}
+		e.preventDefault()
+	}
 
-	// function play_row(index: number) {
-	// 	const all_track_ids = get_track_ids(tracks_page.itemIds)
-	// 	new_playback_instance(all_track_ids, index)
-	// }
+	function play_row(index: number) {
+		const all_track_ids = get_track_ids(tracks_page.itemIds)
+		new_playback_instance(all_track_ids, index)
+	}
 
 	// let drag_line: HTMLElement
 	// let drag_item_ids: ItemId[] = []
@@ -263,11 +263,6 @@
 	// $: if (virtual_list) {
 	// 	virtual_list.refresh()
 	// }
-
-	// let scroll_container: HTMLElement
-	// onMount(() => {
-	// 	tracklist_actions.scroll_to_index = virtual_list.scroll_to_index
-	// })
 
 	const all_columns: ColumnRegular[] = [
 		// sorted alphabetically
@@ -520,6 +515,7 @@
 	}}
 	onkeydown={(e) => {
 		scroll_container_keydown(e)
+		keydown(e)
 	}}
 	onmousedown={(e) => {
 		if (e.target instanceof HTMLElement && e.target.tagName === 'REVOGR-VIEWPORT-SCROLL') {
@@ -590,7 +586,6 @@
 		bind:this={scroll_container}
 		class="main-focus-element relative h-full overflow-y-auto outline-none"
 		tabindex="0"
-		on:keydown={keydown}
 	>
 		<VirtualListBlock
 			bind:this={virtual_list}
