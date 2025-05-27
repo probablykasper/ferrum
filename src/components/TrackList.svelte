@@ -425,15 +425,26 @@
 		if (i % 2 === 0) {
 			row_class += 'odd'
 		}
-		if ($selection.has(track.item_id)) {
-			row_class += ' selected'
-		}
 		return {
 			...track,
 			index: i + 1,
 			row_class,
 		}
 	})
+
+	$: $selection, apply_selection(selection)
+	function apply_selection(selection: SvelteSelection<ItemId>) {
+		const rows = grid.querySelectorAll('.rgRow')
+		for (const row of rows) {
+			const row_index = parseInt(row.getAttribute('data-rgrow') ?? '')
+			if (Number.isInteger(row_index)) {
+				const is_selected = selection.items.has(tracks_data[row_index].item_id)
+				row.classList.toggle('selected', is_selected)
+			} else {
+				throw new Error(`Row index ${row_index} not integer`)
+			}
+		}
+	}
 
 	// let col_container: HTMLElement
 	// let col_drag_line: HTMLElement
