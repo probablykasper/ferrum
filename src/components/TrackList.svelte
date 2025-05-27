@@ -48,6 +48,7 @@
 	import type { SelectedTracksAction } from '@/electron/typed_ipc'
 	import { defineCustomElement } from '@revolist/revogrid/standalone'
 	import type { ColumnRegular } from '@revolist/revogrid'
+	import playing_svg from '@/assets/playing.svg?raw'
 
 	defineCustomElement()
 
@@ -404,26 +405,36 @@
 	grid.hideAttribution = true
 	grid.rowClass = 'row_class'
 	$: grid.columns = columns
-	$: grid.source = tracks_page.itemIds
-		.map((item_id, i) => {
-			const { track } = get_item(item_id)
-			if (track === null) return null
-			let row_class = []
-			if (i % 2 === 0) {
-				row_class.push('odd')
-			}
-			if (selection.items.has(item_id)) {
-				row_class.push(' selected')
-			}
-			return {
-				...track,
-				duration: track.duration ? get_duration(track.duration) : '',
-				dateAdded: format_date(track.dateAdded),
-				index: i + 1,
-				row_class: row_class.trim(),
-			}
-		})
-		.filter((track) => track !== null)
+	$: source_rows = to_source_rows(tracks_page.itemIds)
+	$: grid.source = source_rows
+
+	/** This is a function because we need it to be non-reactive */
+	function to_source_rows(item_ids: ItemId[]) {
+		return item_ids
+			.map((item_id, i) => {
+				const { track, id } = get_item(item_id)
+				if (track === null) return null
+				let row_class = ''
+				if (i % 2 === 0) {
+					row_class += 'odd'
+				}
+				if (selection.items.has(item_id)) {
+					row_class += ' selected'
+				}
+				if (id === $playing_id) {
+					row_class += ' playing'
+				}
+				return {
+					...track,
+					track_id: id,
+					duration: track.duration ? get_duration(track.duration) : '',
+					dateAdded: format_date(track.dateAdded),
+					index: i + 1,
+					row_class: row_class.trim(),
+				}
+			})
+			.filter((track) => track !== null)
+	}
 
 	onMount(() => {
 		tracklist_actions.scroll_to_index = (index) => {
@@ -447,18 +458,44 @@
 		const rows = grid.querySelectorAll('.rgRow')
 		for (const row of rows) {
 			const row_index = parseInt(row.getAttribute('data-rgrow') ?? '')
-			if (Number.isInteger(row_index)) {
-				const is_selected = selection.items.has(tracks_page.itemIds[row_index])
-				row.classList.toggle('selected', is_selected)
-			} else {
+			if (!Number.isInteger(row_index)) {
 				throw new Error(`Row index ${row_index} not integer`)
 			}
+			const is_selected = selection.items.has(tracks_page.itemIds[row_index])
+			row.classList.toggle('selected', is_selected)
 		}
 	}
+
+	$: $playing_id, apply_playing()
+	function apply_playing() {
+		const rows = grid.querySelectorAll('.rgRow')
+		for (const row of rows) {
+			const row_index = parseInt(row.getAttribute('data-rgrow') ?? '')
+			if (!Number.isInteger(row_index)) {
+				throw new Error(`Row index ${row_index} not integer`)
+			}
+			const id = source_rows[row_index].track_id
+			const is_playing = id === $playing_id
+			const index_cell = row.querySelector('.rgCell.index')
+			if (index_cell) {
+				if (row.classList.contains('playing') && !is_playing) {
+					index_cell.innerHTML = String(row_index + 1)
+				} else if (!row.classList.contains('playing') && is_playing) {
+					index_cell.innerHTML = playing_svg
+				}
+			}
+			row.classList.toggle('playing', id === $playing_id)
+		}
+	}
+
+	function apply_classes() {
+		apply_selection()
+		apply_playing()
+	}
 	onMount(() => {
-		// apply_selection when scrolling and such
-		grid.addEventListener('afterrender', apply_selection)
-		return () => grid.removeEventListener('afterrender', apply_selection)
+		// apply classes when scrolling and such
+		grid.addEventListener('afterrender', apply_classes)
+		return () => grid.removeEventListener('afterrender', apply_classes)
 	})
 
 	// let col_container: HTMLElement
@@ -645,35 +682,11 @@
 					on:dragover={(e) => on_drag_over(e, i)}
 					on:drop={drop_handler}
 					on:dragend={drag_end_handler}
-					class:playing={track_id === $playing_id}
 				>
 					{#each columns as column}
 						<div class="c {column.key}" style:width={column.width}>
-							{#if column.key === 'index'}
-								{#if track_id === $playing_id}
-									<svg
-										class="playing-icon inline"
-										xmlns="http://www.w3.org/2000/svg"
-										height="24"
-										viewBox="0 0 24 24"
-										width="24"
-									>
-										<path d="M0 0h24v24H0z" fill="none" />
-										<path
-											d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"
-										/>
-									</svg>
-								{:else}
-									{i + 1}
-								{/if}
-							{:else if column.key === 'duration'}
-								{track.duration ? get_duration(track.duration) : ''}
-							{:else if column.key === 'dateAdded'}
-								{format_date(track.dateAdded)}
 							{:else if column.key === 'image'}
 								<Cover {track} />
-							{:else}
-								{track[column.key] || ''}
 							{/if}
 						</div>
 					{/each}
@@ -708,6 +721,10 @@
 					background-color: hsla(0, 0%, 90%, 0.06)
 				.rgRow.selected
 					background-color: hsla(var(--hue), 20%, 42%, 0.8)
+				.rgRow.playing.selected
+					--revo-grid-text: #ffffff
+				.rgRow.playing
+					--revo-grid-text: #00ffff
 			revogr-header .header-rgRow
 				height: 24px
 				line-height: 24px
@@ -719,6 +736,10 @@
 	.grid-container:focus-within :global revo-grid
 		revogr-data .rgRow.selected
 			background-color: hsla(var(--hue), 70%, 46%, 1)
+	:global
+		svg.playing-icon
+			margin-left: auto
+			width: 16px
 	// .tracklist
 	// 	display: flex
 	// 	flex-direction: column
@@ -749,10 +770,6 @@
 	// 	line-height: $row-height
 	// 	box-sizing: border-box
 	// 	position: relative
-	// 	&.playing.selected
-	// 		color: #ffffff
-	// 	&.playing
-	// 		color: #00ffff
 	// .c
 	// 	display: inline-block
 	// 	vertical-align: top
@@ -762,13 +779,6 @@
 	// 	text-overflow: ellipsis
 	// 	padding-left: 5px
 	// 	padding-right: 5px
-	// .selected .index svg.playing-icon
-	// 	fill: var(--icon-color)
-	// .index
-	// 	svg.playing-icon
-	// 		fill: #00ffff
-	// 		width: 16px
-	// 		height: 100%
 	// .dateAdded
 	// 	font-variant-numeric: tabular-nums
 	// .drag-line
