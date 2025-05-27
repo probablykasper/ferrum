@@ -688,44 +688,39 @@
 </div> -->
 
 <style lang="sass">
-	.grid-container :global revo-grid
-			--revo-grid-focused-bg: hsla(var(--hue), 70%, 46%, 1)
-			outline: none
-			revogr-data, revogr-header
-				.rgCell, .rgHeaderCell
-					padding: 0 5px
-					&:first-child
-						padding-left: 10px
-					&:last-child
-						padding-right: 0px
-					&.index, &.playCount, &.skipCount, &.duration
-						padding-left: 0px
-						padding-right: 10px
-						text-align: right
-				.rgRow
-					line-height: 24px
-					font-size: 12px
-					box-shadow: none
-				.rgRow.odd
-					background-color: hsla(0, 0%, 90%, 0.06)
-				.rgRow.selected
-					background-color: hsla(var(--hue), 20%, 42%, 0.8)
-				.rgRow.playing.selected
-					--revo-grid-text: #ffffff
-				.rgRow.playing
-					--revo-grid-text: #00ffff
-			revogr-header .header-rgRow
-				height: 24px
-				line-height: 24px
-				font-size: 12px
-				box-shadow: none
-				font-weight: 400
-			revogr-header .rgHeaderCell .resizable
-				display: none
-	.grid-container:focus-within :global revo-grid
-		revogr-data .rgRow.selected
-			background-color: hsla(var(--hue), 70%, 46%, 1)
 	.grid-container :global
+		revo-grid
+			outline: none
+		.header-rgRow
+			height: 24px
+			line-height: 24px
+			font-size: 12px
+			box-shadow: none
+			font-weight: 400
+		.rgHeaderCell .resizable
+			display: none
+		.rgCell, .rgHeaderCell
+			padding: 0 5px
+			&:first-child
+				padding-left: 10px
+			&:last-child
+				padding-right: 0px
+			&.index, &.playCount, &.skipCount, &.duration
+				padding-left: 0px
+				padding-right: 10px
+				text-align: right
+		.rgRow
+			line-height: 24px
+			font-size: 12px
+			box-shadow: none
+		.rgRow.odd
+			background-color: hsla(0, 0%, 90%, 0.06)
+		.rgRow.selected
+			background-color: hsla(var(--hue), 20%, 42%, 0.8)
+		.rgRow.playing.selected
+			--revo-grid-text: #ffffff
+		.rgRow.playing
+			--revo-grid-text: #00ffff
 		.playing > .index
 			background-repeat: no-repeat
 			background-size: 16px
@@ -737,6 +732,9 @@
 		.playing.selected > .index
 			// #ffffff
 			background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ffffff'%3E%3Cpath d='M0 0h24v24H0z' fill='none'/%3E%3Cpath d='M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z'/%3E%3C/svg%3E")
+	.grid-container:focus-within :global
+		.rgRow.selected
+			background-color: hsla(var(--hue), 70%, 46%, 1)
 
 
 	// .tracklist
