@@ -269,9 +269,8 @@
 
 	let grid: HTMLRevoGridElement
 
-	type ColumnRefined = ColumnRegular & { prop: string }
-	type ColumnDef = ColumnRefined &
-		(
+	type ColumnRefined = ColumnRegular & { prop: string; left_offset: number }
+	type ColumnDef = ColumnRegular & { prop: string } & (
 			| {
 					width_px: number
 					width_pct?: undefined
@@ -389,6 +388,9 @@
 		'dateAdded',
 		'year',
 	]
+	if (view_options.columns.length === 0) {
+		view_options.columns = [...default_columns]
+	}
 	let columns: ColumnRefined[] = load_columns()
 	onMount(() => (columns = load_columns()))
 	function load_columns(): ColumnRefined[] {
@@ -403,6 +405,7 @@
 		const total_percent_pct = columns.reduce((sum, col) => sum + (col.width_pct || 0), 0)
 		const container_width = grid?.clientWidth ?? total_fixed_width
 		const total_percent_width = container_width - total_fixed_width
+		let left_offset = 0
 		return columns.map((col) => {
 			let size: number
 			if (col.width_px !== undefined) {
@@ -410,10 +413,16 @@
 			} else {
 				size = (col.width_pct / total_percent_pct) * total_percent_width
 			}
+			const this_left_offset = left_offset
+			left_offset += size
 			return {
 				...col,
 				name: col.name === 'Image' ? '' : col.name,
 				size,
+				left_offset: this_left_offset,
+				columnTemplate() {
+					return null
+				},
 				columnProperties() {
 					return { class: col.prop }
 				},
@@ -606,20 +615,6 @@
 			element: row,
 		}
 	}
-	function get_header_col(e: Event) {
-		if (!(e.target instanceof Element)) {
-			return null
-		}
-		const row = e.target?.closest('.rgHeaderCell[data-rgcol]')
-		const row_index_str = parseInt(row?.getAttribute('data-rgcol') ?? '')
-		if (!row || !Number.isInteger(row_index_str)) {
-			return null
-		}
-		return {
-			index: row_index_str,
-			element: row,
-		}
-	}
 
 	onMount(() => {
 		grid.addEventListener('aftergridinit', tracklist_actions.focus)
@@ -637,82 +632,94 @@
 		columns = load_columns()
 	}}
 />
-<!-- svelte-ignore a11y_no_static_element_interactions -->
-<revo-grid
-	bind:this={grid}
-	class="main-focus-element grid grow"
-	{@attach (grid: HTMLRevoGridElement) => {
-		grid.setAttribute('theme', 'darkCompact')
-		grid.readonly = true
-		grid.rowSize = item_height
-		grid.style.lineHeight = 'item_height' + 'px'
-		grid.canFocus = false
-		grid.resize = false
-		grid.canDrag = false
-		grid.canMoveColumns = false
-		grid.hideAttribution = true
-		grid.rowClass = 'row_class'
-	}}
-	onkeydown={(e: KeyboardEvent & { currentTarget: Element }) => {
-		scroll_container_keydown(e)
-		keydown(e)
-	}}
-	onmousedown={(e: MouseEvent) => {
-		if (e.target instanceof HTMLElement && e.target.tagName === 'REVOGR-VIEWPORT-SCROLL') {
-			selection.clear()
-			return
-		}
-		const row = get_row(e)
-		if (row) {
-			selection.handle_mousedown(e, row.index)
-			setTimeout(() => {
-				// Prevent cell focus
-				grid.focus()
-			})
-		}
-	}}
-	onclick={(e: MouseEvent) => {
-		const row = get_row(e)
-		if (row) {
-			selection.handle_click(e, row.index)
-		}
-	}}
-	ondblclick={(e: MouseEvent) => {
-		const row = get_row(e)
-		if (row) {
-			double_click(e, row.index)
-		}
-	}}
-	oncontextmenu={(e: MouseEvent) => {
-		const row = get_row(e)
-		if (row) {
-			selection.handle_contextmenu(e, row.index)
-			return
-		}
-		const header_col = get_header_col(e)
-		if (header_col) {
-			on_column_context_menu()
-		}
-	}}
-	ondragstart={on_drag_start}
-	ondragover={(e: DragEvent) => {
-		const row = get_row(e)
-		if (row) {
-			on_drag_over(e, row.element, row.index)
-		}
-	}}
-	ondrop={drop_handler}
-	ondragend={() => {
-		drag_to_index = null
-	}}
-	ondragleave={() => {
-		drag_to_index = null
-	}}
->
-	<div class="relative" slot="data-rgCol-rgRow">
-		<div class="drag-line" class:hidden={drag_to_index === null} bind:this={drag_line}></div>
+
+<div class="grid-container flex grow flex-col">
+	<div
+		class="row grid-header border-b border-b-slate-500/30"
+		class:desc={$sort_desc}
+		role="row"
+		oncontextmenu={on_column_context_menu}
+	>
+		{#each columns as column, i}
+			<div
+				class="rgCell {column.prop}"
+				style:width="{column.size}px"
+				style:translate="{column.left_offset}px 0"
+				role="button"
+			>
+				{column.prop === 'image' ? '' : column.name}
+			</div>
+		{/each}
 	</div>
-</revo-grid>
+
+	<!-- svelte-ignore a11y_no_static_element_interactions -->
+	<revo-grid
+		bind:this={grid}
+		class="main-focus-element grid grow"
+		{@attach (grid: HTMLRevoGridElement) => {
+			grid.setAttribute('theme', 'darkCompact')
+			grid.readonly = true
+			grid.rowSize = item_height
+			grid.style.lineHeight = 'item_height' + 'px'
+			grid.canFocus = false
+			grid.resize = false
+			grid.canDrag = false
+			grid.canMoveColumns = false
+			grid.hideAttribution = true
+			grid.rowClass = 'row_class'
+		}}
+		onkeydown={(e: KeyboardEvent & { currentTarget: Element }) => {
+			scroll_container_keydown(e)
+			keydown(e)
+		}}
+		onmousedown={(e: MouseEvent) => {
+			if (e.target instanceof HTMLElement && e.target.tagName === 'REVOGR-VIEWPORT-SCROLL') {
+				selection.clear()
+				return
+			}
+			const row = get_row(e)
+			if (row) {
+				selection.handle_mousedown(e, row.index)
+				setTimeout(() => {
+					// Prevent cell focus
+					grid.focus()
+				})
+			}
+		}}
+		onclick={(e: MouseEvent) => {
+			const row = get_row(e)
+			if (row) {
+				selection.handle_click(e, row.index)
+			}
+		}}
+		ondblclick={(e: MouseEvent) => {
+			const row = get_row(e)
+			if (row) {
+				double_click(e, row.index)
+			}
+		}}
+		oncontextmenu={(e: MouseEvent) => {
+			const row = get_row(e)
+			if (row) {
+				selection.handle_contextmenu(e, row.index)
+			}
+		}}
+		ondragstart={on_drag_start}
+		ondragover={(e: DragEvent) => {
+			const row = get_row(e)
+			if (row) {
+				on_drag_over(e, row.element, row.index)
+			}
+		}}
+		ondrop={drop_handler}
+		ondragend={() => (drag_to_index = null)}
+		ondragleave={() => (drag_to_index = null)}
+	>
+		<div class="relative" slot="data-rgCol-rgRow">
+			<div class="drag-line" class:hidden={drag_to_index === null} bind:this={drag_line}></div>
+		</div>
+	</revo-grid>
+</div>
 
 <!-- <div
 	bind:this={tracklist_element}
@@ -769,18 +776,29 @@
 </div> -->
 
 <style lang="sass">
-	.grid :global
-		outline: none
-		min-height: 50px
-		.header-rgRow
+	.grid-header
+		position: relative
+		height: 24px
+		line-height: 24px
+		font-size: 12px
+		flex-shrink: 0
+		.rgCell
 			height: 24px
-			line-height: 24px
-			font-size: 12px
-			box-shadow: none
-			font-weight: 400
-		.rgHeaderCell .resizable
+			top: 0
+			left: 0
+			position: absolute
+			box-sizing: border-box
+			height: 100%
+			overflow: hidden
+			text-overflow: ellipsis
+			white-space: nowrap
+	.grid-container :global
+		revo-grid
+			outline: none
+			min-height: 50px
+		revogr-header
 			display: none
-		.rgCell, .rgHeaderCell
+		.rgCell
 			padding: 0 5px
 			&:first-child
 				padding-left: 10px
@@ -835,7 +853,7 @@
 		.playing.selected > .index
 			// #ffffff
 			background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ffffff'%3E%3Cpath d='M0 0h24v24H0z' fill='none'/%3E%3Cpath d='M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z'/%3E%3C/svg%3E")
-	.grid:focus-within :global
+	.grid-container:focus-within :global
 		.rgRow.selected
 			background-color: hsla(var(--hue), 70%, 46%, 1)
 
