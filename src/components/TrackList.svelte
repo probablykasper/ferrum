@@ -31,23 +31,28 @@
 		save_view_options,
 		get_track_by_item_id,
 		view_options,
+		paths,
 	} from '@/lib/data'
 	import { new_playback_instance, playing_id } from '../lib/player'
 	import { get_duration, format_date, check_mouse_shortcut, check_shortcut } from '../lib/helpers'
 	import { tracklist_actions } from '../lib/page'
-	import { ipc_listen, ipc_renderer } from '../lib/window'
+	import { ipc_listen, ipc_renderer, join_paths } from '../lib/window'
 	import { onDestroy, onMount } from 'svelte'
 	import { dragged } from '../lib/drag-drop'
 	import * as dragGhost from './DragGhost.svelte'
 	import type { ItemId, Track, TracksPage } from 'ferrum-addon/addon'
-	import Cover from './Cover.svelte'
 	import Header from './Header.svelte'
 	import { writable } from 'svelte/store'
 	import { SvelteSelection } from '@/lib/selection'
 	import { get_flattened_tracklists, handle_selected_tracks_action } from '@/lib/menus'
 	import type { SelectedTracksAction } from '@/electron/typed_ipc'
 	import { defineCustomElement } from '@revolist/revogrid/standalone'
-	import type { ColumnRegular } from '@revolist/revogrid'
+	import type {
+		BeforeRowRenderEvent,
+		ColumnCollection,
+		ColumnRegular,
+		RevoGridCustomEvent,
+	} from '@revolist/revogrid'
 
 	defineCustomElement()
 
@@ -298,7 +303,62 @@
 		{ name: 'Time', prop: 'duration', width_px: 50 },
 		{ name: 'Genre', prop: 'genre', width_pct: 0.65 },
 		{ name: 'Grouping', prop: 'grouping', width_pct: 0.65 },
-		{ name: 'Image', prop: 'image', width_px: 28 },
+		{
+			name: 'Image',
+			prop: 'image',
+			width_px: 28,
+
+			cellTemplate(create_element, props) {
+				const src = props.value
+				return create_element('img', {
+					src: src,
+					class: 'invisible',
+					onload(e: Event & { currentTarget: EventTarget & HTMLImageElement }) {
+						if (src !== e.currentTarget.src) return
+						const img = e.currentTarget
+						img.classList.remove('invisible', 'error', 'missing')
+						img.removeAttribute('title')
+					},
+					async onerror(e: Event & { currentTarget: EventTarget & HTMLImageElement }) {
+						// Yes this is dumb, but there's no way to get an error code from <img src="" />
+						const img = e.currentTarget
+						if (src !== img.src) return
+						img.classList.remove('invisible')
+						img.removeAttribute('title')
+						// 404 is an common expected result, so we start with that
+						img.classList.add('error', 'missing')
+						const new_error = await fetch(src)
+							.then(async (response) => {
+								if (response.status === 404) {
+									return '404'
+								}
+								const response_text = await response.text()
+								console.log(`Failed to load cover (${response.status}): ${response_text}`)
+								return response_text
+							})
+							.catch(() => {
+								return 'network'
+							})
+						if (src !== img.src) return
+						img.classList.toggle('missing', new_error === '404')
+						img.title = new_error
+					},
+					onmousedown(e: MouseEvent) {
+						e.stopPropagation()
+					},
+					onclick(e: MouseEvent & { currentTarget: EventTarget & HTMLImageElement }) {
+						const error = e.currentTarget.title
+						if (e.currentTarget.classList.contains('error')) {
+							ipc_renderer.invoke('showMessageBox', false, {
+								type: 'error',
+								message: 'Failed to load cover',
+								detail: error,
+							})
+						}
+					},
+				})
+			},
+		},
 		// { name: 'ImportedFrom', prop: 'importedFrom' },
 		// { name: 'Liked', prop: 'liked' },
 		{ name: 'Name', prop: 'name', width_pct: 1.7 },
@@ -444,6 +504,13 @@
 					duration: track.duration ? get_duration(track.duration) : '',
 					dateAdded: format_date(track.dateAdded),
 					index: i + 1,
+					image:
+						'app://trackimg/?path=' +
+						encodeURIComponent(join_paths(paths.tracksDir, track.file)) +
+						'&cache_db_path=' +
+						encodeURIComponent(paths.cacheDb) +
+						'&date_modified=' +
+						encodeURIComponent(track.dateModified),
 					row_class: row_class.trim(),
 				}
 			})
@@ -688,12 +755,6 @@
 					on:drop={drop_handler}
 					on:dragend={drag_end_handler}
 				>
-					{#each columns as column}
-						<div class="c {column.key}" style:width={column.width}>
-							{:else if column.key === 'image'}
-								<Cover {track} />
-							{/if}
-						</div>
 					{/each}
 				</div>
 			{/if}
@@ -724,6 +785,27 @@
 				padding-left: 0px
 				padding-right: 10px
 				text-align: right
+		.image
+			display: flex
+			align-items: center
+			img
+				display: block
+				object-fit: contain
+				height: 24px
+				width: 18px
+				padding: 3px 0
+			.error::before
+				content: ''
+				cursor: pointer
+				display: block
+				width: 100%
+				height: 100%
+				background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18 18" fill="%23ef4444"><path d="M9,4c-2.76,0 -5,2.24 -5,5c0,2.76 2.24,5 5,5c2.76,0 5,-2.24 5,-5c0,-2.76 -2.24,-5 -5,-5Zm0.5,7.5l-1,0l0,-1l1,0l0,1Zm0,-2l-1,0l0,-3l1,0l0,3Z"/></svg>')
+			.error.missing::before
+				cursor: default
+				background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18 18"><rect x="0" y="0" width="18" height="18" fill="%232b2c31" rx="2" ry="2"/><path fill="%2345464a" d="M12.667,5l-5.332,1.195l-0,4.347c-0.993,-0.197 -2.002,0.557 -2.002,1.384c0,0.713 0.557,1.074 1.162,1.074c0.718,-0 1.504,-0.509 1.505,-1.546l0,-3.633l4,-0.82l0,2.875c-0.992,-0.196 -2,0.554 -2,1.38c0,0.714 0.572,1.077 1.174,1.077c0.713,0 1.492,-0.508 1.493,-1.545l-0,-5.788Z"/></svg>');
+		.loading
+			visibility: hidden
 		.rgRow
 			line-height: 24px
 			font-size: 12px
@@ -742,6 +824,7 @@
 			background-position-y: center
 			background-position-x: calc(100% - 10px)
 			color: transparent
+			// We use background-image because setting it with innerHTML breaks row recycling updates
 			// #00ffff
 			background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2300ffff'%3E%3Cpath d='M0 0h24v24H0z' fill='none'/%3E%3Cpath d='M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z'/%3E%3C/svg%3E")
 		.playing.selected > .index
