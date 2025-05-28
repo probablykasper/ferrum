@@ -634,6 +634,8 @@
 />
 
 <div class="grid-container relative flex grow flex-col">
+	<!-- svelte-ignore a11y_no_static_element_interactions -->
+	<!-- svelte-ignore a11y_interactive_supports_focus -->
 	<div
 		class="row grid-header border-b border-b-slate-500/30"
 		class:desc={$sort_desc}
@@ -647,11 +649,26 @@
 			bind:this={col_drag_line}
 		></div>
 		{#each columns as column, i}
+			<!-- svelte-ignore a11y_click_events_have_key_events -->
 			<div
 				class="rgCell {column.prop}"
+				class:sort={$sort_key === column.prop}
 				style:width="{column.size}px"
 				style:translate="{column.left_offset}px 0"
 				role="button"
+				onclick={() => {
+					if (tracks_page.playlistKind === 'special' && column.prop === 'index') {
+						return
+					} else if (column.prop === 'image') {
+						return
+					}
+					if ($sort_key === column.prop) {
+						sort_desc.set(!$sort_desc)
+					} else {
+						sort_key.set(column.prop)
+						sort_desc.set(get_default_sort_desc(column.prop))
+					}
+				}}
 				draggable="true"
 				ondragstart={(e) => on_col_drag_start(e, i)}
 				ondragend={() => (col_drag_to_index = null)}
@@ -732,49 +749,6 @@
 	</revo-grid>
 </div>
 
-<!-- <div
-	bind:this={tracklist_element}
-	class="tracklist h-full"
-	role="table"
->
-	<div
-		class="row table-header border-b border-b-slate-500/30"
-		class:desc={$sort_desc}
-		role="row"
-		bind:this={col_container}
-	>
-		{#each columns as column, i}
-			<div
-				class="c {column.key}"
-				class:sort={$sort_key === column.key}
-				style:width={column.width}
-				role="button"
-				on:click={() => {
-					if (tracks_page.playlistKind === 'special' && column.key === 'index') {
-						return
-					} else if (column.key === 'image') {
-						return
-					}
-					if ($sort_key === column.key) {
-						sort_desc.set(!$sort_desc)
-					} else {
-						sort_key.set(column.key)
-						sort_desc.set(get_default_sort_desc(column.key))
-					}
-				}}
-			>
-				<span>{column.key === 'image' ? '' : column.name}</span>
-			</div>
-		{/each}
-	</div>
-	<div
-		bind:this={scroll_container}
-		class="relative h-full overflow-y-auto outline-none"
-		tabindex="0"
-	>
-	</div>
-</div> -->
-
 <style lang="sass">
 	.grid-header
 		position: relative
@@ -789,9 +763,17 @@
 			position: absolute
 			box-sizing: border-box
 			height: 100%
-			overflow: hidden
-			text-overflow: ellipsis
+			overflow: visible
 			white-space: nowrap
+		.rgCell.sort
+			font-weight: 500
+		.rgCell.sort::after
+			content: '▲'
+			padding-left: 1px
+			transform: scale(0.8, 0.5)
+			display: inline-block
+		&.desc .rgCell.sort::after
+			content: '▼'
 	.grid-container :global
 		revo-grid
 			outline: none
@@ -864,20 +846,6 @@
 	// 	width: 100%
 	// 	background-color: rgba(0, 0, 0, 0.01)
 	// 	overflow: hidden
-	// 	.table-header
-	// 		.c
-	// 			overflow: visible
-	// 			*
-	// 				pointer-events: none
-	// 		.c.sort span
-	// 			font-weight: 500
-	// 		.c.sort span::after
-	// 			content: '▲'
-	// 			padding-left: 1px
-	// 			transform: scale(0.8, 0.5)
-	// 			display: inline-block
-	// 		&.desc .c.sort span::after
-	// 			content: '▼'
 	// .row
 	// 	display: flex
 	// 	max-width: 100%
