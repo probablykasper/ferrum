@@ -195,66 +195,68 @@
 		new_playback_instance(all_track_ids, index)
 	}
 
-	// let drag_line: HTMLElement
-	// let drag_item_ids: ItemId[] = []
-	// function on_drag_start(e: DragEvent) {
-	// 	if (e.dataTransfer) {
-	// 		drag_item_ids = Array.from(selection.items)
-	// 		e.dataTransfer.effectAllowed = 'move'
-	// 		if (drag_item_ids.length === 1) {
-	// 			const { track } = get_track_by_item_id(drag_item_ids[0])
-	// 			dragGhost.set_inner_text(track.artist + ' - ' + track.name)
-	// 		} else {
-	// 			dragGhost.set_inner_text(drag_item_ids.length + ' items')
-	// 		}
-	// 		dragged.tracks = {
-	// 			ids: get_track_ids(drag_item_ids),
-	// 			playlist_indexes: drag_item_ids,
-	// 		}
-	// 		e.dataTransfer.setDragImage(dragGhost.drag_el, 0, 0)
-	// 		e.dataTransfer.setData('ferrum.tracks', '')
-	// 	}
-	// }
-	// let drag_to_index: null | number = null
-	// function on_drag_over(e: DragEvent, index: number) {
-	// 	if (
-	// 		!$sort_desc ||
-	// 		$sort_key !== 'index' ||
-	// 		$filter ||
-	// 		tracks_page.playlistKind !== 'playlist'
-	// 	) {
-	// 		drag_to_index = null
-	// 		return
-	// 	}
-	// 	if (
-	// 		dragged.tracks?.playlist_indexes &&
-	// 		e.currentTarget instanceof HTMLElement &&
-	// 		e.dataTransfer?.types[0] === 'ferrum.tracks'
-	// 	) {
-	// 		e.preventDefault()
-	// 		const rect = e.currentTarget.getBoundingClientRect()
-	// 		const container_rect = scroll_container.getBoundingClientRect()
-	// 		if (e.pageY < rect.bottom - rect.height / 2) {
-	// 			const top = rect.top - container_rect.top + scroll_container.scrollTop - 1
-	// 			drag_line.style.top = Math.max(0, top) + 'px'
-	// 			drag_to_index = index
-	// 		} else {
-	// 			const top = rect.bottom - container_rect.top + scroll_container.scrollTop - 1
-	// 			const max_top = scroll_container.scrollHeight - 2
-	// 			drag_line.style.top = Math.min(max_top, top) + 'px'
-	// 			drag_to_index = index + 1
-	// 		}
-	// 	}
-	// }
-	// async function drop_handler() {
-	// 	if (drag_to_index !== null) {
-	// 		move_tracks(params.playlist_id, drag_item_ids, drag_to_index)
-	// 		drag_to_index = null
-	// 	}
-	// }
-	// function drag_end_handler() {
-	// 	drag_to_index = null
-	// }
+	let drag_line: HTMLElement
+	let drag_item_ids: ItemId[] = []
+	function on_drag_start(e: DragEvent) {
+		if (e.dataTransfer) {
+			drag_item_ids = Array.from(selection.items)
+			e.dataTransfer.effectAllowed = 'move'
+			if (drag_item_ids.length === 1) {
+				const { track } = get_track_by_item_id(drag_item_ids[0])
+				dragGhost.set_inner_text(track.artist + ' - ' + track.name)
+			} else {
+				dragGhost.set_inner_text(drag_item_ids.length + ' items')
+			}
+			dragged.tracks = {
+				ids: get_track_ids(drag_item_ids),
+				playlist_indexes: drag_item_ids,
+			}
+			e.dataTransfer.setDragImage(dragGhost.drag_el, 0, 0)
+			e.dataTransfer.setData('ferrum.tracks', '')
+		}
+	}
+	let drag_to_index: null | number = null
+	function on_drag_over(e: DragEvent, element: Element, index: number) {
+		if (
+			!$sort_desc ||
+			$sort_key !== 'index' ||
+			$filter ||
+			tracks_page.playlistKind !== 'playlist'
+		) {
+			drag_to_index = null
+			return
+		}
+		const scroll_container = grid.querySelector('.vertical-inner.scroll-rgRow')
+		if (
+			dragged.tracks?.playlist_indexes &&
+			e.currentTarget instanceof HTMLElement &&
+			e.dataTransfer?.types[0] === 'ferrum.tracks' &&
+			scroll_container
+		) {
+			e.preventDefault()
+			const rect = element.getBoundingClientRect()
+			const container_rect = scroll_container.getBoundingClientRect()
+			if (e.pageY < rect.bottom - rect.height / 2) {
+				const top = rect.top - container_rect.top + scroll_container.scrollTop - 1
+				drag_line.style.top = Math.max(0, top) + 'px'
+				drag_to_index = index
+			} else {
+				const top = rect.bottom - container_rect.top + scroll_container.scrollTop - 1
+				const max_top = scroll_container.scrollHeight - 2
+				drag_line.style.top = Math.min(max_top, top) + 'px'
+				drag_to_index = index + 1
+			}
+		}
+	}
+	async function drop_handler() {
+		if (drag_to_index !== null) {
+			move_tracks(params.playlist_id, drag_item_ids, drag_to_index)
+			drag_to_index = null
+		}
+	}
+	function drag_end_handler() {
+		drag_to_index = null
+	}
 
 	function get_item(item_id: ItemId) {
 		try {
@@ -427,6 +429,7 @@
 					classes[col.prop] = true
 					return {
 						class: classes,
+						draggable: true,
 					}
 				},
 			}
@@ -616,11 +619,12 @@
 		}
 		const row = e.target?.closest('[data-rgrow]')
 		const row_index_str = parseInt(row?.getAttribute('data-rgrow') ?? '')
-		if (!Number.isInteger(row_index_str)) {
+		if (!row || !Number.isInteger(row_index_str)) {
 			return null
 		}
 		return {
 			index: row_index_str,
+			element: row,
 		}
 	}
 </script>
@@ -635,6 +639,9 @@
 		columns = load_columns()
 	}}
 />
+<div class="relative">
+	<div class="drag-line" class:hidden={drag_to_index === null} bind:this={drag_line}></div>
+</div>
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
 	bind:this={container_el}
@@ -679,6 +686,15 @@
 			selection.handle_contextmenu(e, row.index)
 		}
 	}}
+	ondragstart={on_drag_start}
+	ondragover={(e) => {
+		const row = get_row(e)
+		if (row) {
+			on_drag_over(e, row.element, row.index)
+		}
+	}}
+	ondrop={drop_handler}
+	ondragend={drag_end_handler}
 ></div>
 
 <!-- <div
@@ -876,12 +892,13 @@
 	// 	padding-right: 5px
 	// .dateAdded
 	// 	font-variant-numeric: tabular-nums
-	// .drag-line
-	// 	position: absolute
-	// 	width: 100%
-	// 	height: 2px
-	// 	background-color: var(--drag-line-color)
-	// 	pointer-events: none
+	.drag-line
+		margin-top: 24px
+		position: absolute
+		width: 100%
+		height: 2px
+		background-color: var(--drag-line-color)
+		pointer-events: none
 	// .col-drag-line
 	// 	position: absolute
 	// 	width: 2px
