@@ -424,35 +424,37 @@
 		})
 	}
 	function save_columns() {
-		view_options.columns = columns.map((col) => col.key)
+		view_options.columns = columns.map((col) => col.prop)
 		if (JSON.stringify(view_options.columns) === JSON.stringify(default_columns)) {
 			view_options.columns = []
 		}
 		save_view_options(view_options)
 	}
-	// function on_column_context_menu() {
-	// 	ipc_renderer.invoke(show_columns_menu', {
-	// 		menu: all_columns.map((col) => {
-	// 			return {
-	// 				id: col.key,
-	// 				label: col.name,
-	// 				type: 'checkbox',
-	// 				checked: !!columns.find((c) => c.key === col.key),
-	// 			}
-	// 		}),
-	// 	})
-	// }
+	function on_column_context_menu() {
+		ipc_renderer.invoke('show_columns_menu', {
+			menu: all_columns.map((col) => {
+				return {
+					id: col.prop,
+					label: col.name,
+					type: 'checkbox',
+					checked: !!columns.find((c) => c.prop === col.prop),
+				}
+			}),
+		})
+	}
 	onDestroy(
 		ipc_listen('context.toggle_column', (_, item) => {
 			if (item.checked) {
-				const column = all_columns.find((column) => column.key === item.id)
-				if (column) {
-					columns.push({ ...column })
-					columns = columns
-					save_columns()
+				const column = all_columns.find((column) => column.prop === item.id)
+				if (!column) {
+					throw new Error('Tried to toggle non-existant column ' + item.id)
 				}
+				view_options.columns.push(column.prop)
+				columns = load_columns()
+				save_columns()
 			} else {
-				columns = columns.filter((column) => column.key !== item.id)
+				view_options.columns = view_options.columns.filter((column) => column !== item.id)
+				columns = load_columns()
 				save_columns()
 			}
 		}),
@@ -604,6 +606,20 @@
 			element: row,
 		}
 	}
+	function get_header_col(e: Event) {
+		if (!(e.target instanceof Element)) {
+			return null
+		}
+		const row = e.target?.closest('.rgHeaderCell[data-rgcol]')
+		const row_index_str = parseInt(row?.getAttribute('data-rgcol') ?? '')
+		if (!row || !Number.isInteger(row_index_str)) {
+			return null
+		}
+		return {
+			index: row_index_str,
+			element: row,
+		}
+	}
 
 	onMount(() => {
 		grid.addEventListener('aftergridinit', tracklist_actions.focus)
@@ -653,7 +669,6 @@
 				// Prevent cell focus
 				grid.focus()
 			})
-			return
 		}
 	}}
 	onclick={(e: MouseEvent) => {
@@ -672,6 +687,11 @@
 		const row = get_row(e)
 		if (row) {
 			selection.handle_contextmenu(e, row.index)
+			return
+		}
+		const header_col = get_header_col(e)
+		if (header_col) {
+			on_column_context_menu()
 		}
 	}}
 	ondragstart={on_drag_start}
@@ -703,7 +723,6 @@
 		class="row table-header border-b border-b-slate-500/30"
 		class:desc={$sort_desc}
 		role="row"
-		on:contextmenu={on_column_context_menu}
 		on:dragleave={() => (col_drag_to_index = null)}
 		bind:this={col_container}
 	>
