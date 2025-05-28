@@ -144,7 +144,7 @@
 			delete_tracks_with_item_ids(item_ids)
 		}
 	}
-	function scroll_container_keydown(e: KeyboardEvent & { currentTarget: HTMLElement }) {
+	function scroll_container_keydown(e: KeyboardEvent & { currentTarget: Element }) {
 		let prevent = true
 		const scroll_area = e.currentTarget.querySelector('.vertical-inner.scroll-rgRow')
 		if (!scroll_area) return
@@ -272,6 +272,8 @@
 	// 	virtual_list.refresh()
 	// }
 
+	let grid: HTMLRevoGridElement
+
 	type ColumnDef = ColumnRegular &
 		(
 			| {
@@ -391,7 +393,6 @@
 		'dateAdded',
 		'year',
 	]
-	let container_el: HTMLElement
 	let columns: ColumnRegular[] = load_columns()
 	onMount(() => (columns = load_columns()))
 	function load_columns(): ColumnRegular[] {
@@ -404,7 +405,7 @@
 			.filter((col) => col !== undefined)
 		const total_fixed_width = columns.reduce((sum, col) => sum + (col.width_px || 0), 0)
 		const total_percent_pct = columns.reduce((sum, col) => sum + (col.width_pct || 0), 0)
-		const container_width = container_el?.clientWidth ?? total_fixed_width
+		const container_width = grid?.clientWidth ?? total_fixed_width
 		const total_percent_width = container_width - total_fixed_width
 		return columns.map((col) => {
 			let size: number
@@ -470,20 +471,9 @@
 		}),
 	)
 
-	const grid = document.createElement('revo-grid')
-	grid.setAttribute('theme', 'darkCompact')
-	grid.readonly = true
-	grid.rowSize = item_height
-	grid.style.lineHeight = 'item_height' + 'px'
-	grid.canFocus = false
-	grid.resize = false
-	grid.canDrag = false
-	grid.canMoveColumns = false
-	grid.hideAttribution = true
-	grid.rowClass = 'row_class'
-	$: grid.columns = columns
+	$: if (grid) grid.columns = columns
 	$: source_rows = to_source_rows(tracks_page.itemIds)
-	$: grid.source = source_rows
+	$: if (grid) grid.source = source_rows
 
 	/** This is a function because we need it to be non-reactive */
 	function to_source_rows(item_ids: ItemId[]) {
@@ -537,7 +527,7 @@
 		}
 	})
 
-	$: $selection, apply_selection()
+	$: if (grid && $selection) apply_selection()
 	function apply_selection() {
 		const rows = grid.querySelectorAll('.rgRow')
 		for (const row of rows) {
@@ -550,7 +540,7 @@
 		}
 	}
 
-	$: $playing_id, apply_playing()
+	$: if (grid && $playing_id) apply_playing()
 	function apply_playing() {
 		const rows = grid.querySelectorAll('.rgRow')
 		for (const row of rows) {
@@ -639,21 +629,27 @@
 		columns = load_columns()
 	}}
 />
-<div class="relative">
-	<div class="drag-line" class:hidden={drag_to_index === null} bind:this={drag_line}></div>
-</div>
 <!-- svelte-ignore a11y_no_static_element_interactions -->
-<div
-	bind:this={container_el}
-	class="grid-container grow"
-	{@attach (element) => {
-		element.appendChild(grid)
+<revo-grid
+	bind:this={grid}
+	class="grid grow"
+	{@attach (grid: HTMLRevoGridElement) => {
+		grid.setAttribute('theme', 'darkCompact')
+		grid.readonly = true
+		grid.rowSize = item_height
+		grid.style.lineHeight = 'item_height' + 'px'
+		grid.canFocus = false
+		grid.resize = false
+		grid.canDrag = false
+		grid.canMoveColumns = false
+		grid.hideAttribution = true
+		grid.rowClass = 'row_class'
 	}}
-	onkeydown={(e) => {
+	onkeydown={(e: KeyboardEvent & { currentTarget: Element }) => {
 		scroll_container_keydown(e)
 		keydown(e)
 	}}
-	onmousedown={(e) => {
+	onmousedown={(e: MouseEvent) => {
 		if (e.target instanceof HTMLElement && e.target.tagName === 'REVOGR-VIEWPORT-SCROLL') {
 			selection.clear()
 			return
@@ -668,26 +664,26 @@
 			return
 		}
 	}}
-	onclick={(e) => {
+	onclick={(e: MouseEvent) => {
 		const row = get_row(e)
 		if (row) {
 			selection.handle_click(e, row.index)
 		}
 	}}
-	ondblclick={(e) => {
+	ondblclick={(e: MouseEvent) => {
 		const row = get_row(e)
 		if (row) {
 			double_click(e, row.index)
 		}
 	}}
-	oncontextmenu={(e) => {
+	oncontextmenu={(e: MouseEvent) => {
 		const row = get_row(e)
 		if (row) {
 			selection.handle_contextmenu(e, row.index)
 		}
 	}}
 	ondragstart={on_drag_start}
-	ondragover={(e) => {
+	ondragover={(e: DragEvent) => {
 		const row = get_row(e)
 		if (row) {
 			on_drag_over(e, row.element, row.index)
@@ -695,7 +691,11 @@
 	}}
 	ondrop={drop_handler}
 	ondragend={drag_end_handler}
-></div>
+>
+	<div class="relative" slot="data-rgCol-rgRow">
+		<div class="drag-line" class:hidden={drag_to_index === null} bind:this={drag_line}></div>
+	</div>
+</revo-grid>
 
 <!-- <div
 	bind:this={tracklist_element}
@@ -750,39 +750,13 @@
 		class="main-focus-element relative h-full overflow-y-auto outline-none"
 		tabindex="0"
 	>
-		<VirtualListBlock
-			bind:this={virtual_list}
-			items={tracks_page.itemIds}
-			get_key={(item) => item}
-			item_height={24}
-			{scroll_container}
-			let:item={item_id}
-			let:i
-			buffer={5}
-		>
-			{@const { id: track_id, track } = get_item(item_id)}
-			{#if track !== null}
-				<div
-					class="row"
-					role="row"
-					draggable="true"
-					on:dragstart={on_drag_start}
-					on:dragover={(e) => on_drag_over(e, i)}
-					on:drop={drop_handler}
-					on:dragend={drag_end_handler}
-				>
-					{/each}
-				</div>
-			{/if}
-		</VirtualListBlock>
-		<div class="drag-line" class:hidden={drag_to_index === null} bind:this={drag_line}></div>
 	</div>
 </div> -->
 
 <style lang="sass">
-	.grid-container :global
-		revo-grid
-			outline: none
+	.grid :global
+		outline: none
+		min-height: 50px
 		.header-rgRow
 			height: 24px
 			line-height: 24px
@@ -846,10 +820,9 @@
 		.playing.selected > .index
 			// #ffffff
 			background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ffffff'%3E%3Cpath d='M0 0h24v24H0z' fill='none'/%3E%3Cpath d='M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z'/%3E%3C/svg%3E")
-	.grid-container:focus-within :global
+	.grid:focus-within :global
 		.rgRow.selected
 			background-color: hsla(var(--hue), 70%, 46%, 1)
-
 
 	// .tracklist
 	// 	display: flex
@@ -893,12 +866,12 @@
 	// .dateAdded
 	// 	font-variant-numeric: tabular-nums
 	.drag-line
-		margin-top: 24px
 		position: absolute
 		width: 100%
 		height: 2px
 		background-color: var(--drag-line-color)
 		pointer-events: none
+		z-index: 5
 	// .col-drag-line
 	// 	position: absolute
 	// 	width: 2px
