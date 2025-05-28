@@ -269,7 +269,8 @@
 
 	let grid: HTMLRevoGridElement
 
-	type ColumnDef = ColumnRegular &
+	type ColumnRefined = ColumnRegular & { prop: string }
+	type ColumnDef = ColumnRefined &
 		(
 			| {
 					width_px: number
@@ -388,9 +389,9 @@
 		'dateAdded',
 		'year',
 	]
-	let columns: ColumnRegular[] = load_columns()
+	let columns: ColumnRefined[] = load_columns()
 	onMount(() => (columns = load_columns()))
-	function load_columns(): ColumnRegular[] {
+	function load_columns(): ColumnRefined[] {
 		let loaded_columns = view_options.columns
 		if (loaded_columns.length === 0) {
 			loaded_columns = [...default_columns]
@@ -414,19 +415,10 @@
 				name: col.name === 'Image' ? '' : col.name,
 				size,
 				columnProperties() {
-					const classes: Record<string, boolean> = {}
-					classes[col.prop] = true
-					return {
-						class: classes,
-					}
+					return { class: col.prop }
 				},
 				cellProperties() {
-					const classes: Record<string, boolean> = {}
-					classes[col.prop] = true
-					return {
-						class: classes,
-						draggable: true,
-					}
+					return { class: col.prop, draggable: true }
 				},
 			}
 		})
