@@ -696,6 +696,28 @@
 			grid.hideAttribution = true
 			grid.rowClass = 'row_class'
 		}}
+		{@attach (grid: HTMLRevoGridElement) => {
+			// Apply `invisible` when an img.src get supdated, so that the old image
+			// doesn't stick around when a DOM node is updated (e.g during scroll)
+			const observer = new MutationObserver((mutationsList) => {
+				for (const mutation of mutationsList) {
+					if (
+						mutation.type === 'attributes' &&
+						mutation.attributeName === 'src' &&
+						(mutation.target as Element).tagName === 'IMG'
+					) {
+						const img = mutation.target as HTMLImageElement
+						img.classList.add('invisible')
+					}
+				}
+			})
+			observer.observe(grid, {
+				subtree: true,
+				attributes: true,
+				attributeFilter: ['src'],
+			})
+			return () => observer.disconnect()
+		}}
 		onkeydown={(e: KeyboardEvent & { currentTarget: Element }) => {
 			scroll_container_keydown(e)
 			keydown(e)
@@ -811,8 +833,6 @@
 			.error.missing::before
 				cursor: default
 				background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18 18"><rect x="0" y="0" width="18" height="18" fill="%232b2c31" rx="2" ry="2"/><path fill="%2345464a" d="M12.667,5l-5.332,1.195l-0,4.347c-0.993,-0.197 -2.002,0.557 -2.002,1.384c0,0.713 0.557,1.074 1.162,1.074c0.718,-0 1.504,-0.509 1.505,-1.546l0,-3.633l4,-0.82l0,2.875c-0.992,-0.196 -2,0.554 -2,1.38c0,0.714 0.572,1.077 1.174,1.077c0.713,0 1.492,-0.508 1.493,-1.545l-0,-5.788Z"/></svg>');
-		.loading
-			visibility: hidden
 		.rgRow
 			line-height: 24px
 			font-size: 12px
