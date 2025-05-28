@@ -54,7 +54,7 @@
 	}
 </script>
 
-<div class="player" class:stopped={$stopped} class:dev={is_dev}>
+<div class="player z-10" class:stopped={$stopped} class:dev={is_dev}>
 	<div class="left">
 		{#if !$stopped && $playing_track}
 			<div

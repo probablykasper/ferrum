@@ -424,7 +424,7 @@
 					return null
 				},
 				columnProperties() {
-					return { class: col.prop }
+					return { class: col.prop, draggable: true }
 				},
 				cellProperties() {
 					return { class: col.prop, draggable: true }
@@ -561,45 +561,45 @@
 		return () => grid.removeEventListener('afterrender', apply_classes)
 	})
 
-	// let col_container: HTMLElement
-	// let col_drag_line: HTMLElement
-	// let col_drag_index: number | null = null
-	// function on_col_drag_start(e: DragEvent, index: number) {
-	// 	if (e.dataTransfer) {
-	// 		col_drag_index = index
-	// 	}
-	// }
-	// let col_drag_to_index: null | number = null
-	// function on_col_drag_over(e: DragEvent, index: number) {
-	// 	if (col_drag_index !== null && e.currentTarget instanceof HTMLElement) {
-	// 		e.preventDefault()
-	// 		const rect = e.currentTarget.getBoundingClientRect()
-	// 		const container_rect = col_container.getBoundingClientRect()
-	// 		if (e.pageX < rect.right - rect.width / 2) {
-	// 			const offset = index === 0 ? 0 : -1
-	// 			col_drag_line.style.left = rect.left - container_rect.left + offset + 'px'
-	// 			col_drag_to_index = index
-	// 		} else {
-	// 			const offset = index === columns.length - 1 ? -2 : -1
-	// 			col_drag_line.style.left = rect.right - container_rect.left + offset + 'px'
-	// 			col_drag_to_index = index + 1
-	// 		}
-	// 	}
-	// }
-	// function col_drop_handler() {
-	// 	if (col_drag_index !== null && col_drag_to_index !== null) {
-	// 		const move_to_left = col_drag_index < col_drag_to_index
-	// 		const removed_column = columns.splice(col_drag_index, 1)[0]
-	// 		columns.splice(col_drag_to_index - Number(move_to_left), 0, removed_column)
-	// 		columns = columns
-	// 		save_columns()
+	let col_drag_line: HTMLElement
+	let col_drag_index: number | null = null
+	function on_col_drag_start(e: DragEvent, index: number) {
+		if (e.dataTransfer) {
+			col_drag_index = index
+		}
+	}
+	let col_drag_to_index: null | number = null
+	function on_col_drag_over(e: DragEvent, index: number) {
+		if (col_drag_index !== null && e.currentTarget instanceof HTMLElement) {
+			e.preventDefault()
+			const rect = e.currentTarget.getBoundingClientRect()
+			const scroll_container = grid.querySelector('.vertical-inner.scroll-rgRow')
+			if (!scroll_container) {
+				throw new Error('Scroll container not found')
+			}
+			const container_rect = scroll_container.getBoundingClientRect()
+			if (e.pageX < rect.right - rect.width / 2) {
+				const offset = index === 0 ? 0 : -1
+				col_drag_line.style.left = rect.left - container_rect.left + offset + 'px'
+				col_drag_to_index = index
+			} else {
+				const offset = index === columns.length - 1 ? -2 : -1
+				col_drag_line.style.left = rect.right - container_rect.left + offset + 'px'
+				col_drag_to_index = index + 1
+			}
+		}
+	}
+	function col_drop_handler() {
+		if (col_drag_index !== null && col_drag_to_index !== null) {
+			const move_to_left = col_drag_index < col_drag_to_index
+			const removed_column = columns.splice(col_drag_index, 1)[0]
+			columns.splice(col_drag_to_index - Number(move_to_left), 0, removed_column)
+			save_columns()
+			columns = load_columns()
 
-	// 		col_drag_to_index = null
-	// 	}
-	// }
-	// function col_drag_end_handler() {
-	// 	col_drag_to_index = null
-	// }
+			col_drag_to_index = null
+		}
+	}
 
 	function get_row(e: Event) {
 		if (!(e.target instanceof Element)) {
@@ -633,19 +633,30 @@
 	}}
 />
 
-<div class="grid-container flex grow flex-col">
+<div class="grid-container relative flex grow flex-col">
 	<div
 		class="row grid-header border-b border-b-slate-500/30"
 		class:desc={$sort_desc}
 		role="row"
 		oncontextmenu={on_column_context_menu}
+		ondragleave={() => (col_drag_to_index = null)}
 	>
+		<div
+			class="col-drag-line"
+			class:hidden={col_drag_to_index === null}
+			bind:this={col_drag_line}
+		></div>
 		{#each columns as column, i}
 			<div
 				class="rgCell {column.prop}"
 				style:width="{column.size}px"
 				style:translate="{column.left_offset}px 0"
 				role="button"
+				draggable="true"
+				ondragstart={(e) => on_col_drag_start(e, i)}
+				ondragend={() => (col_drag_to_index = null)}
+				ondragover={(e) => on_col_drag_over(e, i)}
+				ondrop={col_drop_handler}
 			>
 				{column.prop === 'image' ? '' : column.name}
 			</div>
@@ -730,7 +741,6 @@
 		class="row table-header border-b border-b-slate-500/30"
 		class:desc={$sort_desc}
 		role="row"
-		on:dragleave={() => (col_drag_to_index = null)}
 		bind:this={col_container}
 	>
 		{#each columns as column, i}
@@ -752,20 +762,10 @@
 						sort_desc.set(get_default_sort_desc(column.key))
 					}
 				}}
-				draggable="true"
-				on:dragstart={(e) => on_col_drag_start(e, i)}
-				on:dragend={col_drag_end_handler}
-				on:dragover={(e) => on_col_drag_over(e, i)}
-				on:drop={col_drop_handler}
 			>
 				<span>{column.key === 'image' ? '' : column.name}</span>
 			</div>
 		{/each}
-		<div
-			class="col-drag-line"
-			class:hidden={col_drag_to_index === null}
-			bind:this={col_drag_line}
-		></div>
 	</div>
 	<div
 		bind:this={scroll_container}
@@ -905,11 +905,11 @@
 		background-color: var(--drag-line-color)
 		pointer-events: none
 		z-index: 5
-	// .col-drag-line
-	// 	position: absolute
-	// 	width: 2px
-	// 	height: 100vh
-	// 	background-color: var(--drag-line-color)
-	// 	pointer-events: none
-	// 	z-index: 5
+	.col-drag-line
+		position: absolute
+		width: 2px
+		height: 100vh
+		background-color: var(--drag-line-color)
+		pointer-events: none
+		z-index: 5
 </style>
