@@ -56,8 +56,6 @@
 
 	defineCustomElement()
 
-	// let tracklist_element: HTMLDivElement
-
 	export let params: { playlist_id: string }
 	$: $current_playlist_id = params.playlist_id
 	const item_height = 24
@@ -116,12 +114,12 @@
 	})
 	$: selection.update_all_items(tracks_page.itemIds)
 
-	// const track_action_unlisten = ipc_listen('selected_tracks_action', (_, action) => {
-	// 	if (tracklist_element.contains(document.activeElement)) {
-	// 		handle_action(action)
-	// 	}
-	// })
-	// onDestroy(track_action_unlisten)
+	const track_action_unlisten = ipc_listen('selected_tracks_action', (_, action) => {
+		if (grid.contains(document.activeElement)) {
+			handle_action(action)
+		}
+	})
+	onDestroy(track_action_unlisten)
 
 	ipc_renderer.on('Group Album Tracks', (_, checked) => {
 		group_album_tracks.set(checked)
