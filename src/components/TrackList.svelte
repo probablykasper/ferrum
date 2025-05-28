@@ -248,14 +248,11 @@
 			}
 		}
 	}
-	async function drop_handler() {
+	function drop_handler() {
 		if (drag_to_index !== null) {
 			move_tracks(params.playlist_id, drag_item_ids, drag_to_index)
 			drag_to_index = null
 		}
-	}
-	function drag_end_handler() {
-		drag_to_index = null
 	}
 
 	function get_item(item_id: ItemId) {
@@ -588,7 +585,7 @@
 	// 		}
 	// 	}
 	// }
-	// async function col_drop_handler() {
+	// function col_drop_handler() {
 	// 	if (col_drag_index !== null && col_drag_to_index !== null) {
 	// 		const move_to_left = col_drag_index < col_drag_to_index
 	// 		const removed_column = columns.splice(col_drag_index, 1)[0]
@@ -690,7 +687,12 @@
 		}
 	}}
 	ondrop={drop_handler}
-	ondragend={drag_end_handler}
+	ondragend={() => {
+		drag_to_index = null
+	}}
+	ondragleave={() => {
+		drag_to_index = null
+	}}
 >
 	<div class="relative" slot="data-rgCol-rgRow">
 		<div class="drag-line" class:hidden={drag_to_index === null} bind:this={drag_line}></div>
@@ -701,7 +703,6 @@
 	bind:this={tracklist_element}
 	class="tracklist h-full"
 	role="table"
-	on:dragleave={() => (drag_to_index = null)}
 >
 	<div
 		class="row table-header border-b border-b-slate-500/30"
