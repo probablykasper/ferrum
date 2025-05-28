@@ -614,6 +614,11 @@
 			element: row,
 		}
 	}
+
+	onMount(() => {
+		grid.addEventListener('aftergridinit', tracklist_actions.focus)
+		return () => grid.removeEventListener('aftergridinit', tracklist_actions.focus)
+	})
 </script>
 
 <Header
@@ -629,7 +634,7 @@
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <revo-grid
 	bind:this={grid}
-	class="grid grow"
+	class="main-focus-element grid grow"
 	{@attach (grid: HTMLRevoGridElement) => {
 		grid.setAttribute('theme', 'darkCompact')
 		grid.readonly = true
@@ -748,7 +753,7 @@
 	</div>
 	<div
 		bind:this={scroll_container}
-		class="main-focus-element relative h-full overflow-y-auto outline-none"
+		class="relative h-full overflow-y-auto outline-none"
 		tabindex="0"
 	>
 	</div>

@@ -173,10 +173,6 @@
 
 	onDestroy(ipc_listen('Back', navigate_back))
 	onDestroy(ipc_listen('Forward', navigate_forward))
-
-	onMount(() => {
-		tracklist_actions.focus()
-	})
 </script>
 
 <svelte:window on:keydown={keydown} />
