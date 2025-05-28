@@ -790,6 +790,8 @@
 				padding-left: 0px
 				padding-right: 10px
 				text-align: right
+			&.dateAdded
+				font-variant-numeric: tabular-nums
 		.image
 			display: flex
 			align-items: center
@@ -864,8 +866,6 @@
 	// 	text-overflow: ellipsis
 	// 	padding-left: 5px
 	// 	padding-right: 5px
-	// .dateAdded
-	// 	font-variant-numeric: tabular-nums
 	.drag-line
 		position: absolute
 		width: 100%
