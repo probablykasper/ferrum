@@ -812,6 +812,9 @@
 				padding-left: 0px
 				padding-right: 10px
 				text-align: right
+			&.image:first-child
+				padding-left: 7px
+				padding-right: 3px
 			&.dateAdded
 				font-variant-numeric: tabular-nums
 		.image
