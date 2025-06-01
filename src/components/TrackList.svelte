@@ -47,6 +47,23 @@
 	import { SvelteSelection } from '@/lib/selection'
 	import { get_flattened_tracklists, handle_selected_tracks_action } from '@/lib/menus'
 	import type { SelectedTracksAction } from '@/electron/typed_ipc'
+	import {
+		init,
+		classModule,
+		propsModule,
+		styleModule,
+		eventListenersModule,
+		h,
+		type VNode,
+	} from 'snabbdom'
+
+	const patch = init([
+		// Init patch function with chosen modules
+		classModule, // makes it easy to toggle classes
+		propsModule, // for setting properties on DOM elements
+		styleModule, // handles styling on elements with support for animations
+		eventListenersModule, // attaches event listeners
+	])
 
 	let tracklist_element: HTMLDivElement
 
@@ -419,6 +436,7 @@
 	}
 
 	let visible_indexes: number[] = []
+	let rendered_rows: VNode[] = []
 </script>
 
 <Header
@@ -522,6 +540,7 @@
 					ticking = true
 
 					requestAnimationFrame(() => {
+						const start_time = performance.now()
 						ticking = false
 
 						const start_index = Math.max(0, Math.floor(viewport.scrollTop / row_height - buffer))
@@ -557,7 +576,9 @@
 							// add new visible indexes
 							visible_indexes.push(...new_visible_indexes)
 						}
+						console.log(`Upi ${performance.now() - start_time}ms`)
 						render()
+						console.log(`Render ${performance.now() - start_time}ms`)
 					})
 				}
 				refresh()
@@ -565,42 +586,56 @@
 					requestAnimationFrame(refresh)
 				}
 
-				const rows: HTMLElement[] = []
+				const visible_rows: VNode[] = []
 
 				function render() {
-					if (rows.length < visible_indexes.length) {
-						// add new rows
-						for (let i = rows.length; i < visible_indexes.length; i++) {
-							const row = document.createElement('div')
-							row.className = 'row'
-							row.setAttribute('role', 'row')
-							row.style.translate = `0 ${visible_indexes[i] * row_height}px`
-							rows.push(row)
-							main_element.appendChild(row)
-
-							for (const column of columns) {
-								const cell = document.createElement('div')
-								cell.className = `c ${column.key}`
-								cell.style.width = `${column.width}px`
-								cell.style.translate = `${column.offset}px 0`
-								row.appendChild(cell)
-
-								cell.innerHTML = 'xxxxxx'
+					const remove_count = visible_rows.length - visible_indexes.length
+					if (remove_count > 0) {
+						for (let i = 0; i < remove_count; i++) {
+							const row = visible_rows.pop()
+							if (row?.elm) {
+								main_element.removeChild(row.elm)
 							}
 						}
 					}
-					if (rows.length > visible_indexes.length) {
-						// remove excess rows
-						for (let i = rows.length - 1; i >= visible_indexes.length; i--) {
-							main_element.removeChild(rows[i])
-							rows.pop()
+
+					for (let i = 0; i < visible_indexes.length; i++) {
+						const row_index = visible_indexes[i]
+						let row: VNode | Element = visible_rows[row_index]
+						if (!row) {
+							const new_row = document.createElement('div')
+							main_element.appendChild(new_row)
+							row = new_row
 						}
-					} else {
-						// update existing rows
-						for (let i = 0; i < visible_indexes.length; i++) {
-							const row = rows[i]
-							row.style.translate = `0 ${visible_indexes[i] * row_height}px`
-						}
+						const new_vnode = h(
+							'div',
+							{
+								props: {
+									className: 'row',
+									role: 'row',
+								},
+								style: {
+									translate: `0 ${row_index * row_height}px`,
+								},
+							},
+							columns.map((column) => {
+								return h(
+									'div',
+									{
+										props: {
+											className: `c ${column.key}`,
+										},
+										style: {
+											width: `${column.width}px`,
+											translate: `${column.offset}px 0`,
+										},
+									},
+									'xxxxxx',
+								)
+							}),
+						)
+						patch(row, new_vnode)
+						visible_rows[row_index] = new_vnode
 					}
 				}
 
@@ -611,7 +646,7 @@
 				}
 			}}
 		>
-			<div class="drag-line" class:hidden={drag_to_index === null} bind:this={drag_line}></div>
+			<!-- <div class="drag-line" class:hidden={drag_to_index === null} bind:this={drag_line}></div> -->
 		</div>
 	</div>
 </div>
