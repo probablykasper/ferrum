@@ -506,23 +506,25 @@
 				let viewport_height: number
 				let visible_count: number
 
+				let refreshing = false
 				function set_size() {
 					viewport_height = viewport.clientHeight
 					visible_count = Math.ceil(viewport_height / row_height)
+					refresh()
 				}
 				set_size()
 				const size_observer = new ResizeObserver(set_size)
 				size_observer.observe(viewport)
 
-				let ticking = false
 				function refresh() {
-					if (ticking) {
+					if (refreshing) {
 						return
 					}
-					ticking = true
+					refreshing = true
 
 					requestAnimationFrame(() => {
-						ticking = false
+						const start_time = performance.now()
+						refreshing = false
 
 						const rendered_count = visible_count + buffer * 2
 
@@ -564,9 +566,9 @@
 							visible_indexes.push(...new_visible_indexes)
 						}
 						render()
+						console.log(`Render ${performance.now() - start_time}ms`)
 					})
 				}
-				refresh()
 				function on_scroll() {
 					requestAnimationFrame(refresh)
 				}
@@ -580,7 +582,6 @@
 							const row = document.createElement('div')
 							row.className = 'row'
 							row.setAttribute('role', 'row')
-							row.style.translate = `0 ${visible_indexes[i] * row_height}px`
 							rows.push(row)
 							main_element.appendChild(row)
 
@@ -595,18 +596,19 @@
 							}
 						}
 					}
-					if (rows.length > visible_indexes.length) {
-						// remove excess rows
-						for (let i = rows.length - 1; i >= visible_indexes.length; i--) {
-							main_element.removeChild(rows[i])
-							rows.pop()
-						}
-					} else {
-						// update existing rows
-						for (let i = 0; i < visible_indexes.length; i++) {
-							const row = rows[i]
+
+					let removed_rows = []
+					for (let i = 0; i < rows.length; i++) {
+						const row = rows[i]
+						if (visible_indexes[i] === undefined) {
+							removed_rows.push(row)
+						} else {
 							row.style.translate = `0 ${visible_indexes[i] * row_height}px`
 						}
+					}
+					for (const row of removed_rows) {
+						row.remove()
+						rows.splice(rows.indexOf(row), 1)
 					}
 				}
 
