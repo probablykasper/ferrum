@@ -498,7 +498,7 @@
 
 				let row_height = 24
 
-				let buffer = 0
+				let buffer = 5
 
 				let height = tracks_page.itemIds.length * row_height
 				main_element.style.height = height + 'px'
@@ -557,13 +557,53 @@
 							// add new visible indexes
 							visible_indexes.push(...new_visible_indexes)
 						}
-						visible_indexes = visible_indexes
+						render()
 					})
 				}
 				refresh()
 				function on_scroll() {
 					requestAnimationFrame(refresh)
 				}
+
+				const rows: HTMLElement[] = []
+
+				function render() {
+					if (rows.length < visible_indexes.length) {
+						// add new rows
+						for (let i = rows.length; i < visible_indexes.length; i++) {
+							const row = document.createElement('div')
+							row.className = 'row'
+							row.setAttribute('role', 'row')
+							row.style.translate = `0 ${visible_indexes[i] * row_height}px`
+							rows.push(row)
+							main_element.appendChild(row)
+
+							for (const column of columns) {
+								const cell = document.createElement('div')
+								cell.className = `c ${column.key}`
+								cell.style.width = `${column.width}px`
+								cell.style.translate = `${column.offset}px 0`
+								row.appendChild(cell)
+
+								cell.innerHTML = 'xxxxxx'
+							}
+						}
+					}
+					if (rows.length > visible_indexes.length) {
+						// remove excess rows
+						for (let i = rows.length - 1; i >= visible_indexes.length; i--) {
+							main_element.removeChild(rows[i])
+							rows.pop()
+						}
+					} else {
+						// update existing rows
+						for (let i = 0; i < visible_indexes.length; i++) {
+							const row = rows[i]
+							row.style.translate = `0 ${visible_indexes[i] * row_height}px`
+						}
+					}
+				}
+
 				viewport.addEventListener('scroll', on_scroll)
 				return () => {
 					viewport.removeEventListener('scroll', on_scroll)
@@ -571,21 +611,6 @@
 				}
 			}}
 		>
-			{#each visible_indexes as i (tracks_page.itemIds[i])}
-				<!-- svelte-ignore a11y-click-events-have-key-events -->
-				<!-- svelte-ignore a11y-interactive-supports-focus -->
-				<div class="row" role="row" style:translate="0 {i * 24}px">
-					{#each columns as column}
-						<div
-							class="c {column.key}"
-							style:width="{column.width}px"
-							style:translate="{column.offset}px 0"
-						>
-							xxxxxx
-						</div>
-					{/each}
-				</div>
-			{/each}
 			<div class="drag-line" class:hidden={drag_to_index === null} bind:this={drag_line}></div>
 		</div>
 	</div>
@@ -599,14 +624,14 @@
 	:global(:focus)
 		.selected
 			background-color: hsla(var(--hue), 70%, 46%, 1)
-	.tracklist
+	.tracklist :global
 		display: flex
 		flex-direction: column
 		min-width: 0px
 		width: 100%
 		background-color: rgba(0, 0, 0, 0.01)
 		overflow: hidden
-		.table-header
+		.row.table-header
 			position: relative
 			.c
 				overflow: visible
@@ -621,63 +646,63 @@
 				display: inline-block
 			&.desc .c.sort span::after
 				content: '▼'
-	.row
-		width: 100%
-		$row-height: 24px
-		height: $row-height
-		font-size: 12px
-		line-height: $row-height
-		box-sizing: border-box
-		position: absolute
-		&.playing.selected
-			color: #ffffff
-		&.playing
-			color: #00ffff
-	.c
-		display: block
-		position: absolute
-		vertical-align: top
-		width: 100%
-		white-space: nowrap
-		overflow: hidden
-		text-overflow: ellipsis
-		padding-left: 5px
-		padding-right: 5px
-		&:first-child
-			padding-left: 10px
-		&:last-child
-			padding-right: 0px
-		&.index, &.playCount, &.skipCount, &.duration
-			padding-left: 0px
-			padding-right: 10px
-			text-align: right
+		.row
+			width: 100%
+			$row-height: 24px
+			height: $row-height
+			font-size: 12px
+			line-height: $row-height
+			box-sizing: border-box
+			position: absolute
+			&.playing.selected
+				color: #ffffff
+			&.playing
+				color: #00ffff
+		.c
+			display: block
+			position: absolute
+			vertical-align: top
+			width: 100%
+			white-space: nowrap
+			overflow: hidden
+			text-overflow: ellipsis
+			padding-left: 5px
+			padding-right: 5px
+			&:first-child
+				padding-left: 10px
+			&:last-child
+				padding-right: 0px
+			&.index, &.playCount, &.skipCount, &.duration
+				padding-left: 0px
+				padding-right: 10px
+				text-align: right
+				flex-shrink: 0
+		.selected .index svg.playing-icon
+			fill: var(--icon-color)
+		.index
+			width: 46px
+			svg.playing-icon
+				fill: #00ffff
+				width: 16px
+				height: 100%
+		.image
+			width: 18px
 			flex-shrink: 0
-	.selected .index svg.playing-icon
-		fill: var(--icon-color)
-	.index
-		width: 46px
-		svg.playing-icon
-			fill: #00ffff
-			width: 16px
-			height: 100%
-	.image
-		width: 18px
-		flex-shrink: 0
-		box-sizing: content-box
-	.playCount, .skipCount
-		width: 52px
-	.duration
-		width: 50px
-	.dateAdded
-		width: 140px
-		flex-shrink: 0
-		font-variant-numeric: tabular-nums
-	.year
-		width: 0px
-		min-width: 47px
-	.bpm
-		width: 0px
-		min-width: 43px
+			box-sizing: content-box
+		.playCount, .skipCount
+			width: 52px
+		.duration
+			width: 50px
+		.dateAdded
+			width: 140px
+			flex-shrink: 0
+			font-variant-numeric: tabular-nums
+		.year
+			width: 0px
+			min-width: 47px
+		.bpm
+			width: 0px
+			min-width: 43px
 	.drag-line
 		position: absolute
 		width: 100%
