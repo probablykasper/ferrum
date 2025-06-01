@@ -524,11 +524,17 @@
 					requestAnimationFrame(() => {
 						ticking = false
 
-						const start_index = Math.max(0, Math.floor(viewport.scrollTop / row_height - buffer))
+						const rendered_count = visible_count + buffer * 2
+
+						let start_index = Math.max(0, Math.floor(viewport.scrollTop / row_height - buffer))
 						const end_index = Math.min(
 							tracks_page.itemIds.length - 1,
-							start_index + visible_count + buffer * 2,
+							start_index - 1 + rendered_count,
 						)
+						if (end_index - start_index + 1 < rendered_count) {
+							// fill backwards when scrolled to the end
+							start_index = Math.max(0, end_index + 1 - rendered_count)
+						}
 
 						// figure out which indexes should now be visible
 						const new_visible_indexes: number[] = []
