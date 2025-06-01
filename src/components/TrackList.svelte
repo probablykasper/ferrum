@@ -213,14 +213,14 @@
 		) {
 			e.preventDefault()
 			const rect = e.currentTarget.getBoundingClientRect()
-			const container_rect = scroll_container.getBoundingClientRect()
+			const container_rect = viewport.getBoundingClientRect()
 			if (e.pageY < rect.bottom - rect.height / 2) {
-				const top = rect.top - container_rect.top + scroll_container.scrollTop - 1
+				const top = rect.top - container_rect.top + viewport.scrollTop - 1
 				drag_line.style.top = Math.max(0, top) + 'px'
 				drag_to_index = index
 			} else {
-				const top = rect.bottom - container_rect.top + scroll_container.scrollTop - 1
-				const max_top = scroll_container.scrollHeight - 2
+				const top = rect.bottom - container_rect.top + viewport.scrollTop - 1
+				const max_top = viewport.scrollHeight - 2
 				drag_line.style.top = Math.min(max_top, top) + 'px'
 				drag_to_index = index + 1
 			}
@@ -244,15 +244,15 @@
 		}
 	}
 
-	let virtual_list: VirtualListBlock<ItemId>
+	// let virtual_list: VirtualListBlock<ItemId>
 
-	$: if (virtual_list) {
-		virtual_list.refresh()
-	}
+	// $: if (virtual_list) {
+	// 	virtual_list.refresh()
+	// }
 
-	let scroll_container: HTMLElement
+	let viewport: HTMLElement
 	onMount(() => {
-		tracklist_actions.scroll_to_index = virtual_list.scroll_to_index
+		// tracklist_actions.scroll_to_index = virtual_list.scroll_to_index
 	})
 
 	type Column = {
@@ -417,6 +417,8 @@
 	function col_drag_end_handler() {
 		col_drag_to_index = null
 	}
+
+	let visible_indexes: number[] = []
 </script>
 
 <Header
@@ -432,7 +434,7 @@
 >
 	<!-- svelte-ignore a11y-interactive-supports-focus -->
 	<div
-		class="row table-header border-b border-b-slate-500/30"
+		class="row table-header shrink-0 border-b border-b-slate-500/30"
 		class:desc={$sort_desc}
 		role="row"
 		on:contextmenu={on_column_context_menu}
@@ -479,83 +481,113 @@
 	<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
 	<!-- svelte-ignore a11y-no-static-element-interactions -->
 	<div
-		bind:this={scroll_container}
+		bind:this={viewport}
 		class="main-focus-element relative h-full overflow-y-auto outline-none"
 		tabindex="0"
 		on:mousedown|self={() => selection.clear()}
 		on:keydown={scroll_container_keydown}
 		on:keydown={keydown}
 	>
-		<VirtualListBlock
-			bind:this={virtual_list}
-			items={tracks_page.itemIds}
-			item_height={24}
-			{scroll_container}
-			let:visible_indexes
-			buffer={5}
+		<div
+			{@attach (main_element) => {
+				const viewport_result = main_element.parentElement
+				if (!viewport_result) {
+					throw new Error('No viewport')
+				}
+				const viewport = viewport_result
+
+				let row_height = 24
+
+				let buffer = 0
+
+				let height = tracks_page.itemIds.length * row_height
+				main_element.style.height = height + 'px'
+
+				let viewport_height: number
+				let visible_count: number
+
+				function set_size() {
+					viewport_height = viewport.clientHeight
+					visible_count = Math.ceil(viewport_height / row_height)
+				}
+				set_size()
+				const size_observer = new ResizeObserver(set_size)
+				size_observer.observe(viewport)
+
+				let ticking = false
+				function refresh() {
+					if (ticking) {
+						return
+					}
+					ticking = true
+
+					requestAnimationFrame(() => {
+						ticking = false
+
+						const start_index = Math.max(0, Math.floor(viewport.scrollTop / row_height - buffer))
+						const end_index = Math.min(
+							tracks_page.itemIds.length - 1,
+							start_index + visible_count + buffer * 2,
+						)
+
+						// figure out which indexes should now be visible
+						const new_visible_indexes: number[] = []
+						for (let i = start_index; i <= end_index; i++) {
+							if (!visible_indexes.includes(i)) {
+								new_visible_indexes.push(i)
+							}
+						}
+						// update the visible indexes
+						for (let i = 0; i < visible_indexes.length; i++) {
+							const still_visible =
+								visible_indexes[i] >= start_index && visible_indexes[i] <= end_index
+							if (!still_visible) {
+								const new_index = new_visible_indexes.pop()
+								if (new_index !== undefined) {
+									// update it to a new visible index
+									visible_indexes[i] = new_index
+								} else {
+									// if there are no new visible indexes left, remove it
+									visible_indexes.splice(i, 1)
+									i--
+								}
+							}
+						}
+						if (new_visible_indexes.length > 0) {
+							// add new visible indexes
+							visible_indexes.push(...new_visible_indexes)
+						}
+						visible_indexes = visible_indexes
+					})
+				}
+				refresh()
+				function on_scroll() {
+					requestAnimationFrame(refresh)
+				}
+				viewport.addEventListener('scroll', on_scroll)
+				return () => {
+					viewport.removeEventListener('scroll', on_scroll)
+					size_observer.disconnect()
+				}
+			}}
 		>
 			{#each visible_indexes as i (tracks_page.itemIds[i])}
-				{@const item_id = tracks_page.itemIds[i]}
-				{@const { id: track_id, track } = get_item(item_id)}
-				{#if track !== null}
-					<!-- svelte-ignore a11y-click-events-have-key-events -->
-					<!-- svelte-ignore a11y-interactive-supports-focus -->
-					<div
-						class="row"
-						role="row"
-						style:translate="0 {i * 24}px"
-						on:dblclick={(e) => double_click(e, i)}
-						on:mousedown={(e) => selection.handle_mousedown(e, i)}
-						on:contextmenu={(e) => selection.handle_contextmenu(e, i)}
-						on:click={(e) => selection.handle_click(e, i)}
-						draggable="true"
-						on:dragstart={on_drag_start}
-						on:dragover={(e) => on_drag_over(e, i)}
-						on:drop={drop_handler}
-						on:dragend={drag_end_handler}
-						class:odd={i % 2 === 0}
-						class:selected={$selection.has(item_id)}
-						class:playing={track_id === $playing_id}
-					>
-						{#each columns as column}
-							<div
-								class="c {column.key}"
-								style:width="{column.width}px"
-								style:translate="{column.offset}px 0"
-							>
-								{#if column.key === 'index'}
-									{#if track_id === $playing_id}
-										<svg
-											class="playing-icon inline"
-											xmlns="http://www.w3.org/2000/svg"
-											height="24"
-											viewBox="0 0 24 24"
-											width="24"
-										>
-											<path d="M0 0h24v24H0z" fill="none" />
-											<path
-												d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"
-											/>
-										</svg>
-									{:else}
-										{i + 1}
-									{/if}
-								{:else if column.key === 'duration'}
-									{track.duration ? get_duration(track.duration) : ''}
-								{:else if column.key === 'dateAdded'}
-									{format_date(track.dateAdded)}
-								{:else if column.key === 'image'}
-									<Cover {track} />
-								{:else}
-									{track[column.key] || ''}
-								{/if}
-							</div>
-						{/each}
-					</div>
-				{/if}
+				<!-- svelte-ignore a11y-click-events-have-key-events -->
+				<!-- svelte-ignore a11y-interactive-supports-focus -->
+				<div class="row" role="row" style:translate="0 {i * 24}px">
+					{#each columns as column}
+						<div
+							class="c {column.key}"
+							style:width="{column.width}px"
+							style:translate="{column.offset}px 0"
+						>
+							xxxxxx
+						</div>
+					{/each}
+				</div>
 			{/each}
-		</VirtualListBlock>
-		<div class="drag-line" class:hidden={drag_to_index === null} bind:this={drag_line}></div>
+			<div class="drag-line" class:hidden={drag_to_index === null} bind:this={drag_line}></div>
+		</div>
 	</div>
 </div>
 
