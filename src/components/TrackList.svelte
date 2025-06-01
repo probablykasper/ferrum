@@ -47,6 +47,7 @@
 	import { SvelteSelection } from '@/lib/selection'
 	import { get_flattened_tracklists, handle_selected_tracks_action } from '@/lib/menus'
 	import type { SelectedTracksAction } from '@/electron/typed_ipc'
+	import { VirtualGrid } from '@/lib/virtual-grid'
 
 	let tracklist_element: HTMLDivElement
 
@@ -418,7 +419,10 @@
 		col_drag_to_index = null
 	}
 
-	let visible_indexes: number[] = []
+	const virtual_grid = new VirtualGrid<number>()
+	$: virtual_grid.set_columns(columns)
+	$: virtual_grid.set_items(tracks_page.itemIds)
+	$: $selection, virtual_grid.refresh()
 </script>
 
 <Header
@@ -489,135 +493,12 @@
 		on:keydown={keydown}
 	>
 		<div
-			{@attach (main_element) => {
-				const viewport_result = main_element.parentElement
-				if (!viewport_result) {
-					throw new Error('No viewport')
-				}
-				const viewport = viewport_result
-
-				let row_height = 24
-
-				let buffer = 5
-
-				let height = tracks_page.itemIds.length * row_height
-				main_element.style.height = height + 'px'
-
-				let viewport_height: number
-				let visible_count: number
-
-				let refreshing = false
-				function set_size() {
-					viewport_height = viewport.clientHeight
-					visible_count = Math.ceil(viewport_height / row_height)
-					refresh()
-				}
-				set_size()
-				const size_observer = new ResizeObserver(set_size)
-				size_observer.observe(viewport)
-
-				function refresh() {
-					if (refreshing) {
-						return
-					}
-					refreshing = true
-
-					requestAnimationFrame(() => {
-						const start_time = performance.now()
-						refreshing = false
-
-						const rendered_count = visible_count + buffer * 2
-
-						let start_index = Math.max(0, Math.floor(viewport.scrollTop / row_height - buffer))
-						const end_index = Math.min(
-							tracks_page.itemIds.length - 1,
-							start_index - 1 + rendered_count,
-						)
-						if (end_index - start_index + 1 < rendered_count) {
-							// fill backwards when scrolled to the end
-							start_index = Math.max(0, end_index + 1 - rendered_count)
-						}
-
-						// figure out which indexes should now be visible
-						const new_visible_indexes: number[] = []
-						for (let i = start_index; i <= end_index; i++) {
-							if (!visible_indexes.includes(i)) {
-								new_visible_indexes.push(i)
-							}
-						}
-						// update the visible indexes
-						for (let i = 0; i < visible_indexes.length; i++) {
-							const still_visible =
-								visible_indexes[i] >= start_index && visible_indexes[i] <= end_index
-							if (!still_visible) {
-								const new_index = new_visible_indexes.pop()
-								if (new_index !== undefined) {
-									// update it to a new visible index
-									visible_indexes[i] = new_index
-								} else {
-									// if there are no new visible indexes left, remove it
-									visible_indexes.splice(i, 1)
-									i--
-								}
-							}
-						}
-						if (new_visible_indexes.length > 0) {
-							// add new visible indexes
-							visible_indexes.push(...new_visible_indexes)
-						}
-						render()
-						console.log(`Render ${performance.now() - start_time}ms`)
-					})
-				}
-				function on_scroll() {
-					requestAnimationFrame(refresh)
-				}
-
-				const rows: HTMLElement[] = []
-
-				function render() {
-					if (rows.length < visible_indexes.length) {
-						// add new rows
-						for (let i = rows.length; i < visible_indexes.length; i++) {
-							const row = document.createElement('div')
-							row.className = 'row'
-							row.setAttribute('role', 'row')
-							rows.push(row)
-							main_element.appendChild(row)
-
-							for (const column of columns) {
-								const cell = document.createElement('div')
-								cell.className = `c ${column.key}`
-								cell.style.width = `${column.width}px`
-								cell.style.translate = `${column.offset}px 0`
-								row.appendChild(cell)
-
-								cell.innerHTML = 'xxxxxx'
-							}
-						}
-					}
-
-					let removed_rows = []
-					for (let i = 0; i < rows.length; i++) {
-						const row = rows[i]
-						if (visible_indexes[i] === undefined) {
-							removed_rows.push(row)
-						} else {
-							row.style.translate = `0 ${visible_indexes[i] * row_height}px`
-						}
-					}
-					for (const row of removed_rows) {
-						row.remove()
-						rows.splice(rows.indexOf(row), 1)
-					}
-				}
-
-				viewport.addEventListener('scroll', on_scroll)
-				return () => {
-					viewport.removeEventListener('scroll', on_scroll)
-					size_observer.disconnect()
-				}
-			}}
+			{@attach virtual_grid.attach({
+				row_setup(row, item, i) {
+					row.classList.toggle('odd', i % 2 === 0)
+					row.classList.toggle('selected', $selection.has(item))
+				},
+			})}
 		>
 			<div class="drag-line" class:hidden={drag_to_index === null} bind:this={drag_line}></div>
 		</div>
@@ -625,10 +506,6 @@
 </div>
 
 <style lang="sass">
-	.odd
-		background-color: hsla(0, 0%, 90%, 0.06)
-	.selected
-		background-color: hsla(var(--hue), 20%, 42%, 0.8)
 	:global(:focus)
 		.selected
 			background-color: hsla(var(--hue), 70%, 46%, 1)
@@ -639,6 +516,10 @@
 		width: 100%
 		background-color: rgba(0, 0, 0, 0.01)
 		overflow: hidden
+		.selected
+			background-color: hsla(var(--hue), 20%, 42%, 0.8)
+		.odd
+			background-color: hsla(0, 0%, 90%, 0.06)
 		.row.table-header
 			position: relative
 			.c
