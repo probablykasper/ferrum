@@ -39,7 +39,7 @@
 	import { ipc_listen, ipc_renderer, join_paths } from '../lib/window'
 	import { onDestroy, onMount } from 'svelte'
 	import { dragged } from '../lib/drag-drop'
-	import * as dragGhost from './DragGhost.svelte'
+	import * as DragGhost from './DragGhost.svelte'
 	import VirtualListBlock, { scroll_container_keydown } from './VirtualListBlock.svelte'
 	import type { ItemId, Track, TracksPage } from 'ferrum-addon/addon'
 	import Header from './Header.svelte'
@@ -184,20 +184,21 @@
 			e.dataTransfer.effectAllowed = 'move'
 			if (drag_item_ids.length === 1) {
 				const { track } = get_track_by_item_id(drag_item_ids[0])
-				dragGhost.set_inner_text(track.artist + ' - ' + track.name)
+				console.log('on_drag_start', drag_item_ids, track)
+				DragGhost.set_inner_text(track.artist + ' - ' + track.name)
 			} else {
-				dragGhost.set_inner_text(drag_item_ids.length + ' items')
+				DragGhost.set_inner_text(drag_item_ids.length + ' items')
 			}
 			dragged.tracks = {
 				ids: get_track_ids(drag_item_ids),
 				playlist_indexes: drag_item_ids,
 			}
-			e.dataTransfer.setDragImage(dragGhost.drag_el, 0, 0)
+			e.dataTransfer.setDragImage(DragGhost.drag_el, 0, 0)
 			e.dataTransfer.setData('ferrum.tracks', '')
 		}
 	}
 	let drag_to_index: null | number = null
-	function on_drag_over(e: DragEvent, index: number) {
+	function on_drag_over(e: DragEvent, element: Element, index: number) {
 		if (
 			!$sort_desc ||
 			$sort_key !== 'index' ||
@@ -213,7 +214,7 @@
 			e.dataTransfer?.types[0] === 'ferrum.tracks'
 		) {
 			e.preventDefault()
-			const rect = e.currentTarget.getBoundingClientRect()
+			const rect = element.getBoundingClientRect()
 			const container_rect = viewport.getBoundingClientRect()
 			if (e.pageY < rect.bottom - rect.height / 2) {
 				const top = rect.top - container_rect.top + viewport.scrollTop - 1
@@ -227,14 +228,11 @@
 			}
 		}
 	}
-	async function drop_handler() {
+	function drop_handler() {
 		if (drag_to_index !== null) {
 			move_tracks(params.playlist_id, drag_item_ids, drag_to_index)
 			drag_to_index = null
 		}
-	}
-	function drag_end_handler() {
-		drag_to_index = null
 	}
 
 	function get_item(item_id: ItemId) {
@@ -607,6 +605,16 @@
 				selection.handle_contextmenu(e, row.index)
 			}
 		}}
+		on:dragstart={on_drag_start}
+		on:dragover={(e: DragEvent) => {
+			const row = get_row(e)
+			if (row) {
+				on_drag_over(e, row.element, row.index)
+			}
+		}}
+		on:drop={drop_handler}
+		on:dragend={() => (drag_to_index = null)}
+		on:dragleave={() => (drag_to_index = null)}
 	>
 		<div {@attach virtual_grid.attach()}>
 			<div class="drag-line" class:hidden={drag_to_index === null} bind:this={drag_line}></div>
