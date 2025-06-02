@@ -419,6 +419,21 @@
 		col_drag_to_index = null
 	}
 
+	function get_row(e: Event) {
+		if (!(e.target instanceof Element)) {
+			return null
+		}
+		const row = e.target?.closest('[aria-rowindex]')
+		const row_number = parseInt(row?.getAttribute('aria-rowindex') ?? '')
+		if (!row || !Number.isInteger(row_number)) {
+			return null
+		}
+		return {
+			index: row_number - 1,
+			element: row,
+		}
+	}
+
 	const virtual_grid = new VirtualGrid<number>()
 	$: virtual_grid.set_columns(columns)
 	$: virtual_grid.set_items(tracks_page.itemIds)
@@ -449,7 +464,7 @@
 			<!-- svelte-ignore a11y-interactive-supports-focus -->
 			<!-- svelte-ignore a11y-click-events-have-key-events -->
 			<div
-				class="c {column.key}"
+				class="cell {column.key}"
 				class:sort={$sort_key === column.key}
 				style:width="{column.width}px"
 				style:translate="{column.offset}px 0"
@@ -491,6 +506,30 @@
 		on:mousedown|self={() => selection.clear()}
 		on:keydown={scroll_container_keydown}
 		on:keydown={keydown}
+		on:mousedown={(e: MouseEvent) => {
+			const row = get_row(e)
+			if (row) {
+				selection.handle_mousedown(e, row.index)
+			}
+		}}
+		on:click={(e: MouseEvent) => {
+			const row = get_row(e)
+			if (row) {
+				selection.handle_click(e, row.index)
+			}
+		}}
+		on:dblclick={(e: MouseEvent) => {
+			const row = get_row(e)
+			if (row) {
+				double_click(e, row.index)
+			}
+		}}
+		on:contextmenu={(e: MouseEvent) => {
+			const row = get_row(e)
+			if (row) {
+				selection.handle_contextmenu(e, row.index)
+			}
+		}}
 	>
 		<div
 			{@attach virtual_grid.attach({
@@ -506,7 +545,12 @@
 </div>
 
 <style lang="sass">
-	:global(:focus)
+	.tracklist :global
+		.odd
+			background-color: hsla(0, 0%, 90%, 0.06)
+		.selected
+			background-color: hsla(var(--hue), 20%, 42%, 0.8)
+	:global(:focus) .tracklist :global, .main-focus-element:focus :global
 		.selected
 			background-color: hsla(var(--hue), 70%, 46%, 1)
 	.tracklist :global
@@ -516,10 +560,6 @@
 		width: 100%
 		background-color: rgba(0, 0, 0, 0.01)
 		overflow: hidden
-		.selected
-			background-color: hsla(var(--hue), 20%, 42%, 0.8)
-		.odd
-			background-color: hsla(0, 0%, 90%, 0.06)
 		.row.table-header
 			position: relative
 			.c
@@ -547,7 +587,7 @@
 				color: #ffffff
 			&.playing
 				color: #00ffff
-		.c
+		.cell
 			display: block
 			position: absolute
 			vertical-align: top

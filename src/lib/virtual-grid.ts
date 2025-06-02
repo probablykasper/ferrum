@@ -118,7 +118,7 @@ export class VirtualGrid<T> {
 
 				for (const column of this.columns) {
 					const cell = document.createElement('div')
-					cell.className = `c ${column.key}`
+					cell.className = `cell ${column.key}`
 					cell.style.width = `${column.width}px`
 					cell.style.translate = `${column.offset}px 0`
 					row.appendChild(cell)
