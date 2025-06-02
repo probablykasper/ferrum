@@ -6,18 +6,33 @@ type Column = {
 }
 
 /** Note that parentElement is not reactive */
-export class VirtualGrid<T> {
+export class VirtualGrid<I, R extends Record<string, unknown>> {
 	main_element?: HTMLElement
 	viewport?: HTMLElement
 	size_observer?: ResizeObserver
-	row_setup?: (element: HTMLElement, item: T, index: number) => void
-	constructor() {}
+
+	private constructor(
+		public items: I[],
+		public options: {
+			row_prepare: (item: I, index: number) => R
+			row_render: (element: HTMLElement, item: R, index: number) => void
+		},
+	) {}
+
+	static create<I, R extends Record<string, unknown>>(
+		items: I[],
+		options: {
+			row_prepare: (item: I, index: number) => R
+			row_render: (element: HTMLElement, item: R, index: number) => void
+		},
+	) {
+		return new VirtualGrid<I, R>(items, options)
+	}
 
 	row_height = 24
 	buffer = 5
 
-	items: T[] = []
-	set_items(items: T[]) {
+	set_items(items: I[]) {
 		this.items = items
 		this.#set_size()
 	}
@@ -105,6 +120,9 @@ export class VirtualGrid<T> {
 		this.refresh()
 	}
 
+	// Performance improvements:
+	// - Run row_prepare() before all DOM updates
+	// - Render less during scroll
 	render() {
 		if (this.rows.length < this.visible_indexes.length) {
 			// add new rows
@@ -122,24 +140,30 @@ export class VirtualGrid<T> {
 					cell.style.width = `${column.width}px`
 					cell.style.translate = `${column.offset}px 0`
 					row.appendChild(cell)
-
-					cell.innerHTML = 'xxxxxx'
 				}
 			}
 		}
 
 		const removed_rows = []
-		for (let i = 0; i < this.rows.length; i++) {
-			const row = this.rows[i]
-			const item_index = this.visible_indexes[i]
+		for (let ri = 0; ri < this.rows.length; ri++) {
+			const row = this.rows[ri]
+			const item_index = this.visible_indexes[ri]
 			if (item_index === undefined) {
 				removed_rows.push(row)
 			} else {
 				row.style.translate = `0 ${item_index * this.row_height}px`
 				row.setAttribute('aria-rowindex', String(item_index + 1))
-				if (this.row_setup) {
-					this.row_setup(row, this.items[item_index], item_index)
+				const options = this.options
+				const row_entry = options.row_prepare(this.items[item_index], item_index)
+				for (let ci = 0; ci < this.columns.length; ci++) {
+					const column = this.columns[ci]
+					const cell = row.children[ci] as HTMLElement
+					const cell_value = row_entry[column.key]
+					if (cell_value !== null && cell_value !== undefined) {
+						cell.textContent = String(row_entry[column.key])
+					}
 				}
+				options.row_render(row, row_entry, item_index)
 			}
 		}
 		for (const row of removed_rows) {
@@ -148,12 +172,7 @@ export class VirtualGrid<T> {
 		}
 	}
 
-	setup(
-		node: HTMLElement,
-		options: { row_setup?: (element: HTMLElement, item: T, index: number) => void },
-	) {
-		this.row_setup = options.row_setup
-
+	setup(node: HTMLElement) {
 		this.main_element = node
 
 		const viewport_result = this.main_element.parentElement
@@ -176,7 +195,7 @@ export class VirtualGrid<T> {
 			this.size_observer?.disconnect()
 		}
 	}
-	attach(options: Parameters<typeof this.setup>[1]) {
-		return (node: HTMLElement) => this.setup(node, options)
+	attach() {
+		return (node: HTMLElement) => this.setup(node)
 	}
 }

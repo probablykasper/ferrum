@@ -31,11 +31,12 @@
 		save_view_options,
 		get_track_by_item_id,
 		view_options,
+		paths,
 	} from '@/lib/data'
 	import { new_playback_instance, playing_id } from '../lib/player'
 	import { get_duration, format_date, check_mouse_shortcut, check_shortcut } from '../lib/helpers'
 	import { tracklist_actions } from '../lib/page'
-	import { ipc_listen, ipc_renderer } from '../lib/window'
+	import { ipc_listen, ipc_renderer, join_paths } from '../lib/window'
 	import { onDestroy, onMount } from 'svelte'
 	import { dragged } from '../lib/drag-drop'
 	import * as dragGhost from './DragGhost.svelte'
@@ -434,7 +435,33 @@
 		}
 	}
 
-	const virtual_grid = new VirtualGrid<number>()
+	const virtual_grid = VirtualGrid.create(tracks_page.itemIds, {
+		row_prepare(item_id, i) {
+			const { track, id } = get_item(item_id)
+			if (track === null) {
+				throw new Error(`Track with item_id ${item_id} not found`)
+			}
+			return {
+				...track,
+				item_id,
+				track_id: id,
+				duration: track.duration ? get_duration(track.duration) : '',
+				dateAdded: format_date(track.dateAdded),
+				index: i + 1,
+				image:
+					'app://trackimg/?path=' +
+					encodeURIComponent(join_paths(paths.tracksDir, track.file)) +
+					'&cache_db_path=' +
+					encodeURIComponent(paths.cacheDb) +
+					'&date_modified=' +
+					encodeURIComponent(track.dateModified),
+			}
+		},
+		row_render(row, item, i) {
+			row.classList.toggle('odd', i % 2 === 0)
+			row.classList.toggle('selected', $selection.has(item.item_id))
+		},
+	})
 	$: virtual_grid.set_columns(columns)
 	$: virtual_grid.set_items(tracks_page.itemIds)
 	$: $selection, virtual_grid.refresh()
@@ -531,14 +558,7 @@
 			}
 		}}
 	>
-		<div
-			{@attach virtual_grid.attach({
-				row_setup(row, item, i) {
-					row.classList.toggle('odd', i % 2 === 0)
-					row.classList.toggle('selected', $selection.has(item))
-				},
-			})}
-		>
+		<div {@attach virtual_grid.attach()}>
 			<div class="drag-line" class:hidden={drag_to_index === null} bind:this={drag_line}></div>
 		</div>
 	</div>
