@@ -137,6 +137,9 @@ export class VirtualGrid<I, R extends Record<string, unknown>> {
 			return col
 		})
 
+		for (const row of this.rows) {
+			row.remove()
+		}
 		this.rows = []
 		this.refresh()
 		return this.columns
