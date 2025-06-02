@@ -42,13 +42,12 @@
 	import * as dragGhost from './DragGhost.svelte'
 	import VirtualListBlock, { scroll_container_keydown } from './VirtualListBlock.svelte'
 	import type { ItemId, Track, TracksPage } from 'ferrum-addon/addon'
-	import Cover from './Cover.svelte'
 	import Header from './Header.svelte'
 	import { writable } from 'svelte/store'
 	import { SvelteSelection } from '@/lib/selection'
 	import { get_flattened_tracklists, handle_selected_tracks_action } from '@/lib/menus'
 	import type { SelectedTracksAction } from '@/electron/typed_ipc'
-	import { VirtualGrid } from '@/lib/virtual-grid'
+	import { VirtualGrid, type Column } from '@/lib/virtual-grid'
 
 	let tracklist_element: HTMLDivElement
 
@@ -257,14 +256,11 @@
 		// tracklist_actions.scroll_to_index = virtual_list.scroll_to_index
 	})
 
-	type Column = {
+	type TrackListColumn = Column & {
 		name: string
 		key: 'index' | 'image' | keyof Track
-		width: number
-		is_pct?: true
-		offset?: number
 	}
-	const all_columns: Column[] = [
+	const all_columns: TrackListColumn[] = [
 		// sorted alphabetically
 		{ name: '#', key: 'index', width: 46 },
 		// { name: 'Size', key: 'size' },
@@ -286,7 +282,75 @@
 		{ name: 'Time', key: 'duration', width: 50 },
 		{ name: 'Genre', key: 'genre', width: 0.65, is_pct: true },
 		{ name: 'Grouping', key: 'grouping', width: 0.65, is_pct: true },
-		{ name: 'Image', key: 'image', width: 28 },
+		{
+			name: 'Image',
+			key: 'image',
+			width: 28,
+			cell_render(cell, value) {
+				if (typeof value !== 'string') {
+					throw new Error('Non-string image value')
+				}
+				if (cell.firstChild instanceof HTMLImageElement && cell.firstChild.src === value) {
+					return
+				}
+				let img: HTMLImageElement
+				if (cell.firstChild instanceof HTMLImageElement) {
+					img = cell.firstChild
+				} else {
+					img = document.createElement('img')
+				}
+				img.classList.add('invisible')
+				img.src = value
+				img.onload = (e) => {
+					const img = e.currentTarget as HTMLImageElement
+					if (img.src !== value) return
+					img.classList.remove('invisible', 'error', 'missing')
+					img.removeAttribute('title')
+				}
+				img.onerror = async (e) => {
+					// Yes this is dumb, but there's no way to get an error code from <img src="" />
+					const img = (e as Event).currentTarget as HTMLImageElement
+					if (img.src !== value) return
+					img.classList.remove('invisible')
+					img.removeAttribute('title')
+					// 404 is an common expected result, so we start with that
+					img.classList.add('error', 'missing')
+					const new_error = await fetch(value)
+						.then(async (response) => {
+							if (response.status === 404) {
+								return '404'
+							}
+							const response_text = await response.text()
+							console.log(`Failed to load cover (${response.status}): ${response_text}`)
+							return response_text
+						})
+						.catch(() => {
+							return 'network'
+						})
+					if (img.src !== value) return
+					img.classList.toggle('missing', new_error === '404')
+					img.title = new_error
+				}
+				img.onmousedown = (e) => {
+					const img = e.currentTarget as HTMLImageElement
+					if (img.classList.contains('error')) {
+						e.stopPropagation()
+					}
+				}
+				img.onclick = (e) => {
+					const img = e.currentTarget as HTMLImageElement
+					const error = (e.currentTarget as HTMLImageElement).title
+					if (img.classList.contains('error')) {
+						ipc_renderer.invoke('showMessageBox', false, {
+							type: 'error',
+							message: 'Failed to load cover',
+							detail: error,
+						})
+					}
+				}
+				cell.replaceChildren(img)
+			},
+		},
 		// { name: 'ImportedFrom', key: 'importedFrom' },
 		// { name: 'Liked', key: 'liked' },
 		{ name: 'Name', key: 'name', width: 1.7, is_pct: true },
@@ -329,21 +393,7 @@
 		const columns = loaded_columns
 			.map((key) => all_columns.find((col) => col.key === key))
 			.filter((col) => col !== undefined)
-		const total_fixed_width = columns.reduce((sum, col) => sum + (col.is_pct ? 0 : col.width), 0)
-		const total_percent_pct = columns.reduce((sum, col) => sum + (col.is_pct ? col.width : 0), 0)
-		const container_width = tracklist_element?.clientWidth ?? total_fixed_width
-		const total_percent_width = container_width - total_fixed_width
-		let offset = 0
-		return columns.map((col) => {
-			col = { ...col }
-			if (col.is_pct) {
-				const pct = col.width / total_percent_pct
-				col.width = pct * total_percent_width
-			}
-			col.offset = offset
-			offset += col.width
-			return col
-		})
+		return columns
 	}
 	function save_columns() {
 		view_options.columns = columns.map((col) => col.key)
@@ -462,7 +512,7 @@
 			row.classList.toggle('selected', $selection.has(item.item_id))
 		},
 	})
-	$: virtual_grid.set_columns(columns)
+	$: grid_columns = virtual_grid.set_columns(columns)
 	$: virtual_grid.set_items(tracks_page.itemIds)
 	$: $selection, virtual_grid.refresh()
 </script>
@@ -487,7 +537,7 @@
 		on:dragleave={() => (col_drag_to_index = null)}
 		bind:this={col_container}
 	>
-		{#each columns as column, i}
+		{#each grid_columns as column, i}
 			<!-- svelte-ignore a11y-interactive-supports-focus -->
 			<!-- svelte-ignore a11y-click-events-have-key-events -->
 			<div
@@ -595,9 +645,9 @@
 				display: inline-block
 			&.desc .c.sort span::after
 				content: '▼'
+		$row-height: 24px
 		.row
 			width: 100%
-			$row-height: 24px
 			height: $row-height
 			font-size: 12px
 			line-height: $row-height
@@ -609,9 +659,9 @@
 				color: #00ffff
 		.cell
 			display: block
+			height: 100%
 			position: absolute
 			vertical-align: top
-			width: 100%
 			white-space: nowrap
 			overflow: hidden
 			text-overflow: ellipsis
@@ -626,32 +676,28 @@
 				padding-right: 10px
 				text-align: right
 				flex-shrink: 0
-		.selected .index svg.playing-icon
-			fill: var(--icon-color)
-		.index
-			width: 46px
-			svg.playing-icon
-				fill: #00ffff
-				width: 16px
-				height: 100%
 		.image
-			width: 18px
-			flex-shrink: 0
-			box-sizing: content-box
-		.playCount, .skipCount
-			width: 52px
-		.duration
-			width: 50px
+			display: flex
+			align-items: center
+			img
+				display: block
+				object-fit: contain
+				height: 24px
+				width: 18px
+				padding: 3px 0
+			.error::before
+				content: ''
+				cursor: pointer
+				display: block
+				width: 100%
+				height: 100%
+				background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18 18" fill="%23ef4444"><path d="M9,4c-2.76,0 -5,2.24 -5,5c0,2.76 2.24,5 5,5c2.76,0 5,-2.24 5,-5c0,-2.76 -2.24,-5 -5,-5Zm0.5,7.5l-1,0l0,-1l1,0l0,1Zm0,-2l-1,0l0,-3l1,0l0,3Z"/></svg>')
+			.error.missing::before
+				cursor: default
+				background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18 18"><rect x="0" y="0" width="18" height="18" fill="%232b2c31" rx="2" ry="2"/><path fill="%2345464a" d="M12.667,5l-5.332,1.195l-0,4.347c-0.993,-0.197 -2.002,0.557 -2.002,1.384c0,0.713 0.557,1.074 1.162,1.074c0.718,-0 1.504,-0.509 1.505,-1.546l0,-3.633l4,-0.82l0,2.875c-0.992,-0.196 -2,0.554 -2,1.38c0,0.714 0.572,1.077 1.174,1.077c0.713,0 1.492,-0.508 1.493,-1.545l-0,-5.788Z"/></svg>')
 		.dateAdded
-			width: 140px
 			flex-shrink: 0
 			font-variant-numeric: tabular-nums
-		.year
-			width: 0px
-			min-width: 47px
-		.bpm
-			width: 0px
-			min-width: 43px
 	.drag-line
 		position: absolute
 		width: 100%

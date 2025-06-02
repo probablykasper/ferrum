@@ -1,11 +1,17 @@
-type Column = {
+export type Column = {
+	name: string
 	key: string
 	width: number
 	is_pct?: true
 	offset?: number
+	/** Handles both creation and updating of rows */
+	cell_render?: (element: HTMLElement, value: unknown) => void
 }
 
-/** Note that parentElement is not reactive */
+/**
+ * Note that parentElement is not reactive.
+ * Do not add other elements into the row elements. Things would break because cells are referenced by indexing into the row's children.
+ */
 export class VirtualGrid<I, R extends Record<string, unknown>> {
 	main_element?: HTMLElement
 	viewport?: HTMLElement
@@ -115,9 +121,25 @@ export class VirtualGrid<I, R extends Record<string, unknown>> {
 
 	columns: Column[] = []
 	set_columns(columns: Column[]) {
-		this.columns = columns
+		const total_fixed_width = columns.reduce((sum, col) => sum + (col.is_pct ? 0 : col.width), 0)
+		const total_percent_pct = columns.reduce((sum, col) => sum + (col.is_pct ? col.width : 0), 0)
+		const container_width = this.viewport?.clientWidth ?? total_fixed_width
+		const total_percent_width = container_width - total_fixed_width
+		let offset = 0
+		this.columns = columns.map((col) => {
+			col = { ...col }
+			if (col.is_pct) {
+				const pct = col.width / total_percent_pct
+				col.width = pct * total_percent_width
+			}
+			col.offset = offset
+			offset += col.width
+			return col
+		})
+
 		this.rows = []
 		this.refresh()
+		return this.columns
 	}
 
 	// Performance improvements:
@@ -158,9 +180,14 @@ export class VirtualGrid<I, R extends Record<string, unknown>> {
 				for (let ci = 0; ci < this.columns.length; ci++) {
 					const column = this.columns[ci]
 					const cell = row.children[ci] as HTMLElement
-					const cell_value = row_entry[column.key]
-					if (cell_value !== null && cell_value !== undefined) {
-						cell.textContent = String(row_entry[column.key])
+					let cell_value = row_entry[column.key]
+					if (cell_value === undefined || cell_value === null) {
+						cell_value = ''
+					}
+					if (column.cell_render) {
+						column.cell_render(cell, cell_value)
+					} else {
+						cell.textContent = String(cell_value)
 					}
 				}
 				options.row_render(row, row_entry, item_index)
