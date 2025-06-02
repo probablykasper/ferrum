@@ -40,7 +40,6 @@
 	import { onDestroy, onMount } from 'svelte'
 	import { dragged } from '../lib/drag-drop'
 	import * as DragGhost from './DragGhost.svelte'
-	import VirtualListBlock, { scroll_container_keydown } from './VirtualListBlock.svelte'
 	import type { ItemId, Track, TracksPage } from 'ferrum-addon/addon'
 	import Header from './Header.svelte'
 	import { writable } from 'svelte/store'
@@ -242,12 +241,6 @@
 			return { id: null, track: null }
 		}
 	}
-
-	// let virtual_list: VirtualListBlock<ItemId>
-
-	// $: if (virtual_list) {
-	// 	virtual_list.refresh()
-	// }
 
 	let viewport: HTMLElement
 	onMount(() => {
@@ -579,7 +572,6 @@
 		class="main-focus-element relative h-full overflow-y-auto outline-none"
 		tabindex="0"
 		on:mousedown|self={() => selection.clear()}
-		on:keydown={scroll_container_keydown}
 		on:keydown={keydown}
 		on:mousedown={(e: MouseEvent) => {
 			const row = get_row(e)

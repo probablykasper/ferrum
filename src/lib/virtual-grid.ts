@@ -206,7 +206,8 @@ export class VirtualGrid<I, R extends Record<string, unknown>> {
 		if (!viewport_result) {
 			throw new Error('No viewport')
 		}
-		this.viewport = viewport_result
+		const viewport = viewport_result
+		this.viewport = viewport
 
 		this.#set_size()
 
@@ -216,9 +217,20 @@ export class VirtualGrid<I, R extends Record<string, unknown>> {
 		this.size_observer.observe(this.viewport)
 
 		const on_scroll = () => this.refresh()
-		this.viewport.addEventListener('scroll', on_scroll)
+		const on_keydown = (e: KeyboardEvent) => {
+			let prevent = true
+			if (e.key === 'Home') viewport.scrollTop = 0
+			else if (e.key === 'End') viewport.scrollTop = viewport.scrollHeight
+			else if (e.key === 'PageUp') viewport.scrollTop -= viewport.clientHeight
+			else if (e.key === 'PageDown') viewport.scrollTop += viewport.clientHeight
+			else prevent = false
+			if (prevent) e.preventDefault()
+		}
+		viewport.addEventListener('scroll', on_scroll)
+		viewport.addEventListener('keydown', on_keydown)
 		return () => {
-			this.viewport?.removeEventListener('scroll', on_scroll)
+			viewport.removeEventListener('scroll', on_scroll)
+			viewport.removeEventListener('keydown', on_keydown)
 			this.size_observer?.disconnect()
 		}
 	}
