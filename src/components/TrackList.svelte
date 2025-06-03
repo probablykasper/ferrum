@@ -477,6 +477,7 @@
 	}
 
 	const virtual_grid = VirtualGrid.create(tracks_page.itemIds, {
+		buffer: 20,
 		row_prepare(item_id, i) {
 			const { track, id } = get_item(item_id)
 			if (track === null) {

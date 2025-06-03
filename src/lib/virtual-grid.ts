@@ -38,6 +38,7 @@ export class VirtualGrid<I, R extends Record<string, unknown>> {
 	private constructor(
 		public source_items: I[],
 		public options: {
+			buffer?: number
 			row_prepare: (source_items: I, index: number) => R
 			row_render: (element: HTMLElement, item: R, index: number) => void
 		},
@@ -46,6 +47,7 @@ export class VirtualGrid<I, R extends Record<string, unknown>> {
 	static create<I, R extends Record<string, unknown>>(
 		source_items: I[],
 		options: {
+			buffer?: number
 			row_prepare: (source_items: I, index: number) => R
 			row_render: (element: HTMLElement, item: R, index: number) => void
 		},
@@ -54,7 +56,6 @@ export class VirtualGrid<I, R extends Record<string, unknown>> {
 	}
 
 	row_height = 24
-	buffer = 5
 
 	set_source_items(source_items: I[]) {
 		this.source_items = source_items
@@ -80,12 +81,10 @@ export class VirtualGrid<I, R extends Record<string, unknown>> {
 		if (!this.viewport) {
 			return
 		}
-		const rendered_count = this.viewport_row_count + this.buffer * 2
+		const buffer = this.options.buffer ?? 5
+		const rendered_count = this.viewport_row_count + buffer * 2
 
-		let start_index = Math.max(
-			0,
-			Math.floor(this.viewport.scrollTop / this.row_height - this.buffer),
-		)
+		let start_index = Math.max(0, Math.floor(this.viewport.scrollTop / this.row_height - buffer))
 		const end_index = Math.min(this.source_items.length - 1, start_index - 1 + rendered_count)
 		if (end_index - start_index + 1 < rendered_count) {
 			// fill backwards when scrolled to the end
