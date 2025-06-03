@@ -46,7 +46,7 @@
 	import { SvelteSelection } from '@/lib/selection'
 	import { get_flattened_tracklists, handle_selected_tracks_action } from '@/lib/menus'
 	import type { SelectedTracksAction } from '@/electron/typed_ipc'
-	import { VirtualGrid, type Column } from '@/lib/virtual-grid'
+	import { RefreshLevel, VirtualGrid, type Column } from '@/lib/virtual-grid'
 
 	let tracklist_element: HTMLDivElement
 
@@ -504,8 +504,8 @@
 		},
 	})
 	$: grid_columns = virtual_grid.set_columns(columns)
-	$: virtual_grid.set_items(tracks_page.itemIds)
-	$: $selection, virtual_grid.refresh()
+	$: virtual_grid.set_source_items(tracks_page.itemIds)
+	$: $selection, virtual_grid.refresh(RefreshLevel.AllRows)
 </script>
 
 <Header

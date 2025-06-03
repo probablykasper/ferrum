@@ -8,6 +8,23 @@ export type Column = {
 	cell_render?: (element: HTMLElement, value: unknown) => void
 }
 
+export const RefreshLevel = {
+	Nothing: 0,
+	// Render rows that go in/out of the viewport
+	NewRows: 1,
+	// Render all rows in the viewport
+	AllRows: 2,
+} as const
+export type RefreshLevel = (typeof RefreshLevel)[keyof typeof RefreshLevel]
+
+type Row = {
+	/* null means it will render */
+	element: HTMLElement | null
+	/* null means it will be removed */
+	index: number | null
+	rendered: boolean
+}
+
 /**
  * Note that parentElement is not reactive.
  * Do not add other elements into the row elements. Things would break because cells are referenced by indexing into the row's children.
@@ -16,106 +33,124 @@ export class VirtualGrid<I, R extends Record<string, unknown>> {
 	main_element?: HTMLElement
 	viewport?: HTMLElement
 	size_observer?: ResizeObserver
+	refreshing: RefreshLevel = RefreshLevel.Nothing
 
 	private constructor(
-		public items: I[],
+		public source_items: I[],
 		public options: {
-			row_prepare: (item: I, index: number) => R
+			row_prepare: (source_items: I, index: number) => R
 			row_render: (element: HTMLElement, item: R, index: number) => void
 		},
 	) {}
 
 	static create<I, R extends Record<string, unknown>>(
-		items: I[],
+		source_items: I[],
 		options: {
-			row_prepare: (item: I, index: number) => R
+			row_prepare: (source_items: I, index: number) => R
 			row_render: (element: HTMLElement, item: R, index: number) => void
 		},
 	) {
-		return new VirtualGrid<I, R>(items, options)
+		return new VirtualGrid<I, R>(source_items, options)
 	}
 
 	row_height = 24
 	buffer = 5
 
-	set_items(items: I[]) {
-		this.items = items
-		this.#set_size()
+	set_source_items(source_items: I[]) {
+		this.source_items = source_items
+		this.#update_viewport_size()
+		this.refresh(RefreshLevel.AllRows)
 	}
 
-	visible_count = 0
+	viewport_row_count = 0
 
-	refreshing = false
-	#get_visible_count() {
+	#update_viewport_size() {
 		const viewport_height = this.viewport?.clientHeight ?? 0
-		return Math.ceil(viewport_height / this.row_height)
-	}
-	#set_size() {
-		this.visible_count = this.#get_visible_count()
-		const height = this.items.length * this.row_height
+		this.viewport_row_count = Math.ceil(viewport_height / this.row_height)
+
+		const height = this.source_items.length * this.row_height
 		if (this.main_element) {
 			this.main_element.style.height = height + 'px'
 		}
-		this.refresh()
 	}
 
-	visible_indexes: number[] = []
-	rows: HTMLElement[] = []
+	rows: Row[] = []
 
-	refresh() {
-		if (this.refreshing) {
+	#recalculate_visible_indexes() {
+		if (!this.viewport) {
 			return
 		}
-		this.refreshing = true
+		const rendered_count = this.viewport_row_count + this.buffer * 2
+
+		let start_index = Math.max(
+			0,
+			Math.floor(this.viewport.scrollTop / this.row_height - this.buffer),
+		)
+		const end_index = Math.min(this.source_items.length - 1, start_index - 1 + rendered_count)
+		if (end_index - start_index + 1 < rendered_count) {
+			// fill backwards when scrolled to the end
+			start_index = Math.max(0, end_index + 1 - rendered_count)
+		}
+
+		// figure out which indexes should now be added
+		const new_visible_indexes: number[] = []
+		for (let i = start_index; i <= end_index; i++) {
+			const exists = this.rows.find((row) => row.index === i)
+			if (!exists) {
+				new_visible_indexes.push(i)
+			}
+		}
+
+		// update the visible indexes
+		for (let i = 0; i < this.rows.length; i++) {
+			const row = this.rows[i]
+			const still_visible = row.index !== null && row.index >= start_index && row.index <= end_index
+			if (!still_visible) {
+				const new_index = new_visible_indexes.pop()
+				if (new_index !== undefined) {
+					// update it to a new visible index
+					row.index = new_index
+					row.rendered = false
+				} else {
+					// if there are no new visible indexes left, remove it
+					row.index = null
+					row.rendered = false
+				}
+			}
+		}
+		if (new_visible_indexes.length > 0) {
+			// add new visible indexes
+			for (const index of new_visible_indexes) {
+				this.rows.push({
+					element: null,
+					index,
+					rendered: false,
+				})
+			}
+		}
+	}
+
+	refresh(level: RefreshLevel = RefreshLevel.AllRows) {
+		if (this.refreshing) {
+			if (level > this.refreshing) {
+				this.refreshing = level
+			}
+			return
+		}
+		this.refreshing = level
 
 		requestAnimationFrame(() => {
-			if (!this.viewport) {
-				return
-			}
 			const start_time = performance.now()
-			this.refreshing = false
 
-			const rendered_count = this.visible_count + this.buffer * 2
-
-			let start_index = Math.max(
-				0,
-				Math.floor(this.viewport.scrollTop / this.row_height - this.buffer),
-			)
-			const end_index = Math.min(this.items.length - 1, start_index - 1 + rendered_count)
-			if (end_index - start_index + 1 < rendered_count) {
-				// fill backwards when scrolled to the end
-				start_index = Math.max(0, end_index + 1 - rendered_count)
-			}
-
-			// figure out which indexes should now be visible
-			const new_visible_indexes: number[] = []
-			for (let i = start_index; i <= end_index; i++) {
-				if (!this.visible_indexes.includes(i)) {
-					new_visible_indexes.push(i)
+			this.#recalculate_visible_indexes()
+			if (this.refreshing === RefreshLevel.AllRows) {
+				for (const row of this.rows) {
+					row.rendered = false
 				}
 			}
-			// update the visible indexes
-			for (let i = 0; i < this.visible_indexes.length; i++) {
-				const still_visible =
-					this.visible_indexes[i] >= start_index && this.visible_indexes[i] <= end_index
-				if (!still_visible) {
-					const new_index = new_visible_indexes.pop()
-					if (new_index !== undefined) {
-						// update it to a new visible index
-						this.visible_indexes[i] = new_index
-					} else {
-						// if there are no new visible indexes left, remove it
-						this.visible_indexes.splice(i, 1)
-						i--
-					}
-				}
-			}
-			if (new_visible_indexes.length > 0) {
-				// add new visible indexes
-				this.visible_indexes.push(...new_visible_indexes)
-			}
-			this.render()
+			this.#render()
 			console.log(`Render ${(performance.now() - start_time).toFixed(1)}ms`)
+			this.refreshing = 0
 		})
 	}
 
@@ -137,68 +172,75 @@ export class VirtualGrid<I, R extends Record<string, unknown>> {
 			return col
 		})
 
+		// make all rows fully rerender
 		for (const row of this.rows) {
-			row.remove()
+			row.element?.remove()
 		}
 		this.rows = []
-		this.refresh()
+
+		this.refresh(RefreshLevel.NewRows)
 		return this.columns
 	}
 
-	// Performance improvements:
+	// Performance improvement:
 	// - Run row_prepare() before all DOM updates
-	// - Render less during scroll
-	render() {
-		if (this.rows.length < this.visible_indexes.length) {
-			// add new rows
-			for (let i = this.rows.length; i < this.visible_indexes.length; i++) {
-				const row = document.createElement('div')
-				row.className = 'row'
-				row.setAttribute('role', 'row')
-				row.setAttribute('draggable', 'true')
-				this.rows.push(row)
-				this.main_element?.appendChild(row)
+	#render() {
+		// create new row elements
+		for (const row of this.rows) {
+			if (row.element || row.index === null) {
+				continue
+			}
+			const row_element = document.createElement('div')
+			row_element.className = 'row'
+			row_element.setAttribute('role', 'row')
+			row_element.setAttribute('draggable', 'true')
+			row.element = row_element
+			this.main_element?.appendChild(row_element)
 
-				for (const column of this.columns) {
-					const cell = document.createElement('div')
-					cell.className = `cell ${column.key}`
-					cell.style.width = `${column.width}px`
-					cell.style.translate = `${column.offset}px 0`
-					row.appendChild(cell)
-				}
+			for (const column of this.columns) {
+				const cell = document.createElement('div')
+				cell.className = `cell ${column.key}`
+				cell.style.width = `${column.width}px`
+				cell.style.translate = `${column.offset}px 0`
+				row_element.appendChild(cell)
 			}
 		}
 
-		const removed_rows = []
-		for (let ri = 0; ri < this.rows.length; ri++) {
-			const row = this.rows[ri]
-			const item_index = this.visible_indexes[ri]
-			if (item_index === undefined) {
-				removed_rows.push(row)
-			} else {
-				row.style.translate = `0 ${item_index * this.row_height}px`
-				row.setAttribute('aria-rowindex', String(item_index + 1))
-				const options = this.options
-				const row_entry = options.row_prepare(this.items[item_index], item_index)
-				for (let ci = 0; ci < this.columns.length; ci++) {
-					const column = this.columns[ci]
-					const cell = row.children[ci] as HTMLElement
-					let cell_value = row_entry[column.key]
-					if (cell_value === undefined || cell_value === null) {
-						cell_value = ''
-					}
-					if (column.cell_render) {
-						column.cell_render(cell, cell_value)
-					} else {
-						cell.textContent = String(cell_value)
-					}
-				}
-				options.row_render(row, row_entry, item_index)
+		// render rows
+		for (const row of this.rows) {
+			if (row.rendered || row.index === null) {
+				continue
 			}
+			if (!row.element) {
+				throw new Error('Unexpected missing row element')
+			}
+			row.element.style.translate = `0 ${row.index * this.row_height}px`
+			row.element.setAttribute('aria-rowindex', String(row.index + 1))
+			const row_item = this.options.row_prepare(this.source_items[row.index], row.index)
+			for (let ci = 0; ci < this.columns.length; ci++) {
+				const column = this.columns[ci]
+				const cell = row.element.children[ci] as HTMLElement
+				let cell_value = row_item[column.key]
+				if (cell_value === undefined || cell_value === null) {
+					cell_value = ''
+				}
+				if (column.cell_render) {
+					column.cell_render(cell, cell_value)
+				} else {
+					cell.textContent = String(cell_value)
+				}
+			}
+			this.options.row_render(row.element, row_item, row.index)
+			row.rendered = true
 		}
-		for (const row of removed_rows) {
-			row.remove()
-			this.rows.splice(this.rows.indexOf(row), 1)
+
+		// delete rows that are no longer visible
+		for (let i = this.rows.length - 1; i >= 0; i--) {
+			const row = this.rows[i]
+			if (row.index === null) {
+				row.element?.remove()
+				this.rows.splice(i, 1)
+			}
 		}
 	}
 
@@ -212,14 +254,15 @@ export class VirtualGrid<I, R extends Record<string, unknown>> {
 		const viewport = viewport_result
 		this.viewport = viewport
 
-		this.#set_size()
+		this.#update_viewport_size()
 
 		this.size_observer = new ResizeObserver(() => {
-			this.#set_size()
+			this.#update_viewport_size()
+			this.refresh(RefreshLevel.NewRows)
 		})
 		this.size_observer.observe(this.viewport)
 
-		const on_scroll = () => this.refresh()
+		const on_scroll = () => this.refresh(RefreshLevel.NewRows)
 		const on_keydown = (e: KeyboardEvent) => {
 			let prevent = true
 			if (e.key === 'Home') viewport.scrollTop = 0
