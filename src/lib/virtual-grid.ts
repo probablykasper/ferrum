@@ -139,8 +139,6 @@ export class VirtualGrid<I, R extends Record<string, unknown>> {
 		this.refreshing = level
 
 		requestAnimationFrame(() => {
-			const start_time = performance.now()
-
 			this.#recalculate_visible_indexes()
 			if (this.refreshing === RefreshLevel.AllRows) {
 				for (const row of this.rows) {
@@ -148,7 +146,6 @@ export class VirtualGrid<I, R extends Record<string, unknown>> {
 				}
 			}
 			this.#render()
-			console.log(`Render ${(performance.now() - start_time).toFixed(1)}ms`)
 			this.refreshing = 0
 		})
 	}
@@ -181,9 +178,17 @@ export class VirtualGrid<I, R extends Record<string, unknown>> {
 		return this.columns
 	}
 
-	// Performance improvement:
-	// - Run row_prepare() before all DOM updates
 	#render() {
+		// prepare rows, before any DOM updates
+		const items: R[] = []
+		for (const row of this.rows) {
+			if (row.index === null || row.rendered) {
+				continue
+			}
+			const row_item = this.options.row_prepare(this.source_items[row.index], row.index)
+			items[row.index] = row_item
+		}
+
 		// create new row elements
 		for (const row of this.rows) {
 			if (row.element || row.index === null) {
@@ -215,7 +220,7 @@ export class VirtualGrid<I, R extends Record<string, unknown>> {
 			}
 			row.element.style.translate = `0 ${row.index * this.row_height}px`
 			row.element.setAttribute('aria-rowindex', String(row.index + 1))
-			const row_item = this.options.row_prepare(this.source_items[row.index], row.index)
+			const row_item = items[row.index]
 			for (let ci = 0; ci < this.columns.length; ci++) {
 				const column = this.columns[ci]
 				const cell = row.element.children[ci] as HTMLElement

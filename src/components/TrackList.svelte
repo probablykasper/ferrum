@@ -183,7 +183,6 @@
 			e.dataTransfer.effectAllowed = 'move'
 			if (drag_item_ids.length === 1) {
 				const { track } = get_track_by_item_id(drag_item_ids[0])
-				console.log('on_drag_start', drag_item_ids, track)
 				DragGhost.set_inner_text(track.artist + ' - ' + track.name)
 			} else {
 				DragGhost.set_inner_text(drag_item_ids.length + ' items')
