@@ -1,6 +1,6 @@
 # Changelog
 
-## Next
+## 0.19.4 - 2025 Jun 4
 - Faster scroll performance
 
 ## 0.19.3 - 2024 Nov 26
