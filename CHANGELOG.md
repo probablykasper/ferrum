@@ -1,5 +1,8 @@
 # Changelog
 
+## Next
+- Faster scroll performance
+
 ## 0.19.3 - 2024 Nov 26
 - Fixes rare .ogg metadata corruption (https://github.com/Serial-ATA/lofty-rs/issues/469)
 
