@@ -2,7 +2,7 @@
 name = "ferrum"
 publish = false
 build = "build.rs"
-edition = "2021"
+edition = "2024"
 exclude = ["artifacts.json"]
 
 [lib]
