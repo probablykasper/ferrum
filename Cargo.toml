@@ -37,7 +37,7 @@ url = "2.4"
 unicode-normalization = "0.1"
 rayon = "1.8"
 lazy_static = "1.5.0"
-fast_image_resize = { version = "4.2.1", features = ["image"] }
+fast_image_resize = { version = "5.1", features = ["image"] }
 image = { version = "0.25.2", features = [
 	"png",
 	"jpeg",
