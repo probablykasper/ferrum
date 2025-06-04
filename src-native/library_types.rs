@@ -403,10 +403,10 @@ pub fn get_track_ids_from_item_ids(playlist_item_ids: &[ItemId]) -> Vec<TrackID>
 		.collect()
 }
 
-pub fn get_track_id_from_item_id(playlist_item_id: ItemId) -> TrackID {
-	let playlist_track_id_map = TRACK_ID_MAP.read().unwrap();
-	playlist_track_id_map[playlist_item_id as usize].clone()
-}
+// pub fn get_track_id_from_item_id(playlist_item_id: ItemId) -> TrackID {
+// 	let playlist_track_id_map = TRACK_ID_MAP.read().unwrap();
+// 	playlist_track_id_map[playlist_item_id as usize].clone()
+// }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[napi(object)]
