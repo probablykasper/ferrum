@@ -1,6 +1,6 @@
 # Changelog
 
-## Next
+## 0.19.6 - 2025 Jun 6
 - Fix some cover artworks not loading
 
 ## 0.19.5 - 2025 Jun 6
