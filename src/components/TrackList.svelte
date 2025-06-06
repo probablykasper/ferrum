@@ -290,20 +290,18 @@
 					img = document.createElement('img')
 				}
 				img.classList.add('invisible')
+				console.dir('render ' + value)
 				img.src = value
-				// Use img.src instead of value, because img.src changes the value.
-				// It encodes characters like `'` which isn't done by encodeURIComponent
-				const img_src_value = img.src
 				img.onload = (e) => {
 					const img = e.currentTarget as HTMLImageElement
-					if (img.src !== img_src_value) return
+					if (img.src !== value) return
 					img.classList.remove('invisible', 'error', 'missing')
 					img.removeAttribute('title')
 				}
 				img.onerror = async (e) => {
 					// Yes this is dumb, but there's no way to get an error code from <img src="" />
 					const img = (e as Event).currentTarget as HTMLImageElement
-					if (img.src !== img_src_value) return
+					if (img.src !== value) return
 					img.classList.remove('invisible')
 					img.removeAttribute('title')
 					// 404 is an common expected result, so we start with that
@@ -320,7 +318,7 @@
 						.catch(() => {
 							return 'network'
 						})
-					if (img.src !== img_src_value) return
+					if (img.src !== value) return
 					img.classList.toggle('missing', new_error === '404')
 					img.title = new_error
 				}
@@ -492,13 +490,17 @@
 				duration: track.duration ? get_duration(track.duration) : '',
 				dateAdded: format_date(track.dateAdded),
 				index: i + 1,
-				image:
+				// Use new URL() to get the same URL as img.src uses. For example, this
+				// encodes `'`, unline encodeURIComponent. This prevents
+				// unecessary image reloading.
+				image: new URL(
 					'app://trackimg/?path=' +
-					encodeURIComponent(join_paths(paths.tracksDir, track.file)) +
-					'&cache_db_path=' +
-					encodeURIComponent(paths.cacheDb) +
-					'&date_modified=' +
-					track.dateModified,
+						encodeURIComponent(join_paths(paths.tracksDir, track.file)) +
+						'&cache_db_path=' +
+						encodeURIComponent(paths.cacheDb) +
+						'&date_modified=' +
+						track.dateModified,
+				).href,
 			}
 		},
 		row_render(row, item, i) {

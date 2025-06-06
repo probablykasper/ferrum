@@ -1,5 +1,8 @@
 # Changelog
 
+## Next
+- Fix cover artwork flickering
+
 ## 0.19.6 - 2025 Jun 6
 - Fix some cover artworks not loading
 
