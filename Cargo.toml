@@ -22,8 +22,7 @@ napi = { version = "2.13", features = [
 ] }
 napi-derive = "2.15"
 serde = { version = "1.0", features = ["derive"] }
-# unreleased fix for https://github.com/Serial-ATA/lofty-rs/pull/475
-lofty = { rev = "dd4e926db4eaec593b051c34717a7fbae162397f", git = "https://github.com/Serial-ATA/lofty-rs" }
+lofty = "0.22"
 serde_json = "1.0"
 nanoid = "0.4"
 alphanumeric-sort = "1.5"
