@@ -1,8 +1,8 @@
 use crate::data::Data;
 use crate::data_js::get_data;
 
-use super::{id_to_track, Tag};
-use anyhow::{anyhow, bail, Context, Result};
+use super::{Tag, id_to_track};
+use anyhow::{Context, Result, anyhow, bail};
 use fast_image_resize::images::Image;
 use fast_image_resize::{IntoImageView, Resizer};
 use image::codecs::jpeg::JpegEncoder;

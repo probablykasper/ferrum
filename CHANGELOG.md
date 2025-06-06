@@ -1,5 +1,8 @@
 # Changelog
 
+## Next
+- Fix some cover artworks not loading
+
 ## 0.19.5 - 2025 Jun 6
 - Fix playing indicator not showing
 - Fix column sorting indicator not showing
