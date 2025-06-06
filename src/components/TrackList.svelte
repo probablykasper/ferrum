@@ -501,11 +501,12 @@
 		row_render(row, item, i) {
 			row.classList.toggle('odd', i % 2 === 0)
 			row.classList.toggle('selected', $selection.has(item.item_id))
+			row.classList.toggle('playing', !!$playing_id && $playing_id === item.track_id)
 		},
 	})
 	$: grid_columns = virtual_grid.set_columns(columns)
 	$: virtual_grid.set_source_items(tracks_page.itemIds)
-	$: $selection, virtual_grid.refresh(RefreshLevel.AllRows)
+	$: $selection, $playing_id, virtual_grid.refresh(RefreshLevel.AllRows)
 </script>
 
 <Header
@@ -678,6 +679,18 @@
 			&.image:first-child
 				padding-left: 7px
 				padding-right: 3px
+		.playing > .index
+			background-repeat: no-repeat
+			background-size: 16px
+			background-position-y: center
+			background-position-x: calc(100% - 10px)
+			color: transparent
+			// We use background-image because setting it with innerHTML breaks row recycling updates
+			// #00ffff
+			background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2300ffff'%3E%3Cpath d='M0 0h24v24H0z' fill='none'/%3E%3Cpath d='M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z'/%3E%3C/svg%3E")
+		.playing.selected > .index
+			// #ffffff
+			background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ffffff'%3E%3Cpath d='M0 0h24v24H0z' fill='none'/%3E%3Cpath d='M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z'/%3E%3C/svg%3E")
 		.image
 			display: flex
 			align-items: center

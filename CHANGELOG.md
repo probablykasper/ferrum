@@ -1,5 +1,8 @@
 # Changelog
 
+## Next
+- Fix playing icon not showing
+
 ## 0.19.4 - 2025 Jun 4
 - Faster scroll performance
 
