@@ -633,19 +633,19 @@
 		overflow: hidden
 		.row.table-header
 			position: relative
-			.c
-				overflow: visible
-				*
-					pointer-events: none
-			.c.sort span
-				font-weight: 500
-			.c.sort span::after
-				content: '▲'
-				padding-left: 1px
-				transform: scale(0.8, 0.5)
-				display: inline-block
-			&.desc .c.sort span::after
-				content: '▼'
+		.cell
+			overflow: visible
+			*
+				pointer-events: none
+		.cell.sort span
+			font-weight: 500
+		.cell.sort span::after
+			content: '▲'
+			padding-left: 1px
+			scale: 0.8 0.5
+			display: inline-block
+		.desc .cell.sort span::after
+			content: '▼'
 		$row-height: 24px
 		.row
 			width: 100%
