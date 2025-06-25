@@ -4,7 +4,7 @@
 	"productName": "Ferrum",
 	"author": "kasper.space",
 	"description": "Music library app",
-	"version": "0.19.7",
+	"version": "0.19.8",
 	"repository": "https://github.com/probablykasper/ferrum",
 	"updates_url_prefix": "https://github.com/probablykasper/ferrum/releases",
 	"latest-release-api-url": "https://api.github.com/repos/probablykasper/ferrum/releases/latest",
