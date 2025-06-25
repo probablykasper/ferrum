@@ -290,7 +290,6 @@
 					img = document.createElement('img')
 				}
 				img.classList.add('invisible')
-				console.dir('render ' + value)
 				img.src = value
 				img.onload = (e) => {
 					const img = e.currentTarget as HTMLImageElement
@@ -640,8 +639,7 @@
 			position: relative
 		.cell
 			overflow: visible
-			*
-				pointer-events: none
+			pointer-events: none
 		.cell.sort span
 			font-weight: 500
 		.cell.sort span::after
@@ -705,6 +703,8 @@
 				height: 24px
 				width: 18px
 				padding: 3px 0
+			.error
+				pointer-events: all
 			.error::before
 				content: ''
 				cursor: pointer

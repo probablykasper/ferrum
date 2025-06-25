@@ -1,5 +1,8 @@
 # Changelog
 
+## Next
+- Fix file errors not clickable
+
 ## 0.19.7 - 2025 Jun 6
 - Fix cover artwork flickering
 
