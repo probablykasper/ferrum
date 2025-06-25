@@ -242,9 +242,6 @@
 	}
 
 	let viewport: HTMLElement
-	onMount(() => {
-		// tracklist_actions.scroll_to_index = virtual_list.scroll_to_index
-	})
 
 	type TrackListColumn = Column & {
 		name: string
@@ -511,6 +508,10 @@
 	$: grid_columns = virtual_grid.set_columns(columns)
 	$: virtual_grid.set_source_items(tracks_page.itemIds)
 	$: $selection, $playing_id, virtual_grid.refresh(RefreshLevel.AllRows)
+
+	onMount(() => {
+		tracklist_actions.scroll_to_index = virtual_grid.scroll_to_index.bind(virtual_grid)
+	})
 </script>
 
 <Header

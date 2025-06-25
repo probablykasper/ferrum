@@ -248,6 +248,20 @@ export class VirtualGrid<I, R extends Record<string, unknown>> {
 		}
 	}
 
+	scroll_to_index(index: number, scroll_margin_bottom = 0) {
+		if (!this.viewport) {
+			throw new Error('No viewport')
+		}
+		const dummy = document.createElement('div')
+		dummy.style.height = this.row_height + 'px'
+		dummy.style.position = 'absolute'
+		dummy.style.top = index * this.row_height + 'px'
+		dummy.style.scrollMarginBottom = scroll_margin_bottom + 'px'
+		this.viewport.prepend(dummy)
+		dummy.scrollIntoView({ behavior: 'instant', block: 'nearest' })
+		dummy.remove()
+	}
+
 	setup(node: HTMLElement) {
 		this.main_element = node
 
@@ -285,6 +299,7 @@ export class VirtualGrid<I, R extends Record<string, unknown>> {
 		}
 	}
 	attach() {
+		// This is a function in order to make `this` work
 		return (node: HTMLElement) => this.setup(node)
 	}
 }

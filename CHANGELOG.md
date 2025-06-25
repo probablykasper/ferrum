@@ -1,6 +1,7 @@
 # Changelog
 
 ## Next
+- Fix scrolling not happening when using arrow keys
 - Fix file errors not clickable
 
 ## 0.19.7 - 2025 Jun 6

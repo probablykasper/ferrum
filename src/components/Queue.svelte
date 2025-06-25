@@ -200,7 +200,7 @@
 	>
 		{#if $queue.past.length || $queue.current}
 			<div class="relative">
-				<div class="sticky top-0 z-1 flex flex h-[40px] items-center bg-black/50 backdrop-blur-md">
+				<div class="sticky top-0 z-1 flex h-[40px] items-center bg-black/50 backdrop-blur-md">
 					<button
 						type="button"
 						on:click={() => {

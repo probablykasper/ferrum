@@ -87,13 +87,13 @@
 		scroll_event_element?.removeEventListener('scroll', refresh)
 	})
 
-	export function scroll_to_index(index: number, offset = 0) {
+	export function scroll_to_index(index: number, scroll_margin_bottom = 0) {
 		const dummy = document.createElement('div')
 		dummy.style.height = item_height + 'px'
 		dummy.style.position = 'absolute'
 		dummy.style.top = index * item_height + 'px'
 		// For some reason we apply the offset to the bottom
-		dummy.style.scrollMarginBottom = offset + 'px'
+		dummy.style.scrollMarginBottom = scroll_margin_bottom + 'px'
 		// eslint-disable-next-line svelte/no-dom-manipulating
 		main_element.prepend(dummy)
 		dummy.scrollIntoView({ behavior: 'instant', block: 'nearest' })
