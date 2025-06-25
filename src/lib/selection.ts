@@ -44,11 +44,21 @@ class Selection<T> {
 				this.items.delete(item)
 			}
 		}
-		if (this.last_added !== null && !this.items.has(this.last_added.item)) {
-			this.last_added = null
+		if (this.last_added !== null) {
+			if (this.items.has(this.last_added.item)) {
+				const index = this.all.indexOf(this.last_added.item)
+				this.last_added = { index, item: this.last_added.item }
+			} else {
+				this.last_added = null
+			}
 		}
 		if (this.shift_anchor !== null && !this.items.has(this.shift_anchor.item)) {
-			this.shift_anchor = null
+			if (this.items.has(this.shift_anchor.item)) {
+				const index = this.all.indexOf(this.shift_anchor.item)
+				this.shift_anchor = { index, item: this.shift_anchor.item }
+			} else {
+				this.shift_anchor = null
+			}
 		}
 	}
 
@@ -186,9 +196,11 @@ class Selection<T> {
 		} else if (this.items.size === 0) {
 			this.add_index_unchecked(0)
 		} else if (this.last_added !== null) {
+			console.log('go_forward', { ...this })
 			const next_index = this.last_added.index + 1
 			this.clear()
 			this.add_index_unchecked(Math.min(next_index, this.all.length - 1))
+			console.log('.', { ...this })
 		}
 	}
 	/** Expand or shrink selection backwards (shift+up) */

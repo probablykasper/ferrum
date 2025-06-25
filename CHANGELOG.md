@@ -2,6 +2,7 @@
 
 ## Next
 - Fix scrolling not happening when using arrow keys
+- Fix up/down arrow keys selecting incorrectly after filtering
 - Fix file errors not clickable
 
 ## 0.19.7 - 2025 Jun 6
