@@ -1,5 +1,8 @@
 # Changelog
 
+## Next
+- Fix column size not updating when resizing window
+
 ## 0.19.8 - 2025 Jun 26
 - Fix scrolling not happening when using arrow keys
 - Fix up/down arrow keys selecting incorrectly after filtering

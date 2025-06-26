@@ -46,7 +46,7 @@
 	import { SvelteSelection } from '@/lib/selection'
 	import { get_flattened_tracklists, handle_selected_tracks_action } from '@/lib/menus'
 	import type { SelectedTracksAction } from '@/electron/typed_ipc'
-	import { RefreshLevel, VirtualGrid, type Column } from '@/lib/virtual-grid'
+	import { RefreshLevel, VirtualGrid, type Column } from '@/lib/virtual-grid.svelte'
 
 	let tracklist_element: HTMLDivElement
 
@@ -500,12 +500,13 @@
 			}
 		},
 		row_render(row, item, i) {
+			row.setAttribute('draggable', 'true')
 			row.classList.toggle('odd', i % 2 === 0)
 			row.classList.toggle('selected', $selection.has(item.item_id))
 			row.classList.toggle('playing', !!$playing_id && $playing_id === item.track_id)
 		},
 	})
-	$: grid_columns = virtual_grid.set_columns(columns)
+	$: virtual_grid.set_columns(columns)
 	$: virtual_grid.set_source_items(tracks_page.itemIds)
 	$: $selection, $playing_id, virtual_grid.refresh(RefreshLevel.AllRows)
 
@@ -534,7 +535,7 @@
 		on:dragleave={() => (col_drag_to_index = null)}
 		bind:this={col_container}
 	>
-		{#each grid_columns as column, i}
+		{#each virtual_grid.columns as column, i}
 			<!-- svelte-ignore a11y-interactive-supports-focus -->
 			<!-- svelte-ignore a11y-click-events-have-key-events -->
 			<div

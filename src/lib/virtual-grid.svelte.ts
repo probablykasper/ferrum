@@ -2,7 +2,7 @@ export type Column = {
 	name: string
 	key: string
 	width: number
-	is_pct?: true
+	is_pct?: boolean
 	offset?: number
 	/** Handles both creation and updating of rows */
 	cell_render?: (element: HTMLElement, value: unknown) => void
@@ -40,7 +40,7 @@ export class VirtualGrid<I, R extends Record<string, unknown>> {
 		public options: {
 			buffer?: number
 			row_prepare: (source_items: I, index: number) => R
-			row_render: (element: HTMLElement, item: R, index: number) => void
+			row_render?: (element: HTMLElement, item: R, index: number) => void
 		},
 	) {}
 
@@ -49,7 +49,7 @@ export class VirtualGrid<I, R extends Record<string, unknown>> {
 		options: {
 			buffer?: number
 			row_prepare: (source_items: I, index: number) => R
-			row_render: (element: HTMLElement, item: R, index: number) => void
+			row_render?: (element: HTMLElement, item: R, index: number) => void
 		},
 	) {
 		return new VirtualGrid<I, R>(source_items, options)
@@ -150,14 +150,14 @@ export class VirtualGrid<I, R extends Record<string, unknown>> {
 		})
 	}
 
-	columns: Column[] = []
+	columns: Column[] = $state([])
 	set_columns(columns: Column[]) {
 		const total_fixed_width = columns.reduce((sum, col) => sum + (col.is_pct ? 0 : col.width), 0)
 		const total_percent_pct = columns.reduce((sum, col) => sum + (col.is_pct ? col.width : 0), 0)
 		const container_width = this.viewport?.clientWidth ?? total_fixed_width
 		const total_percent_width = container_width - total_fixed_width
 		let offset = 0
-		this.columns = columns.map((col) => {
+		const new_columns = columns.map((col) => {
 			col = { ...col }
 			if (col.is_pct) {
 				const pct = col.width / total_percent_pct
@@ -168,13 +168,39 @@ export class VirtualGrid<I, R extends Record<string, unknown>> {
 			return col
 		})
 
-		// make all rows fully rerender
-		for (const row of this.rows) {
-			row.element?.remove()
+		let resize_only = true
+		if (this.columns.length !== new_columns.length) {
+			resize_only = false
 		}
-		this.rows = []
+		for (let i = 0; i < this.columns.length; i++) {
+			if (new_columns[i].key !== this.columns[i].key) {
+				resize_only = false
+				break
+			}
+		}
 
-		this.refresh(RefreshLevel.NewRows)
+		this.columns = new_columns
+		if (resize_only) {
+			for (const row of this.rows) {
+				if (!row.element) {
+					throw new Error('Unexpected missing row element')
+				}
+				for (let ci = 0; ci < this.columns.length; ci++) {
+					const column = this.columns[ci]
+					const cell = row.element.children[ci] as HTMLElement
+					cell.style.width = `${column.width}px`
+					cell.style.translate = `${column.offset}px 0`
+				}
+			}
+		} else {
+			// make all rows fully rerender
+			for (const row of this.rows) {
+				row.element?.remove()
+			}
+			this.rows = []
+
+			this.refresh(RefreshLevel.NewRows)
+		}
 		return this.columns
 	}
 
@@ -197,7 +223,6 @@ export class VirtualGrid<I, R extends Record<string, unknown>> {
 			const row_element = document.createElement('div')
 			row_element.className = 'row'
 			row_element.setAttribute('role', 'row')
-			row_element.setAttribute('draggable', 'true')
 			row.element = row_element
 			this.main_element?.appendChild(row_element)
 
@@ -234,7 +259,7 @@ export class VirtualGrid<I, R extends Record<string, unknown>> {
 					cell.textContent = String(cell_value)
 				}
 			}
-			this.options.row_render(row.element, row_item, row.index)
+			this.options.row_render?.(row.element, row_item, row.index)
 			row.rendered = true
 		}
 
@@ -275,6 +300,7 @@ export class VirtualGrid<I, R extends Record<string, unknown>> {
 		this.#update_viewport_size()
 
 		this.size_observer = new ResizeObserver(() => {
+			this.set_columns(this.columns)
 			this.#update_viewport_size()
 			this.refresh(RefreshLevel.NewRows)
 		})
