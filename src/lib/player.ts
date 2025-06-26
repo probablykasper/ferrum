@@ -1,6 +1,6 @@
 import { derived, get, writable } from 'svelte/store'
 import type { Writable } from 'svelte/store'
-import { clamp } from './helpers'
+import { clamp_number } from './helpers'
 import quit from './quit'
 import {
 	add_play,
@@ -66,8 +66,8 @@ export const volume = (() => {
 	})
 	function set(value: number) {
 		last_volume = audio.volume
-		audio.volume = clamp(0, 1, value)
-		store.set(clamp(0, 1, value))
+		audio.volume = clamp_number(0, 1, value)
+		store.set(clamp_number(0, 1, value))
 	}
 	return {
 		set,
