@@ -63,9 +63,9 @@ export function check_mouse_shortcut(e: MouseEvent, options: ShortcutOptions = {
 	return check_modifiers(e, options)
 }
 
-export function clamp(min: number, max: number, value: number) {
-	if (value < 0) return min
-	if (value > 1) return max
+export function clamp_number(min: number, max: number, value: number) {
+	if (value < min) return min
+	if (value > max) return max
 	return value
 }
 
