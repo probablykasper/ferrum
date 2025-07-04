@@ -2,6 +2,7 @@
 
 ## Next
 - Fix column size not updating when resizing window
+- Fix column sorting not working
 
 ## 0.19.8 - 2025 Jun 26
 - Fix scrolling not happening when using arrow keys
