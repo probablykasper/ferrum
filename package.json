@@ -21,7 +21,8 @@
 		"preview": "LOCAL_DATA=./src-native/appdata/local_data LIBRARY=./src-native/appdata/Library ./build/app/mac/Ferrum.app/Contents/MacOS/Ferrum",
 		"lint": "svelte-check --tsconfig ./tsconfig.json && eslint src && prettier --check src",
 		"format": "eslint --fix src && prettier --write src",
-		"check": "npm run lint && cargo check"
+		"check": "npm run lint && cargo check",
+		"release": "npm run check && echo && bash -c 'read -ep \"Enter new version: \" version && read -ep \"Please update CHANGELOG.md before continuing (Enter) \" && git add . && npm version --force \"$version\"' && read -ep \"Please create a GitHub release with release notes before continuing (Enter) && read -ep \"Nice! Press enter to exit\"\""
 	},
 	"build": {
 		"appId": "space.kasper.ferrum",
