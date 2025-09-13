@@ -11,6 +11,7 @@ export interface PathsJs {
   libraryJson: string
   cacheDb: string
   localDataDir: string
+  pathSeparator: string
 }
 export declare function get_paths(): PathsJs
 export declare function save(): void

@@ -1,7 +1,6 @@
 <script lang="ts">
-	import { get_track, paths, tracks_updated } from '@/lib/data'
+	import { get_track, join_paths, paths, tracks_updated } from '@/lib/data'
 	import type { Track } from '../../ferrum-addon'
-	import { join_paths } from '@/lib/window'
 
 	export let id: string
 

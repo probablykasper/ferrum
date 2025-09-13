@@ -19,8 +19,5 @@ declare global {
 		library_path?: string
 		is_mac: boolean
 		is_windows: boolean
-		join_paths: (...args: string[]) => string
 	}
 }
-
-export const join_paths = window.join_paths

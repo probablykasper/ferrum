@@ -1,4 +1,4 @@
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use lofty::picture::{MimeType, Picture};
 use lofty::tag::ItemKey;
 use lofty::{file::TaggedFileExt, tag::Accessor, tag::TagExt};
@@ -158,7 +158,7 @@ impl Tag {
 
 		Ok(())
 	}
-	pub fn get_image_ref(&self, index: usize) -> Result<Option<ImageRef>> {
+	pub fn get_image_ref(&'_ self, index: usize) -> Result<Option<ImageRef<'_>>> {
 		let pictures = self.tag.pictures();
 		match pictures.get(index) {
 			Some(pic) => {

@@ -2,7 +2,7 @@
 
 use crate::get_now_timestamp;
 use crate::playlists::{delete_file, remove_from_all_playlists};
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use linked_hash_map::{Entry, LinkedHashMap};
 use nanoid::nanoid;
 use serde::{Deserialize, Serialize};
@@ -24,7 +24,7 @@ pub struct Library {
 	pub playTime: Vec<PlayTime>,
 }
 impl Library {
-	pub fn versioned(&self) -> VersionedLibrary {
+	pub fn versioned(&'_ self) -> VersionedLibrary<'_> {
 		VersionedLibrary::V2(V2Library {
 			tracks: Cow::Borrowed(&self.tracks),
 			trackLists: Cow::Borrowed(&self.trackLists),

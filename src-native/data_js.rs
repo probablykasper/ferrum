@@ -27,6 +27,7 @@ pub struct PathsJs {
 	pub library_json: String,
 	pub cache_db: String,
 	pub local_data_dir: String,
+	pub path_separator: String,
 }
 
 #[napi(js_name = "get_paths")]
@@ -39,6 +40,7 @@ pub fn get_paths(env: Env) -> Result<PathsJs> {
 		library_json: data.paths.library_json.to_string_lossy().into(),
 		cache_db: data.paths.cache_db.to_string_lossy().into(),
 		local_data_dir: data.paths.local_data_dir.to_string_lossy().into(),
+		path_separator: std::path::MAIN_SEPARATOR_STR.into(),
 	})
 }
 

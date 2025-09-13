@@ -32,11 +32,12 @@
 		get_track_by_item_id,
 		view_options,
 		paths,
+		join_paths,
 	} from '@/lib/data'
 	import { new_playback_instance, playing_id } from '../lib/player'
 	import { get_duration, format_date, check_mouse_shortcut, check_shortcut } from '../lib/helpers'
 	import { tracklist_actions } from '../lib/page'
-	import { ipc_listen, ipc_renderer, join_paths } from '../lib/window'
+	import { ipc_listen, ipc_renderer } from '../lib/window'
 	import { onDestroy, onMount } from 'svelte'
 	import { dragged } from '../lib/drag-drop'
 	import * as DragGhost from './DragGhost.svelte'

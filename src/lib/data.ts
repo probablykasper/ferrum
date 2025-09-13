@@ -25,6 +25,11 @@ export const ItunesImport = inner_addon.ItunesImport
 
 call((addon) => addon.load_data(is_dev, local_data_path, library_path))
 
+export const paths = call((addon) => addon.get_paths())
+export function join_paths(...args: string[]) {
+	return args.join(paths.pathSeparator)
+}
+
 export const track_lists_details_map = (() => {
 	const initial = call((addon) => addon.get_track_lists_details())
 
@@ -108,8 +113,6 @@ export function move_playlist(
 	track_lists_details_map.refresh()
 	save()
 }
-
-export const paths = call((addon) => addon.get_paths())
 
 export async function import_tracks(paths: string[]) {
 	let err_state = null
