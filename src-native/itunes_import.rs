@@ -1,11 +1,11 @@
 use crate::data_js::get_data;
 use crate::get_now_timestamp;
 use crate::library_types::{
-	new_item_ids_from_track_ids, CountObject, Folder, Library, Playlist, Track, TrackList,
+	CountObject, Folder, Library, Playlist, Track, TrackList, new_item_ids_from_track_ids,
 };
 use crate::tracks::generate_filename;
-use crate::tracks::import::{read_file_metadata, FileType};
-use anyhow::{bail, Context, Result};
+use crate::tracks::import::{FileType, read_file_metadata};
+use anyhow::{Context, Result, bail};
 use lofty::file::{AudioFile, TaggedFileExt};
 use napi::Env;
 use serde::{Deserialize, Serialize};
@@ -13,9 +13,9 @@ use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
+use time::OffsetDateTime;
 use time::serde::iso8601;
 use time::serde::iso8601::option as iso8601_opt;
-use time::OffsetDateTime;
 
 #[derive(Serialize, Deserialize, Debug)]
 struct XmlLibrary {
@@ -589,7 +589,7 @@ pub struct ItunesImport {
 impl ItunesImport {
 	#[napi(factory)]
 	pub fn new(env: Env) -> napi::Result<Self> {
-		let data = get_data(&env)?;
+		let data = get_data(&env);
 		Ok(Self {
 			new_library: Some(data.library.clone()).into(),
 			itunes_track_paths: HashMap::new().into(),
@@ -601,7 +601,7 @@ impl ItunesImport {
 	}
 	#[napi]
 	pub fn finish(&mut self, env: Env) -> napi::Result<()> {
-		let data = get_data(&env)?;
+		let data = get_data(&env);
 		let itunes_track_paths = &mut *self.itunes_track_paths.lock().unwrap();
 		for (itunes_path, ferrum_file) in itunes_track_paths {
 			let new_path = data.paths.tracks_dir.join(ferrum_file);

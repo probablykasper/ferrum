@@ -250,7 +250,7 @@ impl Task for ReadCover {
 )]
 #[allow(dead_code)]
 pub fn read_cover_async(track_id: String, index: u16, env: Env) -> napi::Result<JsObject> {
-	let data: &mut Data = get_data(&env)?;
+	let data: &mut Data = get_data(&env);
 	let track = id_to_track(&env, &track_id)?;
 	let tracks_dir = &data.paths.tracks_dir;
 	let file_path = tracks_dir.join(&track.file);

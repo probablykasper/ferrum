@@ -1,11 +1,14 @@
 use crate::data::Data;
-use anyhow::{Context, Result};
+use anyhow::Result;
 use napi::{Env, JsUndefined};
 use rfd::MessageDialog;
 
-pub fn get_data(env: &Env) -> Result<&mut Data> {
-	let data = env.get_instance_data::<Data>()?.context("No data")?;
-	return Ok(data);
+pub fn get_data(env: &Env) -> &mut Data {
+	let data = env
+		.get_instance_data::<Data>()
+		.expect("Error getting data")
+		.expect("No data");
+	return data;
 }
 
 #[napi(js_name = "load_data")]
@@ -68,7 +71,7 @@ pub struct PathsJs {
 #[napi(js_name = "get_paths")]
 #[allow(dead_code)]
 pub fn get_paths(env: Env) -> Result<PathsJs> {
-	let data: &mut Data = get_data(&env)?;
+	let data: &mut Data = get_data(&env);
 	Ok(PathsJs {
 		library_dir: data.paths.library_dir.to_string_lossy().into(),
 		tracks_dir: data.paths.tracks_dir.to_string_lossy().into(),
@@ -82,7 +85,7 @@ pub fn get_paths(env: Env) -> Result<PathsJs> {
 #[napi(js_name = "save")]
 #[allow(dead_code)]
 pub fn save(env: Env) -> napi::Result<JsUndefined> {
-	let data: &mut Data = get_data(&env)?;
+	let data: &mut Data = get_data(&env);
 	data.save()?;
 	env.get_undefined()
 }

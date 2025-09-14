@@ -45,13 +45,13 @@ impl ViewOptions {
 #[napi(js_name = "load_view_options")]
 #[allow(dead_code)]
 pub fn load_view_options(env: Env) -> Result<ViewOptions> {
-	let data: &Data = get_data(&env)?;
+	let data: &Data = get_data(&env);
 	Ok(ViewOptions::load(&data.paths))
 }
 #[napi(js_name = "save_view_options")]
 #[allow(dead_code)]
 pub fn save_view_options(view_options: ViewOptions, env: Env) -> Result<()> {
-	let data: &mut Data = get_data(&env)?;
+	let data: &mut Data = get_data(&env);
 	view_options.save(&data.paths)?;
 	Ok(())
 }

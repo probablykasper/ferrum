@@ -1,11 +1,11 @@
 use crate::data::Data;
 use crate::data_js::get_data;
 use crate::library_types::{
-	get_track_ids_from_item_ids, new_item_ids_from_track_ids, ItemId, Library,
-	SpecialTrackListName, TrackID, TrackList, TRACK_ID_MAP,
+	ItemId, Library, SpecialTrackListName, TRACK_ID_MAP, TrackID, TrackList,
+	get_track_ids_from_item_ids, new_item_ids_from_track_ids,
 };
 use crate::str_to_option;
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use linked_hash_map::LinkedHashMap;
 use napi::{Env, JsUnknown};
 use std::collections::{HashMap, HashSet};
@@ -26,7 +26,7 @@ pub struct TrackListDetails {
 #[napi(js_name = "get_track_lists_details")]
 #[allow(dead_code)]
 pub fn get_track_lists_details(env: Env) -> Result<HashMap<String, TrackListDetails>> {
-	let data: &Data = get_data(&env)?;
+	let data: &Data = get_data(&env);
 	Ok(data
 		.library
 		.trackLists
@@ -60,7 +60,7 @@ pub fn get_track_lists_details(env: Env) -> Result<HashMap<String, TrackListDeta
 #[napi(js_name = "get_track_list", ts_return_type = "TrackList")]
 #[allow(dead_code)]
 pub fn get_track_list(id: String, env: Env) -> Result<JsUnknown> {
-	let data: &mut Data = get_data(&env)?;
+	let data: &mut Data = get_data(&env);
 	let tracklist = data.library.get_tracklist(&id)?;
 	Ok(env.to_js_value(&tracklist)?)
 }
@@ -124,7 +124,7 @@ fn remove_child_id(library: &mut Library, parent_id: &String, child_id: &String)
 #[napi(js_name = "delete_track_list")]
 #[allow(dead_code)]
 pub fn delete_track_list(id: String, env: Env) -> Result<()> {
-	let data: &mut Data = get_data(&env)?;
+	let data: &mut Data = get_data(&env);
 	let parent_id = data.library.get_parent_id(&id).context("No parent found")?;
 
 	let mut ids = HashSet::new();
@@ -144,7 +144,7 @@ pub fn delete_track_list(id: String, env: Env) -> Result<()> {
 #[napi(js_name = "add_tracks_to_playlist")]
 #[allow(dead_code)]
 pub fn add_tracks(playlist_id: String, track_ids: Vec<String>, env: Env) -> Result<()> {
-	let data: &mut Data = get_data(&env)?;
+	let data: &mut Data = get_data(&env);
 	let playlist = match data.library.get_tracklist_mut(&playlist_id)? {
 		TrackList::Playlist(playlist) => playlist,
 		TrackList::Folder(_) => bail!("Cannot add track to folder"),
@@ -158,7 +158,7 @@ pub fn add_tracks(playlist_id: String, track_ids: Vec<String>, env: Env) -> Resu
 #[napi(js_name = "playlist_filter_duplicates")]
 #[allow(dead_code)]
 pub fn filter_duplicates(playlist_id: TrackID, ids: Vec<String>, env: Env) -> Result<Vec<TrackID>> {
-	let data: &mut Data = get_data(&env)?;
+	let data: &mut Data = get_data(&env);
 	let mut track_ids: HashSet<String> = HashSet::from_iter(ids);
 	let playlist = match data.library.get_tracklist_mut(&playlist_id)? {
 		TrackList::Playlist(playlist) => playlist,
@@ -176,7 +176,7 @@ pub fn filter_duplicates(playlist_id: TrackID, ids: Vec<String>, env: Env) -> Re
 #[napi(js_name = "remove_from_playlist")]
 #[allow(dead_code)]
 pub fn remove_from_playlist(playlist_id: TrackID, item_ids: Vec<ItemId>, env: Env) -> Result<()> {
-	let data: &mut Data = get_data(&env)?;
+	let data: &mut Data = get_data(&env);
 	let playlist = match data.library.get_tracklist_mut(&playlist_id)? {
 		TrackList::Playlist(playlist) => playlist,
 		_ => bail!("Cannot remove track from non-playlist"),
@@ -218,7 +218,7 @@ pub fn delete_file(path: &PathBuf) -> Result<()> {
 #[napi(js_name = "delete_tracks_with_item_ids")]
 #[allow(dead_code)]
 pub fn delete_tracks_with_item_ids(item_ids: Vec<ItemId>, env: Env) -> Result<()> {
-	let data: &mut Data = get_data(&env)?;
+	let data: &mut Data = get_data(&env);
 	let library = &mut data.library;
 	let track_ids = get_track_ids_from_item_ids(&item_ids);
 	for track_id in &track_ids {
@@ -236,7 +236,7 @@ pub fn new_playlist(
 	parent_id: String,
 	env: Env,
 ) -> Result<()> {
-	let data: &mut Data = get_data(&env)?;
+	let data: &mut Data = get_data(&env);
 	let library = &mut data.library;
 
 	let list = match is_folder {
@@ -275,7 +275,7 @@ pub fn new_playlist(
 #[napi(js_name = "update_playlist")]
 #[allow(dead_code)]
 pub fn update_playlist(id: String, name: String, description: String, env: Env) -> Result<()> {
-	let data: &mut Data = get_data(&env)?;
+	let data: &mut Data = get_data(&env);
 
 	match data.library.trackLists.get_mut(&id) {
 		Some(TrackList::Special(_)) => bail!("Cannot edit special playlists"),
@@ -339,7 +339,7 @@ pub fn move_playlist(
 	to_index: u32,
 	env: Env,
 ) -> Result<()> {
-	let data: &mut Data = get_data(&env)?;
+	let data: &mut Data = get_data(&env);
 
 	match data.library.trackLists.get(&id) {
 		Some(TrackList::Special(_)) => bail!("Cannot move special playlist"),
@@ -386,7 +386,7 @@ pub fn move_tracks(
 	to_index: u32,
 	env: Env,
 ) -> Result<()> {
-	let data: &mut Data = get_data(&env)?;
+	let data: &mut Data = get_data(&env);
 	let playlist = match data.library.get_tracklist_mut(&playlist_id)? {
 		TrackList::Playlist(playlist) => playlist,
 		_ => bail!("Cannot rearrange tracks in non-playlist"),

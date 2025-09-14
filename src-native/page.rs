@@ -27,7 +27,7 @@ pub struct TracksPage {
 #[napi(js_name = "get_tracks_page")]
 #[allow(dead_code)]
 pub fn get_tracks_page(options: TracksPageOptions, env: Env) -> Result<TracksPage> {
-	let data: &mut Data = get_data(&env)?;
+	let data: &mut Data = get_data(&env);
 	let tracklist = data.library.get_tracklist(&options.playlist_id)?;
 	let item_ids = sort(options.clone(), &data.library)?;
 	let tracklist_length = item_ids.len();
