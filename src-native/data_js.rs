@@ -31,16 +31,13 @@ pub fn load_data(
 			"Unknown panic message"
 		};
 
-		// Get the location of the panic (file, line, column)
+		// file:line:column
 		let location = if let Some(loc) = info.location() {
 			format!("{}:{}:{}", loc.file(), loc.line(), loc.column())
 		} else {
 			"Unknown location".to_string()
 		};
 
-		// let stacktrace = std::backtrace::Backtrace::force_capture();
-		// println!("Got panic. {}\n{}", panic_msg, stacktrace);
-		// println!("");
 		eprintln!(
 			"thread '{}' panicked at '{}': {}",
 			thread_name, panic_msg, location
