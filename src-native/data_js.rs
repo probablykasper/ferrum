@@ -1,6 +1,7 @@
 use crate::data::Data;
 use anyhow::{Context, Result};
 use napi::{Env, JsUndefined};
+use rfd::MessageDialog;
 
 pub fn get_data(env: &Env) -> Result<&mut Data> {
 	let data = env.get_instance_data::<Data>()?.context("No data")?;
@@ -15,6 +16,40 @@ pub fn load_data(
 	library_path: Option<String>,
 	env: Env,
 ) -> Result<()> {
+	std::panic::set_hook(Box::new(move |info| {
+		let thread = std::thread::current();
+		let thread_name = thread.name().unwrap_or("<unnamed>");
+		// Get the panic message
+		let panic_msg = if let Some(s) = info.payload().downcast_ref::<&str>() {
+			*s
+		} else if let Some(s) = info.payload().downcast_ref::<String>() {
+			s.as_str()
+		} else {
+			"Unknown panic message"
+		};
+
+		// Get the location of the panic (file, line, column)
+		let location = if let Some(loc) = info.location() {
+			format!("{}:{}:{}", loc.file(), loc.line(), loc.column())
+		} else {
+			"Unknown location".to_string()
+		};
+
+		// let stacktrace = std::backtrace::Backtrace::force_capture();
+		// println!("Got panic. {}\n{}", panic_msg, stacktrace);
+		// println!("");
+		eprintln!(
+			"thread '{}' panicked at '{}': {}",
+			thread_name, panic_msg, location
+		);
+
+		MessageDialog::new()
+			.set_title(&format!("{}", panic_msg))
+			.set_description(&format!("{}", location))
+			.set_buttons(rfd::MessageButtons::Ok)
+			.set_level(rfd::MessageLevel::Error)
+			.show();
+	}));
 	let data = Data::load(is_dev, local_data_path, library_path)?;
 	env.set_instance_data(data, 0, |_ctx| {})?;
 	return Ok(());

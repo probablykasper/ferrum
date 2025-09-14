@@ -178,7 +178,10 @@ app.whenReady().then(async () => {
 		browser_windows.main_window = main_window
 	})
 	main_window.webContents.on('render-process-gone', (_e, details) => {
-		if (
+		if (details.reason === 'crashed') {
+			// we have a napi-rs panic handler message popup already
+			trigger_crash()
+		} else if (
 			details.reason !== 'clean-exit' &&
 			details.reason !== 'abnormal-exit' &&
 			details.reason !== 'killed'
