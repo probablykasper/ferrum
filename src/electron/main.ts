@@ -20,12 +20,12 @@ export function trigger_crash() {
 	})
 }
 
-async function err_handler(msg: string, error: Error) {
+async function err_handler(msg: string, error: Error | string) {
 	app.whenReady().then(() => {
 		dialog.showMessageBoxSync({
 			type: 'error',
 			message: msg,
-			detail: error.stack,
+			detail: error instanceof Error ? error.stack : error,
 			title: 'Error',
 		})
 		trigger_crash()
@@ -176,6 +176,18 @@ app.whenReady().then(async () => {
 	main_window.on('closed', () => {
 		main_window = null
 		browser_windows.main_window = main_window
+	})
+	main_window.webContents.on('render-process-gone', (_e, details) => {
+		if (
+			details.reason !== 'clean-exit' &&
+			details.reason !== 'abnormal-exit' &&
+			details.reason !== 'killed'
+		) {
+			err_handler(
+				`Crashed with code ${details.exitCode} (${details.reason})`,
+				'Error message was likely logged to console.',
+			)
+		}
 	})
 	ipc_main.handle('app_loaded', () => {
 		app_loaded = true
