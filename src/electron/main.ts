@@ -10,6 +10,16 @@ import path from 'path'
 import url from 'url'
 import { ipc_main } from './typed_ipc'
 
+export function trigger_crash() {
+	app.once('will-quit', () => {
+		process.exit(1)
+	})
+	app.quit()
+	setTimeout(() => {
+		process.exit(1)
+	})
+}
+
 async function err_handler(msg: string, error: Error) {
 	app.whenReady().then(() => {
 		dialog.showMessageBoxSync({
@@ -18,7 +28,7 @@ async function err_handler(msg: string, error: Error) {
 			detail: error.stack,
 			title: 'Error',
 		})
-		err_handler(msg, error)
+		trigger_crash()
 	})
 }
 process.on('uncaughtException', (error) => {

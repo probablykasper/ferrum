@@ -20,12 +20,17 @@ function get_error_stack(err: unknown): string {
 	}
 	return ''
 }
-function error_popup(err: unknown) {
-	ipc_renderer.invoke('showMessageBox', false, {
-		type: 'error',
-		message: get_error_message(err),
-		detail: get_error_stack(err),
-	})
+function error_popup(err: unknown, crash = false) {
+	ipc_renderer.invoke(
+		'showMessageBox',
+		false,
+		{
+			type: 'error',
+			message: get_error_message(err),
+			detail: get_error_stack(err),
+		},
+		crash,
+	)
 }
 
 /** @deprecated */
@@ -34,6 +39,7 @@ export function call<T, P extends T | Promise<T>>(cb: (addon: typeof window.addo
 		const result = cb(window.addon)
 		if (result instanceof Promise) {
 			return result.catch((err) => {
+				console.error(err)
 				error_popup(err)
 				throw err
 			}) as P
@@ -41,33 +47,36 @@ export function call<T, P extends T | Promise<T>>(cb: (addon: typeof window.addo
 			return result
 		}
 	} catch (err) {
-		console.error('errorPopup:', err)
+		console.error(err)
 		error_popup(err)
 		throw err
 	}
 }
 
-export function safe_call<T>(
-	cb: (addon: typeof window.addon) => T,
-): T extends Promise<unknown> ? Promise<Awaited<T> | Error> : T | Error {
+// Crashes on error
+export function strict_call<T>(cb: (addon: typeof window.addon) => T): T {
 	try {
 		const result = cb(window.addon)
 
-		// Handle asynchronous result (Promise)
+		// Handle async errors
 		if (result instanceof Promise) {
-			return result.catch((err) => {
-				error_popup(err)
-				return err as Error
-			}) as T extends Promise<unknown> ? Promise<Awaited<T> | Error> : never
+			result.catch((error) => {
+				error_popup(error, true)
+				throw error
+			})
 		}
 
 		// Handle synchronous result
-		return result as T extends Promise<unknown> ? never : T | Error
-	} catch (err) {
+		return result
+	} catch (raw_err) {
+		let error: Error
+		if (raw_err instanceof Error) {
+			error = raw_err
+		} else {
+			error = new Error('Unexpected error: ' + String(raw_err))
+		}
 		// Handle synchronous errors
-		console.error('errorPopup:', err)
-		error_popup(err)
-		// Correct return type for synchronous calls
-		return err as T extends Promise<unknown> ? never : Error
+		error_popup(error, true)
+		throw error
 	}
 }

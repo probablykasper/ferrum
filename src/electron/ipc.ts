@@ -4,6 +4,7 @@ import path from 'path'
 import is from './is'
 import { check_for_updates } from './update'
 import { init_media_keys } from './shortcuts'
+import { trigger_crash } from './main'
 
 ipc_main.handle('check_for_updates', (_e) => {
 	return check_for_updates() ?? null
@@ -15,13 +16,18 @@ ipc_main.handle('open_url', (_e, url) => {
 	shell.openExternal(url)
 })
 
-ipc_main.handle('showMessageBox', async (e, attached, options) => {
+ipc_main.handle('showMessageBox', async (e, attached, options, crash) => {
 	const window = BrowserWindow.fromWebContents(e.sender)
+	let result: Awaited<ReturnType<typeof dialog.showMessageBox>>
 	if (attached && window) {
-		return await dialog.showMessageBox(window, options)
+		result = await dialog.showMessageBox(window, options)
 	} else {
-		return await dialog.showMessageBox(options)
+		result = await dialog.showMessageBox(options)
 	}
+	if (crash) {
+		trigger_crash()
+	}
+	return result
 })
 
 ipc_main.handle('showOpenDialog', async (e, attached, options) => {

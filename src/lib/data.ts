@@ -13,7 +13,7 @@ import type {
 import { queue } from './queue'
 import { current_playlist_id } from '@/components/TrackList.svelte'
 import { navigate } from './router'
-import { call, get_error_message } from './error'
+import { call, get_error_message, strict_call } from './error'
 
 export const is_dev = window.is_dev
 export const local_data_path = window.local_data_path
@@ -235,6 +235,9 @@ export const tracklist_updated = create_refresh_store()
 
 export function get_artists() {
 	return call((addon) => addon.get_artists())
+}
+export function get_genres() {
+	return strict_call((addon) => addon.get_genres())
 }
 export function move_tracks(playlist_id: TrackListID, indexes: ItemId[], to_index: number) {
 	call((data) => data.move_tracks(playlist_id, indexes, to_index))

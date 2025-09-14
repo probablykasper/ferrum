@@ -2,6 +2,7 @@
 
 ## Next
 - Make macOS media key permission request non-intrusive
+- Improve crashing behaviour
 
 ## 0.19.9 - 2025 Jul 4
 - Fix column size not updating when resizing window

@@ -152,6 +152,7 @@ type Commands = {
 	showMessageBox: (
 		attached: boolean,
 		options: Parameters<typeof dialog.showMessageBox>[0],
+		crash?: boolean,
 	) => ReturnType<typeof dialog.showMessageBox>
 	showOpenDialog: (
 		attached: boolean,
