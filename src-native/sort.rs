@@ -1,5 +1,5 @@
-use crate::library::{get_track_field_type, TrackField};
-use crate::library_types::{ItemId, Library, Track, TRACK_ID_MAP};
+use crate::library::{TrackField, get_track_field_type};
+use crate::library_types::{ItemId, Library, TRACK_ID_MAP, Track};
 use crate::page::TracksPageOptions;
 use crate::playlists::get_tracklist_item_ids;
 use alphanumeric_sort::compare_str;

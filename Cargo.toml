@@ -10,17 +10,17 @@ path = "src-native/lib.rs"
 crate-type = ["cdylib"]
 
 [build-dependencies]
-napi-build = "2.0"
+napi-build = "2.2"
 
 [dependencies]
-napi = { version = "2.13", features = [
+napi = { version = "3.3", features = [
 	"serde-json",
 	"napi6",
 	"tokio_rt",
 	"async",
 	"anyhow",
 ] }
-napi-derive = "2.15"
+napi-derive = "3.2"
 serde = { version = "1.0", features = ["derive"] }
 lofty = "0.22"
 serde_json = "1.0"

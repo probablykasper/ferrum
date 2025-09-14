@@ -33,6 +33,10 @@ jobs:
         with:
           node-version: 20
 
+      - name: 'Install dependencies (Linux)'
+        if: matrix.os == 'ubuntu-latest'
+        run: sudo apt update && sudo apt-get install -y libwayland-dev pkg-config
+
       - run: npm install
       - run: npm run napi -- --target ${{ matrix.target }}
       - run: npm run build:web

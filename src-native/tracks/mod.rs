@@ -3,7 +3,8 @@ use crate::data_js::get_data;
 use crate::get_now_timestamp;
 use crate::library_types::{ItemId, MsSinceUnixEpoch, TRACK_ID_MAP, Track, TrackID};
 use anyhow::{Context, Result, bail};
-use napi::{Env, JsArrayBuffer, JsBuffer};
+use napi::Env;
+use napi::bindgen_prelude::{ArrayBuffer, Buffer};
 use std::fs;
 use std::path::Path;
 
@@ -174,7 +175,7 @@ pub struct JsImage {
 	pub index: i64,
 	pub total_images: i64,
 	pub mime_type: String,
-	pub data: JsBuffer,
+	pub data: Buffer,
 }
 
 #[napi(js_name = "get_image")]
@@ -195,7 +196,7 @@ pub fn get_image(index: u32, env: Env) -> Result<Option<JsImage>> {
 		index: img.index,
 		total_images: img.total_images,
 		mime_type: img.mime_type.to_string(),
-		data: env.create_buffer_copy(img.data)?.into_raw(),
+		data: img.data.into(),
 	};
 	Ok(Some(js_image))
 }
@@ -216,8 +217,8 @@ pub fn set_image(index: u32, path_str: String, env: Env) -> Result<()> {
 
 #[napi(js_name = "set_image_data")]
 #[allow(dead_code)]
-pub fn set_image_data(index: u32, bytes: JsArrayBuffer, env: Env) -> Result<()> {
-	let bytes: Vec<u8> = bytes.into_value()?.to_vec();
+pub fn set_image_data(index: u32, bytes: ArrayBuffer, env: Env) -> Result<()> {
+	let bytes: Vec<u8> = bytes.to_vec();
 	let data: &mut Data = get_data(&env);
 	let tag = match &mut data.current_tag {
 		Some(tag) => tag,

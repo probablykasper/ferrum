@@ -7,7 +7,7 @@ use crate::library_types::{
 use crate::str_to_option;
 use anyhow::{Context, Result, bail};
 use linked_hash_map::LinkedHashMap;
-use napi::{Env, JsUnknown};
+use napi::{Env, Unknown};
 use std::collections::{HashMap, HashSet};
 use std::path::PathBuf;
 
@@ -59,7 +59,7 @@ pub fn get_track_lists_details(env: Env) -> Result<HashMap<String, TrackListDeta
 
 #[napi(js_name = "get_track_list", ts_return_type = "TrackList")]
 #[allow(dead_code)]
-pub fn get_track_list(id: String, env: Env) -> Result<JsUnknown> {
+pub fn get_track_list<'a>(id: String, env: Env) -> Result<Unknown<'a>> {
 	let data: &mut Data = get_data(&env);
 	let tracklist = data.library.get_tracklist(&id)?;
 	Ok(env.to_js_value(&tracklist)?)

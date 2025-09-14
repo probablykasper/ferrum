@@ -9,8 +9,8 @@ use image::codecs::jpeg::JpegEncoder;
 use image::codecs::png::PngEncoder;
 use image::{ImageEncoder, ImageFormat, ImageReader};
 use lazy_static::lazy_static;
-use napi::bindgen_prelude::Buffer;
-use napi::{Env, JsBuffer, JsObject, Task};
+use napi::bindgen_prelude::{AsyncTask, Buffer};
+use napi::{Env, Task};
 use redb::{Database, TableDefinition};
 use std::fs;
 use std::io::{BufWriter, Cursor};
@@ -218,17 +218,16 @@ fn to_resized_image(image_bytes: Vec<u8>, max_size: u32) -> Result<Vec<u8>> {
 	Ok(img_bytes)
 }
 
-/// File path, artwork index
-struct ReadCover(PathBuf, usize);
+pub struct ReadCover {
+	path: PathBuf,
+	index: usize,
+}
 impl Task for ReadCover {
 	type Output = Option<Vec<u8>>;
-	type JsValue = Option<JsBuffer>;
+	type JsValue = Option<Buffer>;
 	fn compute(&mut self) -> napi::Result<Self::Output> {
-		let path = &self.0;
-		let index = self.1;
-
-		let tag = Tag::read_from_path(path)?;
-		let image = match tag.get_image_consume(index)? {
+		let tag = Tag::read_from_path(&self.path)?;
+		let image = match tag.get_image_consume(self.index)? {
 			Some(image) => image,
 			None => {
 				return Ok(None);
@@ -237,23 +236,23 @@ impl Task for ReadCover {
 
 		Ok(Some(image.data))
 	}
-	fn resolve(&mut self, env: Env, output: Self::Output) -> napi::Result<Self::JsValue> {
+	fn resolve(&mut self, _env: Env, output: Self::Output) -> napi::Result<Self::JsValue> {
 		match output {
-			Some(output) => Ok(Some(env.create_buffer_copy(output)?.into_raw())),
+			Some(output) => Ok(Some(Buffer::from(output))),
 			None => Ok(None),
 		}
 	}
 }
-#[napi(
-	js_name = "read_cover_async",
-	ts_return_type = "Promise<ArrayBuffer | null>"
-)]
+#[napi(js_name = "read_cover_async", ts_return_type = "Promise<ArrayBuffer>")]
 #[allow(dead_code)]
-pub fn read_cover_async(track_id: String, index: u16, env: Env) -> napi::Result<JsObject> {
+pub fn read_cover_async(track_id: String, index: u16, env: Env) -> AsyncTask<ReadCover> {
 	let data: &mut Data = get_data(&env);
-	let track = id_to_track(&env, &track_id)?;
+	let track = id_to_track(&env, &track_id).expect("Track ID not found");
 	let tracks_dir = &data.paths.tracks_dir;
 	let file_path = tracks_dir.join(&track.file);
-	let task = ReadCover(file_path, index.into());
-	env.spawn(task).map(|t| t.promise_object())
+	let task = ReadCover {
+		path: file_path,
+		index: index.into(),
+	};
+	AsyncTask::new(task)
 }

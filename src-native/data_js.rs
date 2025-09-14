@@ -1,6 +1,6 @@
 use crate::data::Data;
 use anyhow::Result;
-use napi::{Env, JsUndefined};
+use napi::Env;
 use rfd::MessageDialog;
 
 pub fn get_data(env: &Env) -> &mut Data {
@@ -67,22 +67,22 @@ pub struct PathsJs {
 
 #[napi(js_name = "get_paths")]
 #[allow(dead_code)]
-pub fn get_paths(env: Env) -> Result<PathsJs> {
+pub fn get_paths(env: Env) -> PathsJs {
 	let data: &mut Data = get_data(&env);
-	Ok(PathsJs {
+	PathsJs {
 		library_dir: data.paths.library_dir.to_string_lossy().into(),
 		tracks_dir: data.paths.tracks_dir.to_string_lossy().into(),
 		library_json: data.paths.library_json.to_string_lossy().into(),
 		cache_db: data.paths.cache_db.to_string_lossy().into(),
 		local_data_dir: data.paths.local_data_dir.to_string_lossy().into(),
 		path_separator: std::path::MAIN_SEPARATOR_STR.into(),
-	})
+	}
 }
 
 #[napi(js_name = "save")]
 #[allow(dead_code)]
-pub fn save(env: Env) -> napi::Result<JsUndefined> {
+pub fn save(env: Env) -> napi::Result<()> {
 	let data: &mut Data = get_data(&env);
 	data.save()?;
-	env.get_undefined()
+	Ok(())
 }
