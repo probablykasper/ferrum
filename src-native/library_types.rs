@@ -7,8 +7,10 @@ use linked_hash_map::{Entry, LinkedHashMap};
 use nanoid::nanoid;
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
+use std::collections::HashSet;
 use std::path::PathBuf;
 use std::sync::RwLock;
+use std::time::Instant;
 
 #[derive(Clone, Debug)]
 pub struct Library {
@@ -22,6 +24,8 @@ pub struct Library {
 	/// - timestamps aren't updated after pausing
 	pub v1PlayTime: Vec<PlayTime>,
 	pub playTime: Vec<PlayTime>,
+	pub artists: Option<Vec<String>>,
+	pub genres: Option<Vec<String>>,
 }
 impl Library {
 	pub fn versioned(&'_ self) -> VersionedLibrary<'_> {
@@ -70,6 +74,8 @@ impl<'a> V2Library<'a> {
 			trackLists: self.trackLists.into_owned(),
 			v1PlayTime: self.playTime.into_owned(),
 			playTime: Vec::new(),
+			artists: None,
+			genres: None,
 		};
 		for (id, track) in self.tracks.into_owned() {
 			library.insert_track(id, track);
@@ -112,13 +118,13 @@ impl Library {
 			trackLists: track_lists,
 			v1PlayTime: Vec::new(),
 			playTime: Vec::new(),
+			artists: None,
+			genres: None,
 		}
 	}
-	#[inline]
 	pub fn get_tracks(&self) -> &LinkedHashMap<TrackID, Track> {
 		&self.tracks
 	}
-	#[inline]
 	pub fn get_track_item_ids(&self) -> &LinkedHashMap<TrackID, ItemId> {
 		&self.track_item_ids
 	}
@@ -231,6 +237,38 @@ impl Library {
 			}
 		}
 		None
+	}
+	pub fn get_genres(&mut self) -> &Vec<String> {
+		if self.genres.is_none() {
+			let now = Instant::now();
+			let mut genres = HashSet::new();
+			for track in self.tracks.values() {
+				if let Some(genre) = &track.genre {
+					genres.insert(genre.clone());
+				}
+			}
+			let mut genres: Vec<String> = genres.into_iter().collect();
+			genres.sort();
+			self.genres = Some(genres);
+			println!("Load genres: {}ms", now.elapsed().as_millis());
+		}
+		return self.genres.as_ref().unwrap();
+	}
+	pub fn get_artists(&mut self) -> &Vec<String> {
+		if self.artists.is_none() {
+			let now = Instant::now();
+			let mut artists = HashSet::new();
+			for track in self.tracks.values() {
+				if track.artist != "" {
+					artists.insert(track.artist.clone());
+				}
+			}
+			let mut artists: Vec<String> = artists.into_iter().collect();
+			artists.sort();
+			self.artists = Some(artists);
+			println!("Load artists: {}ms", now.elapsed().as_millis());
+		}
+		return self.artists.as_ref().unwrap();
 	}
 }
 

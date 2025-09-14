@@ -234,7 +234,7 @@ export const tracks_updated = create_refresh_store()
 export const tracklist_updated = create_refresh_store()
 
 export function get_artists() {
-	return call((addon) => addon.get_artists())
+	return strict_call((addon) => addon.get_artists())
 }
 export function get_genres() {
 	return strict_call((addon) => addon.get_genres())

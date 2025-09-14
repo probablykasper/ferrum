@@ -1,8 +1,11 @@
+use crate::data::Data;
+use crate::data_js::get_data;
 use crate::library_types::{Library, VersionedLibrary};
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
+use napi::Env;
 use serde::{Deserialize, Serialize};
-use serde_json::{json, Value};
-use std::fs::{create_dir_all, File};
+use serde_json::{Value, json};
+use std::fs::{File, create_dir_all};
 use std::io::{ErrorKind, Read};
 use std::path::PathBuf;
 use std::time::Instant;
@@ -142,4 +145,20 @@ pub fn get_track_field_type(field: &str) -> Result<TrackField> {
 		_ => bail!("Field type not found for {}", field),
 	};
 	return Ok(field);
+}
+
+#[napi(js_name = "get_genres")]
+#[allow(dead_code)]
+pub fn get_genres(env: Env) -> Result<Vec<String>> {
+	let data: &mut Data = get_data(&env)?;
+	let genres = data.library.get_genres();
+	Ok(genres.clone())
+}
+
+#[napi(js_name = "get_artists")]
+#[allow(dead_code)]
+pub fn get_artists(env: Env) -> Result<Vec<String>> {
+	let data: &mut Data = get_data(&env)?;
+	let genres = data.library.get_artists();
+	Ok(genres.clone())
 }

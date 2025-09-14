@@ -27,6 +27,7 @@
 	import { get, writable } from 'svelte/store'
 	import Modal, { modal_count } from './Modal.svelte'
 	import {
+		get_genres,
 		get_image,
 		get_track,
 		load_tags,
@@ -35,6 +36,8 @@
 		set_image_data,
 		update_track_info,
 	} from '@/lib/data'
+
+	const genres = get_genres()
 
 	function cancel() {
 		current_list.set(null)
@@ -449,7 +452,25 @@
 		</div>
 		<div class="row">
 			<div class="label">Genre</div>
-			<input type="text" bind:value={genre} />
+			<input
+				type="text"
+				bind:value={genre}
+				on:input={(e) => {
+					if (!(e instanceof InputEvent) || e.inputType !== 'insertText') {
+						return
+					}
+					const match = genres.find((genre) => {
+						return genre.startsWith(e.currentTarget.value)
+					})
+					if (!match) {
+						return
+					}
+					const start = e.currentTarget.selectionStart
+					genre = match
+					e.currentTarget.value = genre
+					e.currentTarget.setSelectionRange(start, genre.length) // select the appended text
+				}}
+			/>
 		</div>
 		<div class="row">
 			<div class="label">Year</div>

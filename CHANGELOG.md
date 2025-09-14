@@ -1,6 +1,7 @@
 # Changelog
 
 ## Next
+- Add genre autocomplete
 - Make macOS media key permission request non-intrusive
 - Improve crashing behaviour
 

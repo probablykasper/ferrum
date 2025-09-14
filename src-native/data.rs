@@ -1,12 +1,10 @@
-use crate::artists::load_artists;
-use crate::library::{load_library, Paths};
+use crate::library::{Paths, load_library};
 use crate::library_types::Library;
 use crate::tracks::Tag;
 use anyhow::{Context, Result};
 use atomicwrites::{AllowOverwrite, AtomicFile};
 use dirs_next;
 use serde::Serialize;
-use std::collections::HashSet;
 use std::env;
 use std::io::Write;
 use std::path::PathBuf;
@@ -17,7 +15,6 @@ pub struct Data {
 	pub library: Library,
 	/// Current tag being edited
 	pub current_tag: Option<Tag>,
-	pub artists: HashSet<String>,
 }
 
 impl Data {
@@ -81,12 +78,10 @@ impl Data {
 		};
 
 		let loaded_library = load_library(&paths)?;
-		let artists = load_artists(&loaded_library);
 
 		let data = Data {
 			paths,
 			library: loaded_library,
-			artists,
 			current_tag: None,
 		};
 		return Ok(data);
