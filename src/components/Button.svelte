@@ -5,17 +5,28 @@
 	interface $$Props extends HTMLBaseAttributes {
 		secondary?: boolean
 		danger?: boolean
+		thin?: boolean
 		type?: 'button' | 'submit' | 'reset'
 	}
 
 	export let secondary = false
 	export let danger = false
+	export let thin = false
 	export let type: 'button' | 'submit' | 'reset' = 'button'
 	let normal = !danger && !secondary
 	$: normal = !danger && !secondary
 </script>
 
-<button on:click on:mousedown class:normal class:secondary class:danger {type} {...$$restProps}>
+<button
+	on:click
+	on:mousedown
+	class:normal
+	class:secondary
+	class:danger
+	class:thin
+	{type}
+	{...$$restProps}
+>
 	<slot />
 </button>
 
@@ -44,6 +55,9 @@
 			right: 0px
 			border-radius: 7px
 			transition: all 120ms var(--cubic-out)
+	button.thin
+		padding: 4px 10px
+		font-size: 12px
 	button.normal
 		&::before
 			background-color: hsl(220, 100%, 46%)

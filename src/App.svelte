@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onDestroy, onMount } from 'svelte'
-	import { fade } from 'svelte/transition'
+	import { fade, fly } from 'svelte/transition'
 	import TrackList from './components/TrackList.svelte'
 	import Player from './components/Player.svelte'
 	import Sidebar from './components/Sidebar.svelte'
@@ -23,6 +23,7 @@
 	import './lib/router'
 	import CheckForUpdates from './components/CheckForUpdates.svelte'
 	import Settings from './components/Settings.svelte'
+	import Button from './components/Button.svelte'
 
 	ipc_renderer.invoke('app_loaded').catch(() => {
 		ipc_renderer.invoke('showMessageBox', false, {
@@ -31,6 +32,12 @@
 			detail: 'Graceful shutdown will not be possible.',
 		})
 	})
+
+	let media_keys_result: Awaited<ReturnType<typeof init_media_keys>> | null = null
+	async function init_media_keys(prompt: boolean) {
+		return await ipc_renderer.invoke('init_media_keys', prompt)
+	}
+	init_media_keys(false).then((result) => (media_keys_result = result))
 
 	async function open_import_dialog() {
 		if ($modal_count !== 0) {
@@ -179,7 +186,15 @@
 	})
 </script>
 
-<svelte:window on:keydown={keydown} />
+<svelte:window
+	on:keydown={keydown}
+	on:focus={async () => {
+		if (media_keys_result?.needs_accessibility_permission) {
+			media_keys_result = null
+			media_keys_result = await ipc_renderer.invoke('init_media_keys', false)
+		}
+	}}
+/>
 <svelte:head>
 	<title>Ferrum</title>
 </svelte:head>
@@ -204,6 +219,56 @@
 		<div class="flex size-full min-w-0 flex-col">
 			<Route route="/playlist/:playlist_id" component={TrackList} />
 			<Route route="/artists" component={ArtistList} />
+			{#if media_keys_result}
+				<div class="shrink-0 overflow-hidden">
+					<div
+						class="flex items-center border-t border-r border-l border-red-500/15 bg-red-500/10 px-2 py-1 text-[15px] text-red-500 select-text"
+						in:fly|global={{ y: '100%', duration: 200 }}
+					>
+						{#if media_keys_result.error}
+							{media_keys_result.error}
+							<Button
+								type="button"
+								secondary
+								thin
+								on:click={async () => {
+									media_keys_result = null
+									media_keys_result = await ipc_renderer.invoke('init_media_keys', false)
+								}}>Retry</Button
+							>
+							<Button
+								type="button"
+								secondary
+								thin
+								on:click={() => {
+									media_keys_result = null
+								}}>Ignore</Button
+							>
+						{:else if media_keys_result.needs_accessibility_permission}
+							Do you want to Ferrum to control the media keys? You may need to delete and re-add the
+							app from the accessibility list
+							<Button
+								class="text-nowrap"
+								type="button"
+								secondary
+								thin
+								on:click={async () => {
+									media_keys_result = null
+									media_keys_result = await ipc_renderer.invoke('init_media_keys', true)
+								}}>Give permission</Button
+							>
+							<Button
+								type="button"
+								secondary
+								thin
+								on:click={() => {
+									media_keys_result = null
+								}}>Ignore</Button
+							>
+						{/if}
+					</div>
+				</div>
+			{/if}
 		</div>
 		{#if $queue_visible}
 			<Queue />

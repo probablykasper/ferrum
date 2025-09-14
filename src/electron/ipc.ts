@@ -3,6 +3,7 @@ import { ipc_main } from './typed_ipc'
 import path from 'path'
 import is from './is'
 import { check_for_updates } from './update'
+import { init_media_keys } from './shortcuts'
 
 ipc_main.handle('check_for_updates', (_e) => {
 	return check_for_updates() ?? null
@@ -42,6 +43,10 @@ ipc_main.handle('volume_change', async (_e, up) => {
 	} else {
 		Menu.getApplicationMenu()?.getMenuItemById('Volume Down')?.click()
 	}
+})
+
+ipc_main.handle('init_media_keys', async (_e, prompt) => {
+	return await init_media_keys(prompt)
 })
 
 ipc_main.handle('show_tracks_menu', (e, options) => {

@@ -5,7 +5,6 @@ import addon from '../../ferrum-addon'
 if (is.dev) app.setName('Ferrum Dev')
 
 import { init_menu_bar } from './menubar'
-import { init_media_keys } from './shortcuts'
 import('./ipc')
 import path from 'path'
 import url from 'url'
@@ -60,6 +59,10 @@ protocol.registerSchemesAsPrivileged([
 	},
 ])
 
+export const browser_windows = {
+	main_window: null as BrowserWindow | null,
+}
+
 app.whenReady().then(async () => {
 	let main_window: BrowserWindow | null = new BrowserWindow({
 		width: 1305,
@@ -75,10 +78,7 @@ app.whenReady().then(async () => {
 		backgroundColor: '#0D1115',
 		show: false,
 	})
-
-	if (!is.dev) {
-		await init_media_keys(main_window)
-	}
+	browser_windows.main_window = main_window
 
 	protocol.registerFileProtocol('track', (request, callback) => {
 		const url = decodeURI(request.url)
@@ -165,6 +165,7 @@ app.whenReady().then(async () => {
 	})
 	main_window.on('closed', () => {
 		main_window = null
+		browser_windows.main_window = main_window
 	})
 	ipc_main.handle('app_loaded', () => {
 		app_loaded = true

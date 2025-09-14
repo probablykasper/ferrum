@@ -1,5 +1,8 @@
 # Changelog
 
+## Next
+- Make macOS media key permission request non-intrusive
+
 ## 0.19.9 - 2025 Jul 4
 - Fix column size not updating when resizing window
 - Fix column sorting not working

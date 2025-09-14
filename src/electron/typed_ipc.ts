@@ -162,6 +162,13 @@ type Commands = {
 	showTracklistMenu: (options: { id: string; isFolder: boolean; isRoot: boolean }) => void
 	show_columns_menu: (options: { menu: MenuItemConstructorOptions[] }) => void
 	volume_change: (up: boolean) => void
+	init_media_keys: (
+		prompt: boolean,
+	) => Promise<
+		| { needs_accessibility_permission: undefined; error: string }
+		| { needs_accessibility_permission: boolean; error: undefined }
+		| null
+	>
 
 	'update:Shuffle': (checked: boolean) => void
 	'update:Repeat': (checked: boolean) => void
