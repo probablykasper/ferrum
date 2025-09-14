@@ -91,13 +91,20 @@ export const cover_src = (() => {
 	return {
 		async newFromTrackId(id: TrackID) {
 			try {
-				const buf = await read_cover_async(id, 0)
-				if (buf === null) {
+				const result = await read_cover_async(id, 0)
+				if (result.type === 'Err') {
 					set(null)
 					return
+				} else if (!result.field0) {
+					set(null)
+					return
+				} else {
+					// this should be zero-copy
+					const uint8 = new Uint8Array(result.field0)
+					// Blob() does copy
+					const url = URL.createObjectURL(new Blob([uint8], {}))
+					set(url)
 				}
-				const url = URL.createObjectURL(new Blob([buf], {}))
-				set(url)
 			} catch (_) {
 				set(null)
 			}

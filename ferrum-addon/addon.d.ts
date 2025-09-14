@@ -123,10 +123,14 @@ export interface Playlist {
 
 export declare function playlist_filter_duplicates(playlistId: TrackID, ids: Array<string>): Array<TrackID>
 
-export declare function read_cover_async(trackId: string, index: number): Promise<ArrayBuffer>
+export declare function read_cover_async(trackId: string, index: number): Promise<ReadCoverResult>
 
 /** Returns `None` if the file does not have an image */
 export declare function read_small_cover_async(path: string, index: number, cacheDbPath: string): Promise<Buffer | null>
+
+export type ReadCoverResult =
+  | { type: 'Ok', field0?: Buffer }
+  | { type: 'Err', field0: string }
 
 export declare function remove_from_playlist(playlistId: TrackID, itemIds: Array<ItemId>): void
 
