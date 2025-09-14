@@ -1,3 +1,4 @@
+use crate::FerrumStatus;
 use crate::data::Data;
 use anyhow::Result;
 use napi::Env;
@@ -81,8 +82,10 @@ pub fn get_paths(env: Env) -> PathsJs {
 
 #[napi(js_name = "save")]
 #[allow(dead_code)]
-pub fn save(env: Env) -> napi::Result<()> {
+pub fn save(env: Env) -> FerrumStatus {
 	let data: &mut Data = get_data(&env);
-	data.save()?;
-	Ok(())
+	match data.save() {
+		Ok(_) => FerrumStatus::Ok,
+		Err(err) => FerrumStatus::SaveError(err.to_string()),
+	}
 }

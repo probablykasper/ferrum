@@ -4,7 +4,7 @@ use crate::library_types::{
 	ItemId, Library, SpecialTrackListName, TRACK_ID_MAP, TrackID, TrackList,
 	get_track_ids_from_item_ids, new_item_ids_from_track_ids,
 };
-use crate::str_to_option;
+use crate::{FerrumStatus, str_to_option};
 use anyhow::{Context, Result, bail};
 use linked_hash_map::LinkedHashMap;
 use napi::{Env, Unknown};
@@ -25,10 +25,9 @@ pub struct TrackListDetails {
 
 #[napi(js_name = "get_track_lists_details")]
 #[allow(dead_code)]
-pub fn get_track_lists_details(env: Env) -> Result<HashMap<String, TrackListDetails>> {
+pub fn get_track_lists_details(env: Env) -> HashMap<String, TrackListDetails> {
 	let data: &Data = get_data(&env);
-	Ok(data
-		.library
+	data.library
 		.trackLists
 		.iter()
 		.map(|(id, tracklist)| {
@@ -54,7 +53,7 @@ pub fn get_track_lists_details(env: Env) -> Result<HashMap<String, TrackListDeta
 				},
 			);
 		})
-		.collect())
+		.collect()
 }
 
 #[napi(js_name = "get_track_list", ts_return_type = "TrackList")]
@@ -217,14 +216,17 @@ pub fn delete_file(path: &PathBuf) -> Result<()> {
 
 #[napi(js_name = "delete_tracks_with_item_ids")]
 #[allow(dead_code)]
-pub fn delete_tracks_with_item_ids(item_ids: Vec<ItemId>, env: Env) -> Result<()> {
+pub fn delete_tracks_with_item_ids(item_ids: Vec<ItemId>, env: Env) -> Result<FerrumStatus> {
 	let data: &mut Data = get_data(&env);
 	let library = &mut data.library;
 	let track_ids = get_track_ids_from_item_ids(&item_ids);
 	for track_id in &track_ids {
-		library.delete_track_and_file(track_id, &data.paths.tracks_dir)?;
+		let status = library.delete_track_and_file(track_id, &data.paths.tracks_dir)?;
+		if status.is_err() {
+			return Ok(status);
+		}
 	}
-	return Ok(());
+	return Ok(FerrumStatus::Ok);
 }
 
 #[napi(js_name = "new_playlist")]

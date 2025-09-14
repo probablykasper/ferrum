@@ -149,16 +149,16 @@ pub fn get_track_field_type(field: &str) -> Result<TrackField> {
 
 #[napi(js_name = "get_genres")]
 #[allow(dead_code)]
-pub fn get_genres(env: Env) -> Result<Vec<String>> {
+pub fn get_genres(env: Env) -> Vec<String> {
 	let data: &mut Data = get_data(&env);
 	let genres = data.library.get_genres();
-	Ok(genres.clone())
+	genres.clone()
 }
 
 #[napi(js_name = "get_artists")]
 #[allow(dead_code)]
-pub fn get_artists(env: Env) -> Result<Vec<String>> {
+pub fn get_artists(env: Env) -> Vec<String> {
 	let data: &mut Data = get_data(&env);
 	let genres = data.library.get_artists();
-	Ok(genres.clone())
+	genres.clone()
 }

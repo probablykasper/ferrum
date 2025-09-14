@@ -20,6 +20,21 @@ mod sort;
 mod tracks;
 mod view_options;
 
+#[napi]
+pub enum FerrumStatus {
+	Ok,
+	FileDeletionError(String),
+	SaveError(String),
+}
+impl FerrumStatus {
+	pub fn is_err(&self) -> bool {
+		match self {
+			FerrumStatus::Ok => false,
+			_ => true,
+		}
+	}
+}
+
 fn get_now_timestamp() -> i64 {
 	let timestamp = match SystemTime::now().duration_since(UNIX_EPOCH) {
 		Ok(n) => n.as_millis() as i64,

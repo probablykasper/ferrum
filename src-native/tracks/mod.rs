@@ -50,21 +50,21 @@ pub fn get_track_by_item_id(item_id: ItemId, env: Env) -> Result<KeyedTrack> {
 
 #[napi(js_name = "get_track_ids")]
 #[allow(dead_code)]
-pub fn get_track_ids(item_ids: Vec<ItemId>) -> Result<Vec<TrackID>> {
+pub fn get_track_ids(item_ids: Vec<ItemId>) -> Vec<TrackID> {
 	let id_map = TRACK_ID_MAP.read().unwrap();
 	let track_ids = item_ids.into_iter().map(|item_id| {
 		let track_id = &id_map[item_id as usize];
 		track_id.clone()
 	});
-	Ok(track_ids.collect())
+	track_ids.collect()
 }
 
 #[napi(js_name = "track_exists")]
 #[allow(dead_code)]
-pub fn track_exists(id: String, env: Env) -> Result<bool> {
+pub fn track_exists(id: String, env: Env) -> bool {
 	let data: &mut Data = get_data(&env);
 	let tracks = &data.library.get_tracks();
-	Ok(tracks.contains_key(&id))
+	tracks.contains_key(&id)
 }
 
 #[napi(js_name = "add_play")]
@@ -218,13 +218,12 @@ pub fn set_image(index: u32, path_str: String, env: Env) -> Result<()> {
 #[napi(js_name = "set_image_data")]
 #[allow(dead_code)]
 pub fn set_image_data(index: u32, bytes: ArrayBuffer, env: Env) -> Result<()> {
-	let bytes: Vec<u8> = bytes.to_vec();
 	let data: &mut Data = get_data(&env);
 	let tag = match &mut data.current_tag {
 		Some(tag) => tag,
 		None => bail!("No tag loaded"),
 	};
-	tag.set_image(index as usize, bytes)?;
+	tag.set_image(index as usize, bytes.to_vec())?;
 	Ok(())
 }
 

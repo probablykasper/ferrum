@@ -8,6 +8,8 @@ export function get_error_message(err: unknown): string {
 		} else if (obj.code) {
 			return 'Code: ' + String(obj.message)
 		}
+	} else if (typeof err === 'string') {
+		return err
 	}
 	return 'No reason or code provided'
 }
@@ -20,7 +22,7 @@ function get_error_stack(err: unknown): string {
 	}
 	return ''
 }
-function error_popup(err: unknown, crash = false) {
+export function error_popup(err: unknown, crash = false) {
 	ipc_renderer.invoke(
 		'showMessageBox',
 		false,

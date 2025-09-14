@@ -196,11 +196,9 @@ class Selection<T> {
 		} else if (this.items.size === 0) {
 			this.add_index_unchecked(0)
 		} else if (this.last_added !== null) {
-			console.log('go_forward', { ...this })
 			const next_index = this.last_added.index + 1
 			this.clear()
 			this.add_index_unchecked(Math.min(next_index, this.all.length - 1))
-			console.log('.', { ...this })
 		}
 	}
 	/** Expand or shrink selection backwards (shift+up) */

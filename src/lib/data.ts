@@ -3,7 +3,6 @@ import { ipc_renderer } from '@/lib/window'
 import type {
 	MsSinceUnixEpoch,
 	TrackID,
-	TrackList,
 	TrackListID,
 	ItemId,
 	TrackMd,
@@ -13,7 +12,7 @@ import type {
 import { queue } from './queue'
 import { current_playlist_id } from '@/components/TrackList.svelte'
 import { navigate } from './router'
-import { call, get_error_message, strict_call } from './error'
+import { call, error_popup, get_error_message, strict_call } from './error'
 
 export const is_dev = window.is_dev
 export const local_data_path = window.local_data_path
@@ -23,21 +22,21 @@ export const is_windws = window.is_windows
 const inner_addon = window.addon
 export const ItunesImport = inner_addon.ItunesImport
 
-call((addon) => addon.load_data(is_dev, local_data_path, library_path))
+strict_call((addon) => addon.load_data(is_dev, local_data_path, library_path))
 
-export const paths = call((addon) => addon.get_paths())
+export const paths = strict_call((addon) => addon.get_paths())
 export function join_paths(...args: string[]) {
 	return args.join(paths.pathSeparator)
 }
 
 export const track_lists_details_map = (() => {
-	const initial = call((addon) => addon.get_track_lists_details())
+	const initial = strict_call((addon) => addon.get_track_lists_details())
 
 	const { subscribe, set } = writable(initial)
 	return {
 		subscribe,
 		refresh() {
-			set(call((addon) => addon.get_track_lists_details()))
+			set(strict_call((addon) => addon.get_track_lists_details()))
 		},
 	}
 })()
@@ -47,7 +46,9 @@ export async function add_tracks_to_playlist(
 	check_duplicates = true,
 ) {
 	if (check_duplicates) {
-		const filtered_ids = call((addon) => addon.playlist_filter_duplicates(playlist_id, track_ids))
+		const filtered_ids = strict_call((addon) =>
+			addon.playlist_filter_duplicates(playlist_id, track_ids),
+		)
 		const duplicates = track_ids.length - filtered_ids.length
 		if (duplicates > 0) {
 			const result = await ipc_renderer.invoke('showMessageBox', false, {
@@ -68,18 +69,22 @@ export async function add_tracks_to_playlist(
 		}
 	}
 	if (track_ids.length >= 1) {
-		call((addon) => addon.add_tracks_to_playlist(playlist_id, track_ids))
+		strict_call((addon) => addon.add_tracks_to_playlist(playlist_id, track_ids))
 		tracklist_updated.emit()
 		save()
 	}
 }
 export function remove_from_playlist(playlist_id: TrackListID, item_ids: ItemId[]) {
-	call((addon) => addon.remove_from_playlist(playlist_id, item_ids))
+	strict_call((addon) => addon.remove_from_playlist(playlist_id, item_ids))
 	tracklist_updated.emit()
 	save()
 }
 export function delete_tracks_with_item_ids(item_ids: ItemId[]) {
-	call((addon) => addon.delete_tracks_with_item_ids(item_ids))
+	const result = strict_call((addon) => addon.delete_tracks_with_item_ids(item_ids))
+	if (result.type === 'FileDeletionError') {
+		// Gracefully handle
+		error_popup(result.field0)
+	}
 	tracklist_updated.emit()
 	queue.removeDeleted()
 	save()
@@ -93,12 +98,12 @@ export type PlaylistInfo = {
 	editMode: boolean
 }
 export function new_playlist(info: PlaylistInfo) {
-	call((addon) => addon.new_playlist(info.name, info.description, info.isFolder, info.id))
+	strict_call((addon) => addon.new_playlist(info.name, info.description, info.isFolder, info.id))
 	track_lists_details_map.refresh()
 	save()
 }
 export function update_playlist(id: string, name: string, description: string) {
-	call((addon) => addon.update_playlist(id, name, description))
+	strict_call((addon) => addon.update_playlist(id, name, description))
 	track_lists_details_map.refresh()
 	tracklist_updated.emit()
 	save()
@@ -109,7 +114,7 @@ export function move_playlist(
 	to_parent: TrackListID,
 	to_index: number,
 ) {
-	call((addon) => addon.move_playlist(id, from_parent, to_parent, to_index))
+	strict_call((addon) => addon.move_playlist(id, from_parent, to_parent, to_index))
 	track_lists_details_map.refresh()
 	save()
 }
@@ -138,32 +143,32 @@ export async function import_tracks(paths: string[]) {
 }
 
 export function get_default_sort_desc(field: string) {
-	return call((data) => data.get_default_sort_desc(field))
+	return strict_call((data) => data.get_default_sort_desc(field))
 }
 
 export function import_track(path: string, now: MsSinceUnixEpoch) {
 	call((data) => data.import_file(path, now))
 }
 export function get_track(id: TrackID) {
-	return call((data) => data.get_track(id))
+	return strict_call((data) => data.get_track(id))
 }
 export function get_track_by_item_id(item_id: ItemId) {
-	return call((data) => data.get_track_by_item_id(item_id))
+	return strict_call((data) => data.get_track_by_item_id(item_id))
 }
 export function get_track_ids(item_ids: ItemId[]) {
-	return call((data) => data.get_track_ids(item_ids))
+	return strict_call((data) => data.get_track_ids(item_ids))
 }
 export function get_tracks_page(options: TracksPageOptions) {
-	return call((data) => data.get_tracks_page(options))
+	return strict_call((data) => data.get_tracks_page(options))
 }
 export function track_exists(id: TrackID) {
-	return call((data) => data.track_exists(id))
+	return strict_call((data) => data.track_exists(id))
 }
 export function get_track_list(id: TrackListID) {
-	return call((data) => data.get_track_list(id)) as TrackList
+	return strict_call((data) => data.get_track_list(id))
 }
 export function delete_track_list(id: TrackListID) {
-	call((data) => data.delete_track_list(id))
+	strict_call((data) => data.delete_track_list(id))
 	if (id === get(current_playlist_id)) {
 		navigate('/playlist/root')
 	}
@@ -171,7 +176,11 @@ export function delete_track_list(id: TrackListID) {
 	save()
 }
 export function save() {
-	return call((addon) => addon.save())
+	const result = strict_call((addon) => addon.save())
+	if (result.type === 'SaveError') {
+		// Gracefully handle
+		error_popup(result.field0)
+	}
 }
 export function add_play(id: TrackID) {
 	call((data) => data.add_play(id))

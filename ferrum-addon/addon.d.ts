@@ -23,7 +23,12 @@ export interface CountObject {
 /** Returns the deleted track lists, including folder children */
 export declare function delete_track_list(id: string): void
 
-export declare function delete_tracks_with_item_ids(itemIds: Array<ItemId>): void
+export declare function delete_tracks_with_item_ids(itemIds: Array<ItemId>): FerrumStatus
+
+export type FerrumStatus =
+  | { type: 'Ok' }
+  | { type: 'FileDeletionError', field0: string }
+  | { type: 'SaveError', field0: string }
 
 export interface Folder {
   id: TrackListID
@@ -127,13 +132,13 @@ export declare function remove_from_playlist(playlistId: TrackID, itemIds: Array
 
 export declare function remove_image(index: number): void
 
-export declare function save(): void
+export declare function save(): FerrumStatus
 
 export declare function save_view_options(viewOptions: ViewOptions): void
 
 export declare function set_image(index: number, pathStr: string): void
 
-export declare function set_image_data(index: number, bytes: Uint8Array): void
+export declare function set_image_data(index: number, bytes: ArrayBuffer): void
 
 export interface Special {
   id: TrackListID
