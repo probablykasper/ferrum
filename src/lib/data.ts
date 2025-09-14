@@ -12,7 +12,7 @@ import type {
 import { queue } from './queue'
 import { current_playlist_id } from '@/components/TrackList.svelte'
 import { navigate } from './router'
-import { call, error_popup, get_error_message, strict_call } from './error'
+import { call, call_safe, error_popup, get_error_message, strict_call } from './error'
 
 export const is_dev = window.is_dev
 export const local_data_path = window.local_data_path
@@ -183,18 +183,21 @@ export function save() {
 	}
 }
 export function add_play(id: TrackID) {
-	call((data) => data.add_play(id))
-	tracklist_updated.emit()
-	save()
+	return call_safe((data) => data.add_play(id)).on_success(() => {
+		tracklist_updated.emit()
+		save()
+	})
 }
 export function add_skip(id: TrackID) {
-	call((data) => data.add_skip(id))
-	tracklist_updated.emit()
-	save()
+	return call_safe((data) => data.add_skip(id)).on_success(() => {
+		tracklist_updated.emit()
+		save()
+	})
 }
 export function add_play_time(id: TrackID, start_time: MsSinceUnixEpoch, duration_ms: number) {
-	call((data) => data.add_play_time(id, start_time, duration_ms))
-	save()
+	return call_safe((data) => data.add_play_time(id, start_time, duration_ms)).on_success(() => {
+		save()
+	})
 }
 export function read_cover_async(id: TrackID, index: number) {
 	return inner_addon.read_cover_async(id, index).catch((error) => {
@@ -203,7 +206,7 @@ export function read_cover_async(id: TrackID, index: number) {
 	})
 }
 export function update_track_info(id: TrackID, md: TrackMd) {
-	call((data) => data.update_track_info(id, md))
+	strict_call((data) => data.update_track_info(id, md))
 	tracks_updated.emit()
 	save()
 }

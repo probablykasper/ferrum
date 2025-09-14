@@ -1,9 +1,9 @@
 #![allow(non_snake_case)]
 
-use super::{generate_filename, Tag};
+use super::{Tag, generate_filename};
 use crate::library_types::Track;
 use crate::{get_now_timestamp, str_to_option};
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::PathBuf;
@@ -142,7 +142,7 @@ pub fn update_track_info(
 	let new_comments = str_to_option(new_info.comments);
 
 	// save tag
-	tag.write_to_path(&old_path)?;
+	tag.write_to_path(&old_path).context("Failed to save tag")?;
 
 	// move file
 	if new_name != track.name || new_artist != track.artist {
