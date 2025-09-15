@@ -199,11 +199,8 @@ export function add_play_time(id: TrackID, start_time: MsSinceUnixEpoch, duratio
 		save()
 	})
 }
-export function read_cover_async(id: TrackID, index: number) {
-	return inner_addon.read_cover_async(id, index).catch((error) => {
-		console.log('Could not read cover', error)
-		throw error
-	})
+export function read_cover_async(file_path: string, index: number) {
+	return inner_addon.read_cover_async(file_path, index)
 }
 export function update_track_info(id: TrackID, md: TrackMd) {
 	strict_call((data) => data.update_track_info(id, md))

@@ -216,44 +216,14 @@ fn to_resized_image(image_bytes: Vec<u8>, max_size: u32) -> Result<Vec<u8>> {
 	Ok(img_bytes)
 }
 
-// This enum is now exposed to JavaScript
-#[napi]
-pub enum ReadCoverResult {
-	Ok(Option<Buffer>),
-	Err(String),
-}
-
-#[napi(
-	js_name = "read_cover_async",
-	ts_return_type = "Promise<ReadCoverResult>"
-)]
+#[napi(js_name = "read_cover_async")]
 #[allow(dead_code)]
-pub fn read_cover_async<'env>(
-	track_id: String,
-	index: u16,
-	env: &'env Env,
-) -> Result<PromiseRaw<'env, ReadCoverResult>> {
-	let data = get_data(&env);
-	let track = id_to_track(&env, &track_id).expect("Track ID not found");
-
-	let tracks_dir = &data.paths.tracks_dir;
-	let file_path = tracks_dir.join(&track.file);
-
-	let result = env
-		.spawn_future(async move {
-			let tag = match Tag::read_from_path(&file_path) {
-				Ok(tag) => tag,
-				Err(err) => return Ok(ReadCoverResult::Err(err.to_string())),
-			};
-			let image = match tag.get_image_consume(index.into()) {
-				Ok(Some(image)) => image,
-				Ok(None) => {
-					return Ok(ReadCoverResult::Ok(None));
-				}
-				Err(err) => return Ok(ReadCoverResult::Err(err.to_string())),
-			};
-			Ok(ReadCoverResult::Ok(Some(Buffer::from(image.data))))
-		})
-		.context("Failed to spawn async future")?;
-	Ok(result)
+pub async fn read_cover_async(file_path: String, index: u16) -> Result<Option<Buffer>> {
+	let file_path = PathBuf::from(file_path);
+	let tag = Tag::read_from_path(&file_path)?;
+	let image = match tag.get_image_consume(index.into())? {
+		Some(image) => image,
+		None => return Ok(None),
+	};
+	Ok(Some(Buffer::from(image.data)))
 }
