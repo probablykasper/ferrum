@@ -12,7 +12,7 @@ import type {
 import { queue } from './queue'
 import { current_playlist_id } from '@/components/TrackList.svelte'
 import { navigate } from './router'
-import { call_sync, error_popup, get_error_message, strict_call } from './error'
+import { call_sync, get_error_message, strict_call } from './error'
 
 export const is_dev = window.is_dev
 export const local_data_path = window.local_data_path
@@ -80,14 +80,11 @@ export function remove_from_playlist(playlist_id: TrackListID, item_ids: ItemId[
 	save()
 }
 export function delete_tracks_with_item_ids(item_ids: ItemId[]) {
-	const result = strict_call((addon) => addon.delete_tracks_with_item_ids(item_ids))
-	if (result.type === 'FileDeletionError') {
-		// Gracefully handle
-		error_popup(result.field0)
-	}
-	tracklist_updated.emit()
-	queue.removeDeleted()
-	save()
+	return call_sync((addon) => addon.delete_tracks_with_item_ids(item_ids)).on_success(() => {
+		tracklist_updated.emit()
+		queue.removeDeleted()
+		save()
+	})
 }
 export type PlaylistInfo = {
 	name: string
@@ -147,29 +144,29 @@ export async function import_tracks(paths: string[]) {
 }
 
 export function get_default_sort_desc(field: string) {
-	return strict_call((data) => data.get_default_sort_desc(field))
+	return strict_call((addon) => addon.get_default_sort_desc(field))
 }
 
 export function get_track(id: TrackID) {
-	return strict_call((data) => data.get_track(id))
+	return strict_call((addon) => addon.get_track(id))
 }
 export function get_track_by_item_id(item_id: ItemId) {
-	return strict_call((data) => data.get_track_by_item_id(item_id))
+	return strict_call((addon) => addon.get_track_by_item_id(item_id))
 }
 export function get_track_ids(item_ids: ItemId[]) {
-	return strict_call((data) => data.get_track_ids(item_ids))
+	return strict_call((addon) => addon.get_track_ids(item_ids))
 }
 export function get_tracks_page(options: TracksPageOptions) {
-	return strict_call((data) => data.get_tracks_page(options))
+	return strict_call((addon) => addon.get_tracks_page(options))
 }
 export function track_exists(id: TrackID) {
-	return strict_call((data) => data.track_exists(id))
+	return strict_call((addon) => addon.track_exists(id))
 }
 export function get_track_list(id: TrackListID) {
-	return strict_call((data) => data.get_track_list(id))
+	return strict_call((addon) => addon.get_track_list(id))
 }
 export function delete_track_list(id: TrackListID) {
-	strict_call((data) => data.delete_track_list(id))
+	strict_call((addon) => addon.delete_track_list(id))
 	if (id === get(current_playlist_id)) {
 		navigate('/playlist/root')
 	}
@@ -177,26 +174,22 @@ export function delete_track_list(id: TrackListID) {
 	save()
 }
 export function save() {
-	const result = strict_call((addon) => addon.save())
-	if (result.type === 'SaveError') {
-		// Gracefully handle
-		error_popup(result.field0)
-	}
+	return call_sync((addon) => addon.save())
 }
 export function add_play(id: TrackID) {
-	return call_sync((data) => data.add_play(id)).on_success(() => {
+	return call_sync((addon) => addon.add_play(id)).on_success(() => {
 		tracklist_updated.emit()
 		save()
 	})
 }
 export function add_skip(id: TrackID) {
-	return call_sync((data) => data.add_skip(id)).on_success(() => {
+	return call_sync((addon) => addon.add_skip(id)).on_success(() => {
 		tracklist_updated.emit()
 		save()
 	})
 }
 export function add_play_time(id: TrackID, start_time: MsSinceUnixEpoch, duration_ms: number) {
-	return call_sync((data) => data.add_play_time(id, start_time, duration_ms)).on_success(() => {
+	return call_sync((addon) => addon.add_play_time(id, start_time, duration_ms)).on_success(() => {
 		save()
 	})
 }
@@ -204,29 +197,29 @@ export function read_cover_async(file_path: string, index: number) {
 	return inner_addon.read_cover_async(file_path, index)
 }
 export function update_track_info(id: TrackID, md: TrackMd) {
-	strict_call((data) => data.update_track_info(id, md))
+	strict_call((addon) => addon.update_track_info(id, md))
 	tracks_updated.emit()
 	save()
 }
 export function load_tags(id: TrackID) {
-	return call_sync((data) => data.load_tags(id))
+	return call_sync((addon) => addon.load_tags(id))
 }
 export function get_image(index: number) {
-	return call_sync((data) => data.get_image(index))
+	return call_sync((addon) => addon.get_image(index))
 }
 export function set_image(index: number, path: string) {
-	return call_sync((data) => data.set_image(index, path))
+	return call_sync((addon) => addon.set_image(index, path))
 }
 export function set_image_data(index: number, bytes: ArrayBuffer) {
-	return call_sync((data) => data.set_image_data(index, bytes))
+	return call_sync((addon) => addon.set_image_data(index, bytes))
 }
 export function remove_image(index: number) {
-	return call_sync((data) => data.remove_image(index))
+	return call_sync((addon) => addon.remove_image(index))
 }
-export let view_options = strict_call((data) => data.load_view_options())
+export let view_options = strict_call((addon) => addon.load_view_options())
 export function save_view_options(options: ViewOptions) {
 	view_options = options
-	return call_sync((data) => data.save_view_options(view_options, paths.viewOptionsFile))
+	return call_sync((addon) => addon.save_view_options(view_options, paths.viewOptionsFile))
 }
 
 export const filter = writable('')
@@ -250,7 +243,7 @@ export function get_genres() {
 	return strict_call((addon) => addon.get_genres())
 }
 export function move_tracks(playlist_id: TrackListID, indexes: ItemId[], to_index: number) {
-	return call_sync((data) => data.move_tracks(playlist_id, indexes, to_index)).on_success(() => {
+	return call_sync((addon) => addon.move_tracks(playlist_id, indexes, to_index)).on_success(() => {
 		tracklist_updated.emit()
 		save()
 	})

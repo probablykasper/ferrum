@@ -1,8 +1,8 @@
 #![allow(non_snake_case)]
 
+use crate::get_now_timestamp;
 use crate::library::Paths;
 use crate::playlists::{delete_file, remove_from_all_playlists};
-use crate::{FerrumStatus, get_now_timestamp};
 use anyhow::{Context, Result, bail};
 use linked_hash_map::{Entry, LinkedHashMap};
 use nanoid::nanoid;
@@ -138,16 +138,13 @@ impl Library {
 		track_id_map.push(id.clone());
 		self.track_item_ids.insert(id, item_id);
 	}
-	pub fn delete_track_and_file(&mut self, id: &TrackID, paths: &Paths) -> Result<FerrumStatus> {
+	pub fn delete_track_and_file(&mut self, id: &TrackID, paths: &Paths) -> Result<()> {
 		let file_path = {
 			let track = self.get_track(id)?;
 			paths.get_track_file_path(&track.file)
 		};
 		if !file_path.exists() {
-			return Ok(FerrumStatus::FileDeletionError(format!(
-				"File does not exist: {}",
-				file_path.to_string_lossy()
-			)));
+			bail!("File does not exist: {}", file_path.to_string_lossy());
 		}
 
 		remove_from_all_playlists(self, id);
@@ -157,10 +154,8 @@ impl Library {
 		self.track_item_ids
 			.remove(id)
 			.expect("Track ID not found when deleting (2)");
-		Ok(match delete_file(&file_path) {
-			Ok(_) => FerrumStatus::Ok,
-			Err(err) => FerrumStatus::FileDeletionError(err.to_string()),
-		})
+		delete_file(&file_path)?;
+		Ok(())
 	}
 	pub fn generate_id(&self) -> String {
 		let alphabet: [char; 32] = [

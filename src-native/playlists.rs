@@ -4,7 +4,7 @@ use crate::library_types::{
 	ItemId, Library, SpecialTrackListName, TRACK_ID_MAP, TrackID, TrackList,
 	get_track_ids_from_item_ids, new_item_ids_from_track_ids,
 };
-use crate::{FerrumStatus, str_to_option};
+use crate::str_to_option;
 use anyhow::{Context, Result, bail};
 use linked_hash_map::LinkedHashMap;
 use napi::{Env, Unknown};
@@ -216,17 +216,14 @@ pub fn delete_file(path: &PathBuf) -> Result<()> {
 
 #[napi(js_name = "delete_tracks_with_item_ids")]
 #[allow(dead_code)]
-pub fn delete_tracks_with_item_ids(item_ids: Vec<ItemId>, env: Env) -> Result<FerrumStatus> {
+pub fn delete_tracks_with_item_ids(item_ids: Vec<ItemId>, env: Env) -> Result<()> {
 	let data: &mut Data = get_data(&env);
 	let library = &mut data.library;
 	let track_ids = get_track_ids_from_item_ids(&item_ids);
 	for track_id in &track_ids {
-		let status = library.delete_track_and_file(track_id, &data.paths)?;
-		if status.is_err() {
-			return Ok(status);
-		}
+		library.delete_track_and_file(track_id, &data.paths)?;
 	}
-	return Ok(FerrumStatus::Ok);
+	return Ok(());
 }
 
 #[napi(js_name = "new_playlist")]
