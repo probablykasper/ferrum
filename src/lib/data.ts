@@ -12,7 +12,7 @@ import type {
 import { queue } from './queue'
 import { current_playlist_id } from '@/components/TrackList.svelte'
 import { navigate } from './router'
-import { call, call_safe, error_popup, get_error_message, strict_call } from './error'
+import { call, call_async, call_sync, error_popup, get_error_message, strict_call } from './error'
 
 export const is_dev = window.is_dev
 export const local_data_path = window.local_data_path
@@ -183,19 +183,19 @@ export function save() {
 	}
 }
 export function add_play(id: TrackID) {
-	return call_safe((data) => data.add_play(id)).on_success(() => {
+	return call_async((data) => data.add_play(id)).on_success(() => {
 		tracklist_updated.emit()
 		save()
 	})
 }
 export function add_skip(id: TrackID) {
-	return call_safe((data) => data.add_skip(id)).on_success(() => {
+	return call_async((data) => data.add_skip(id)).on_success(() => {
 		tracklist_updated.emit()
 		save()
 	})
 }
 export function add_play_time(id: TrackID, start_time: MsSinceUnixEpoch, duration_ms: number) {
-	return call_safe((data) => data.add_play_time(id, start_time, duration_ms)).on_success(() => {
+	return call_async((data) => data.add_play_time(id, start_time, duration_ms)).on_success(() => {
 		save()
 	})
 }
@@ -208,19 +208,19 @@ export function update_track_info(id: TrackID, md: TrackMd) {
 	save()
 }
 export function load_tags(id: TrackID) {
-	return call((data) => data.load_tags(id))
+	return call_sync((data) => data.load_tags(id))
 }
 export function get_image(index: number) {
-	return call((data) => data.get_image(index))
+	return call_sync((data) => data.get_image(index))
 }
 export function set_image(index: number, path: string) {
-	return call((data) => data.set_image(index, path))
+	return call_sync((data) => data.set_image(index, path))
 }
 export function set_image_data(index: number, bytes: ArrayBuffer) {
-	return call((data) => data.set_image_data(index, bytes))
+	return call_sync((data) => data.set_image_data(index, bytes))
 }
 export function remove_image(index: number) {
-	return call((data) => data.remove_image(index))
+	return call_sync((data) => data.remove_image(index))
 }
 export let view_options = call((data) => data.load_view_options())
 export function save_view_options(options: ViewOptions) {

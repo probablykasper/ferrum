@@ -1,5 +1,4 @@
-use super::{Tag, id_to_track};
-use crate::data_js::get_data;
+use super::Tag;
 use anyhow::{Context, Result, anyhow, bail};
 use fast_image_resize::images::Image;
 use fast_image_resize::{IntoImageView, Resizer};
@@ -7,8 +6,7 @@ use image::codecs::jpeg::JpegEncoder;
 use image::codecs::png::PngEncoder;
 use image::{ImageEncoder, ImageFormat, ImageReader};
 use lazy_static::lazy_static;
-use napi::Env;
-use napi::bindgen_prelude::{Buffer, PromiseRaw};
+use napi::bindgen_prelude::Buffer;
 use redb::{Database, TableDefinition};
 use std::fs;
 use std::io::{BufWriter, Cursor};

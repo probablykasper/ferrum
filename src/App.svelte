@@ -5,7 +5,7 @@
 	import Player from './components/Player.svelte'
 	import Sidebar from './components/Sidebar.svelte'
 	import Queue from './components/Queue.svelte'
-	import TrackInfo, { current_list } from './components/TrackInfo.svelte'
+	import TrackInfo, { track_info_state } from './components/TrackInfo.svelte'
 	import PlaylistInfoModal from './components/PlaylistInfo.svelte'
 	import { queue_visible } from './lib/queue'
 	import { ipc_listen, ipc_renderer } from '@/lib/window'
@@ -294,8 +294,8 @@
 </main>
 
 <QuickNav />
-{#if $current_list}
-	<TrackInfo />
+{#if track_info_state.instance}
+	<TrackInfo bind:instance={track_info_state.instance} />
 {/if}
 {#if playlist_info}
 	<PlaylistInfoModal info={playlist_info} cancel={() => (playlist_info = null)} />

@@ -162,10 +162,10 @@ pub fn import_file(path: String, now: MsSinceUnixEpoch, env: Env) -> Result<()> 
 pub fn load_tags(track_id: String, env: Env) -> Result<()> {
 	let data: &mut Data = get_data(&env);
 	data.current_tag = None;
-	let track = id_to_track(&env, &track_id)?;
+	let track = id_to_track(&env, &track_id).context("Could not load tags")?;
 
 	let path = data.paths.tracks_dir.join(&track.file);
-	let tag = Tag::read_from_path(&path)?;
+	let tag = Tag::read_from_path(&path).context("Could not load tags")?;
 	data.current_tag = Some(tag);
 	Ok(())
 }
@@ -185,9 +185,12 @@ pub fn get_image(index: u32, env: Env) -> Result<Option<JsImage>> {
 
 	let tag = match &data.current_tag {
 		Some(tag) => tag,
-		None => return Ok(None),
+		None => bail!("Could not load image: No tag loaded"),
 	};
-	let img = match tag.get_image_ref(index as usize)? {
+	let img = match tag
+		.get_image_ref(index as usize)
+		.context("Could not load image")?
+	{
 		Some(image) => image,
 		None => return Ok(None),
 	};
@@ -229,7 +232,7 @@ pub fn set_image_data(index: u32, bytes: ArrayBuffer, env: Env) -> Result<()> {
 
 #[napi(js_name = "remove_image")]
 #[allow(dead_code)]
-pub fn remove_image(index: u32, env: Env) -> Result<()> {
+pub fn remove_image(index: u32, env: Env) -> () {
 	let data: &mut Data = get_data(&env);
 	match data.current_tag {
 		Some(ref mut tag) => {
@@ -237,7 +240,6 @@ pub fn remove_image(index: u32, env: Env) -> Result<()> {
 		}
 		None => {}
 	};
-	Ok(())
 }
 
 #[napi(js_name = "update_track_info")]
