@@ -222,10 +222,10 @@ export function set_image_data(index: number, bytes: ArrayBuffer) {
 export function remove_image(index: number) {
 	return call_sync((data) => data.remove_image(index))
 }
-export let view_options = call((data) => data.load_view_options())
+export let view_options = strict_call((data) => data.load_view_options())
 export function save_view_options(options: ViewOptions) {
 	view_options = options
-	return call((data) => data.save_view_options(view_options))
+	return call_sync((data) => data.save_view_options(view_options, paths.viewOptionsFile))
 }
 
 export const filter = writable('')

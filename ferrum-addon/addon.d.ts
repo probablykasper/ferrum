@@ -136,7 +136,7 @@ export declare function remove_image(index: number): void
 
 export declare function save(): FerrumStatus
 
-export declare function save_view_options(viewOptions: ViewOptions): void
+export declare function save_view_options(viewOptions: ViewOptions, filePath: string): Promise<void>
 
 export declare function set_image(index: number, path: string): void
 

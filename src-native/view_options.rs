@@ -32,9 +32,9 @@ impl ViewOptions {
 			},
 		}
 	}
-	pub fn save(&self, paths: &Paths) -> Result<()> {
+	pub fn save(&self, file_path: &str) -> Result<()> {
 		let json_str = serde_json::to_string(self).context("Error saving view.json")?;
-		let af = AtomicFile::new(&paths.view_options_file, AllowOverwrite);
+		let af = AtomicFile::new(&file_path, AllowOverwrite);
 		af.write(|f| f.write_all(json_str.as_bytes()))
 			.context("Error writing view.json")?;
 		Ok(())
@@ -49,8 +49,7 @@ pub fn load_view_options(env: Env) -> Result<ViewOptions> {
 }
 #[napi(js_name = "save_view_options")]
 #[allow(dead_code)]
-pub fn save_view_options(view_options: ViewOptions, env: Env) -> Result<()> {
-	let data: &mut Data = get_data(&env);
-	view_options.save(&data.paths)?;
+pub async fn save_view_options(view_options: ViewOptions, file_path: String) -> Result<()> {
+	view_options.save(&file_path)?;
 	Ok(())
 }
