@@ -138,7 +138,7 @@ export declare function save(): FerrumStatus
 
 export declare function save_view_options(viewOptions: ViewOptions): void
 
-export declare function set_image(index: number, pathStr: string): void
+export declare function set_image(index: number, path: string): void
 
 export declare function set_image_data(index: number, bytes: ArrayBuffer): void
 

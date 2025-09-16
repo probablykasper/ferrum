@@ -207,9 +207,8 @@ pub fn get_image(index: u32, env: Env) -> Result<Option<JsImage>> {
 
 #[napi(js_name = "set_image")]
 #[allow(dead_code)]
-pub fn set_image(index: u32, path_str: String, env: Env) -> Result<()> {
+pub fn set_image(index: u32, path: String, env: Env) -> Result<()> {
 	let data: &mut Data = get_data(&env);
-	let path = data.paths.get_track_file_path(&path_str);
 	let tag = match &mut data.current_tag {
 		Some(tag) => tag,
 		None => bail!("No tag loaded"),
