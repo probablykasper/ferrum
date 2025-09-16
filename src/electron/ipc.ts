@@ -25,7 +25,7 @@ ipc_main.handle('showMessageBox', async (e, attached, options, crash) => {
 		result = await dialog.showMessageBox(options)
 	}
 	if (crash) {
-		trigger_crash()
+		trigger_crash(null)
 	}
 	return result
 })

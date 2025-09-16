@@ -5,13 +5,12 @@ use fast_image_resize::{IntoImageView, Resizer};
 use image::codecs::jpeg::JpegEncoder;
 use image::codecs::png::PngEncoder;
 use image::{ImageEncoder, ImageFormat, ImageReader};
-use lazy_static::lazy_static;
 use napi::bindgen_prelude::Buffer;
 use redb::{Database, TableDefinition};
 use std::fs;
 use std::io::{BufWriter, Cursor};
 use std::path::PathBuf;
-use std::sync::{Arc, RwLock};
+use std::sync::{LazyLock, RwLock};
 use std::time::{Instant, UNIX_EPOCH};
 
 // (modified_timestamp_ms, image_bytes)
@@ -19,32 +18,54 @@ type CacheEntry = (i64, Vec<u8>);
 
 const IMG_CACHE_TABLE: TableDefinition<&str, CacheEntry> = TableDefinition::new("img_cache");
 
-lazy_static! {
-	static ref CACHE_DB: Arc<RwLock<Option<Database>>> = Arc::new(RwLock::new(None));
-}
+static CACHE_DB: LazyLock<RwLock<Option<Database>>> = LazyLock::new(|| RwLock::new(None));
 
 fn init_cache_db(path: String) -> Result<()> {
 	let now = Instant::now();
-	let cache_db_mutex = CACHE_DB.read().unwrap();
-	if cache_db_mutex.is_none() {
-		drop(cache_db_mutex);
-		let mut cache_db_mutex = CACHE_DB.write().unwrap();
-		if cache_db_mutex.is_none() {
-			let db = Database::create(&path).context("Could not load image cache: {}")?;
-			let init_txn = db
-				.begin_write()
-				.context("Could not begin write transaction: {}")?;
-			{
-				// Create table
-				init_txn
-					.open_table(IMG_CACHE_TABLE)
-					.context("Could not open table: {}")?;
-			}
-			init_txn.commit().context("Could not commit cache: {}")?;
-			*cache_db_mutex = Some(db);
-			println!("Initialized Cache.redb: {}ms", now.elapsed().as_millis());
+
+	// Check quickly with a read-lock first
+	{
+		let cache_db_global = &*CACHE_DB;
+		let cache_db_lock = cache_db_global.read().unwrap();
+		if cache_db_lock.is_some() {
+			return Ok(());
 		}
 	}
+
+	let cache_db_global = &*CACHE_DB;
+	let mut cache_db_lock = cache_db_global.write().unwrap();
+	if cache_db_lock.is_none() {
+		let db = Database::create(&path).context("Could not load image cache")?;
+		let init_txn = db
+			.begin_write()
+			.context("Could not begin write transaction")?;
+		{
+			// Create table
+			init_txn
+				.open_table(IMG_CACHE_TABLE)
+				.context("Could not open table")?;
+		}
+		init_txn.commit().context("Could not commit cache")?;
+		*cache_db_lock = Some(db);
+		println!("Initialized Cache.redb: {}ms", now.elapsed().as_millis());
+	}
+	Ok(())
+}
+
+#[napi(js_name = "close_cache_db")]
+#[allow(dead_code)]
+pub async fn close_cache_db() -> napi::Result<()> {
+	let cache_db_global = &*CACHE_DB;
+	let mut cache_db_lock = cache_db_global.write().unwrap();
+	if let Some(cache_db) = cache_db_lock.take() {
+		let now = Instant::now();
+		drop(cache_db);
+		println!("Closed Cache.redb: {}ms", now.elapsed().as_millis());
+	} else {
+		// This can happen if the app crashes during startup
+		println!("Cache.redb was not open");
+	}
+
 	Ok(())
 }
 
@@ -129,8 +150,9 @@ pub async fn read_small_cover_async(
 
 	init_cache_db(cache_db_path)?;
 
-	let cache_db_mutex = CACHE_DB.read().unwrap();
-	let cache_db = cache_db_mutex.as_ref().unwrap();
+	let cache_db_global = &*CACHE_DB;
+	let cache_db_lock = cache_db_global.read().unwrap();
+	let cache_db = cache_db_lock.as_ref().unwrap();
 
 	let date_modified_ms: Option<i64> =
 		get_modified_timestamp_ms(&path)?.map(|n| n.try_into().unwrap());

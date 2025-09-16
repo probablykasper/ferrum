@@ -236,7 +236,7 @@ export function stop() {
 	}
 }
 
-quit.setHandler('player', () => {
+quit.set_handler('player', () => {
 	stop()
 })
 

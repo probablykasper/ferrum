@@ -10,32 +10,43 @@ import path from 'path'
 import url from 'url'
 import { ipc_main } from './typed_ipc'
 
-export function trigger_crash() {
-	app.once('will-quit', () => {
-		process.exit(1)
-	})
-	app.quit()
-	setTimeout(() => {
-		process.exit(1)
-	})
+async function close_cache_db() {
+	await addon.close_cache_db()
 }
 
-async function err_handler(msg: string, error: Error | string) {
-	app.whenReady().then(() => {
-		dialog.showMessageBoxSync({
-			type: 'error',
-			message: msg,
-			detail: error instanceof Error ? error.stack : error,
-			title: 'Error',
+let triggering_crash = false
+export function trigger_crash(popup: { msg: string; error: Error | string } | null) {
+	if (triggering_crash) {
+		return
+	}
+	triggering_crash = true
+	quitting = true
+	const close_promise = close_cache_db()
+	app.whenReady().then(async () => {
+		if (popup) {
+			dialog.showMessageBoxSync({
+				type: 'error',
+				message: popup.msg,
+				detail: popup.error instanceof Error ? popup.error.stack : popup.error,
+				title: 'Error',
+			})
+		}
+		browser_windows.main_window?.close()
+		await close_promise
+		app.once('will-quit', () => {
+			process.exit(1)
 		})
-		trigger_crash()
+		app.quit()
+		setTimeout(() => {
+			process.exit(1)
+		})
 	})
 }
 process.on('uncaughtException', (error) => {
-	err_handler('Unhandled Error', error)
+	trigger_crash({ msg: 'Unhandled Error', error })
 })
 process.on('unhandledRejection', (error: Error) => {
-	err_handler('Unhandled Promise Rejection', error)
+	trigger_crash({ msg: 'Unhandled Promise Rejection', error })
 })
 
 const app_data = app.getPath('appData')
@@ -55,8 +66,11 @@ if (is.dev) {
 let quitting = false
 let app_loaded = false
 
-app.on('window-all-closed', () => {
-	app.quit()
+app.on('window-all-closed', async () => {
+	if (!triggering_crash) {
+		await close_cache_db()
+		app.quit()
+	}
 })
 
 protocol.registerSchemesAsPrivileged([
@@ -180,16 +194,16 @@ app.whenReady().then(async () => {
 	main_window.webContents.on('render-process-gone', (_e, details) => {
 		if (details.reason === 'crashed') {
 			// we have a napi-rs panic handler message popup already
-			trigger_crash()
+			trigger_crash(null)
 		} else if (
 			details.reason !== 'clean-exit' &&
 			details.reason !== 'abnormal-exit' &&
 			details.reason !== 'killed'
 		) {
-			err_handler(
-				`Crashed with code ${details.exitCode} (${details.reason})`,
-				'Error message was likely logged to console.',
-			)
+			trigger_crash({
+				msg: `Crashed with code ${details.exitCode} (${details.reason})`,
+				error: 'Error message was likely logged to console.',
+			})
 		}
 	})
 	ipc_main.handle('app_loaded', () => {

@@ -18,7 +18,7 @@ function set_handler(name: string, callback: Callback) {
 	handlers[name] = callback
 }
 
-export default { notReady: not_ready, ready, setHandler: set_handler }
+export default { not_ready, ready, set_handler }
 
 function try_to_quit() {
 	if (unfinished_tasks === 0) {

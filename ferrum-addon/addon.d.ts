@@ -14,6 +14,8 @@ export declare function add_skip(trackId: string): void
 
 export declare function add_tracks_to_playlist(playlistId: string, trackIds: Array<string>): void
 
+export declare function close_cache_db(): Promise<void>
+
 export interface CountObject {
   count: number
   fromDate: MsSinceUnixEpoch
