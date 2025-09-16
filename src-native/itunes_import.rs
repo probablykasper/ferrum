@@ -586,13 +586,13 @@ pub struct ItunesImport {
 #[napi]
 impl ItunesImport {
 	#[napi(factory)]
-	pub fn new(env: Env) -> napi::Result<Self> {
+	pub fn new(env: Env) -> Self {
 		let data = get_data(&env);
-		Ok(Self {
+		Self {
 			new_library: Some(data.library.clone()).into(),
 			itunes_track_paths: HashMap::new().into(),
 			paths: data.paths.clone(),
-		})
+		}
 	}
 	#[napi]
 	pub async fn start(&self, path: String) -> napi::Result<ImportStatus> {

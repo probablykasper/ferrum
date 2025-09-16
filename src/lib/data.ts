@@ -12,7 +12,7 @@ import type {
 import { queue } from './queue'
 import { current_playlist_id } from '@/components/TrackList.svelte'
 import { navigate } from './router'
-import { call, call_async, call_sync, error_popup, get_error_message, strict_call } from './error'
+import { call_sync, error_popup, get_error_message, strict_call } from './error'
 
 export const is_dev = window.is_dev
 export const local_data_path = window.local_data_path
@@ -184,19 +184,19 @@ export function save() {
 	}
 }
 export function add_play(id: TrackID) {
-	return call_async((data) => data.add_play(id)).on_success(() => {
+	return call_sync((data) => data.add_play(id)).on_success(() => {
 		tracklist_updated.emit()
 		save()
 	})
 }
 export function add_skip(id: TrackID) {
-	return call_async((data) => data.add_skip(id)).on_success(() => {
+	return call_sync((data) => data.add_skip(id)).on_success(() => {
 		tracklist_updated.emit()
 		save()
 	})
 }
 export function add_play_time(id: TrackID, start_time: MsSinceUnixEpoch, duration_ms: number) {
-	return call_async((data) => data.add_play_time(id, start_time, duration_ms)).on_success(() => {
+	return call_sync((data) => data.add_play_time(id, start_time, duration_ms)).on_success(() => {
 		save()
 	})
 }
@@ -250,7 +250,8 @@ export function get_genres() {
 	return strict_call((addon) => addon.get_genres())
 }
 export function move_tracks(playlist_id: TrackListID, indexes: ItemId[], to_index: number) {
-	call((data) => data.move_tracks(playlist_id, indexes, to_index))
-	tracklist_updated.emit()
-	save()
+	return call_sync((data) => data.move_tracks(playlist_id, indexes, to_index)).on_success(() => {
+		tracklist_updated.emit()
+		save()
+	})
 }

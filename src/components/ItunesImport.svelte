@@ -4,8 +4,7 @@
 	import type { ImportStatus } from 'ferrum-addon/addon'
 	import Button from './Button.svelte'
 	import Modal from './Modal.svelte'
-	import { call } from '@/lib/error'
-	// import { selection as pageSelection } from '@/lib/page'
+	import { strict_call } from '@/lib/error'
 
 	export let cancel: () => void
 	let itunes_import = ItunesImport.new()
@@ -29,7 +28,7 @@
 		if (!open.canceled && open.filePaths[0]) {
 			stage = 'scanning'
 			const file_path = open.filePaths[0]
-			stage = await call(() => itunes_import.start(file_path))
+			stage = await strict_call(() => itunes_import.start(file_path))
 		} else {
 			stage = 'select'
 		}

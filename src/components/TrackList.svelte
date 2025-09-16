@@ -229,7 +229,8 @@
 	}
 	function drop_handler() {
 		if (drag_to_index !== null) {
-			move_tracks(params.playlist_id, drag_item_ids, drag_to_index)
+			const _result = move_tracks(params.playlist_id, drag_item_ids, drag_to_index)
+			// Same handling for success and error
 			drag_to_index = null
 		}
 	}

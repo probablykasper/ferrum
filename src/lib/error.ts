@@ -35,26 +35,6 @@ export function error_popup(err: unknown, crash = false) {
 	)
 }
 
-/** @deprecated */
-export function call<T, P extends T | Promise<T>>(cb: (addon: typeof window.addon) => P): P {
-	try {
-		const result = cb(window.addon)
-		if (result instanceof Promise) {
-			return result.catch((err) => {
-				console.error(err)
-				error_popup(err)
-				throw err
-			}) as P
-		} else {
-			return result
-		}
-	} catch (err) {
-		console.error(err)
-		error_popup(err)
-		throw err
-	}
-}
-
 // Crashes on error
 export function strict_call<T>(cb: (addon: typeof window.addon) => T): T {
 	try {
@@ -84,42 +64,8 @@ export function strict_call<T>(cb: (addon: typeof window.addon) => T): T {
 }
 
 type BaseResult<T> = { data: T; error: null } | { data: null; error: Error }
-type PromiseResult<T> = Promise<BaseResult<T>> & {
-	on_success: (cb: (data: T) => void) => Promise<BaseResult<T>>
-}
 type Result<T> = BaseResult<T> & {
 	on_success: (cb: (data: T) => void) => BaseResult<T>
-}
-
-// Shows a popup message on error
-export function call_async<T>(cb: (addon: typeof window.addon) => T): PromiseResult<T> {
-	const promise = (async () => {
-		try {
-			const data = await cb(window.addon)
-
-			const result = { data, error: null }
-			return result
-		} catch (raw_err) {
-			let error: Error
-			if (raw_err instanceof Error) {
-				error = raw_err
-			} else {
-				error = new Error('Unexpected error: ' + String(raw_err))
-			}
-			error_popup(error)
-
-			const result = { data: null, error }
-			return result
-		}
-	})() as PromiseResult<T>
-	promise.on_success = async (cb) => {
-		const result = await promise
-		if (result.data) {
-			cb(result.data)
-		}
-		return result
-	}
-	return promise
 }
 
 // Shows a popup message on error
