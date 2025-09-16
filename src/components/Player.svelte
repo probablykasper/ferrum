@@ -13,12 +13,12 @@
 	} from '../lib/player'
 	import { get_duration } from '../lib/helpers'
 	import { queue_visible, toggle_queue_visibility, queue, shuffle, repeat } from '../lib/queue'
-	import { get_track, is_dev } from '@/lib/data'
-	import { dragged } from '@/lib/drag-drop'
+	import { get_track, is_dev } from '$lib/data'
+	import { dragged } from '$lib/drag-drop'
 	import * as dragGhost from './DragGhost.svelte'
 	import Slider from './Slider.svelte'
-	import { get_flattened_tracklists, handle_selected_tracks_action } from '@/lib/menus'
-	import { ipc_renderer } from '@/lib/window'
+	import { get_flattened_tracklists, handle_selected_tracks_action } from '$lib/menus'
+	import { ipc_renderer } from '$lib/window'
 	import { tracks_page_item_ids } from './TrackList.svelte'
 
 	async function playing_context_menu() {

@@ -1,4 +1,4 @@
-import { resolve } from 'path'
+import path from 'path'
 import { defineConfig } from 'vite'
 import { svelte, vitePreprocess } from '@sveltejs/vite-plugin-svelte'
 import electron from 'vite-plugin-electron'
@@ -9,7 +9,10 @@ export default defineConfig({
 	clearScreen: false,
 	resolve: {
 		alias: {
-			'@': resolve(__dirname, './src'),
+			// These must also be specified in tsconfig.json
+			$lib: path.resolve(__dirname, './src/lib'),
+			$components: path.resolve(__dirname, './src/components'),
+			$electron: path.resolve(__dirname, './src/electron'),
 		},
 	},
 	build: {

@@ -16,7 +16,10 @@
 		"isolatedModules": true,
 		"baseUrl": ".",
 		"paths": {
-			"@/*": ["./src/*"]
+			// These must also be specified in the vite config
+			"$lib/*": ["src/lib/*"],
+			"$components/*": ["src/components/*"],
+			"$electron/*": ["src/electron/*"]
 		}
 	},
 	"include": ["src/**/*.d.ts", "src/**/*.ts", "src/**/*.svelte", "ferrum-addon/**/*.node"]

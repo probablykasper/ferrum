@@ -9,16 +9,16 @@
 	} from '../lib/queue'
 	import { onDestroy, tick } from 'svelte'
 	import QueueItemComponent from './QueueItem.svelte'
-	import { dragged } from '@/lib/drag-drop'
-	import { get_track } from '@/lib/data'
+	import { dragged } from '$lib/drag-drop'
+	import { get_track } from '$lib/data'
 	import * as dragGhost from './DragGhost.svelte'
-	import { ipc_listen, ipc_renderer } from '@/lib/window'
-	import { check_shortcut } from '@/lib/helpers'
+	import { ipc_listen, ipc_renderer } from '$lib/window'
+	import { check_shortcut } from '$lib/helpers'
 	import { fly } from 'svelte/transition'
 	import VirtualListBlock, { scroll_container_keydown } from './VirtualListBlock.svelte'
-	import type { SelectedTracksAction } from '@/electron/typed_ipc'
-	import { get_flattened_tracklists, handle_selected_tracks_action } from '@/lib/menus'
-	import { SvelteSelection } from '@/lib/selection'
+	import type { SelectedTracksAction } from '$electron/typed_ipc'
+	import { get_flattened_tracklists, handle_selected_tracks_action } from '$lib/menus'
+	import { SvelteSelection } from '$lib/selection'
 
 	let object_urls: string[] = []
 

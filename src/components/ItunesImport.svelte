@@ -1,10 +1,10 @@
 <script lang="ts">
-	import { ItunesImport, tracklist_updated, track_lists_details_map, save } from '@/lib/data'
-	import { ipc_renderer } from '@/lib/window'
+	import { ItunesImport, tracklist_updated, track_lists_details_map, save } from '$lib/data'
+	import { ipc_renderer } from '$lib/window'
 	import type { ImportStatus } from 'ferrum-addon/addon'
 	import Button from './Button.svelte'
 	import Modal from './Modal.svelte'
-	import { strict_call } from '@/lib/error'
+	import { strict_call } from '$lib/error'
 
 	export let cancel: () => void
 	let itunes_import = ItunesImport.new()

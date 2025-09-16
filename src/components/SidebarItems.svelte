@@ -5,7 +5,7 @@
 		move_playlist,
 		view_options,
 		save_view_options,
-	} from '@/lib/data'
+	} from '$lib/data'
 	import Self from './SidebarItems.svelte'
 
 	export type SidebarItemHandle = {
@@ -34,9 +34,9 @@
 	import { getContext } from 'svelte'
 	import { dragged } from '../lib/drag-drop'
 	import * as dragGhost from './DragGhost.svelte'
-	import { ipc_renderer } from '@/lib/window'
-	import { check_shortcut } from '@/lib/helpers'
-	import { navigate, url_pathname } from '@/lib/router'
+	import { ipc_renderer } from '$lib/window'
+	import { check_shortcut } from '$lib/helpers'
+	import { navigate, url_pathname } from '$lib/router'
 	import { current_playlist_id } from './TrackList.svelte'
 
 	export let show = true

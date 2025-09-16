@@ -1,5 +1,5 @@
 import { get, writable } from 'svelte/store'
-import { ipc_renderer } from '@/lib/window'
+import { ipc_renderer } from '$lib/window'
 import type {
 	MsSinceUnixEpoch,
 	TrackID,
@@ -10,7 +10,7 @@ import type {
 	ViewOptions,
 } from '../../ferrum-addon'
 import { queue } from './queue'
-import { current_playlist_id } from '@/components/TrackList.svelte'
+import { current_playlist_id } from '$components/TrackList.svelte'
 import { navigate } from './router'
 import { call_sync, get_error_message, strict_call } from './error'
 

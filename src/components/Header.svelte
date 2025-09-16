@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { is_mac } from '@/lib/data'
+	import { is_mac } from '$lib/data'
 	import { modal_count } from './Modal.svelte'
-	import { queue_visible } from '@/lib/queue'
+	import { queue_visible } from '$lib/queue'
 
 	export let title: string
 	export let subtitle: string

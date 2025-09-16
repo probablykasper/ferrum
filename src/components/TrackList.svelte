@@ -33,7 +33,7 @@
 		view_options,
 		paths,
 		join_paths,
-	} from '@/lib/data'
+	} from '$lib/data'
 	import { new_playback_instance, playing_id } from '../lib/player'
 	import { get_duration, format_date, check_mouse_shortcut, check_shortcut } from '../lib/helpers'
 	import { tracklist_actions } from '../lib/page'
@@ -44,10 +44,10 @@
 	import type { ItemId, Track, TracksPage } from 'ferrum-addon/addon'
 	import Header from './Header.svelte'
 	import { writable } from 'svelte/store'
-	import { SvelteSelection } from '@/lib/selection'
-	import { get_flattened_tracklists, handle_selected_tracks_action } from '@/lib/menus'
-	import type { SelectedTracksAction } from '@/electron/typed_ipc'
-	import { RefreshLevel, VirtualGrid, type Column } from '@/lib/virtual-grid.svelte'
+	import { SvelteSelection } from '$lib/selection'
+	import { get_flattened_tracklists, handle_selected_tracks_action } from '$lib/menus'
+	import type { SelectedTracksAction } from '$electron/typed_ipc'
+	import { RefreshLevel, VirtualGrid, type Column } from '$lib/virtual-grid.svelte'
 
 	let tracklist_element: HTMLDivElement
 
