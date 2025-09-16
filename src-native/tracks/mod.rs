@@ -1,6 +1,7 @@
 use crate::data::Data;
 use crate::data_js::get_data;
 use crate::get_now_timestamp;
+use crate::library::Paths;
 use crate::library_types::{ItemId, MsSinceUnixEpoch, TRACK_ID_MAP, Track, TrackID};
 use anyhow::{Context, Result, bail};
 use napi::Env;
@@ -126,7 +127,7 @@ fn sanitize_filename(input: &String) -> String {
 	return string;
 }
 
-pub fn generate_filename(dest_dir: &Path, artist: &str, title: &str, ext: &str) -> String {
+pub fn generate_filename(paths: &Paths, artist: &str, title: &str, ext: &str) -> String {
 	let beginning = artist.to_owned() + " - " + title;
 	let beginning = sanitize_filename(&beginning);
 
@@ -136,7 +137,7 @@ pub fn generate_filename(dest_dir: &Path, artist: &str, title: &str, ext: &str) 
 		if i == 1000 {
 			panic!("Already got 500 files with that artist and title")
 		}
-		let full_path = dest_dir.join(&filename);
+		let full_path = paths.get_track_file_path(&filename);
 		if full_path.exists() {
 			file_num += 1;
 			filename = beginning.clone() + " " + file_num.to_string().as_str() + "." + ext;
@@ -164,7 +165,7 @@ pub fn load_tags(track_id: String, env: Env) -> Result<()> {
 	data.current_tag = None;
 	let track = id_to_track(&env, &track_id).context("Could not load tags")?;
 
-	let path = data.paths.tracks_dir.join(&track.file);
+	let path = data.paths.get_track_file_path(&track.file);
 	let tag = Tag::read_from_path(&path).context("Could not load tags")?;
 	data.current_tag = Some(tag);
 	Ok(())
@@ -208,7 +209,7 @@ pub fn get_image(index: u32, env: Env) -> Result<Option<JsImage>> {
 #[allow(dead_code)]
 pub fn set_image(index: u32, path_str: String, env: Env) -> Result<()> {
 	let data: &mut Data = get_data(&env);
-	let path = data.paths.tracks_dir.join(path_str);
+	let path = data.paths.get_track_file_path(&path_str);
 	let tag = match &mut data.current_tag {
 		Some(tag) => tag,
 		None => bail!("No tag loaded"),
@@ -252,7 +253,7 @@ pub fn update_track_info(track_id: String, info: md::TrackMD, env: Env) -> Resul
 		Some(tag) => tag,
 		None => bail!("No tag loaded"),
 	};
-	md::update_track_info(&data.paths.tracks_dir, track, tag, info)?;
+	md::update_track_info(&data.paths, track, tag, info)?;
 
 	Ok(())
 }

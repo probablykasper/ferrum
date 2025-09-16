@@ -1,12 +1,12 @@
 #![allow(non_snake_case)]
 
 use super::{Tag, generate_filename};
+use crate::library::Paths;
 use crate::library_types::Track;
 use crate::{get_now_timestamp, str_to_option};
 use anyhow::{Context, Result, bail};
 use serde::{Deserialize, Serialize};
 use std::fs;
-use std::path::PathBuf;
 
 #[derive(Serialize, Deserialize, Debug)]
 #[napi(object)]
@@ -32,12 +32,12 @@ pub struct TrackMD {
 }
 
 pub fn update_track_info(
-	tracks_dir: &PathBuf,
+	paths: &Paths,
 	track: &mut Track,
 	tag: &mut Tag,
 	new_info: TrackMD,
 ) -> Result<()> {
-	let old_path = tracks_dir.join(&track.file);
+	let old_path = paths.get_track_file_path(&track.file);
 	if !old_path.exists() {
 		bail!("File does not exist: {}", track.file);
 	}
@@ -146,8 +146,8 @@ pub fn update_track_info(
 
 	// move file
 	if new_name != track.name || new_artist != track.artist {
-		let new_filename = generate_filename(tracks_dir, &new_artist, &new_name, &ext);
-		let new_path = tracks_dir.join(&new_filename);
+		let new_filename = generate_filename(&paths, &new_artist, &new_name, &ext);
+		let new_path = paths.get_track_file_path(&new_filename);
 		match fs::rename(old_path, new_path) {
 			Ok(_) => {
 				track.file = new_filename;

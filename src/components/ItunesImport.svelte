@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { ItunesImport, paths, tracklist_updated, track_lists_details_map, save } from '@/lib/data'
+	import { ItunesImport, tracklist_updated, track_lists_details_map, save } from '@/lib/data'
 	import { ipc_renderer } from '@/lib/window'
 	import type { ImportStatus } from 'ferrum-addon/addon'
 	import Button from './Button.svelte'
@@ -29,7 +29,7 @@
 		if (!open.canceled && open.filePaths[0]) {
 			stage = 'scanning'
 			const file_path = open.filePaths[0]
-			stage = await call(() => itunes_import.start(file_path, paths.tracksDir))
+			stage = await call(() => itunes_import.start(file_path))
 		} else {
 			stage = 'select'
 		}

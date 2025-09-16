@@ -1,5 +1,6 @@
 use crate::FerrumStatus;
 use crate::data::Data;
+use crate::library::Paths;
 use anyhow::Result;
 use napi::Env;
 use rfd::MessageDialog;
@@ -56,28 +57,11 @@ pub fn load_data(
 	return Ok(());
 }
 
-#[napi(object)]
-pub struct PathsJs {
-	pub library_dir: String,
-	pub tracks_dir: String,
-	pub library_json: String,
-	pub cache_db: String,
-	pub local_data_dir: String,
-	pub path_separator: String,
-}
-
 #[napi(js_name = "get_paths")]
 #[allow(dead_code)]
-pub fn get_paths(env: Env) -> PathsJs {
-	let data: &mut Data = get_data(&env);
-	PathsJs {
-		library_dir: data.paths.library_dir.to_string_lossy().into(),
-		tracks_dir: data.paths.tracks_dir.to_string_lossy().into(),
-		library_json: data.paths.library_json.to_string_lossy().into(),
-		cache_db: data.paths.cache_db.to_string_lossy().into(),
-		local_data_dir: data.paths.local_data_dir.to_string_lossy().into(),
-		path_separator: std::path::MAIN_SEPARATOR_STR.into(),
-	}
+pub fn get_paths(env: Env) -> Paths {
+	let data: &Data = get_data(&env);
+	data.paths.clone()
 }
 
 #[napi(js_name = "save")]

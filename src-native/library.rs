@@ -3,21 +3,23 @@ use crate::data_js::get_data;
 use crate::library_types::{Library, VersionedLibrary};
 use anyhow::{Context, Result, bail};
 use napi::Env;
-use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 use std::fs::{File, create_dir_all};
 use std::io::{ErrorKind, Read};
 use std::path::PathBuf;
 use std::time::Instant;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Clone)]
+#[napi(object)]
 pub struct Paths {
-	pub library_dir: PathBuf,
-	pub tracks_dir: PathBuf,
-	pub library_json: PathBuf,
-	pub cache_dir: PathBuf,
-	pub cache_db: PathBuf,
-	pub local_data_dir: PathBuf,
+	pub path_separator: String,
+	pub library_dir: String,
+	pub tracks_dir: String,
+	pub library_json: String,
+	pub cache_dir: String,
+	pub cache_db: String,
+	pub local_data_dir: String,
+	pub view_options_file: String,
 }
 impl Paths {
 	fn ensure_dirs_exists(&self) -> Result<()> {
@@ -27,6 +29,9 @@ impl Paths {
 		create_dir_all(&self.cache_dir)?;
 		return Ok(());
 	}
+	pub fn get_track_file_path(&self, file: &str) -> PathBuf {
+		PathBuf::from(&self.tracks_dir).join(file)
+	}
 }
 
 pub fn load_library(paths: &Paths) -> Result<Library> {
@@ -35,10 +40,7 @@ pub fn load_library(paths: &Paths) -> Result<Library> {
 	paths
 		.ensure_dirs_exists()
 		.context("Error ensuring folder exists")?;
-	println!(
-		"Loading library at path: {}",
-		paths.library_dir.to_string_lossy()
-	);
+	println!("Loading library at path: {}", paths.library_dir);
 
 	let mut library_file = match File::open(&paths.library_json) {
 		Ok(file) => file,

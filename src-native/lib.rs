@@ -2,7 +2,6 @@ use anyhow::{Context, Result};
 use serde::de::DeserializeOwned;
 use std::fs::File;
 use std::io::BufReader;
-use std::path::PathBuf;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 #[macro_use]
@@ -58,7 +57,7 @@ fn str_to_option(s: String) -> Option<String> {
 	}
 }
 
-fn path_to_json<J>(path: PathBuf) -> Result<J>
+fn path_to_json<J>(path: &str) -> Result<J>
 where
 	J: DeserializeOwned,
 {

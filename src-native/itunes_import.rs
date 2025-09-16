@@ -1,5 +1,6 @@
 use crate::data_js::get_data;
 use crate::get_now_timestamp;
+use crate::library::Paths;
 use crate::library_types::{
 	CountObject, Folder, Library, Playlist, Track, TrackList, new_item_ids_from_track_ids,
 };
@@ -11,7 +12,7 @@ use napi::Env;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::sync::Mutex;
 use time::OffsetDateTime;
 use time::serde::iso8601;
@@ -319,11 +320,7 @@ fn parse_file_url(value: &str) -> Result<PathBuf> {
 }
 
 /// Parses track but does not move it to `tracks_dir`
-fn parse_track(
-	xml_track: XmlTrack,
-	start_time: i64,
-	tracks_dir: &Path,
-) -> Result<(PathBuf, Track)> {
+fn parse_track(xml_track: XmlTrack, start_time: i64, paths: &Paths) -> Result<(PathBuf, Track)> {
 	let xml_location = xml_track.location.context("Missing track location")?;
 	if xml_track.track_type != Some("File".to_string()) {
 		bail!(
@@ -358,7 +355,7 @@ fn parse_track(
 
 	let name = xml_track.name.unwrap_or_default();
 	let artist = xml_track.artist.unwrap_or_default();
-	let filename = generate_filename(tracks_dir, &artist, &name, file_type.file_extension());
+	let filename = generate_filename(&paths, &artist, &name, file_type.file_extension());
 
 	let track = Track {
 		size: file_md.len() as i64,
@@ -584,6 +581,7 @@ pub struct ItunesImport {
 	new_library: Mutex<Option<Library>>,
 	/// iTunes path -> Ferrum file
 	itunes_track_paths: Mutex<HashMap<PathBuf, String>>,
+	paths: Paths,
 }
 #[napi]
 impl ItunesImport {
@@ -593,18 +591,19 @@ impl ItunesImport {
 		Ok(Self {
 			new_library: Some(data.library.clone()).into(),
 			itunes_track_paths: HashMap::new().into(),
+			paths: data.paths.clone(),
 		})
 	}
 	#[napi]
-	pub async fn start(&self, path: String, tracks_dir: String) -> napi::Result<ImportStatus> {
-		Ok(import_itunes(self, path, tracks_dir).await?)
+	pub async fn start(&self, path: String) -> napi::Result<ImportStatus> {
+		Ok(import_itunes(self, path).await?)
 	}
 	#[napi]
 	pub fn finish(&mut self, env: Env) -> napi::Result<()> {
 		let data = get_data(&env);
 		let itunes_track_paths = &mut *self.itunes_track_paths.lock().unwrap();
 		for (itunes_path, ferrum_file) in itunes_track_paths {
-			let new_path = data.paths.tracks_dir.join(ferrum_file);
+			let new_path = data.paths.get_track_file_path(ferrum_file);
 			fs::copy(itunes_path, new_path).context("Error copying file")?;
 		}
 		let new_library = &mut self.new_library.lock().unwrap();
@@ -613,11 +612,7 @@ impl ItunesImport {
 	}
 }
 
-pub async fn import_itunes(
-	itunes_import: &ItunesImport,
-	path: String,
-	tracks_dir: String,
-) -> Result<ImportStatus> {
+async fn import_itunes(itunes_import: &ItunesImport, path: String) -> Result<ImportStatus> {
 	let new_library_lock = &mut *itunes_import.new_library.lock().unwrap();
 	let mut library = match new_library_lock {
 		Some(library) => library,
@@ -663,7 +658,7 @@ pub async fn import_itunes(
 			errors.push(format!("Missing track artist: {artist_title}"));
 		}
 
-		match parse_track(xml_track, start_time, Path::new(&tracks_dir)) {
+		match parse_track(xml_track, start_time, &itunes_import.paths) {
 			Ok((xml_track_path, track)) => {
 				let generated_id = library.generate_id();
 				// immediately insert into library so new generated ids are unique

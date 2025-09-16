@@ -7,8 +7,15 @@ use dirs_next;
 use serde::Serialize;
 use std::env;
 use std::io::Write;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::time::Instant;
+
+pub fn path_to_string<P: AsRef<Path>>(path: P) -> String {
+	path.as_ref()
+		.to_str()
+		.expect("Invalid path str")
+		.to_string()
+}
 
 pub struct Data {
 	pub paths: Paths,
@@ -62,19 +69,22 @@ impl Data {
 				.context("Local data folder not found")?
 				.join("space.kasper.ferrum");
 		};
+		let local_data_dir = match local_data_path {
+			Some(path) => PathBuf::from(path),
+			None => local_data_dir,
+		};
 		if let Some(library_path) = library_path {
 			library_dir = PathBuf::from(library_path);
 		}
 		let paths = Paths {
-			library_dir: library_dir.clone(),
-			tracks_dir: library_dir.join("Tracks"),
-			library_json: library_dir.join("Library.json"),
-			cache_dir: cache_dir.clone(),
-			cache_db: cache_dir.join("Cache.redb"),
-			local_data_dir: match local_data_path {
-				Some(path) => PathBuf::from(path),
-				None => local_data_dir,
-			},
+			path_separator: std::path::MAIN_SEPARATOR_STR.into(),
+			library_dir: path_to_string(&library_dir),
+			tracks_dir: path_to_string(library_dir.join("Tracks")),
+			library_json: path_to_string(library_dir.join("Library.json")),
+			cache_dir: path_to_string(&cache_dir),
+			cache_db: path_to_string(cache_dir.join("Cache.redb")),
+			local_data_dir: path_to_string(&local_data_dir),
+			view_options_file: path_to_string(local_data_dir.join("view.json")),
 		};
 
 		let loaded_library = load_library(&paths)?;

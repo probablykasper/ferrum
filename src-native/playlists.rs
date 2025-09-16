@@ -221,7 +221,7 @@ pub fn delete_tracks_with_item_ids(item_ids: Vec<ItemId>, env: Env) -> Result<Fe
 	let library = &mut data.library;
 	let track_ids = get_track_ids_from_item_ids(&item_ids);
 	for track_id in &track_ids {
-		let status = library.delete_track_and_file(track_id, &data.paths.tracks_dir)?;
+		let status = library.delete_track_and_file(track_id, &data.paths)?;
 		if status.is_err() {
 			return Ok(status);
 		}

@@ -2,7 +2,7 @@ use crate::data::Data;
 use crate::library_types::Track;
 use crate::sys_time_to_timestamp;
 use crate::tracks::generate_filename;
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use lofty::file::{AudioFile, TaggedFileExt};
 use lofty::tag::{Accessor, ItemKey, TagExt};
 use std::fs;
@@ -94,14 +94,13 @@ pub fn import(data: &Data, track_path: &Path, now: i64) -> Result<Track> {
 	};
 	let artist = tag.artist().map(|s| s.into_owned()).unwrap_or_default();
 
-	let tracks_dir = &data.paths.tracks_dir;
 	let extension = match FileType::from_path(track_path)? {
 		FileType::Opus => "opus",
 		FileType::M4a => "m4a",
 		FileType::Mp3 => "mp3",
 	};
-	let filename = generate_filename(tracks_dir, &artist, &title, extension);
-	let dest_path = tracks_dir.join(&filename);
+	let filename = generate_filename(&data.paths, &artist, &title, extension);
+	let dest_path = data.paths.get_track_file_path(&filename);
 
 	fs::copy(track_path, &dest_path).context("Error copying file")?;
 	println!(

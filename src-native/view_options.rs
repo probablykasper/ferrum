@@ -22,7 +22,7 @@ pub struct ViewOptions {
 }
 impl ViewOptions {
 	pub fn load(paths: &Paths) -> ViewOptions {
-		match path_to_json(paths.local_data_dir.join("view.json")) {
+		match path_to_json(&paths.view_options_file) {
 			Ok(view_cache) => view_cache,
 			Err(_) => ViewOptions {
 				shown_playlist_folders: Vec::new(),
@@ -34,8 +34,7 @@ impl ViewOptions {
 	}
 	pub fn save(&self, paths: &Paths) -> Result<()> {
 		let json_str = serde_json::to_string(self).context("Error saving view.json")?;
-		let file_path = paths.local_data_dir.join("view.json");
-		let af = AtomicFile::new(file_path, AllowOverwrite);
+		let af = AtomicFile::new(&paths.view_options_file, AllowOverwrite);
 		af.write(|f| f.write_all(json_str.as_bytes()))
 			.context("Error writing view.json")?;
 		Ok(())

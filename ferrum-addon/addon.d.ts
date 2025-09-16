@@ -2,7 +2,7 @@
 /* eslint-disable */
 export declare class ItunesImport {
   static new(): ItunesImport
-  start(path: string, tracksDir: string): Promise<ImportStatus>
+  start(path: string): Promise<ImportStatus>
   finish(): void
 }
 
@@ -53,7 +53,7 @@ export declare function get_genres(): Array<string>
 
 export declare function get_image(index: number): JsImage | null
 
-export declare function get_paths(): PathsJs
+export declare function get_paths(): Paths
 
 export declare function get_track(id: string): Track
 
@@ -99,13 +99,15 @@ export declare function move_tracks(playlistId: string, itemIds: Array<ItemId>, 
 
 export declare function new_playlist(name: string, description: string, isFolder: boolean, parentId: string): void
 
-export interface PathsJs {
+export interface Paths {
+  pathSeparator: string
   libraryDir: string
   tracksDir: string
   libraryJson: string
+  cacheDir: string
   cacheDb: string
   localDataDir: string
-  pathSeparator: string
+  viewOptionsFile: string
 }
 
 export interface Playlist {

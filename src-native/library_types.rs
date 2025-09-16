@@ -1,5 +1,6 @@
 #![allow(non_snake_case)]
 
+use crate::library::Paths;
 use crate::playlists::{delete_file, remove_from_all_playlists};
 use crate::{FerrumStatus, get_now_timestamp};
 use anyhow::{Context, Result, bail};
@@ -8,7 +9,6 @@ use nanoid::nanoid;
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
 use std::collections::HashSet;
-use std::path::PathBuf;
 use std::sync::RwLock;
 use std::time::Instant;
 
@@ -138,14 +138,10 @@ impl Library {
 		track_id_map.push(id.clone());
 		self.track_item_ids.insert(id, item_id);
 	}
-	pub fn delete_track_and_file(
-		&mut self,
-		id: &TrackID,
-		tracks_dir: &PathBuf,
-	) -> Result<FerrumStatus> {
+	pub fn delete_track_and_file(&mut self, id: &TrackID, paths: &Paths) -> Result<FerrumStatus> {
 		let file_path = {
 			let track = self.get_track(id)?;
-			tracks_dir.join(&track.file)
+			paths.get_track_file_path(&track.file)
 		};
 		if !file_path.exists() {
 			return Ok(FerrumStatus::FileDeletionError(format!(
