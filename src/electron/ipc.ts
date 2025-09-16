@@ -143,8 +143,16 @@ ipc_main.handle('showTracklistMenu', (e, args) => {
 })
 
 ipc_main.handle('show_columns_menu', (e, args) => {
-	const menu = Menu.buildFromTemplate(
-		args.menu.map((item) => {
+	const menu = Menu.buildFromTemplate([
+		{
+			label: 'Filter by this field',
+			click: () => {
+				e.sender.send('filter', (args.column_filter ?? 'error') + ':')
+			},
+			visible: args.column_filter !== null,
+		},
+		{ type: 'separator', visible: args.column_filter !== null },
+		...args.menu.map((item) => {
 			item.click = (item) => {
 				e.sender.send('context.toggle_column', {
 					id: item.id,
@@ -154,6 +162,6 @@ ipc_main.handle('show_columns_menu', (e, args) => {
 			}
 			return item
 		}),
-	)
+	])
 	menu.popup()
 })

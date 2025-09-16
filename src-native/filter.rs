@@ -57,7 +57,51 @@ fn find_match_opt(text: &Option<String>, keyword: &str) -> bool {
 	}
 }
 
-fn filter_keyword(ids: Vec<ItemId>, keyword: &str, library: &Library) -> Vec<ItemId> {
+fn strip_prefix_ignore_case<'a>(text: &'a str, prefix: &str) -> Option<&'a str> {
+	if text.len() >= prefix.len() && text[..prefix.len()].eq_ignore_ascii_case(prefix) {
+		Some(&text[prefix.len()..])
+	} else {
+		None
+	}
+}
+
+fn strip_suffix_ignore_case<'a>(text: &'a str, suffix: &str) -> Option<&'a str> {
+	if text.len() >= suffix.len() && text[text.len() - suffix.len()..].eq_ignore_ascii_case(suffix)
+	{
+		Some(&text[..text.len() - suffix.len()])
+	} else {
+		None
+	}
+}
+
+fn feat_artists_match(track_name: &str, keyword: &str) -> bool {
+	for (open, close) in &[('(', ')'), ('[', ']')] {
+		let mut rest = track_name;
+		while let Some(start) = rest.find(*open) {
+			if let Some(end) = rest[start..].find(*close) {
+				let inside = &rest[start + 1..start + end];
+				for prefix in ["feat.", "feat ", "ft.", "ft ", "featuring "] {
+					let artist_text = strip_prefix_ignore_case(inside, prefix);
+					if let Some(artist_text) = artist_text {
+						return find_match(artist_text, keyword);
+					}
+				}
+				for prefix in [" remix", " flip", " bootleg", " edit"] {
+					let artist_text = strip_suffix_ignore_case(inside, prefix);
+					if let Some(artist_text) = artist_text {
+						return find_match(artist_text, keyword);
+					}
+				}
+				rest = &rest[start + end + 1..];
+			} else {
+				break;
+			}
+		}
+	}
+	false
+}
+
+fn filter_keyword(ids: Vec<ItemId>, keyword: Keyword, library: &Library) -> Vec<ItemId> {
 	let id_map = TRACK_ID_MAP.read().unwrap();
 	let filtered_tracks: Vec<_> = ids
 		.into_par_iter()
@@ -68,16 +112,88 @@ fn filter_keyword(ids: Vec<ItemId>, keyword: &str, library: &Library) -> Vec<Ite
 				Ok(track) => track,
 				Err(_) => panic!("Track ID {} not found", track_id),
 			};
-			let is_match = find_match(&track.name, keyword)
-				|| find_match(&track.artist, keyword)
-				|| find_match_opt(&track.albumName, keyword)
-				|| find_match_opt(&track.comments, keyword)
-				|| find_match_opt(&track.genre, keyword);
+			let field = match &keyword.field {
+				Some(field) => field.to_lowercase(),
+				None => "".to_string(),
+			};
+			let is_match = match field.as_str() {
+				"name" | "title" => find_match(&track.name, &keyword.literal),
+				"artist" | "band" => {
+					find_match(&track.artist, &keyword.literal)
+						|| feat_artists_match(&track.name, &keyword.literal)
+				}
+				"album" | "albumname" | "album_name" => {
+					find_match_opt(&track.albumName, &keyword.literal)
+				}
+				"albumartist" | "album_artist" => {
+					find_match_opt(&track.albumArtist, &keyword.literal)
+				}
+				"comment" | "comments" | "description" | "notes" => {
+					find_match_opt(&track.comments, &keyword.literal)
+				}
+				"genre" => find_match_opt(&track.genre, &keyword.literal),
+				"composer" => find_match_opt(&track.composer, &keyword.literal),
+				"group" | "grouping" => find_match_opt(&track.grouping, &keyword.literal),
+				"year" => {
+					track.year.map(|n| n.to_string()).unwrap_or("".to_string()) == keyword.literal
+				}
+				"plays" => {
+					track
+						.plays
+						.as_ref()
+						.map(|n| n.len().to_string())
+						.unwrap_or("".to_string())
+						== keyword.literal
+				}
+				"skips" => {
+					track
+						.skips
+						.as_ref()
+						.map(|n| n.len().to_string())
+						.unwrap_or("".to_string())
+						== keyword.literal
+				}
+				"bpm" => {
+					track.bpm.map(|n| n.to_string()).unwrap_or("".to_string()) == keyword.literal
+				}
+				_ => {
+					find_match(&track.name, &keyword.full_word)
+						|| find_match(&track.artist, &keyword.full_word)
+						|| find_match_opt(&track.albumName, &keyword.full_word)
+						|| find_match_opt(&track.comments, &keyword.full_word)
+						|| find_match_opt(&track.genre, &keyword.full_word)
+				}
+			};
 			is_match
 		})
 		.map(|id| id.clone())
 		.collect();
 	filtered_tracks
+}
+
+struct Keyword {
+	full_word: String,
+	field: Option<String>,
+	literal: String,
+}
+impl Keyword {
+	fn parse(word: &str) -> Keyword {
+		let mut parts = word.splitn(2, ':');
+		let field = parts.next();
+		let literal = parts.next();
+		match (field, literal) {
+			(Some(field), Some(literal)) => Keyword {
+				full_word: word.to_string(),
+				field: Some(field.to_string()),
+				literal: literal.to_string(),
+			},
+			_ => Keyword {
+				full_word: word.to_string(),
+				field: None,
+				literal: word.to_string(),
+			},
+		}
+	}
 }
 
 pub fn filter(mut item_ids: Vec<ItemId>, query: String, library: &Library) -> Vec<ItemId> {
@@ -87,10 +203,11 @@ pub fn filter(mut item_ids: Vec<ItemId>, query: String, library: &Library) -> Ve
 	}
 	let query: String = query.nfc().collect();
 
-	for keyword in query.split(' ') {
-		if keyword == "" {
+	for word in query.split(' ') {
+		if word == "" {
 			continue;
 		}
+		let keyword = Keyword::parse(word);
 		item_ids = filter_keyword(item_ids, keyword, &library);
 	}
 	println!("Filter: {}ms", now.elapsed().as_millis());

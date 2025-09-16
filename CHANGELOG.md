@@ -1,6 +1,7 @@
 # Changelog
 
 ## Next
+- Add filtering for specific fields in search, like `artist:apashe`. You can also right-click a column header to add a filter.
 - Add genre autocomplete
 - Make macOS media key permission request non-intrusive
 - Improve error and crashing behaviour

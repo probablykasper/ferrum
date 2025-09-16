@@ -248,19 +248,20 @@
 	type TrackListColumn = Column & {
 		name: string
 		key: 'index' | 'image' | keyof Track
+		filter?: string | undefined
 	}
 	const all_columns: TrackListColumn[] = [
 		// sorted alphabetically
 		{ name: '#', key: 'index', width: 46 },
 		// { name: 'Size', key: 'size' },
-		{ name: 'Album', key: 'albumName', width: 0.9, is_pct: true },
-		{ name: 'Album Artist', key: 'albumArtist', width: 0.9, is_pct: true },
-		{ name: 'Artist', key: 'artist', width: 1.2, is_pct: true },
+		{ name: 'Album', key: 'albumName', filter: 'album', width: 0.9, is_pct: true },
+		{ name: 'Album Artist', key: 'albumArtist', filter: 'albumartist', width: 0.9, is_pct: true },
+		{ name: 'Artist', key: 'artist', filter: 'artist', width: 1.2, is_pct: true },
 		// { name: 'Bitrate', key: 'bitrate' },
-		{ name: 'BPM', key: 'bpm', width: 43 },
-		{ name: 'Comments', key: 'comments', width: 0.65, is_pct: true },
+		{ name: 'BPM', key: 'bpm', filter: 'bpm', width: 43 },
+		{ name: 'Comments', key: 'comments', filter: 'comment', width: 0.65, is_pct: true },
 		// { name: 'Compilation', key: 'compilation' },
-		{ name: 'Composer', key: 'composer', width: 0.65, is_pct: true },
+		{ name: 'Composer', key: 'composer', filter: 'composer', width: 0.65, is_pct: true },
 		{ name: 'Date Added', key: 'dateAdded', width: 140 },
 		// { name: 'DateImported', key: 'dateImported' },
 		// { name: 'DateModified', key: 'dateModified' },
@@ -269,8 +270,8 @@
 		// { name: 'DiscNum', key: 'discNum' },
 		// { name: 'Disliked', key: 'disliked' },
 		{ name: 'Time', key: 'duration', width: 50 },
-		{ name: 'Genre', key: 'genre', width: 0.65, is_pct: true },
-		{ name: 'Grouping', key: 'grouping', width: 0.65, is_pct: true },
+		{ name: 'Genre', key: 'genre', filter: 'genre', width: 0.65, is_pct: true },
+		{ name: 'Grouping', key: 'grouping', filter: 'grouping', width: 0.65, is_pct: true },
 		{
 			name: 'Image',
 			key: 'image',
@@ -342,11 +343,11 @@
 		},
 		// { name: 'ImportedFrom', key: 'importedFrom' },
 		// { name: 'Liked', key: 'liked' },
-		{ name: 'Name', key: 'name', width: 1.7, is_pct: true },
-		{ name: 'Plays', key: 'playCount', width: 52 },
+		{ name: 'Name', key: 'name', filter: 'name', width: 1.7, is_pct: true },
+		{ name: 'Plays', key: 'playCount', filter: 'plays', width: 52 },
 		// { name: 'Rating', key: 'rating' },
 		// { name: 'SampleRate', key: 'sampleRate' },
-		{ name: 'Skips', key: 'skipCount', width: 52 },
+		{ name: 'Skips', key: 'skipCount', filter: 'skips', width: 52 },
 		// { name: 'Sort Album', key: 'sortAlbumName', width: 0.65, is_pct: true },
 		// { name: 'Sort Album Artist', key: 'sortAlbumArtist', width: 0.65, is_pct: true },
 		// { name: 'Sort Artist', key: 'sortArtist', width: 0.65, is_pct: true },
@@ -355,7 +356,7 @@
 		// { name: 'TrackCount', key: 'trackCount' },
 		// { name: 'TrackNum', key: 'trackNum' },
 		// { name: 'Volume', key: 'volume' },
-		{ name: 'Year', key: 'year', width: 47 },
+		{ name: 'Year', key: 'year', filter: 'year', width: 47 },
 	]
 	const default_columns: Column['key'][] = [
 		'index',
@@ -390,18 +391,6 @@
 			view_options.columns = []
 		}
 		save_view_options(view_options)
-	}
-	function on_column_context_menu() {
-		ipc_renderer.invoke('show_columns_menu', {
-			menu: all_columns.map((col) => {
-				return {
-					id: col.key,
-					label: col.name,
-					type: 'checkbox',
-					checked: !!columns.find((c) => c.key === col.key),
-				}
-			}),
-		})
 	}
 	onDestroy(
 		ipc_listen('context.toggle_column', (_, item) => {
@@ -533,7 +522,6 @@
 		class="row table-header shrink-0 border-b border-b-slate-500/30"
 		class:desc={$sort_desc}
 		role="row"
-		on:contextmenu={on_column_context_menu}
 		on:dragleave={() => (col_drag_to_index = null)}
 		bind:this={col_container}
 	>
@@ -558,6 +546,21 @@
 						sort_key.set(column.key)
 						sort_desc.set(get_default_sort_desc(column.key))
 					}
+				}}
+				on:contextmenu={() => {
+					const column_filter = 'filter' in column ? column.filter : null
+					console.log('cf', column_filter)
+					ipc_renderer.invoke('show_columns_menu', {
+						column_filter: typeof column_filter === 'string' ? column_filter : null,
+						menu: all_columns.map((col) => {
+							return {
+								id: col.key,
+								label: col.name,
+								type: 'checkbox',
+								checked: !!columns.find((c) => c.key === col.key),
+							} as const
+						}),
+					})
 				}}
 				draggable="true"
 				on:dragstart={(e) => on_col_drag_start(e, i)}

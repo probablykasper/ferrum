@@ -106,7 +106,7 @@ type Events = {
 	show_settings: () => void
 	itunesImport: () => void
 	import: () => void
-	filter: () => void
+	filter: (text?: string) => void
 
 	playPause: () => void
 	Next: () => void
@@ -161,7 +161,10 @@ type Commands = {
 	revealTrackFile: (...paths: string[]) => void
 	show_tracks_menu: (options: ShowTrackMenuOptions) => Promise<null | SelectedTracksAction>
 	showTracklistMenu: (options: { id: string; isFolder: boolean; isRoot: boolean }) => void
-	show_columns_menu: (options: { menu: MenuItemConstructorOptions[] }) => void
+	show_columns_menu: (options: {
+		column_filter: string | null
+		menu: MenuItemConstructorOptions[]
+	}) => void
 	volume_change: (up: boolean) => void
 	init_media_keys: (
 		prompt: boolean,

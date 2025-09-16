@@ -5,8 +5,13 @@
 
 	let filter_input: HTMLInputElement
 	onDestroy(
-		ipc_listen('filter', () => {
-			filter_input.select()
+		ipc_listen('filter', (e, text) => {
+			if (text) {
+				$filter = text
+				filter_input.select()
+			} else {
+				filter_input.select()
+			}
 		}),
 	)
 </script>
