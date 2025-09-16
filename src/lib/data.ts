@@ -120,22 +120,26 @@ export function move_playlist(
 }
 
 export async function import_tracks(paths: string[]) {
-	let err_state = null
+	let skip_all_errors = false
 	const now = Date.now()
-	for (const path of paths) {
+	for (const [i, path] of paths.entries()) {
+		const is_last = i === paths.length - 1
 		try {
 			inner_addon.import_file(path, now)
 		} catch (err) {
-			if (err_state === 'skip') continue
+			if (skip_all_errors) {
+				continue
+			}
 			const result = await ipc_renderer.invoke('showMessageBox', false, {
 				type: 'error',
 				message: 'Error importing track ' + path,
 				detail: get_error_message(err),
-				buttons: err_state ? ['OK', 'Skip all errors'] : ['OK'],
+				buttons: !is_last ? ['OK', 'Skip all errors'] : ['OK'],
 				defaultId: 0,
 			})
-			if (result.response === 1) err_state = 'skip'
-			else err_state = 'skippable'
+			if (result.response === 1) {
+				skip_all_errors = true
+			}
 		}
 	}
 	tracklist_updated.emit()
@@ -146,9 +150,6 @@ export function get_default_sort_desc(field: string) {
 	return strict_call((data) => data.get_default_sort_desc(field))
 }
 
-export function import_track(path: string, now: MsSinceUnixEpoch) {
-	call((data) => data.import_file(path, now))
-}
 export function get_track(id: TrackID) {
 	return strict_call((data) => data.get_track(id))
 }
