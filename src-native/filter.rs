@@ -58,7 +58,7 @@ fn find_match_opt(text: &Option<String>, keyword: &str) -> bool {
 }
 
 fn strip_prefix_ignore_case<'a>(text: &'a str, prefix: &str) -> Option<&'a str> {
-	if text.len() >= prefix.len() && text[..prefix.len()].eq_ignore_ascii_case(prefix) {
+	if text.len() >= prefix.len() && text.get(..prefix.len())?.eq_ignore_ascii_case(prefix) {
 		Some(&text[prefix.len()..])
 	} else {
 		None
@@ -66,7 +66,10 @@ fn strip_prefix_ignore_case<'a>(text: &'a str, prefix: &str) -> Option<&'a str> 
 }
 
 fn strip_suffix_ignore_case<'a>(text: &'a str, suffix: &str) -> Option<&'a str> {
-	if text.len() >= suffix.len() && text[text.len() - suffix.len()..].eq_ignore_ascii_case(suffix)
+	if text.len() >= suffix.len()
+		&& text
+			.get(text.len() - suffix.len()..)?
+			.eq_ignore_ascii_case(suffix)
 	{
 		Some(&text[..text.len() - suffix.len()])
 	} else {

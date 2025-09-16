@@ -20,6 +20,7 @@ pub fn load_data(
 	library_path: Option<String>,
 	env: Env,
 ) -> Result<()> {
+	// This does not work on macOS
 	std::panic::set_hook(Box::new(move |info| {
 		let thread = std::thread::current();
 		let thread_name = thread.name().unwrap_or("<unnamed>");
