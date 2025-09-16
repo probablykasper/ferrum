@@ -197,13 +197,19 @@ app.whenReady().then(async () => {
 	})
 
 	// doesn't always fire on Windows :(
+	let gonna_quit = false
 	app.on('before-quit', (e) => {
 		if (quitting) {
 			return
 		} else if (app_loaded) {
+			if (gonna_quit) {
+				console.log('Already preparing to quit')
+				return
+			}
 			console.log('Preparing to quit')
 			e.preventDefault()
 			main_window?.webContents.send('gonnaQuit')
+			gonna_quit = true
 			ipcMain.once('readyToQuit', () => {
 				console.log('Quitting gracefully')
 				quitting = true
