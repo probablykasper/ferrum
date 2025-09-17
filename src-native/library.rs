@@ -5,7 +5,7 @@ use anyhow::{Context, Result, bail};
 use napi::Env;
 use serde_json::{Value, json};
 use std::fs::{File, create_dir_all};
-use std::io::{ErrorKind, Read};
+use std::io::{ErrorKind, Read, Seek, SeekFrom};
 use std::path::PathBuf;
 use std::time::Instant;
 
@@ -37,7 +37,7 @@ impl Paths {
 }
 
 pub fn load_library(paths: &Paths) -> Result<Library> {
-	let mut now = Instant::now();
+	let now = Instant::now();
 
 	paths
 		.ensure_dirs_exists()
@@ -51,13 +51,41 @@ pub fn load_library(paths: &Paths) -> Result<Library> {
 			_ => return Err(err).context("Error opening library file"),
 		},
 	};
+	println!("Read library: {}ms", now.elapsed().as_millis());
+	let now = Instant::now();
 
+	let mut json_bytes = Vec::new();
+	library_file
+		.read_to_end(&mut json_bytes)
+		.context("Error reading library file")?;
+
+	let versioned_library: VersionedLibrary = match simd_json::from_slice(&mut json_bytes) {
+		Ok(lib) => {
+			println!("Parsed library: {}ms", now.elapsed().as_millis());
+			lib
+		}
+		Err(_) => {
+			let now = Instant::now();
+			library_file
+				.seek(SeekFrom::Start(0))
+				.context("Error seeking to start of library file")?;
+			let versioned_library = parse_old_versionless_library_json(&mut library_file)?;
+			println!("Parsed v0 library: {}ms", now.elapsed().as_millis());
+			versioned_library
+		}
+	};
+	let now = Instant::now();
+
+	let library = versioned_library.upgrade().init_libary();
+	println!("Initialized library: {}ms", now.elapsed().as_millis());
+	Ok(library)
+}
+
+pub fn parse_old_versionless_library_json(library_file: &mut File) -> Result<VersionedLibrary<'_>> {
 	let mut json_str = String::new();
 	library_file
 		.read_to_string(&mut json_str)
 		.context("Error reading library file")?;
-	println!("Read library: {}ms", now.elapsed().as_millis());
-	now = Instant::now();
 
 	let mut value: Value =
 		serde_json::from_str(&mut json_str).context("Error parsing library file")?;
@@ -76,11 +104,7 @@ pub fn load_library(paths: &Paths) -> Result<Library> {
 
 	let versioned_library: VersionedLibrary =
 		serde_json::from_value(value).context("Error parsing library file")?;
-	println!("Parse library: {}ms", now.elapsed().as_millis());
-
-	let library = versioned_library.upgrade().init_libary();
-	println!("Initialized library: {}ms", now.elapsed().as_millis());
-	Ok(library)
+	Ok(versioned_library)
 }
 
 pub enum TrackField {

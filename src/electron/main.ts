@@ -153,7 +153,7 @@ app.whenReady().then(async () => {
 					})
 					.catch((error) => {
 						resolve(new Response(error, { status: 500 }))
-						console.log(`Could not read cover "${track_path}":`, error)
+						console.error(`Could not read cover "${track_path}":`, error)
 					})
 			})
 		} else if (req_url.hostname === 'app') {
