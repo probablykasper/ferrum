@@ -18,6 +18,7 @@ export default defineConfig({
 	build: {
 		outDir: './build/web',
 		sourcemap: true,
+		minify: false, // For easier crash messages
 		target: 'chrome106',
 	},
 	plugins: [
