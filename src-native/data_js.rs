@@ -1,8 +1,8 @@
-use crate::data::Data;
+use crate::data::{Data, app_log_dir, path_to_string};
 use crate::library::Paths;
 use anyhow::Result;
 use napi::Env;
-use rfd::MessageDialog;
+use std::fs;
 
 pub fn get_data(env: &Env) -> &mut Data {
 	let data = env
@@ -20,37 +20,21 @@ pub fn load_data(
 	library_path: Option<String>,
 	env: Env,
 ) -> Result<()> {
-	// This does not work on macOS
 	std::panic::set_hook(Box::new(move |info| {
-		let thread = std::thread::current();
-		let thread_name = thread.name().unwrap_or("<unnamed>");
-		// Get the panic message
-		let panic_msg = if let Some(s) = info.payload().downcast_ref::<&str>() {
-			*s
-		} else if let Some(s) = info.payload().downcast_ref::<String>() {
-			s.as_str()
-		} else {
-			"Unknown panic message"
-		};
+		let log_msg = format!("{}", info);
+		eprintln!("{}", log_msg);
 
-		// file:line:column
-		let location = if let Some(loc) = info.location() {
-			format!("{}:{}:{}", loc.file(), loc.line(), loc.column())
-		} else {
-			"Unknown location".to_string()
-		};
+		let logs_dir = app_log_dir().unwrap();
+		fs::create_dir_all(&logs_dir).unwrap();
 
-		eprintln!(
-			"thread '{}' panicked at '{}': {}",
-			thread_name, panic_msg, location
+		let filename = format!(
+			"Crash {}.log",
+			chrono::Local::now().format("%Y-%m-%d %H-%M-%S")
 		);
+		let file_path = logs_dir.join(filename);
 
-		MessageDialog::new()
-			.set_title(&format!("{}", panic_msg))
-			.set_description(&format!("{}", location))
-			.set_buttons(rfd::MessageButtons::Ok)
-			.set_level(rfd::MessageLevel::Error)
-			.show();
+		fs::write(&file_path, log_msg).expect("Could not save crash log");
+		println!("Crash message written to {}", file_path.to_string_lossy());
 	}));
 	let data = Data::load(is_dev, local_data_path, library_path)?;
 	env.set_instance_data(data, 0, |_ctx| {})?;
@@ -62,6 +46,14 @@ pub fn load_data(
 pub fn get_paths(env: Env) -> Paths {
 	let data: &Data = get_data(&env);
 	data.paths.clone()
+}
+#[napi(js_name = "get_logs_dir")]
+#[allow(dead_code)]
+pub fn get_logs_dir() -> Result<String> {
+	match app_log_dir() {
+		Ok(path) => Ok(path_to_string(path)),
+		Err(err) => Err(err),
+	}
 }
 
 #[napi(js_name = "save")]

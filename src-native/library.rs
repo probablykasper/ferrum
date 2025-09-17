@@ -20,13 +20,15 @@ pub struct Paths {
 	pub cache_db: String,
 	pub local_data_dir: String,
 	pub view_options_file: String,
+	pub logs_dir: String,
 }
 impl Paths {
 	fn ensure_dirs_exists(&self) -> Result<()> {
 		create_dir_all(&self.library_dir)?;
 		create_dir_all(&self.tracks_dir)?;
-		create_dir_all(&self.local_data_dir)?;
 		create_dir_all(&self.cache_dir)?;
+		create_dir_all(&self.local_data_dir)?;
+		// We do not create logs_dir, we create it lazily when a crash occurs
 		return Ok(());
 	}
 	pub fn get_track_file_path(&self, file: &str) -> PathBuf {

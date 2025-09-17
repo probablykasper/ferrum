@@ -50,6 +50,8 @@ export declare function get_genres(): Array<string>
 
 export declare function get_image(index: number): JsImage | null
 
+export declare function get_logs_dir(): string
+
 export declare function get_paths(): Paths
 
 export declare function get_track(id: string): Track
@@ -105,6 +107,7 @@ export interface Paths {
   cacheDb: string
   localDataDir: string
   viewOptionsFile: string
+  logsDir: string
 }
 
 export interface Playlist {

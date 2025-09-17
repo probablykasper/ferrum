@@ -13,6 +13,14 @@ import { ipc_main } from './typed_ipc'
 async function close_cache_db() {
 	await addon.close_cache_db()
 }
+function get_logs_dir() {
+	try {
+		return addon.get_logs_dir()
+	} catch (_) {
+		return null
+	}
+}
+const logs_dir = get_logs_dir()
 
 let triggering_crash = false
 export function trigger_crash(popup: { msg: string; error: Error | string } | null) {
@@ -192,17 +200,14 @@ app.whenReady().then(async () => {
 		browser_windows.main_window = main_window
 	})
 	main_window.webContents.on('render-process-gone', (_e, details) => {
-		if (details.reason === 'crashed') {
-			// we have a napi-rs panic handler message popup already
-			trigger_crash(null)
-		} else if (
+		if (
 			details.reason !== 'clean-exit' &&
 			details.reason !== 'abnormal-exit' &&
 			details.reason !== 'killed'
 		) {
 			trigger_crash({
 				msg: `Crashed with code ${details.exitCode} (${details.reason})`,
-				error: 'Error message was likely logged to console.',
+				error: `Error message was logged to ${logs_dir}`,
 			})
 		}
 	})

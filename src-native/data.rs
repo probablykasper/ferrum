@@ -24,6 +24,23 @@ pub struct Data {
 	pub current_tag: Option<Tag>,
 }
 
+pub fn app_log_dir() -> Result<PathBuf> {
+	#[cfg(target_os = "macos")]
+	{
+		use anyhow::Context;
+		let home_dir = dirs_next::home_dir().context("Home folder not found")?;
+		let log_dir = home_dir.join("Library/Logs").join("space.kasper.ferrum");
+		return Ok(log_dir);
+	}
+	#[cfg(not(target_os = "macos"))]
+	{
+		use anyhow::Context;
+		let local_data_dir = dirs_next::data_local_dir().context("Local data folder not found")?;
+		let log_dir = local_data_dir.join("space.kasper.ferrum").join("logs");
+		return Ok(log_dir);
+	}
+}
+
 impl Data {
 	pub fn save(&mut self) -> Result<()> {
 		let mut now = Instant::now();
@@ -85,6 +102,8 @@ impl Data {
 			cache_db: path_to_string(cache_dir.join("Cache.redb")),
 			local_data_dir: path_to_string(&local_data_dir),
 			view_options_file: path_to_string(local_data_dir.join("view.json")),
+			// This makes sure we can get the logs dir, which is important for crash logs
+			logs_dir: path_to_string(app_log_dir()?),
 		};
 
 		let loaded_library = load_library(&paths)?;
