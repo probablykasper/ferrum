@@ -1,8 +1,13 @@
 use anyhow::{Context, Result};
+use mimalloc::MiMalloc;
 use serde::de::DeserializeOwned;
 use std::fs::File;
 use std::io::BufReader;
 use std::time::{SystemTime, UNIX_EPOCH};
+
+// Alloactor recommended by simd_json
+#[global_allocator]
+static GLOBAL: MiMalloc = MiMalloc;
 
 #[macro_use]
 extern crate napi_derive;

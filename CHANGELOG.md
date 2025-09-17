@@ -5,7 +5,7 @@
 - Add genre autocomplete
 - Make macOS media key permission request non-intrusive
 - Improve error and crashing behaviour
-- 55% faster library loading at startup
+- 2x faster library loading at startup
 
 ## 0.19.9 - 2025 Jul 4
 - Fix column size not updating when resizing window
