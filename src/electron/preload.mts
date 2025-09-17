@@ -1,6 +1,9 @@
+console.log('Preload running')
 import path from 'path'
 import is from './is'
-import addon from '../../ferrum-addon'
+const addon = await import(path.join(import.meta.dirname, '../../ferrum-addon/main'), {
+	assert: { type: 'node' },
+})
 
 window.addon = addon
 window.is_dev = is.dev

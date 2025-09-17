@@ -1,4 +1,5 @@
 {
+	"type": "module",
 	"private": true,
 	"name": "ferrum-addon",
 	"main": "addon.node",

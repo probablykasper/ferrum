@@ -1,4 +1,5 @@
 {
+	"type": "module",
 	"name": "ferrum",
 	"private": true,
 	"productName": "Ferrum",
@@ -17,7 +18,7 @@
 		"build": "npm run napi && npm run build:web && electron-builder && npm run generate-update-json",
 		"build:web": "vite build",
 		"electron-builder": "electron-builder",
-		"generate-update-json": "node ./generate-update-json.mjs",
+		"generate-update-json": "node ./generate-update-json.js",
 		"preview": "LOCAL_DATA=./src-native/appdata/local_data LIBRARY=./src-native/appdata/Library ./build/app/mac/Ferrum.app/Contents/MacOS/Ferrum",
 		"lint": "svelte-check --tsconfig ./tsconfig.json && eslint src && prettier --check src",
 		"format": "eslint --fix src && prettier --write src",
@@ -63,7 +64,7 @@
 			"output": "build/app"
 		}
 	},
-	"main": "build/electron/main.js",
+	"main": "build/electron/main.mjs",
 	"napi": {
 		"binaryName": "addon"
 	},

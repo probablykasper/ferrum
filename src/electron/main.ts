@@ -1,6 +1,9 @@
 import { app, ipcMain, session, BrowserWindow, dialog, protocol, net } from 'electron'
 import is from './is'
-import addon from '../../ferrum-addon'
+console.log('Launch')
+import { createRequire } from 'module'
+const require = createRequire(import.meta.url)
+const addon = require('../../ferrum-addon/addon.node')
 
 if (is.dev) app.setName('Ferrum Dev')
 
@@ -11,6 +14,7 @@ import url from 'url'
 import { ipc_main } from './typed_ipc'
 
 async function close_cache_db() {
+	console.trace('close_cache_db')
 	await addon.close_cache_db()
 }
 
@@ -54,7 +58,7 @@ const local_data_path = process.env.LOCAL_DATA ? path.resolve(process.env.LOCAL_
 if (is.dev) {
 	const data_path =
 		local_data_path ??
-		path.join(__dirname, '../../src-native/appdata/LocalData/space.kasper.ferrum')
+		path.join(import.meta.dirname, '../../src-native/appdata/LocalData/space.kasper.ferrum')
 	const electron_data_path = path.join(data_path, 'Electron Data')
 	app.setPath('userData', electron_data_path)
 } else {
@@ -88,6 +92,7 @@ export const browser_windows = {
 }
 
 app.whenReady().then(async () => {
+	console.log('LaunchReady')
 	let main_window: BrowserWindow | null = new BrowserWindow({
 		width: 1305,
 		height: 1000,
@@ -97,7 +102,7 @@ app.whenReady().then(async () => {
 		webPreferences: {
 			contextIsolation: false,
 			nodeIntegration: true,
-			preload: path.resolve(__dirname, './preload.js'),
+			preload: path.resolve(import.meta.dirname, './preload.mjs'),
 		},
 		backgroundColor: '#0D1115',
 		show: false,
@@ -124,10 +129,11 @@ app.whenReady().then(async () => {
 		throw new Error('VITE_DEV_SERVER_URL missing')
 	}
 
-	const web_folder = path.join(path.dirname(__dirname), 'web')
+	const web_folder = path.join(path.dirname(import.meta.dirname), 'web')
 	const origin = 'app://app'
 
 	protocol.handle('app', (request) => {
+		console.log('app:', request)
 		const req_url = new URL(request.url)
 		if (req_url.hostname === 'trackimg') {
 			return new Promise((resolve) => {
@@ -170,6 +176,7 @@ app.whenReady().then(async () => {
 	})
 
 	if (is.dev) {
+		console.log('load', new URL(vite_dev_server_url).origin + '/playlist/root')
 		main_window.loadURL(new URL(vite_dev_server_url).origin + '/playlist/root')
 	} else {
 		main_window.loadURL(`${origin}/playlist/root`)
@@ -193,8 +200,10 @@ app.whenReady().then(async () => {
 	})
 	main_window.webContents.on('render-process-gone', (_e, details) => {
 		if (details.reason === 'crashed') {
-			// we have a napi-rs panic handler message popup already
-			trigger_crash(null)
+			trigger_crash({
+				msg: `Crashed with code ${details.exitCode} (${details.reason})`,
+				error: 'Error message was likely logged to console.',
+			})
 		} else if (
 			details.reason !== 'clean-exit' &&
 			details.reason !== 'abnormal-exit' &&
