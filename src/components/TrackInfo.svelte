@@ -189,13 +189,13 @@
 	function keydown(e: KeyboardEvent) {
 		if (check_shortcut(e, '[', { cmd_or_ctrl: true })) {
 			save(false)
-			if (instance) {
+			if (instance && instance.index - 1 >= 0) {
 				open_track_info(instance.ids, instance.index - 1)
 			}
 			e.preventDefault()
 		} else if (check_shortcut(e, ']', { cmd_or_ctrl: true })) {
 			save(false)
-			if (instance) {
+			if (instance && instance.index + 1 <= instance.ids.length - 1) {
 				open_track_info(instance.ids, instance.index + 1)
 			}
 
