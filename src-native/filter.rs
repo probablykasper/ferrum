@@ -174,13 +174,14 @@ fn filter_keyword(ids: Vec<ItemId>, keyword: Keyword, library: &Library) -> Vec<
 	filtered_tracks
 }
 
+#[derive(Default, Debug)]
 struct Keyword {
 	full_word: String,
 	field: Option<String>,
 	literal: String,
 }
 impl Keyword {
-	fn parse(word: &str) -> Keyword {
+	fn from_word(word: &str) -> Keyword {
 		let mut parts = word.splitn(2, ':');
 		let field = parts.next();
 		let literal = parts.next();
@@ -197,6 +198,41 @@ impl Keyword {
 			},
 		}
 	}
+	fn parse_next_keyword(query: &mut String) -> Option<Keyword> {
+		*query = query.trim_start().to_string();
+		if query.is_empty() {
+			return None;
+		}
+
+		// get next word
+		let (word, rest) = match query.find(char::is_whitespace) {
+			Some(i) => {
+				let (word, rest) = query.split_at(i);
+				(word.to_string(), rest.to_string())
+			}
+			None => (query.to_string(), "".to_string()),
+		};
+		*query = rest.to_string();
+		println!("word: {}", word);
+		println!("rest: {}", query);
+
+		let mut keyword = Keyword::from_word(&word);
+
+		// parse field:"literal"
+		if keyword.field.is_some() && keyword.literal.starts_with('\"') {
+			keyword.literal = keyword.literal.trim_start_matches('\"').to_string();
+			let (literal, rest) = match query.split_once('\"') {
+				Some((literal, rest)) => (literal.to_string(), rest.to_string()),
+				None => (query.to_string(), "".to_string()),
+			};
+			keyword.literal.push_str(&literal);
+			*query = rest;
+			println!("word: {}", keyword.literal);
+			println!("rest: {}", query);
+		}
+
+		Some(keyword)
+	}
 }
 
 pub fn filter(mut item_ids: Vec<ItemId>, query: String, library: &Library) -> Vec<ItemId> {
@@ -204,13 +240,16 @@ pub fn filter(mut item_ids: Vec<ItemId>, query: String, library: &Library) -> Ve
 	if query == "" {
 		return item_ids;
 	}
-	let query: String = query.nfc().collect();
+	let mut query: String = query.nfc().collect();
 
-	for word in query.split(' ') {
-		if word == "" {
-			continue;
-		}
-		let keyword = Keyword::parse(word);
+	let mut keywords = Vec::new();
+	while let Some(keyword) = Keyword::parse_next_keyword(&mut query) {
+		keywords.push(keyword);
+	}
+
+	println!("Keywords: {keywords:?}");
+
+	for keyword in keywords {
 		item_ids = filter_keyword(item_ids, keyword, &library);
 	}
 	println!("Filter: {}ms", now.elapsed().as_millis());

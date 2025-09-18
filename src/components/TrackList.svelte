@@ -549,7 +549,6 @@
 				}}
 				on:contextmenu={() => {
 					const column_filter = 'filter' in column ? column.filter : null
-					console.log('cf', column_filter)
 					ipc_renderer.invoke('show_columns_menu', {
 						column_filter: typeof column_filter === 'string' ? column_filter : null,
 						menu: all_columns.map((col) => {
