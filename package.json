@@ -74,6 +74,8 @@
 		"@sveltejs/vite-plugin-svelte": "^5.1.0",
 		"@tailwindcss/vite": "^4.1.8",
 		"@tsconfig/svelte": "^5.0.4",
+		"@types/d3-scale": "^4.0.9",
+		"d3-scale": "^4.0.2",
 		"electron": "^30.5.1",
 		"electron-builder": "^26.0.12",
 		"eslint": "^9.28.0",
