@@ -220,9 +220,20 @@ impl Keyword {
 
 		// parse field:"literal"
 		if keyword.field.is_some() && keyword.literal.starts_with('\"') {
-			keyword.literal = keyword.literal.trim_start_matches('\"').to_string();
+			keyword.literal = keyword.literal[1..].to_string();
+			// Search for the next quote in the current keyword
+			match keyword.literal.split_once('\"') {
+				Some((literal, rest)) => {
+					let (literal, rest) = (literal.to_string(), rest.to_string());
+					keyword.literal = literal;
+					*query = rest + " " + query;
+				}
+				None => {}
+			};
+			// Search for the next quote in the rest of the query
 			let (literal, rest) = match query.split_once('\"') {
 				Some((literal, rest)) => (literal.to_string(), rest.to_string()),
+				// If there is no ending quote, treat everything as quoted
 				None => (query.to_string(), "".to_string()),
 			};
 			keyword.literal.push_str(&literal);
