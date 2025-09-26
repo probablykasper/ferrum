@@ -1,7 +1,7 @@
 # Changelog
 
 ## Next
-- Add filtering for specific fields in search, like `artist:apashe` or `album:"mirai sekai"`. You can also right-click a column header to add a filter.
+- Add filtering for specific fields in search, like `artist:apashe` or `album:"mirai sekai"`. You can also right-click a column header to add a filter. Filtering by artist also finds featured artists, remixers etc in the song title.
 - Add genre autocomplete
 - Make macOS media key permission request non-intrusive
 - Improve error and crashing behaviour
