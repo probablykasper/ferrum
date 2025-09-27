@@ -66,6 +66,14 @@
 		ipc_renderer.removeListener('Show Queue', toggle_queue)
 	})
 
+	function toggle_visualizer() {
+		show_visualizer = !show_visualizer
+	}
+	ipc_renderer.on('Toggle Visualizer', toggle_visualizer)
+	onDestroy(() => {
+		ipc_renderer.removeListener('Toggle Visualizer', toggle_visualizer)
+	})
+
 	let droppable = false
 	const allowed_mimes = ['audio/mpeg', 'audio/x-m4a', 'audio/ogg'] // mp3, m4a
 	function get_file_paths(e: DragEvent): string[] {
@@ -136,6 +144,8 @@
 			}
 		}),
 	)
+
+	let show_visualizer = false
 
 	let playlist_info: PlaylistInfo | null = null
 	onDestroy(
@@ -275,7 +285,7 @@
 			<Queue />
 		{/if}
 	</div>
-	<Player />
+	<Player on_show_visualizer={toggle_visualizer} />
 	{#if droppable}
 		<!-- if the overlay is always visible, it's not possible to scroll while dragging tracks -->
 		<div class="drag-overlay" transition:fade={{ duration: 100 }}>
@@ -293,7 +303,10 @@
 		></div>
 	{/if}
 </main>
-<Visualizer />
+
+{#if show_visualizer}
+	<Visualizer on_close={toggle_visualizer} />
+{/if}
 
 <QuickNav />
 {#if track_info_state.instance}

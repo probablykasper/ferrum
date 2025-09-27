@@ -21,6 +21,8 @@
 	import { ipc_renderer } from '$lib/window'
 	import { tracks_page_item_ids } from './TrackList.svelte'
 
+	export let on_show_visualizer: () => void
+
 	async function playing_context_menu() {
 		const playing = queue.getCurrent()
 		if (playing) {
@@ -229,6 +231,33 @@
 		</div>
 	</div>
 	<div class="right">
+		<button
+			type="button"
+			class="mr-2"
+			aria-label="Show visualizer"
+			tabindex="-1"
+			on:click={() => {
+				on_show_visualizer()
+			}}
+		>
+			<div class="parent-active-zoom">
+				<svg
+					xmlns="http://www.w3.org/2000/svg"
+					width="24"
+					height="24"
+					viewBox="-2 -2 26 26"
+					fill="none"
+					stroke="currentColor"
+					stroke-width="2"
+					stroke-linecap="round"
+					stroke-linejoin="round"
+					class="lucide lucide-audio-lines-icon lucide-audio-lines"
+					><path d="M2 10v3" /><path d="M6 6v11" /><path d="M10 3v18" /><path d="M14 8v7" /><path
+						d="M18 5v13"
+					/><path d="M22 10v3" /></svg
+				>
+			</div>
+		</button>
 		<button type="button" class="volume-icon" tabindex="-1" on:click={volume.toggle}>
 			{#if $volume > 0.5}
 				<svg
