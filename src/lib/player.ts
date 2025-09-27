@@ -16,9 +16,10 @@ import type { Track, TrackID } from '../../ferrum-addon'
 import { ipc_renderer } from './window'
 import { queue, set_new_queue, next as queueNext, prev as queuePrev } from './queue'
 import { tracks_page_item_ids } from '$components/TrackList.svelte'
-// import { start_visualizer } from './vis'
 
 const audio = new Audio()
+export const audioContext = new AudioContext()
+export const mediaElementSource = audioContext.createMediaElementSource(audio)
 
 let is_stopped = true
 export const stopped = (() => {

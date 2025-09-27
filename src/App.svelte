@@ -24,6 +24,7 @@
 	import CheckForUpdates from './components/CheckForUpdates.svelte'
 	import Settings from './components/Settings.svelte'
 	import Button from './components/Button.svelte'
+	import Visualizer from '$lib/visualizer/Visualizer.svelte'
 
 	ipc_renderer.invoke('app_loaded').catch(() => {
 		ipc_renderer.invoke('showMessageBox', false, {
@@ -292,6 +293,7 @@
 		></div>
 	{/if}
 </main>
+<Visualizer />
 
 <QuickNav />
 {#if track_info_state.instance}
