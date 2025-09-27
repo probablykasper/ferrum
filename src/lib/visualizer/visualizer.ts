@@ -1,3 +1,5 @@
+// Based on kaleidosync code
+
 import { scaleLinear } from 'd3-scale'
 
 const visualizer_settings = {
@@ -10,9 +12,12 @@ const FILTER_TYPE = 'lowpass'
 const FILTER_FREQUENCY = 7500
 const FILTER_Q = 0.75
 
-export function start_visualizer(element: HTMLAudioElement) {
-	const audioContext = new AudioContext()
-	const mediaElementSource = audioContext.createMediaElementSource(element)
+export function start_visualizer(
+	audioContext: AudioContext,
+	mediaElementSource: MediaElementAudioSourceNode,
+	on_update: (info: { stream: number; volume: number }) => void,
+) {
+	console.log('createMediaElementSource')
 
 	const analyser = audioContext.createAnalyser()
 	const filter = audioContext.createBiquadFilter()
@@ -28,7 +33,7 @@ export function start_visualizer(element: HTMLAudioElement) {
 	filter.Q.value = FILTER_Q
 
 	let stream = 0
-	let volume = 1
+	let volume = 0
 
 	const def = visualizer_settings?.def || [2.5, 0.09]
 	const volumeBuffer: number[] = []
@@ -79,6 +84,8 @@ export function start_visualizer(element: HTMLAudioElement) {
 
 		stream = stream + Math.pow(vol, 0.75) / (playing ? 10 : 100)
 
+		on_update({ stream, volume })
+
 		if (!destroyed) {
 			raf_id = requestAnimationFrame(measure)
 		}
@@ -94,6 +101,8 @@ export function start_visualizer(element: HTMLAudioElement) {
 			}
 			analyser.disconnect()
 			filter.disconnect()
+			mediaElementSource.disconnect()
+			audioContext.close()
 		},
 	}
 }
