@@ -41,12 +41,10 @@ export function trigger_crash(popup: { msg: string; error: Error | string } | nu
 		}
 		browser_windows.main_window?.close()
 		await close_promise
-		app.once('will-quit', () => {
-			process.exit(1)
-		})
 		app.quit()
 		setTimeout(() => {
-			process.exit(1)
+			console.log('Exiting with code 1')
+			app.exit(1)
 		})
 	})
 }
@@ -248,4 +246,9 @@ app.whenReady().then(async () => {
 	})
 
 	init_menu_bar(app, main_window)
+})
+
+process.on('SIGINT', () => {
+	console.log('Trying to quit')
+	app.quit()
 })
