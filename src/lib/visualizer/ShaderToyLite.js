@@ -441,5 +441,43 @@ export function ShaderToyLite(canvasId) {
 		}
 	}
 
+	var recreateTextures = () => {
+		;['A', 'B', 'C', 'D'].forEach((key) => {
+			if (atexture[key]) {
+				// Delete old textures
+				gl.deleteTexture(atexture[key])
+				gl.deleteTexture(btexture[key])
+				gl.deleteFramebuffer(aframebuf[key])
+				gl.deleteFramebuffer(bframebuf[key])
+
+				// Create new textures with updated canvas size
+				atexture[key] = createTexture()
+				btexture[key] = createTexture()
+				aframebuf[key] = createFrameBuffer(atexture[key])
+				bframebuf[key] = createFrameBuffer(btexture[key])
+				flip[key] = false
+			}
+		})
+	}
+
+	this.resize = () => {
+		// Update WebGL viewport
+		gl.viewport(0, 0, gl.canvas.width, gl.canvas.height)
+
+		// Recreate all textures and framebuffers with new dimensions
+		recreateTextures()
+
+		// Reset timing to avoid glitches
+		var now = Date.now()
+		var elapsed = prevDrawTime - firstDrawTime
+		firstDrawTime = now - elapsed
+		prevDrawTime = now
+
+		// Force a redraw
+		if (!isPlaying) {
+			draw()
+		}
+	}
+
 	setup()
 }

@@ -7,7 +7,9 @@
 
 	export let on_close: () => void
 
+	let canvas: HTMLCanvasElement | undefined
 	const canvas_id = 'visualizer'
+	let toy: ShaderToyLite | undefined
 
 	onMount(() => {
 		const a = `
@@ -51,15 +53,15 @@
 					fragColor = vec4(col.rgb, 1.);
 			}
 			`
-		const toy = new ShaderToyLite(canvas_id)
+		toy = new ShaderToyLite(canvas_id)
 		toy.setCommon('')
 		toy.setBufferA({ source: a })
 		toy.setImage({ source: image, iChannel0: 'A' })
 		toy.play()
 		console.log('start')
 		const visualizer = start_visualizer(audioContext, mediaElementSource, (info) => {
-			toy.setStream(info.stream)
-			toy.setVolume(info.volume)
+			toy?.setStream(info.stream)
+			toy?.setVolume(info.volume)
 		})
 
 		return () => {
@@ -74,9 +76,24 @@
 			on_close()
 		}
 	}}
+	on:resize={() => {
+		if (canvas) {
+			canvas.width = window.innerWidth
+			canvas.height = window.innerHeight
+			toy?.resize()
+		}
+	}}
 />
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div class="fixed top-0 left-0 flex h-screen w-screen items-center justify-center">
-	<canvas id={canvas_id} width="840" height="472"></canvas>
+	<div class="relative">
+		<canvas
+			bind:this={canvas}
+			class="size-full"
+			id={canvas_id}
+			width={window.innerWidth}
+			height={window.innerHeight}
+		></canvas>
+	</div>
 </div>
