@@ -33,10 +33,10 @@
 				float dist = distance(uv, vec2(0.));
 				uv = WARP ? uv * kale(uv, vec2(0.), 2.) : uv;
 				for (float i = 0.; i < BALLS; i++) {
-					float t = iTime/2. - i * PI / BALLS * cos(iTime / max(i, 0.0001));
-					vec2 p = vec2(cos(t), sin(t)) / sin(i / BALLS * PI / dist + iTime);
-					vec3 c = cos(vec3(0, 5, -5) * PI * 2. / PI + PI * (iTime / (i+1.) / 5.)) * (GLOW) + (GLOW);
-					fragColor += vec4(vec3(dist * .35 / length(uv - p * ORB_SIZE) * c), 1.0);
+					float t = iStream/2. - i * PI / BALLS * cos(iStream / max(i, 0.0001));
+					vec2 p = vec2(cos(t), sin(t)) / sin(i / BALLS * PI / dist + iStream);
+					vec3 c = iVolume * cos(vec3(0, 5, -5) * PI * 2. / PI + PI * (iStream / (i+1.) / 5.)) * (GLOW) + (GLOW);
+					fragColor += vec4(iVolume * vec3(dist * .35 / length(uv - p * ORB_SIZE) * c), 1.0);
 				}
 				fragColor.xyz = pow(fragColor.xyz, vec3(CONTRAST));
 			}
@@ -55,7 +55,8 @@
 		toy.play()
 		console.log('start')
 		const visualizer = start_visualizer(audioContext, mediaElementSource, (info) => {
-			console.log('update', info.stream, info.volume)
+			toy.setStream(info.stream)
+			toy.setVolume(info.volume)
 		})
 
 		return () => {

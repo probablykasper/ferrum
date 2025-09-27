@@ -22,6 +22,8 @@ export function ShaderToyLite(canvasId) {
     uniform sampler2D iChannel3;             // input channel 3
     uniform vec4      iDate;                 // (year, month, day, unixtime in seconds)
     uniform float     iSampleRate;           // sound sample rate (i.e., 44100)
+    uniform float     iStream;               // audio stream value
+    uniform float     iVolume;               // audio volume value
     out vec4          frag_out_color;
     void mainImage( out vec4 c, in vec2 f );
     void main( void )
@@ -76,6 +78,8 @@ export function ShaderToyLite(canvasId) {
 	// uniforms
 	var iFrame = 0
 	var iMouse = { x: 0, y: 0, clickX: 0, clickY: 0 }
+	var iStream = 0
+	var iVolume = 0
 
 	// shader common source
 	var common = ''
@@ -222,6 +226,8 @@ export function ShaderToyLite(canvasId) {
 		location[key]['iMouse'] = gl.getUniformLocation(program, 'iMouse')
 		location[key]['iDate'] = gl.getUniformLocation(program, 'iDate')
 		location[key]['iSampleRate'] = gl.getUniformLocation(program, 'iSampleRate')
+		location[key]['iStream'] = gl.getUniformLocation(program, 'iStream')
+		location[key]['iVolume'] = gl.getUniformLocation(program, 'iVolume')
 		location[key]['vertexInPosition'] = gl.getAttribLocation(program, 'vertexInPosition')
 
 		return program
@@ -320,6 +326,8 @@ export function ShaderToyLite(canvasId) {
 				gl.uniform4f(location[key]['iMouse'], iMouse.x, iMouse.y, iMouse.clickX, iMouse.clickY)
 				gl.uniform4f(location[key]['iDate'], iDate[0], iDate[1], iDate[2], iDate[3])
 				gl.uniform1f(location[key]['iSampleRate'], 44100)
+				gl.uniform1f(location[key]['iStream'], iStream)
+				gl.uniform1f(location[key]['iVolume'], iVolume)
 
 				// viewport
 				gl.viewport(0, 0, gl.canvas.width, gl.canvas.height)
@@ -388,6 +396,14 @@ export function ShaderToyLite(canvasId) {
 
 	this.setOnDraw = (callback) => {
 		onDrawCallback = callback
+	}
+
+	this.setStream = (value) => {
+		iStream = value
+	}
+
+	this.setVolume = (value) => {
+		iVolume = value
 	}
 
 	this.addTexture = (texture, key) => {
