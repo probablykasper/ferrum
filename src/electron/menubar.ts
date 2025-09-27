@@ -178,6 +178,14 @@ export function init_menu_bar(app: App, main_window: BrowserWindow) {
 					},
 				},
 				{
+					label: 'Toggle Visualizer',
+					type: 'checkbox',
+					accelerator: 'CmdOrCtrl+T',
+					click() {
+						web_contents.send('Toggle Visualizer')
+					},
+				},
+				{
 					label: 'Toggle Quick Nav',
 					type: 'checkbox',
 					accelerator: 'CmdOrCtrl+K',

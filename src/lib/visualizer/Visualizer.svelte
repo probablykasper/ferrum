@@ -3,6 +3,9 @@
 	import { ShaderToyLite } from './ShaderToyLite.js'
 	import { onMount } from 'svelte'
 	import { audioContext, mediaElementSource } from '$lib/player'
+	import { check_shortcut } from '$lib/helpers'
+
+	export let on_close: () => void
 
 	const canvas_id = 'visualizer'
 
@@ -65,6 +68,15 @@
 	})
 </script>
 
+<svelte:window
+	on:keydown={(e) => {
+		if (check_shortcut(e, 'Escape')) {
+			on_close()
+		}
+	}}
+/>
+
+<!-- svelte-ignore a11y_no_static_element_interactions -->
 <div class="fixed top-0 left-0 flex h-screen w-screen items-center justify-center">
 	<canvas id={canvas_id} width="840" height="472"></canvas>
 </div>
