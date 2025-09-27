@@ -17,8 +17,6 @@ export function start_visualizer(
 	mediaElementSource: MediaElementAudioSourceNode,
 	on_update: (info: { stream: number; volume: number }) => void,
 ) {
-	console.log('createMediaElementSource')
-
 	const analyser = audioContext.createAnalyser()
 	const filter = audioContext.createBiquadFilter()
 	const analyserBuffer = new Uint8Array(BIT_DEPTH / 2)
@@ -101,8 +99,6 @@ export function start_visualizer(
 			}
 			analyser.disconnect()
 			filter.disconnect()
-			mediaElementSource.disconnect()
-			audioContext.close()
 		},
 	}
 }

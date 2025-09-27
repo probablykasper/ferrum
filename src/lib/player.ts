@@ -20,6 +20,7 @@ import { tracks_page_item_ids } from '$components/TrackList.svelte'
 const audio = new Audio()
 export const audioContext = new AudioContext()
 export const mediaElementSource = audioContext.createMediaElementSource(audio)
+mediaElementSource.connect(audioContext.destination)
 
 let is_stopped = true
 export const stopped = (() => {
