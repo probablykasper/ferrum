@@ -67,6 +67,7 @@
 
 		return () => {
 			visualizer.destroy()
+			toy?.pause()
 		}
 	})
 
