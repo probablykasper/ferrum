@@ -6,7 +6,7 @@
 	import Player from '$components/Player.svelte'
 	import { fly } from 'svelte/transition'
 	import { check_modifiers } from '$lib/helpers'
-	import { cubicInOut, quadInOut } from 'svelte/easing'
+	import { quadInOut } from 'svelte/easing'
 
 	let { on_close }: { on_close: () => void } = $props()
 
@@ -18,6 +18,8 @@
 	let isTransitioning = $state(false)
 	let transitionCanvas: HTMLCanvasElement | undefined = $state()
 	const transition_canvas_id = 'visualizer-transition'
+	let autoTransitionTimeout: ReturnType<typeof setTimeout> | undefined
+	let pendingTransition: number | undefined
 
 	const shaders = [
 		{
@@ -115,11 +117,43 @@
 		}
 	`
 
-	function transitionToShader(newShaderIndex: number) {
-		if (isTransitioning || currentShaderIndex === newShaderIndex) return
+	onMount(() => {
+		const a = shaders[0].shader
+		toy = new ShaderToyLite(canvas_id)
+		toy.setCommon('')
+		toy.setBufferA({ source: a })
+		toy.setImage({ source: imageShader, iChannel0: 'A' })
+		toy.play()
+
+		const visualizer = start_visualizer(audioContext, mediaElementSource, (info) => {
+			toy?.setStream(info.stream)
+			toy?.setVolume(info.volume)
+			// Also update transition toy if it exists
+			transitionToy?.setStream(info.stream)
+			transitionToy?.setVolume(info.volume)
+		})
+
+		return () => {
+			visualizer.destroy()
+			toy?.pause()
+			transitionToy?.pause()
+			clearTimeout(autoTransitionTimeout)
+		}
+	})
+
+	function transitionToShader(newShaderIndex: number, duration: number = 2000) {
+		if (currentShaderIndex === newShaderIndex) return
+
+		if (isTransitioning) {
+			pendingTransition = newShaderIndex
+			return
+		}
 
 		console.log('Starting transition to:', newShaderIndex)
 		isTransitioning = true
+
+		// Clear any pending auto transition
+		clearTimeout(autoTransitionTimeout)
 
 		// Create transition toy
 		transitionToy = new ShaderToyLite(transition_canvas_id)
@@ -133,7 +167,6 @@
 
 		// Animate transition
 		let startTime = Date.now()
-		const duration = 2000
 
 		function animateTransition() {
 			const elapsed = Date.now() - startTime
@@ -149,7 +182,6 @@
 			}
 
 			if (linearProgress < 1) {
-				// Use linear progress for timing check
 				requestAnimationFrame(animateTransition)
 			} else {
 				// Transition complete - clean up properly
@@ -173,34 +205,33 @@
 				if (transitionCanvas) {
 					transitionCanvas.style.opacity = '0'
 				}
+
+				// Schedule next auto transition
+				scheduleAutoTransition()
+
+				// Handle any pending transition
+				if (pendingTransition !== undefined) {
+					const nextIndex = pendingTransition
+					pendingTransition = undefined
+					transitionToShader(nextIndex, 500)
+				}
 			}
 		}
 
 		requestAnimationFrame(animateTransition)
 	}
 
-	onMount(() => {
-		const a = shaders[0].shader
-		toy = new ShaderToyLite(canvas_id)
-		toy.setCommon('')
-		toy.setBufferA({ source: a })
-		toy.setImage({ source: imageShader, iChannel0: 'A' })
-		toy.play()
+	function scheduleAutoTransition() {
+		clearTimeout(autoTransitionTimeout)
+		autoTransitionTimeout = setTimeout(() => {
+			if (!isTransitioning) {
+				const nextIndex = (currentShaderIndex + 1) % shaders.length
+				transitionToShader(nextIndex, 2000)
+			}
+		}, 1000)
+	}
 
-		const visualizer = start_visualizer(audioContext, mediaElementSource, (info) => {
-			toy?.setStream(info.stream)
-			toy?.setVolume(info.volume)
-			// Also update transition toy if it exists
-			transitionToy?.setStream(info.stream)
-			transitionToy?.setVolume(info.volume)
-		})
-
-		return () => {
-			visualizer.destroy()
-			toy?.pause()
-			transitionToy?.pause()
-		}
-	})
+	scheduleAutoTransition()
 
 	let show_player = $state(false)
 	let hide_player_timeout: ReturnType<typeof setTimeout> | undefined
@@ -232,12 +263,16 @@
 		on_close()
 	}}
 	onkeydown={(e) => {
-		if (e.key === 'ArrowLeft') {
-			transitionToShader((currentShaderIndex - 1 + shaders.length) % shaders.length)
-		} else if (e.key === 'ArrowRight') {
-			transitionToShader((currentShaderIndex + 1) % shaders.length)
-		} else if (check_modifiers(e, {})) {
-			show_player_temporarily()
+		if (check_modifiers(e, {})) {
+			if (e.key === 'ArrowLeft') {
+				transitionToShader((currentShaderIndex - 1 + shaders.length) % shaders.length, 500)
+			} else if (e.key === 'ArrowRight') {
+				transitionToShader((currentShaderIndex + 1) % shaders.length, 500)
+			} else if (/^[0-9]$/.test(e.key)) {
+				transitionToShader(Math.min(currentShaderIndex + 1, shaders.length - 1), 500)
+			} else {
+				show_player_temporarily()
+			}
 		}
 	}}
 >
@@ -253,11 +288,12 @@
 		<!-- Always render transition canvas, but hidden -->
 		<canvas
 			bind:this={transitionCanvas}
-			class="pointer-events-none fixed inset-0 opacity-0 mix-blend-screen"
+			class="pointer-events-none fixed inset-0 mix-blend-screen"
 			id={transition_canvas_id}
 			width={window.innerWidth}
 			height={window.innerHeight}
 			onmousemove={show_player_temporarily}
+			style:opacity="0"
 		></canvas>
 		{#if show_player}
 			<!-- svelte-ignore a11y_no_static_element_interactions -->
