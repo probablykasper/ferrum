@@ -3,7 +3,6 @@
 	import { ShaderToyLite } from './ShaderToyLite.js'
 	import { onMount } from 'svelte'
 	import { audioContext, mediaElementSource } from '$lib/player'
-	import { check_shortcut } from '$lib/helpers'
 
 	export let on_close: () => void
 
@@ -71,11 +70,6 @@
 </script>
 
 <svelte:window
-	on:keydown={(e) => {
-		if (check_shortcut(e, 'Escape')) {
-			on_close()
-		}
-	}}
 	on:resize={() => {
 		if (canvas) {
 			canvas.width = window.innerWidth
@@ -85,15 +79,19 @@
 	}}
 />
 
-<!-- svelte-ignore a11y_no_static_element_interactions -->
-<div class="fixed top-0 left-0 flex h-screen w-screen items-center justify-center">
-	<div class="relative">
-		<canvas
-			bind:this={canvas}
-			class="size-full"
-			id={canvas_id}
-			width={window.innerWidth}
-			height={window.innerHeight}
-		></canvas>
-	</div>
-</div>
+<dialog
+	{@attach (e) => {
+		e.showModal()
+	}}
+	on:close={() => {
+		on_close()
+	}}
+>
+	<canvas
+		bind:this={canvas}
+		class="fixed h-screen w-screen"
+		id={canvas_id}
+		width={window.innerWidth}
+		height={window.innerHeight}
+	></canvas>
+</dialog>
