@@ -35,7 +35,7 @@ type ShortcutOptions = {
 }
 const is_mac = navigator.userAgent.indexOf('Mac') !== -1
 
-function check_modifiers(e: KeyboardEvent | MouseEvent, options: ShortcutOptions) {
+export function check_modifiers(e: KeyboardEvent | MouseEvent, options: ShortcutOptions) {
 	const target = {
 		shift: options.shift || false,
 		alt: options.alt || false,

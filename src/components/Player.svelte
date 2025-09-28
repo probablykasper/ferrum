@@ -21,7 +21,7 @@
 	import { ipc_renderer } from '$lib/window'
 	import { tracks_page_item_ids } from './TrackList.svelte'
 
-	export let on_show_visualizer: () => void
+	export let on_toggle_visualizer: () => void
 
 	async function playing_context_menu() {
 		const playing = queue.getCurrent()
@@ -234,10 +234,10 @@
 		<button
 			type="button"
 			class="mr-2"
-			aria-label="Show visualizer"
+			aria-label="Toggle visualizer"
 			tabindex="-1"
 			on:click={() => {
-				on_show_visualizer()
+				on_toggle_visualizer()
 			}}
 		>
 			<div class="parent-active-zoom">

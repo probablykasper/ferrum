@@ -285,7 +285,7 @@
 			<Queue />
 		{/if}
 	</div>
-	<Player on_show_visualizer={toggle_visualizer} />
+	<Player on_toggle_visualizer={toggle_visualizer} />
 	{#if droppable}
 		<!-- if the overlay is always visible, it's not possible to scroll while dragging tracks -->
 		<div class="drag-overlay" transition:fade={{ duration: 100 }}>

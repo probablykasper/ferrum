@@ -3,8 +3,11 @@
 	import { ShaderToyLite } from './ShaderToyLite.js'
 	import { onMount } from 'svelte'
 	import { audioContext, mediaElementSource } from '$lib/player'
+	import Player from '$components/Player.svelte'
+	import { fly } from 'svelte/transition'
+	import { check_modifiers } from '$lib/helpers'
 
-	export let on_close: () => void
+	let { on_close }: { on_close: () => void } = $props()
 
 	let canvas: HTMLCanvasElement | undefined
 	const canvas_id = 'visualizer'
@@ -57,7 +60,6 @@
 		toy.setBufferA({ source: a })
 		toy.setImage({ source: image, iChannel0: 'A' })
 		toy.play()
-		console.log('start')
 		const visualizer = start_visualizer(audioContext, mediaElementSource, (info) => {
 			toy?.setStream(info.stream)
 			toy?.setVolume(info.volume)
@@ -67,6 +69,16 @@
 			visualizer.destroy()
 		}
 	})
+
+	let show_player = $state(false)
+	let hide_player_timeout: ReturnType<typeof setTimeout> | undefined
+	function show_player_temporarily() {
+		show_player = true
+		clearTimeout(hide_player_timeout)
+		hide_player_timeout = setTimeout(() => {
+			show_player = false
+		}, 1000)
+	}
 </script>
 
 <svelte:window
@@ -80,18 +92,41 @@
 />
 
 <dialog
+	class="overflow-hidden"
 	{@attach (e) => {
 		e.showModal()
 	}}
-	on:close={() => {
+	onclose={() => {
 		on_close()
 	}}
+	onkeydown={(e) => {
+		if (check_modifiers(e, {})) {
+			show_player_temporarily()
+		}
+	}}
 >
-	<canvas
-		bind:this={canvas}
-		class="fixed h-screen w-screen"
-		id={canvas_id}
-		width={window.innerWidth}
-		height={window.innerHeight}
-	></canvas>
+	<div class="h-screen w-screen">
+		<canvas
+			bind:this={canvas}
+			class="fixed inset-0"
+			id={canvas_id}
+			width={window.innerWidth}
+			height={window.innerHeight}
+			onmousemove={show_player_temporarily}
+		></canvas>
+		{#if show_player}
+			<!-- svelte-ignore a11y_no_static_element_interactions -->
+			<div
+				class="fixed bottom-0 flex w-full flex-col justify-end"
+				transition:fly={{ y: '100%', duration: 500 }}
+				onmouseenter={() => {
+					show_player = true
+					clearTimeout(hide_player_timeout)
+				}}
+				onmouseleave={show_player_temporarily}
+			>
+				<Player on_toggle_visualizer={on_close} />
+			</div>
+		{/if}
+	</div>
 </dialog>
