@@ -39,6 +39,11 @@ export function start_visualizer(
 	const def = visualizer_settings?.def || [2.5, 0.09]
 	const volumeBuffer: number[] = []
 
+	// Pre-fill buffer with some baseline values to avoid initial instability
+	for (let i = 0; i < 60; i++) {
+		volumeBuffer.push(0.1) // Small baseline value
+	}
+
 	function sampleVolume(totalSamples: number) {
 		let value = 0
 		const start = Math.max(volumeBuffer.length - 1, 0)
@@ -54,11 +59,25 @@ export function start_visualizer(
 	function measure_volume(frameRate: number) {
 		const rawVolume = getRawVolume()
 		volumeBuffer.push(rawVolume)
+
+		// Need minimum samples before doing complex calculations
+		const minSamplesNeeded = Math.max(2, (def[1] * 1000) / (1000 / frameRate))
+		if (volumeBuffer.length < minSamplesNeeded) {
+			return 0.01 // Small default value while buffer builds up
+		}
+
 		const [ref, min] = sampleVolume((def[0] * 1000) / (1000 / frameRate))
 		const [sample] = sampleVolume((def[1] * 1000) / (1000 / frameRate))
+
+		// Avoid division by zero or very small differences
+		const range = ref - min
+		if (range < 0.001) {
+			return 0.01 // Small default when no audio variance
+		}
+
 		const scaled = scaleLinear([min, ref], [0, 1])(sample)
 		const raw = Number(Math.pow(scaled, 1.5).toFixed(3))
-		return isNaN(raw) ? 1 : raw / 2
+		return isNaN(raw) ? 0.1 : Math.max(0, raw / 2) // Ensure non-negative
 	}
 
 	function getRawVolume() {
