@@ -140,6 +140,10 @@ app.whenReady().then(async () => {
 				const track_path = decodeURIComponent(req_url.searchParams.get('path') ?? '')
 				const cache_db_path = decodeURIComponent(req_url.searchParams.get('cache_db_path') ?? '')
 
+				if (quitting) {
+					// If we're quitting, don't call async addon functions. It seems to cause panics.
+					return new Response('Currently quitting', { status: 500 })
+				}
 				addon
 					.read_small_cover_async(track_path, 0, cache_db_path)
 					.then((buffer) => {
