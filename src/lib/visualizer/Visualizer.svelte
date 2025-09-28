@@ -13,8 +13,8 @@
 	const canvas_id = 'visualizer'
 	let toy: ShaderToyLite | undefined
 
-	onMount(() => {
-		const a = `
+	const shaders = {
+		'Color Warp by yozic': `
 			#define WARP true
 			#define BALLS 10.
 			#define CONTRAST 3
@@ -47,14 +47,61 @@
 				}
 				fragColor.xyz = pow(fragColor.xyz, vec3(CONTRAST));
 			}
-			`
+		`,
+		'Bars by yozic': `
+			#define orbs 20.
+			#define PI 3.14159265359
+			#define zoom 24.950
+			#define div 10.000
+			#define div2 10.000
+			#define radius 8.159
+			#define orbSize 0.682
+			#define colorShift 12.710
+			#define contrast 0.902
+
+			// Helper function to get normalized UV coordinates
+			vec2 k_uv() {
+				vec2 uv = 2. * gl_FragCoord.xy/iResolution.xy - 1.;
+				uv.x *= iResolution.x / iResolution.y;
+				return uv;
+			}
+
+			// Helper function to create orb effect
+			vec4 k_orb(vec2 uv, float size, vec2 position, vec3 color, float contrast_val) {
+				float d = length(uv - position);
+				float intensity = size / (d + 0.001);
+				intensity = pow(intensity, contrast_val);
+				return vec4(color * intensity, 1.0);
+			}
+
+			void mainImage (out vec4 fragColor, in vec2 fragCoord) {
+				vec2 uv = k_uv();
+				uv *= zoom;
+				fragColor = vec4(0.);
+				
+				for (float i = 0.; i < orbs; i++) {
+					uv.y -= cos((i+1.)*uv.y/div - iStream);
+					uv.x += cos((i+1.)*uv.y/div2 - iStream/1.5);
+					float t = i * PI / orbs;
+					float x = radius * tan(t + iStream/2.);
+					float y = radius * cos(t - iStream/2.2) * sin(t-iStream/3.);
+					vec2 position = vec2(x, y);
+					vec3 color = cos(vec3(-2, 0, -1) * PI * 2. / 3. + PI * (i / colorShift)) * 0.5 + 0.5;
+					fragColor += k_orb(uv, iVolume * orbSize, position, color, contrast);
+				}
+			}
+		`,
+	}
+
+	onMount(() => {
+		const a = shaders['Bars by yozic']
 		const image = `
 			void mainImage( out vec4 fragColor, in vec2 fragCoord ) {  
-					vec2 uv = fragCoord.xy / iResolution.xy;
-					vec4 col = texture(iChannel0, uv);
-					fragColor = vec4(col.rgb, 1.);
+				vec2 uv = fragCoord.xy / iResolution.xy;
+				vec4 col = texture(iChannel0, uv);
+				fragColor = vec4(col.rgb, 1.);
 			}
-			`
+		`
 		toy = new ShaderToyLite(canvas_id)
 		toy.setCommon('')
 		toy.setBufferA({ source: a })
