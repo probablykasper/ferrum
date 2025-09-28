@@ -1,6 +1,9 @@
 // Based on kaleidosync code
 
 import { scaleLinear } from 'd3-scale'
+import Meyda from 'meyda'
+export type AudioStream = [number, number]
+export type AudioStreamDefinitions = AudioStream[]
 
 const visualizer_settings = {
 	disableFlashing: false,
@@ -19,7 +22,7 @@ export function start_visualizer(
 ) {
 	const analyser = audioContext.createAnalyser()
 	const filter = audioContext.createBiquadFilter()
-	const analyserBuffer = new Uint8Array(BIT_DEPTH / 2)
+	const timeBuffer = new Float32Array(BIT_DEPTH)
 
 	mediaElementSource.connect(filter)
 	filter.connect(analyser)
@@ -59,11 +62,8 @@ export function start_visualizer(
 	}
 
 	function getRawVolume() {
-		analyser.getByteFrequencyData(analyserBuffer)
-		const len = BIT_DEPTH / 2
-		let val = 0
-		for (let i = 0; i < len; i++) val += analyserBuffer[i]
-		return val / len
+		analyser.getFloatTimeDomainData(timeBuffer)
+		return (Meyda.extract('rms', timeBuffer) as number) || 0
 	}
 
 	let destroyed = false
