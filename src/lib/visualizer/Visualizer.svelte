@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { start_visualizer } from './visualizer'
 	import { ShaderToyLite } from './ShaderToyLite.js'
-	import { onDestroy, onMount, untrack } from 'svelte'
+	import { onDestroy } from 'svelte'
 	import { audioContext, mediaElementSource } from '$lib/player'
 	import Player from '$components/Player.svelte'
 	import { fly } from 'svelte/transition'
@@ -106,8 +106,8 @@
 	`
 	function create_toy(canvas: HTMLCanvasElement) {
 		const toy = new ShaderToyLite(canvas)
-		toy.setCommon('')
-		toy.setImage({ source: imageShader, iChannel0: 'A' })
+		toy.set_common('')
+		toy.set_image({ source: imageShader, iChannel0: 'A' })
 		return toy
 	}
 
@@ -136,11 +136,11 @@
 	let autoTransitionTimeout: ReturnType<typeof setTimeout> | undefined
 
 	const visualizer = start_visualizer(audioContext, mediaElementSource, (info) => {
-		main_vis.toy?.setStream(info.stream)
-		main_vis.toy?.setVolume(info.volume)
+		main_vis.toy?.set_stream(info.stream)
+		main_vis.toy?.set_volume(info.volume)
 		// Also update transition toy if it exists
-		next_vis.toy?.setStream(info.stream)
-		next_vis.toy?.setVolume(info.volume)
+		next_vis.toy?.set_stream(info.stream)
+		next_vis.toy?.set_volume(info.volume)
 	})
 
 	let pendingTransition: number | null = null
@@ -168,7 +168,7 @@
 			next_vis.should_resize = false
 			schedule_resize(next_vis)
 		}
-		next_vis.toy.setBufferA({ source: shaders[newShaderIndex].shader })
+		next_vis.toy.set_buffer_a({ source: shaders[newShaderIndex].shader })
 		next_vis.toy.play()
 
 		const animation_new = next_vis.canvas.animate(
@@ -297,7 +297,7 @@
 					vis.canvas = canvas
 					if (vis.is_main && !vis.toy) {
 						const toy = create_toy(canvas)
-						toy.setBufferA({ source: shaders[0].shader })
+						toy.set_buffer_a({ source: shaders[0].shader })
 						toy.play()
 						vis.toy = toy
 					}
