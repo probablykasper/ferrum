@@ -291,6 +291,7 @@
 			<canvas
 				bind:this={vis.canvas}
 				class="fixed inset-0"
+				class:cursor-none={!show_player}
 				style:z-index={vis.is_main ? '1' : '2'}
 				class:mix-blend-screen={!vis.is_main}
 				width={window.innerWidth}
