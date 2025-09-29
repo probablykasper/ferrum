@@ -20,7 +20,9 @@ import { tracks_page_item_ids } from '$components/TrackList.svelte'
 const audio = new Audio()
 export const audioContext = new AudioContext()
 export const mediaElementSource = audioContext.createMediaElementSource(audio)
-mediaElementSource.connect(audioContext.destination)
+const gain_node = audioContext.createGain()
+mediaElementSource.connect(gain_node)
+gain_node.connect(audioContext.destination)
 
 let is_stopped = true
 export const stopped = (() => {
@@ -66,12 +68,9 @@ const media_session = navigator.mediaSession
 export const volume = (() => {
 	let last_volume = 1
 	const store = writable(1)
-	audio.addEventListener('volumechange', () => {
-		store.set(audio.volume)
-	})
 	function set(value: number) {
-		last_volume = audio.volume
-		audio.volume = clamp_number(0, 1, value)
+		last_volume = gain_node.gain.value
+		gain_node.gain.value = clamp_number(0, 1, value)
 		store.set(clamp_number(0, 1, value))
 	}
 	return {

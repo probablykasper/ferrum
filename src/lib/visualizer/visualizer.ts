@@ -28,7 +28,6 @@ export function start_visualizer(
 
 	mediaElementSource.connect(filter)
 	filter.connect(analyser)
-	mediaElementSource.connect(audioContext.destination)
 	analyser.smoothingTimeConstant = 0
 	analyser.fftSize = BIT_DEPTH
 	filter.type = FILTER_TYPE
