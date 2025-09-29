@@ -151,7 +151,6 @@
 			return console.error('Missing canvas')
 		}
 
-		console.log('Starting transition to:', new_shader_index)
 		is_transitioning = true
 		clearTimeout(auto_transition_timeout)
 
@@ -177,7 +176,7 @@
 		const animation_new = next_vis.canvas.animate(
 			{ opacity: [0, 1] },
 			{
-				duration: duration,
+				duration: duration * 0.7,
 				easing: 'cubic-bezier(0.45, 0, 0.55, 1)', // quadInOut
 				fill: 'forwards',
 			},
@@ -185,7 +184,8 @@
 		const animation_old = main_vis.canvas.animate(
 			{ opacity: [1, 0] },
 			{
-				duration: duration,
+				duration: duration * 0.7,
+				delay: duration * 0.3,
 				easing: 'cubic-bezier(0.45, 0, 0.55, 1)', // quadInOut
 				fill: 'forwards',
 			},
