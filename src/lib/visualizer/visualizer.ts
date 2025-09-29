@@ -17,16 +17,16 @@ const FILTER_FREQUENCY = 7500
 const FILTER_Q = 0.75
 
 export function start_visualizer(
-	audioContext: AudioContext,
-	mediaElementSource: MediaElementAudioSourceNode,
+	audio_context: AudioContext,
+	media_element_source: MediaElementAudioSourceNode,
 	on_update: (info: { stream: number; volume: number }) => void,
 ) {
-	const analyser = audioContext.createAnalyser()
-	const filter = audioContext.createBiquadFilter()
-	const timeBuffer = new Float32Array(BIT_DEPTH)
+	const analyser = audio_context.createAnalyser()
+	const filter = audio_context.createBiquadFilter()
+	const time_buffer = new Float32Array(BIT_DEPTH)
 	const raf = create_singular_request_animation_frame()
 
-	mediaElementSource.connect(filter)
+	media_element_source.connect(filter)
 	filter.connect(analyser)
 	analyser.smoothingTimeConstant = 0
 	analyser.fftSize = BIT_DEPTH
@@ -38,37 +38,37 @@ export function start_visualizer(
 	let volume = 0
 
 	const def = visualizer_settings?.def || [2.5, 0.09]
-	const volumeBuffer: number[] = []
+	const volume_buffer: number[] = []
 
 	// Pre-fill buffer with some baseline values to avoid initial instability
 	for (let i = 0; i < 60; i++) {
-		volumeBuffer.push(0.1) // Small baseline value
+		volume_buffer.push(0.1) // Small baseline value
 	}
 
-	function sampleVolume(totalSamples: number) {
+	function sample_volume(total_samples: number) {
 		let value = 0
-		const start = Math.max(volumeBuffer.length - 1, 0)
-		const end = Math.max(start - totalSamples, 0)
+		const start = Math.max(volume_buffer.length - 1, 0)
+		const end = Math.max(start - total_samples, 0)
 		let min = Infinity
 		for (let i = start; i >= end; i--) {
-			value += volumeBuffer[i]
-			if (volumeBuffer[i] < min) min = volumeBuffer[i]
+			value += volume_buffer[i]
+			if (volume_buffer[i] < min) min = volume_buffer[i]
 		}
-		return [value / totalSamples, min]
+		return [value / total_samples, min]
 	}
 
-	function measure_volume(frameRate: number) {
-		const rawVolume = getRawVolume()
-		volumeBuffer.push(rawVolume)
+	function measure_volume(frame_rate: number) {
+		const raw_volume = get_raw_volume()
+		volume_buffer.push(raw_volume)
 
 		// Need minimum samples before doing complex calculations
-		const minSamplesNeeded = Math.max(2, (def[1] * 1000) / (1000 / frameRate))
-		if (volumeBuffer.length < minSamplesNeeded) {
+		const min_samples_needed = Math.max(2, (def[1] * 1000) / (1000 / frame_rate))
+		if (volume_buffer.length < min_samples_needed) {
 			return 0.01 // Small default value while buffer builds up
 		}
 
-		const [ref, min] = sampleVolume((def[0] * 1000) / (1000 / frameRate))
-		const [sample] = sampleVolume((def[1] * 1000) / (1000 / frameRate))
+		const [ref, min] = sample_volume((def[0] * 1000) / (1000 / frame_rate))
+		const [sample] = sample_volume((def[1] * 1000) / (1000 / frame_rate))
 
 		// Avoid division by zero or very small differences
 		const range = ref - min
@@ -81,9 +81,9 @@ export function start_visualizer(
 		return isNaN(raw) ? 0.1 : Math.max(0, raw / 2) // Ensure non-negative
 	}
 
-	function getRawVolume() {
-		analyser.getFloatTimeDomainData(timeBuffer)
-		return (Meyda.extract('rms', timeBuffer) as number) || 0
+	function get_raw_volume() {
+		analyser.getFloatTimeDomainData(time_buffer)
+		return (Meyda.extract('rms', time_buffer) as number) || 0
 	}
 
 	let destroyed = false
@@ -98,7 +98,7 @@ export function start_visualizer(
 			volume = vol
 		}
 
-		const playing = audioContext.state === 'running'
+		const playing = audio_context.state === 'running'
 
 		stream = stream + Math.pow(vol, 0.75) / (playing ? 10 : 100)
 

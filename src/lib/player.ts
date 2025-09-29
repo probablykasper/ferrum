@@ -18,11 +18,11 @@ import { queue, set_new_queue, next as queueNext, prev as queuePrev } from './qu
 import { tracks_page_item_ids } from '$components/TrackList.svelte'
 
 const audio = new Audio()
-export const audioContext = new AudioContext()
-export const mediaElementSource = audioContext.createMediaElementSource(audio)
-const gain_node = audioContext.createGain()
-mediaElementSource.connect(gain_node)
-gain_node.connect(audioContext.destination)
+export const audio_context = new AudioContext()
+export const media_element_source = audio_context.createMediaElementSource(audio)
+const gain_node = audio_context.createGain()
+media_element_source.connect(gain_node)
+gain_node.connect(audio_context.destination)
 
 let is_stopped = true
 export const stopped = (() => {

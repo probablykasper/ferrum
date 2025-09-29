@@ -2,8 +2,34 @@
 
 import { create_singular_request_animation_frame } from '$lib/helpers'
 
-export function ShaderToyLite(canvas) {
-	var hdr = `#version 300 es
+type Key = 'A' | 'B' | 'C' | 'D' | 'Image'
+
+const possible_keys = ['A', 'B', 'C', 'D', 'Image'] as const
+
+type Locations = {
+	iResolution: WebGLUniformLocation | null
+	iTime: WebGLUniformLocation | null
+	iTimeDelta: WebGLUniformLocation | null
+	iFrameRate: WebGLUniformLocation | null
+	iFrame: WebGLUniformLocation | null
+	iChannelTime: WebGLUniformLocation | null
+	iChannelResolution: WebGLUniformLocation | null
+	iChannel0: WebGLUniformLocation | null
+	iChannel1: WebGLUniformLocation | null
+	iChannel2: WebGLUniformLocation | null
+	iChannel3: WebGLUniformLocation | null
+	iMouse: WebGLUniformLocation | null
+	iDate: WebGLUniformLocation | null
+	iSampleRate: WebGLUniformLocation | null
+	iStream: WebGLUniformLocation | null
+	iVolume: WebGLUniformLocation | null
+	vertexInPosition: number
+}
+
+export type ShaderToyLite = NonNullable<ReturnType<typeof shader_toy_lite>['data']>
+
+export function shader_toy_lite(canvas: HTMLCanvasElement) {
+	const hdr = `#version 300 es
     #ifdef GL_ES
     precision highp float;
     precision highp int;
@@ -52,7 +78,7 @@ export function ShaderToyLite(canvas) {
 		-1.0, -1.0, 1.0, -1.0, -1.0, 1.0, 1.0, 1.0, -1.0, 1.0, 1.0, -1.0,
 	])
 
-	var opts = {
+	const opts = {
 		alpha: false,
 		depth: false,
 		stencil: false,
@@ -62,51 +88,55 @@ export function ShaderToyLite(canvas) {
 		power_preference: 'high-performance',
 	}
 
-	var gl = canvas.getContext('webgl2', opts)
+	const retrieved_gl = canvas.getContext('webgl2', opts)
+	if (!(retrieved_gl instanceof WebGL2RenderingContext)) {
+		return { data: null, error: 'WebGL2 is not supported' }
+	}
+	const gl = retrieved_gl
 
 	// timing
-	var is_playing = false
-	var first_draw_time = 0
-	var prev_draw_time = 0
+	let is_playing = false
+	let first_draw_time = 0
+	let prev_draw_time = 0
 
 	// callback
-	var on_draw_callback
+	let on_draw_callback: (() => void) | undefined
 
 	// uniforms
-	var iframe = 0
-	var imouse = { x: 0, y: 0, clickX: 0, clickY: 0 }
-	var istream = 0
-	var ivolume = 0
+	let iframe = 0
+	const imouse = { x: 0, y: 0, clickX: 0, clickY: 0 }
+	let istream = 0
+	let ivolume = 0
 
 	// shader common source
-	var common = ''
+	let common = ''
 
 	// render passes variables. valid keys:
 	//   'A', 'B', 'C', 'D', 'Image'
-	var sourcecode = {} // fragment shader code
-	var ichannels = {} // texture inputs
-	var atexture = {} // front texture (input/output)
-	var btexture = {} // back texture  (input/output)
-	var aframebuf = {} // front buffer (output)
-	var bframebuf = {} // back buffer (output)
-	var program = {} // webgl program
-	var fragment_shaders = {}
-	var vertex_shaders = {}
-	var location = {} // uniform location
-	var flip = {} // a b flip
-	var quad_buffer // two full screen triangles
+	const sourcecode: Partial<Record<Key, string>> = {} // fragment shader code
+	const ichannels: Partial<Record<Key, Record<number, Key>>> = {} // texture inputs
+	const atexture: Partial<Record<Key, WebGLTexture | null>> = {} // front texture (input/output)
+	const btexture: Partial<Record<Key, WebGLTexture | null>> = {} // back texture  (input/output)
+	const aframebuf: Partial<Record<Key, WebGLFramebuffer | null>> = {} // front buffer (output)
+	const bframebuf: Partial<Record<Key, WebGLFramebuffer | null>> = {} // back buffer (output)
+	const program: Partial<Record<Key, WebGLProgram | null>> = {} // webgl program
+	const fragment_shaders: Partial<Record<Key, WebGLShader | null>> = {}
+	const vertex_shaders: Partial<Record<Key, WebGLShader | null>> = {}
+	const location: Partial<Record<Key, Partial<Locations>>> = {} // uniform location
+	const flip: Partial<Record<Key, boolean>> = {} // a b flip
+	let quad_buffer: WebGLBuffer | null // two full screen triangles
 
-	var setup = () => {
+	const setup = () => {
 		gl.getExtension('OES_texture_float_linear')
 		gl.getExtension('OES_texture_half_float_linear')
 		gl.getExtension('EXT_color_buffer_float')
 		gl.getExtension('WEBGL_debug_shaders')
-		;['A', 'B', 'C', 'D', 'Image'].forEach((key) => {
+		possible_keys.forEach((key) => {
 			sourcecode[key] = ''
 			ichannels[key] = {}
 			program[key] = null
 			location[key] = {}
-			if (key != 'Image') {
+			if (key !== 'Image') {
 				atexture[key] = create_texture()
 				btexture[key] = create_texture()
 				aframebuf[key] = create_frame_buffer(atexture[key])
@@ -145,8 +175,8 @@ export function ShaderToyLite(canvas) {
 		})
 	}
 
-	var create_texture = () => {
-		var texture = gl.createTexture()
+	const create_texture = () => {
+		const texture = gl.createTexture()
 		gl.bindTexture(gl.TEXTURE_2D, texture)
 		gl.texImage2D(
 			gl.TEXTURE_2D,
@@ -166,8 +196,8 @@ export function ShaderToyLite(canvas) {
 		return texture
 	}
 
-	var create_frame_buffer = (texture) => {
-		var framebuffer = gl.createFramebuffer()
+	const create_frame_buffer = (texture: WebGLTexture) => {
+		const framebuffer = gl.createFramebuffer()
 		gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer)
 		gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0)
 		gl.bindTexture(gl.TEXTURE_2D, null)
@@ -175,7 +205,7 @@ export function ShaderToyLite(canvas) {
 		return framebuffer
 	}
 
-	var compile_program = (key) => {
+	const compile_program = (key: Key) => {
 		// Delete previous program + shaders if they exist
 		if (program[key]) {
 			gl.deleteProgram(program[key])
@@ -190,18 +220,23 @@ export function ShaderToyLite(canvas) {
 			fragment_shaders[key] = null
 		}
 
-		var vert = gl.createShader(gl.VERTEX_SHADER)
+		const vert = gl.createShader(gl.VERTEX_SHADER)
+		if (!vert) {
+			return { data: null, error: 'Failed to create vertex shader' }
+		}
 		gl.shaderSource(vert, basic_vertex_shader)
 		gl.compileShader(vert)
 
 		if (!gl.getShaderParameter(vert, gl.COMPILE_STATUS)) {
-			console.error('Vertex Shader compilation failed: ' + gl.getShaderInfoLog(vert))
 			gl.deleteShader(vert)
-			return null
+			return { data: null, error: 'Vertex Shader compilation failed: ' + gl.getShaderInfoLog(vert) }
 		}
 
-		var frag_source = hdr + common + sourcecode[key]
-		var frag = gl.createShader(gl.FRAGMENT_SHADER)
+		const frag_source = hdr + common + sourcecode[key]
+		const frag = gl.createShader(gl.FRAGMENT_SHADER)
+		if (!frag) {
+			return { error: 'Failed to create fragment shader' }
+		}
 		gl.shaderSource(frag, frag_source)
 		gl.compileShader(frag)
 
@@ -212,7 +247,7 @@ export function ShaderToyLite(canvas) {
 			return null
 		}
 
-		var new_program = gl.createProgram()
+		const new_program = gl.createProgram()
 		gl.attachShader(new_program, vert)
 		gl.attachShader(new_program, frag)
 		gl.linkProgram(new_program)
@@ -221,8 +256,14 @@ export function ShaderToyLite(canvas) {
 		gl.deleteShader(frag)
 
 		if (!gl.getProgramParameter(new_program, gl.LINK_STATUS)) {
-			console.error('Program initialization failed: ' + gl.getProgramInfoLog(new_program))
-			return null
+			return {
+				data: null,
+				error: 'Program initialization failed: ' + gl.getProgramInfoLog(new_program),
+			}
+		}
+
+		if (!location[key]) {
+			return { data: null, error: 'Unexpected missing location[key]' }
 		}
 
 		// uniform locations
@@ -252,15 +293,23 @@ export function ShaderToyLite(canvas) {
 		return new_program
 	}
 
-	var repeat = (times, arr) => {
-		let result = []
+	const repeat = (times: number, arr: number[]) => {
+		let result: number[] = []
 		for (let i = 0; i < times; i++) {
 			result = [...result, ...arr]
 		}
 		return result
 	}
 
-	var set_shader = (config, key) => {
+	type ShaderConfig = {
+		source?: string
+		iChannel0?: Key
+		iChannel1?: Key
+		iChannel2?: Key
+		iChannel3?: Key
+	}
+
+	const set_shader = (config: ShaderConfig, key: Key) => {
 		// Unbind before deleting
 		gl.bindTexture(gl.TEXTURE_2D, null)
 		gl.bindFramebuffer(gl.FRAMEBUFFER, null)
@@ -292,9 +341,12 @@ export function ShaderToyLite(canvas) {
 				flip[key] = false
 			}
 
-			for (let i = 0; i < 4; i++) {
-				var s = config[`iChannel${i}`]
-				if (s == 'A' || s == 'B' || s == 'C' || s == 'D') {
+			for (const i of [0, 1, 2, 3] as const) {
+				const s = config[`iChannel${i}`]
+				if (s === 'A' || s === 'B' || s === 'C' || s === 'D') {
+					if (!ichannels[key]) {
+						return { error: 'Unexpected missing ichannels[key]' }
+					}
 					ichannels[key][i] = s
 				}
 			}
@@ -304,13 +356,13 @@ export function ShaderToyLite(canvas) {
 		}
 	}
 
-	var draw = () => {
+	const draw = () => {
 		// current time
-		var now = is_playing ? Date.now() : prev_draw_time
-		var date = new Date(now)
+		const now = is_playing ? Date.now() : prev_draw_time
+		const date = new Date(now)
 
 		// first draw?
-		if (first_draw_time == 0) {
+		if (first_draw_time === 0) {
 			first_draw_time = now
 		}
 
@@ -320,62 +372,81 @@ export function ShaderToyLite(canvas) {
 		}
 
 		// time difference between frames in seconds
-		var itime_delta = (now - prev_draw_time) * 0.001
+		const itime_delta = (now - prev_draw_time) * 0.001
 
 		// time in seconds
-		var itime = (now - first_draw_time) * 0.001
-		var idate = [date.getFullYear(), date.getMonth(), date.getDate(), date.getTime() * 0.001]
+		const itime = (now - first_draw_time) * 0.001
+		const idate = [date.getFullYear(), date.getMonth(), date.getDate(), date.getTime() * 0.001]
 
 		// channel uniforms
-		var ichannel_times = new Float32Array(repeat(4, [itime]))
-		var ichannel_resolutions = new Float32Array(repeat(4, [gl.canvas.width, gl.canvas.height, 0]))
+		const ichannel_times = new Float32Array(repeat(4, [itime]))
+		const ichannel_resolutions = new Float32Array(repeat(4, [gl.canvas.width, gl.canvas.height, 0]))
 
-		;['A', 'B', 'C', 'D', 'Image'].forEach((key) => {
+		for (const key of possible_keys) {
 			if (program[key]) {
 				// framebuffer
 				if (key === 'Image') {
 					gl.bindFramebuffer(gl.FRAMEBUFFER, null)
 				} else {
-					var output = flip[key] ? bframebuf[key] : aframebuf[key]
-					gl.bindFramebuffer(gl.FRAMEBUFFER, output)
+					const output = flip[key] ? bframebuf[key] : aframebuf[key]
+					gl.bindFramebuffer(gl.FRAMEBUFFER, output ?? null)
 				}
 
 				// textures
 				for (let i = 0; i < 4; i++) {
-					var chkey = ichannels[key][i]
+					if (!ichannels[key]) {
+						return { error: 'Unexpected missing ichannels[key]' }
+					}
+					const chkey = ichannels[key][i]
 					if (chkey) {
-						var input = flip[chkey] ? atexture[chkey] : btexture[chkey]
-						gl.activeTexture(gl[`TEXTURE${i}`])
-						gl.bindTexture(gl.TEXTURE_2D, input)
+						const input = flip[chkey] ? atexture[chkey] : btexture[chkey]
+						if (!gl[`TEXTURE${i}` as 'TEXTURE0']) {
+							return { error: `Unexpected missing gl.TEXTURE${i}` }
+						}
+						gl.activeTexture(gl[`TEXTURE${i}` as 'TEXTURE0'])
+						gl.bindTexture(gl.TEXTURE_2D, input ?? null)
 					}
 				}
 
 				// program
 				gl.useProgram(program[key])
 
+				if (!location[key]) {
+					return { error: 'Unexpected missing location[key]' }
+				}
+
 				// uniforms
-				gl.uniform3f(location[key]['iResolution'], gl.canvas.width, gl.canvas.height, 1.0)
-				gl.uniform1f(location[key]['iTime'], itime)
-				gl.uniform1f(location[key]['iTimeDelta'], itime_delta)
-				gl.uniform1f(location[key]['iFrameRate'], 60)
-				gl.uniform1i(location[key]['iFrame'], iframe)
-				gl.uniform1fv(location[key]['iChannelTime'], ichannel_times)
-				gl.uniform3fv(location[key]['iChannelResolution'], ichannel_resolutions)
-				gl.uniform1i(location[key]['iChannel0'], 0)
-				gl.uniform1i(location[key]['iChannel1'], 1)
-				gl.uniform1i(location[key]['iChannel2'], 2)
-				gl.uniform1i(location[key]['iChannel3'], 3)
-				gl.uniform4f(location[key]['iMouse'], imouse.x, imouse.y, imouse.clickX, imouse.clickY)
-				gl.uniform4f(location[key]['iDate'], idate[0], idate[1], idate[2], idate[3])
-				gl.uniform1f(location[key]['iSampleRate'], 44100)
-				gl.uniform1f(location[key]['iStream'], istream)
-				gl.uniform1f(location[key]['iVolume'], ivolume)
+				gl.uniform3f(location[key]['iResolution'] ?? null, gl.canvas.width, gl.canvas.height, 1.0)
+				gl.uniform1f(location[key]['iTime'] ?? null, itime)
+				gl.uniform1f(location[key]['iTimeDelta'] ?? null, itime_delta)
+				gl.uniform1f(location[key]['iFrameRate'] ?? null, 60)
+				gl.uniform1i(location[key]['iFrame'] ?? null, iframe)
+				gl.uniform1fv(location[key]['iChannelTime'] ?? null, ichannel_times)
+				gl.uniform3fv(location[key]['iChannelResolution'] ?? null, ichannel_resolutions)
+				gl.uniform1i(location[key]['iChannel0'] ?? null, 0)
+				gl.uniform1i(location[key]['iChannel1'] ?? null, 1)
+				gl.uniform1i(location[key]['iChannel2'] ?? null, 2)
+				gl.uniform1i(location[key]['iChannel3'] ?? null, 3)
+				gl.uniform4f(
+					location[key]['iMouse'] ?? null,
+					imouse.x,
+					imouse.y,
+					imouse.clickX,
+					imouse.clickY,
+				)
+				gl.uniform4f(location[key]['iDate'] ?? null, idate[0], idate[1], idate[2], idate[3])
+				gl.uniform1f(location[key]['iSampleRate'] ?? null, 44100)
+				gl.uniform1f(location[key]['iStream'] ?? null, istream)
+				gl.uniform1f(location[key]['iVolume'] ?? null, ivolume)
 
 				// viewport
 				gl.viewport(0, 0, gl.canvas.width, gl.canvas.height)
 
 				// vertexs
 				gl.bindBuffer(gl.ARRAY_BUFFER, quad_buffer)
+				if (location[key]['vertexInPosition'] === undefined) {
+					return { error: 'Unexpected missing location[key].vertexInPosition' }
+				}
 				gl.vertexAttribPointer(location[key]['vertexInPosition'], 2, gl.FLOAT, false, 0, 0)
 				gl.enableVertexAttribArray(location[key]['vertexInPosition'])
 
@@ -384,7 +455,7 @@ export function ShaderToyLite(canvas) {
 
 				flip[key] = !flip[key]
 			}
-		})
+		}
 
 		// time of last draw
 		prev_draw_time = now
@@ -396,14 +467,14 @@ export function ShaderToyLite(canvas) {
 	const raf = create_singular_request_animation_frame()
 
 	// Animation loop
-	var animate = () => {
+	const animate = () => {
 		if (is_playing) {
 			draw()
 			raf(animate)
 		}
 	}
 
-	this.set_common = (source) => {
+	const set_common = (source: string) => {
 		if (source === undefined) {
 			source = ''
 		}
@@ -411,46 +482,46 @@ export function ShaderToyLite(canvas) {
 			source = ''
 		}
 		common = source
-		;['A', 'B', 'C', 'D', 'Image'].forEach((key) => {
+		possible_keys.forEach((key) => {
 			if (program[key]) {
 				program[key] = compile_program(key)
 			}
 		})
 	}
 
-	this.set_buffer_a = (config) => {
+	const set_buffer_a = (config: ShaderConfig) => {
 		set_shader(config, 'A')
 	}
 
-	this.set_buffer_b = (config) => {
+	const set_buffer_b = (config: ShaderConfig) => {
 		set_shader(config, 'B')
 	}
 
-	this.set_buffer_c = (config) => {
+	const set_buffer_c = (config: ShaderConfig) => {
 		set_shader(config, 'C')
 	}
 
-	this.set_buffer_d = (config) => {
+	const set_buffer_d = (config: ShaderConfig) => {
 		set_shader(config, 'D')
 	}
 
-	this.set_image = (config) => {
+	const set_image = (config: ShaderConfig) => {
 		set_shader(config, 'Image')
 	}
 
-	this.set_on_draw = (callback) => {
+	const set_on_draw = (callback: (() => void) | undefined) => {
 		on_draw_callback = callback
 	}
 
-	this.set_stream = (value) => {
+	const set_stream = (value: number) => {
 		istream = value
 	}
 
-	this.set_volume = (value) => {
+	const set_volume = (value: number) => {
 		ivolume = value
 	}
 
-	this.add_texture = (texture, key) => {
+	const add_texture = (texture: WebGLTexture, key: Key) => {
 		if (atexture[key]) {
 			gl.deleteTexture(atexture[key])
 			atexture[key] = null
@@ -472,43 +543,41 @@ export function ShaderToyLite(canvas) {
 		flip[key] = false
 	}
 
-	this.time = () => {
+	const time = () => {
 		return (prev_draw_time - first_draw_time) * 0.001
 	}
 
-	this.is_playing = () => is_playing
-
-	this.reset = () => {
-		var now = new Date()
+	const reset = () => {
+		const now = Date.now()
 		first_draw_time = now
 		prev_draw_time = now
 		iframe = 0
 		draw()
 	}
 
-	this.pause = () => {
+	const pause = () => {
 		is_playing = false
 	}
 
-	this.play = () => {
+	const play = () => {
 		if (!is_playing) {
 			is_playing = true
-			var now = Date.now()
-			var elapsed = prev_draw_time - first_draw_time
+			const now = Date.now()
+			const elapsed = prev_draw_time - first_draw_time
 			first_draw_time = now - elapsed
 			prev_draw_time = now
 			animate()
 		}
 	}
 
-	var recreate_textures = () => {
-		;['A', 'B', 'C', 'D'].forEach((key) => {
+	const recreate_textures = () => {
+		for (const key of ['A', 'B', 'C', 'D'] as const) {
 			if (atexture[key]) {
 				// Delete old textures
 				gl.deleteTexture(atexture[key])
-				gl.deleteTexture(btexture[key])
-				gl.deleteFramebuffer(aframebuf[key])
-				gl.deleteFramebuffer(bframebuf[key])
+				gl.deleteTexture(btexture[key] ?? null)
+				gl.deleteFramebuffer(aframebuf[key] ?? null)
+				gl.deleteFramebuffer(bframebuf[key] ?? null)
 
 				// Create new textures with updated canvas size
 				atexture[key] = create_texture()
@@ -517,10 +586,10 @@ export function ShaderToyLite(canvas) {
 				bframebuf[key] = create_frame_buffer(btexture[key])
 				flip[key] = false
 			}
-		})
+		}
 	}
 
-	this.resize = () => {
+	const resize = () => {
 		// Update WebGL viewport
 		gl.viewport(0, 0, gl.canvas.width, gl.canvas.height)
 
@@ -528,8 +597,8 @@ export function ShaderToyLite(canvas) {
 		recreate_textures()
 
 		// Reset timing to avoid glitches
-		var now = Date.now()
-		var elapsed = prev_draw_time - first_draw_time
+		const now = Date.now()
+		const elapsed = prev_draw_time - first_draw_time
 		first_draw_time = now - elapsed
 		prev_draw_time = now
 
@@ -539,12 +608,12 @@ export function ShaderToyLite(canvas) {
 		}
 	}
 
-	this.destroy = () => {
+	const destroy = () => {
 		// Stop animation loop
 		is_playing = false
 
 		// Delete all programs and shaders
-		;['A', 'B', 'C', 'D', 'Image'].forEach((key) => {
+		possible_keys.forEach((key) => {
 			if (program[key]) {
 				gl.deleteProgram(program[key])
 				program[key] = null
@@ -560,7 +629,7 @@ export function ShaderToyLite(canvas) {
 		})
 
 		// Delete all textures and framebuffers
-		;['A', 'B', 'C', 'D'].forEach((key) => {
+		for (const key of ['A', 'B', 'C', 'D'] as const) {
 			if (atexture[key]) {
 				gl.deleteTexture(atexture[key])
 				atexture[key] = null
@@ -577,7 +646,7 @@ export function ShaderToyLite(canvas) {
 				gl.deleteFramebuffer(bframebuf[key])
 				bframebuf[key] = null
 			}
-		})
+		}
 
 		// Delete quad buffer
 		if (quad_buffer) {
@@ -596,11 +665,33 @@ export function ShaderToyLite(canvas) {
 		}
 
 		// Clear callback
-		on_draw_callback = null
-
-		// Nullify gl reference
-		gl = null
+		on_draw_callback = undefined
 	}
 
 	setup()
+
+	return {
+		data: {
+			set_common,
+			set_buffer_a,
+			set_buffer_b,
+			set_buffer_c,
+			set_buffer_d,
+			set_image,
+			set_on_draw,
+			set_stream,
+			set_volume,
+			add_texture,
+			time,
+			reset,
+			pause,
+			play,
+			resize,
+			destroy,
+			is_playing() {
+				return is_playing
+			},
+		},
+		error: null,
+	}
 }

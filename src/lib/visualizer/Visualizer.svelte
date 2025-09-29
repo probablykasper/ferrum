@@ -1,11 +1,12 @@
 <script lang="ts">
 	import { start_visualizer } from './visualizer'
-	import { ShaderToyLite } from './ShaderToyLite.js'
+	import { shader_toy_lite, type ShaderToyLite } from './ShaderToyLite.js'
 	import { onDestroy } from 'svelte'
-	import { audioContext, mediaElementSource } from '$lib/player'
+	import { audio_context, media_element_source } from '$lib/player'
 	import Player from '$components/Player.svelte'
 	import { fly } from 'svelte/transition'
 	import { check_modifiers } from '$lib/helpers'
+	import { error_popup } from '$lib/error'
 
 	let { on_close }: { on_close: () => void } = $props()
 
@@ -97,19 +98,13 @@
 		},
 	]
 
-	const imageShader = `
+	const image_shader = `
 		void mainImage( out vec4 fragColor, in vec2 fragCoord ) {  
 			vec2 uv = fragCoord.xy / iResolution.xy;
 			vec4 col = texture(iChannel0, uv);
 			fragColor = vec4(col.rgb, 1.);
 		}
 	`
-	function create_toy(canvas: HTMLCanvasElement) {
-		const toy = new ShaderToyLite(canvas)
-		toy.set_common('')
-		toy.set_image({ source: imageShader, iChannel0: 'A' })
-		return toy
-	}
 
 	// main visualizer, and a transition visualizer
 	type Vis = {
@@ -131,11 +126,11 @@
 	let main_vis = visualisers[0]
 	let next_vis = visualisers[1]
 
-	let currentShaderIndex = 0
-	let isTransitioning = false
-	let autoTransitionTimeout: ReturnType<typeof setTimeout> | undefined
+	let current_shader_index = 0
+	let is_transitioning = false
+	let auto_transition_timeout: ReturnType<typeof setTimeout> | undefined
 
-	const visualizer = start_visualizer(audioContext, mediaElementSource, (info) => {
+	const visualizer = start_visualizer(audio_context, media_element_source, (info) => {
 		main_vis.toy?.set_stream(info.stream)
 		main_vis.toy?.set_volume(info.volume)
 		// Also update transition toy if it exists
@@ -143,32 +138,40 @@
 		next_vis.toy?.set_volume(info.volume)
 	})
 
-	let pendingTransition: number | null = null
+	let pending_transition: number | null = null
 
-	async function transitionToShader(newShaderIndex: number, duration = 2000) {
-		if (isTransitioning) {
-			pendingTransition = newShaderIndex
+	async function transition_to_shader(new_shader_index: number, duration = 2000) {
+		if (is_transitioning) {
+			pending_transition = new_shader_index
 			return
 		}
-		if (currentShaderIndex === newShaderIndex) return
+		if (current_shader_index === new_shader_index) return
 
 		if (!main_vis.canvas || !next_vis.canvas) {
 			return console.error('Missing canvas')
 		}
 
-		console.log('Starting transition to:', newShaderIndex)
-		isTransitioning = true
-		clearTimeout(autoTransitionTimeout)
+		console.log('Starting transition to:', new_shader_index)
+		is_transitioning = true
+		clearTimeout(auto_transition_timeout)
 
 		// Start transition visualizer
 		if (!next_vis.toy) {
-			next_vis.toy = create_toy(next_vis.canvas)
+			const toy_result = shader_toy_lite(next_vis.canvas)
+			if (!toy_result.data) {
+				error_popup(toy_result.error)
+				on_close()
+				return
+			}
+			next_vis.toy = toy_result.data
+			next_vis.toy.set_common('')
+			next_vis.toy.set_image({ source: image_shader, iChannel0: 'A' })
 		}
 		if (next_vis.should_resize) {
 			next_vis.should_resize = false
 			schedule_resize(next_vis)
 		}
-		next_vis.toy.set_buffer_a({ source: shaders[newShaderIndex].shader })
+		next_vis.toy.set_buffer_a({ source: shaders[new_shader_index].shader })
 		next_vis.toy.play()
 
 		const animation_new = next_vis.canvas.animate(
@@ -199,29 +202,29 @@
 
 		next_vis.toy?.pause() // Keep the instance for later use
 
-		currentShaderIndex = newShaderIndex
-		isTransitioning = false
+		current_shader_index = new_shader_index
+		is_transitioning = false
 
-		scheduleAutoTransition()
+		schedule_auto_transition()
 
-		if (pendingTransition !== null) {
-			const nextIndex = pendingTransition
-			pendingTransition = null
-			transitionToShader(nextIndex)
+		if (pending_transition !== null) {
+			const next_index = pending_transition
+			pending_transition = null
+			transition_to_shader(next_index)
 		}
 	}
 
-	function scheduleAutoTransition() {
-		clearTimeout(autoTransitionTimeout)
-		autoTransitionTimeout = setTimeout(() => {
-			if (!isTransitioning) {
-				const nextIndex = (currentShaderIndex + 1) % shaders.length
-				transitionToShader(nextIndex)
+	function schedule_auto_transition() {
+		clearTimeout(auto_transition_timeout)
+		auto_transition_timeout = setTimeout(() => {
+			if (!is_transitioning) {
+				const next_index = (current_shader_index + 1) % shaders.length
+				transition_to_shader(next_index)
 			}
 		}, 10000)
 	}
 
-	scheduleAutoTransition()
+	schedule_auto_transition()
 
 	let show_player = $state(false)
 	let hide_player_timeout: ReturnType<typeof setTimeout> | undefined
@@ -234,7 +237,7 @@
 	}
 
 	function schedule_resize(vis: Vis) {
-		if (!isTransitioning && !vis.is_main) {
+		if (!is_transitioning && !vis.is_main) {
 			vis.should_resize = true
 			return
 		}
@@ -246,7 +249,7 @@
 	}
 
 	onDestroy(() => {
-		clearTimeout(autoTransitionTimeout)
+		clearTimeout(auto_transition_timeout)
 		visualizer.destroy()
 		main_vis.toy?.destroy()
 		next_vis.toy?.destroy()
@@ -272,11 +275,11 @@
 	onkeydown={(e) => {
 		if (check_modifiers(e, {})) {
 			if (e.key === 'ArrowLeft') {
-				transitionToShader((currentShaderIndex - 1 + shaders.length) % shaders.length, 500)
+				transition_to_shader((current_shader_index - 1 + shaders.length) % shaders.length, 500)
 			} else if (e.key === 'ArrowRight') {
-				transitionToShader((currentShaderIndex + 1) % shaders.length, 500)
+				transition_to_shader((current_shader_index + 1) % shaders.length, 500)
 			} else if (/^[0-9]$/.test(e.key)) {
-				transitionToShader(Math.min(currentShaderIndex + 1, shaders.length - 1), 500)
+				transition_to_shader(Math.min(current_shader_index + 1, shaders.length - 1), 500)
 			} else {
 				show_player_temporarily()
 			}
@@ -284,7 +287,7 @@
 	}}
 >
 	<div class="h-screen w-screen">
-		{#each visualisers as vis, i (vis)}
+		{#each visualisers as vis}
 			<canvas
 				bind:this={vis.canvas}
 				class="fixed inset-0"
@@ -296,7 +299,15 @@
 				{@attach (canvas) => {
 					vis.canvas = canvas
 					if (vis.is_main && !vis.toy) {
-						const toy = create_toy(canvas)
+						const toy_result = shader_toy_lite(canvas)
+						if (!toy_result.data) {
+							error_popup(toy_result.error)
+							on_close()
+							return
+						}
+						const toy = toy_result.data
+						toy.set_common('')
+						toy.set_image({ source: image_shader, iChannel0: 'A' })
 						toy.set_buffer_a({ source: shaders[0].shader })
 						toy.play()
 						vis.toy = toy
