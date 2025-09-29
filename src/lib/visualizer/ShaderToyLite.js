@@ -1,6 +1,8 @@
 // github.com/chipweinberger/ShaderToyLite.js/blob/main/ShaderToyLite.js
 
-export function ShaderToyLite(canvasId) {
+import { create_singular_request_animation_frame } from '$lib/helpers'
+
+export function ShaderToyLite(canvas) {
 	var hdr = `#version 300 es
     #ifdef GL_ES
     precision highp float;
@@ -65,7 +67,7 @@ export function ShaderToyLite(canvasId) {
 		powerPreference: 'high-performance',
 	}
 
-	var gl = document.getElementById(canvasId).getContext('webgl2', opts)
+	var gl = canvas.getContext('webgl2', opts)
 
 	// timing
 	var isPlaying = false
@@ -93,6 +95,8 @@ export function ShaderToyLite(canvasId) {
 	var aframebuf = {} // front buffer (output)
 	var bframebuf = {} // back buffer (output)
 	var program = {} // webgl program
+	var fragmentShaders = {}
+	var vertexShaders = {}
 	var location = {} // uniform location
 	var flip = {} // a b flip
 	var quadBuffer // two full screen triangles
@@ -123,8 +127,6 @@ export function ShaderToyLite(canvasId) {
 
 		// Set viewport size
 		gl.viewport(0, 0, gl.canvas.width, gl.canvas.height)
-
-		var canvas = document.getElementById(canvasId)
 
 		window.addEventListener('resize', function () {
 			gl.canvas.width = canvas.width
@@ -179,6 +181,20 @@ export function ShaderToyLite(canvasId) {
 	}
 
 	var compileProgram = (key) => {
+		// Delete previous program + shaders if they exist
+		if (program[key]) {
+			gl.deleteProgram(program[key])
+			program[key] = null
+		}
+		if (vertexShaders[key]) {
+			gl.deleteShader(vertexShaders[key])
+			vertexShaders[key] = null
+		}
+		if (fragmentShaders[key]) {
+			gl.deleteShader(fragmentShaders[key])
+			fragmentShaders[key] = null
+		}
+
 		var vert = gl.createShader(gl.VERTEX_SHADER)
 		gl.shaderSource(vert, basicVertexShader)
 		gl.compileShader(vert)
@@ -189,48 +205,53 @@ export function ShaderToyLite(canvasId) {
 			return null
 		}
 
-		var source = hdr + common + sourcecode[key]
+		var fragSource = hdr + common + sourcecode[key]
 		var frag = gl.createShader(gl.FRAGMENT_SHADER)
-		gl.shaderSource(frag, source)
+		gl.shaderSource(frag, fragSource)
 		gl.compileShader(frag)
 
 		if (!gl.getShaderParameter(frag, gl.COMPILE_STATUS)) {
 			console.error('Fragment Shader compilation failed: ' + gl.getShaderInfoLog(frag))
-			console.error(source)
+			console.error(fragSource)
 			gl.deleteShader(frag)
 			return null
 		}
 
-		var program = gl.createProgram()
-		gl.attachShader(program, vert)
-		gl.attachShader(program, frag)
-		gl.linkProgram(program)
+		var newProgram = gl.createProgram()
+		gl.attachShader(newProgram, vert)
+		gl.attachShader(newProgram, frag)
+		gl.linkProgram(newProgram)
 
-		if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-			console.error('Program initialization failed: ' + gl.getProgramInfoLog(program))
+		gl.deleteShader(vert)
+		gl.deleteShader(frag)
+
+		if (!gl.getProgramParameter(newProgram, gl.LINK_STATUS)) {
+			console.error('Program initialization failed: ' + gl.getProgramInfoLog(newProgram))
 			return null
 		}
 
 		// uniform locations
-		location[key]['iResolution'] = gl.getUniformLocation(program, 'iResolution')
-		location[key]['iTime'] = gl.getUniformLocation(program, 'iTime')
-		location[key]['iTimeDelta'] = gl.getUniformLocation(program, 'iTimeDelta')
-		location[key]['iFrameRate'] = gl.getUniformLocation(program, 'iFrameRate')
-		location[key]['iFrame'] = gl.getUniformLocation(program, 'iFrame')
-		location[key]['iChannelTime'] = gl.getUniformLocation(program, 'iChannelTime[0]')
-		location[key]['iChannelResolution'] = gl.getUniformLocation(program, 'iChannelResolution[0]')
-		location[key]['iChannel0'] = gl.getUniformLocation(program, 'iChannel0')
-		location[key]['iChannel1'] = gl.getUniformLocation(program, 'iChannel1')
-		location[key]['iChannel2'] = gl.getUniformLocation(program, 'iChannel2')
-		location[key]['iChannel3'] = gl.getUniformLocation(program, 'iChannel3')
-		location[key]['iMouse'] = gl.getUniformLocation(program, 'iMouse')
-		location[key]['iDate'] = gl.getUniformLocation(program, 'iDate')
-		location[key]['iSampleRate'] = gl.getUniformLocation(program, 'iSampleRate')
-		location[key]['iStream'] = gl.getUniformLocation(program, 'iStream')
-		location[key]['iVolume'] = gl.getUniformLocation(program, 'iVolume')
-		location[key]['vertexInPosition'] = gl.getAttribLocation(program, 'vertexInPosition')
+		location[key]['iResolution'] = gl.getUniformLocation(newProgram, 'iResolution')
+		location[key]['iTime'] = gl.getUniformLocation(newProgram, 'iTime')
+		location[key]['iTimeDelta'] = gl.getUniformLocation(newProgram, 'iTimeDelta')
+		location[key]['iFrameRate'] = gl.getUniformLocation(newProgram, 'iFrameRate')
+		location[key]['iFrame'] = gl.getUniformLocation(newProgram, 'iFrame')
+		location[key]['iChannelTime'] = gl.getUniformLocation(newProgram, 'iChannelTime[0]')
+		location[key]['iChannelResolution'] = gl.getUniformLocation(newProgram, 'iChannelResolution[0]')
+		location[key]['iChannel0'] = gl.getUniformLocation(newProgram, 'iChannel0')
+		location[key]['iChannel1'] = gl.getUniformLocation(newProgram, 'iChannel1')
+		location[key]['iChannel2'] = gl.getUniformLocation(newProgram, 'iChannel2')
+		location[key]['iChannel3'] = gl.getUniformLocation(newProgram, 'iChannel3')
+		location[key]['iMouse'] = gl.getUniformLocation(newProgram, 'iMouse')
+		location[key]['iDate'] = gl.getUniformLocation(newProgram, 'iDate')
+		location[key]['iSampleRate'] = gl.getUniformLocation(newProgram, 'iSampleRate')
+		location[key]['iStream'] = gl.getUniformLocation(newProgram, 'iStream')
+		location[key]['iVolume'] = gl.getUniformLocation(newProgram, 'iVolume')
+		location[key]['vertexInPosition'] = gl.getAttribLocation(newProgram, 'vertexInPosition')
 
-		return program
+		vertexShaders[key] = vert
+		fragmentShaders[key] = frag
+		return newProgram
 	}
 
 	var repeat = (times, arr) => {
@@ -242,14 +263,37 @@ export function ShaderToyLite(canvasId) {
 	}
 
 	var setShader = (config, key) => {
+		// Unbind before deleting
+		gl.bindTexture(gl.TEXTURE_2D, null)
+		gl.bindFramebuffer(gl.FRAMEBUFFER, null)
+		if (atexture[key]) gl.deleteTexture(atexture[key])
+		if (btexture[key]) gl.deleteTexture(btexture[key])
+		if (aframebuf[key]) gl.deleteFramebuffer(aframebuf[key])
+		if (bframebuf[key]) gl.deleteFramebuffer(bframebuf[key])
+
+		atexture[key] = null
+		btexture[key] = null
+		aframebuf[key] = null
+		bframebuf[key] = null
+
 		if (config) {
 			if (config.source) {
 				sourcecode[key] = config.source
 				program[key] = compileProgram(key)
-				if (program[key] == null) {
+				if (!program[key]) {
 					console.error('Failed to compile ' + key)
 				}
 			}
+
+			// Recreate textures/framebuffers for buffers
+			if (key !== 'Image') {
+				atexture[key] = createTexture()
+				btexture[key] = createTexture()
+				aframebuf[key] = createFrameBuffer(atexture[key])
+				bframebuf[key] = createFrameBuffer(btexture[key])
+				flip[key] = false
+			}
+
 			for (let i = 0; i < 4; i++) {
 				var s = config[`iChannel${i}`]
 				if (s == 'A' || s == 'B' || s == 'C' || s == 'D') {
@@ -351,11 +395,13 @@ export function ShaderToyLite(canvasId) {
 		iFrame++
 	}
 
+	const raf = create_singular_request_animation_frame()
+
 	// Animation loop
 	var animate = () => {
 		if (isPlaying) {
 			draw()
-			requestAnimationFrame(animate)
+			raf(animate)
 		}
 	}
 
@@ -407,6 +453,22 @@ export function ShaderToyLite(canvasId) {
 	}
 
 	this.addTexture = (texture, key) => {
+		if (atexture[key]) {
+			gl.deleteTexture(atexture[key])
+			atexture[key] = null
+		}
+		if (btexture[key]) {
+			gl.deleteTexture(btexture[key])
+			btexture[key] = null
+		}
+		if (aframebuf[key]) {
+			gl.deleteFramebuffer(aframebuf[key])
+			aframebuf[key] = null
+		}
+		if (bframebuf[key]) {
+			gl.deleteFramebuffer(bframebuf[key])
+			bframebuf[key] = null
+		}
 		atexture[key] = texture
 		btexture[key] = texture
 		flip[key] = false
@@ -477,6 +539,69 @@ export function ShaderToyLite(canvasId) {
 		if (!isPlaying) {
 			draw()
 		}
+	}
+
+	this.destroy = () => {
+		// Stop animation loop
+		isPlaying = false
+
+		// Delete all programs and shaders
+		;['A', 'B', 'C', 'D', 'Image'].forEach((key) => {
+			if (program[key]) {
+				gl.deleteProgram(program[key])
+				program[key] = null
+			}
+			if (vertexShaders[key]) {
+				gl.deleteShader(vertexShaders[key])
+				vertexShaders[key] = null
+			}
+			if (fragmentShaders[key]) {
+				gl.deleteShader(fragmentShaders[key])
+				fragmentShaders[key] = null
+			}
+		})
+
+		// Delete all textures and framebuffers
+		;['A', 'B', 'C', 'D'].forEach((key) => {
+			if (atexture[key]) {
+				gl.deleteTexture(atexture[key])
+				atexture[key] = null
+			}
+			if (btexture[key]) {
+				gl.deleteTexture(btexture[key])
+				btexture[key] = null
+			}
+			if (aframebuf[key]) {
+				gl.deleteFramebuffer(aframebuf[key])
+				aframebuf[key] = null
+			}
+			if (bframebuf[key]) {
+				gl.deleteFramebuffer(bframebuf[key])
+				bframebuf[key] = null
+			}
+		})
+
+		// Delete quad buffer
+		if (quadBuffer) {
+			gl.deleteBuffer(quadBuffer)
+			quadBuffer = null
+		}
+
+		// Clear event listeners (store references during setup to remove them)
+		// Note: These won't be removed since we don't have references to the handlers
+		// If you need to remove them, store handler references in setup()
+
+		// Lose WebGL context to free GPU memory
+		const loseContext = gl.getExtension('WEBGL_lose_context')
+		if (loseContext) {
+			loseContext.loseContext()
+		}
+
+		// Clear callback
+		onDrawCallback = null
+
+		// Nullify gl reference
+		gl = null
 	}
 
 	setup()

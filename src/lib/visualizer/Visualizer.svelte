@@ -1,25 +1,13 @@
 <script lang="ts">
 	import { start_visualizer } from './visualizer'
 	import { ShaderToyLite } from './ShaderToyLite.js'
-	import { onMount } from 'svelte'
+	import { onDestroy, onMount, untrack } from 'svelte'
 	import { audioContext, mediaElementSource } from '$lib/player'
 	import Player from '$components/Player.svelte'
 	import { fly } from 'svelte/transition'
 	import { check_modifiers } from '$lib/helpers'
-	import { quadInOut } from 'svelte/easing'
 
 	let { on_close }: { on_close: () => void } = $props()
-
-	let canvas: HTMLCanvasElement | undefined
-	const canvas_id = 'visualizer'
-	let toy: ShaderToyLite | undefined
-	let currentShaderIndex = $state(0)
-	let transitionToy: ShaderToyLite | undefined
-	let isTransitioning = $state(false)
-	let transitionCanvas: HTMLCanvasElement | undefined = $state()
-	const transition_canvas_id = 'visualizer-transition'
-	let autoTransitionTimeout: ReturnType<typeof setTimeout> | undefined
-	let pendingTransition: number | undefined
 
 	const shaders = [
 		{
@@ -116,109 +104,111 @@
 			fragColor = vec4(col.rgb, 1.);
 		}
 	`
-
-	onMount(() => {
-		const a = shaders[0].shader
-		toy = new ShaderToyLite(canvas_id)
+	function create_toy(canvas: HTMLCanvasElement) {
+		const toy = new ShaderToyLite(canvas)
 		toy.setCommon('')
-		toy.setBufferA({ source: a })
 		toy.setImage({ source: imageShader, iChannel0: 'A' })
-		toy.play()
+		return toy
+	}
 
-		const visualizer = start_visualizer(audioContext, mediaElementSource, (info) => {
-			toy?.setStream(info.stream)
-			toy?.setVolume(info.volume)
-			// Also update transition toy if it exists
-			transitionToy?.setStream(info.stream)
-			transitionToy?.setVolume(info.volume)
-		})
+	// main visualizer, and a transition visualizer
+	type Vis = {
+		is_main: boolean
+		canvas?: HTMLCanvasElement
+		toy?: ShaderToyLite
+		should_resize?: boolean
+	}
+	const visualisers: [Vis, Vis] = $state([
+		{
+			id: 'vis-0',
+			is_main: true,
+		},
+		{
+			id: 'vis-1',
+			is_main: false,
+		},
+	])
+	let main_vis = visualisers[0]
+	let next_vis = visualisers[1]
 
-		return () => {
-			visualizer.destroy()
-			toy?.pause()
-			transitionToy?.pause()
-			clearTimeout(autoTransitionTimeout)
-		}
+	let currentShaderIndex = 0
+	let isTransitioning = false
+	let autoTransitionTimeout: ReturnType<typeof setTimeout> | undefined
+
+	const visualizer = start_visualizer(audioContext, mediaElementSource, (info) => {
+		main_vis.toy?.setStream(info.stream)
+		main_vis.toy?.setVolume(info.volume)
+		// Also update transition toy if it exists
+		next_vis.toy?.setStream(info.stream)
+		next_vis.toy?.setVolume(info.volume)
 	})
 
-	function transitionToShader(newShaderIndex: number, duration: number = 2000) {
-		if (currentShaderIndex === newShaderIndex) return
+	let pendingTransition: number | null = null
 
+	async function transitionToShader(newShaderIndex: number, duration = 2000) {
 		if (isTransitioning) {
 			pendingTransition = newShaderIndex
 			return
 		}
+		if (currentShaderIndex === newShaderIndex) return
+
+		if (!main_vis.canvas || !next_vis.canvas) {
+			return console.error('Missing canvas')
+		}
 
 		console.log('Starting transition to:', newShaderIndex)
 		isTransitioning = true
-
-		// Clear any pending auto transition
 		clearTimeout(autoTransitionTimeout)
 
-		// Create transition toy
-		transitionToy = new ShaderToyLite(transition_canvas_id)
-		transitionToy.setCommon('')
-		transitionToy.setBufferA({ source: shaders[newShaderIndex].shader })
-		transitionToy.setImage({
-			source: imageShader,
-			iChannel0: 'A',
-		})
-		transitionToy.play()
-
-		// Animate transition
-		let startTime = Date.now()
-
-		function animateTransition() {
-			const elapsed = Date.now() - startTime
-			const linearProgress = Math.min(elapsed / duration, 1)
-			const progress = quadInOut(linearProgress)
-
-			// Fade out old canvas, fade in new canvas
-			if (canvas) {
-				canvas.style.opacity = (1 - progress).toString()
-			}
-			if (transitionCanvas) {
-				transitionCanvas.style.opacity = progress.toString()
-			}
-
-			if (linearProgress < 1) {
-				requestAnimationFrame(animateTransition)
-			} else {
-				// Transition complete - clean up properly
-				toy?.pause()
-
-				// Update the main toy with new shader
-				toy?.setBufferA({ source: shaders[newShaderIndex].shader })
-				toy?.play()
-
-				// Clean up transition toy
-				transitionToy?.pause()
-				transitionToy = undefined
-
-				currentShaderIndex = newShaderIndex
-				isTransitioning = false
-
-				// Reset canvas opacities
-				if (canvas) {
-					canvas.style.opacity = '1'
-				}
-				if (transitionCanvas) {
-					transitionCanvas.style.opacity = '0'
-				}
-
-				// Schedule next auto transition
-				scheduleAutoTransition()
-
-				// Handle any pending transition
-				if (pendingTransition !== undefined) {
-					const nextIndex = pendingTransition
-					pendingTransition = undefined
-					transitionToShader(nextIndex, 500)
-				}
-			}
+		// Start transition visualizer
+		if (!next_vis.toy) {
+			next_vis.toy = create_toy(next_vis.canvas)
 		}
+		if (next_vis.should_resize) {
+			next_vis.should_resize = false
+			schedule_resize(next_vis)
+		}
+		next_vis.toy.setBufferA({ source: shaders[newShaderIndex].shader })
+		next_vis.toy.play()
 
-		requestAnimationFrame(animateTransition)
+		const animation_new = next_vis.canvas.animate(
+			{ opacity: [0, 1] },
+			{
+				duration: duration,
+				easing: 'cubic-bezier(0.45, 0, 0.55, 1)', // quadInOut
+				fill: 'forwards',
+			},
+		)
+		const animation_old = main_vis.canvas.animate(
+			{ opacity: [1, 0] },
+			{
+				duration: duration,
+				easing: 'cubic-bezier(0.45, 0, 0.55, 1)', // quadInOut
+				fill: 'forwards',
+			},
+		)
+		await animation_new.finished
+		await animation_old.finished
+
+		await new Promise((resolve) => setTimeout(resolve, duration))
+
+		next_vis.is_main = true
+		main_vis.is_main = false
+		// Swap
+		;[main_vis, next_vis] = [next_vis, main_vis]
+
+		next_vis.toy?.pause() // Keep the instance for later use
+
+		currentShaderIndex = newShaderIndex
+		isTransitioning = false
+
+		scheduleAutoTransition()
+
+		if (pendingTransition !== null) {
+			const nextIndex = pendingTransition
+			pendingTransition = null
+			transitionToShader(nextIndex)
+		}
 	}
 
 	function scheduleAutoTransition() {
@@ -226,9 +216,9 @@
 		autoTransitionTimeout = setTimeout(() => {
 			if (!isTransitioning) {
 				const nextIndex = (currentShaderIndex + 1) % shaders.length
-				transitionToShader(nextIndex, 2000)
+				transitionToShader(nextIndex)
 			}
-		}, 1000)
+		}, 10000)
 	}
 
 	scheduleAutoTransition()
@@ -242,20 +232,37 @@
 			show_player = false
 		}, 1000)
 	}
+
+	function schedule_resize(vis: Vis) {
+		if (!isTransitioning && !vis.is_main) {
+			vis.should_resize = true
+			return
+		}
+		if (vis.canvas) {
+			vis.canvas.width = window.innerWidth
+			vis.canvas.height = window.innerHeight
+			vis.toy?.resize()
+		}
+	}
+
+	onDestroy(() => {
+		clearTimeout(autoTransitionTimeout)
+		visualizer.destroy()
+		main_vis.toy?.destroy()
+		next_vis.toy?.destroy()
+	})
 </script>
 
 <svelte:window
 	on:resize={() => {
-		if (canvas) {
-			canvas.width = window.innerWidth
-			canvas.height = window.innerHeight
-			toy?.resize()
+		for (const vis of visualisers) {
+			schedule_resize(vis)
 		}
 	}}
 />
 
 <dialog
-	class="max-h-screen max-w-screen outline-none"
+	class="max-h-screen max-w-screen bg-black outline-none"
 	{@attach (e) => {
 		e.showModal()
 	}}
@@ -277,28 +284,30 @@
 	}}
 >
 	<div class="h-screen w-screen">
-		<canvas
-			bind:this={canvas}
-			class="fixed inset-0"
-			id={canvas_id}
-			width={window.innerWidth}
-			height={window.innerHeight}
-			onmousemove={show_player_temporarily}
-		></canvas>
-		<!-- Always render transition canvas, but hidden -->
-		<canvas
-			bind:this={transitionCanvas}
-			class="pointer-events-none fixed inset-0 mix-blend-screen"
-			id={transition_canvas_id}
-			width={window.innerWidth}
-			height={window.innerHeight}
-			onmousemove={show_player_temporarily}
-			style:opacity="0"
-		></canvas>
+		{#each visualisers as vis, i (vis)}
+			<canvas
+				bind:this={vis.canvas}
+				class="fixed inset-0"
+				style:z-index={vis.is_main ? '1' : '2'}
+				class:mix-blend-screen={!vis.is_main}
+				width={window.innerWidth}
+				height={window.innerHeight}
+				onmousemove={show_player_temporarily}
+				{@attach (canvas) => {
+					vis.canvas = canvas
+					if (vis.is_main && !vis.toy) {
+						const toy = create_toy(canvas)
+						toy.setBufferA({ source: shaders[0].shader })
+						toy.play()
+						vis.toy = toy
+					}
+				}}
+			></canvas>
+		{/each}
 		{#if show_player}
 			<!-- svelte-ignore a11y_no_static_element_interactions -->
 			<div
-				class="fixed bottom-0 flex w-full flex-col justify-end"
+				class="fixed bottom-0 z-10 flex w-full flex-col justify-end"
 				transition:fly={{ y: '100%', duration: 500 }}
 				onmouseenter={() => {
 					show_player = true

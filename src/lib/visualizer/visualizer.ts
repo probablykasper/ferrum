@@ -1,5 +1,6 @@
 // Based on kaleidosync code
 
+import { create_singular_request_animation_frame } from '$lib/helpers'
 import { scaleLinear } from 'd3-scale'
 import Meyda from 'meyda'
 export type AudioStream = [number, number]
@@ -23,6 +24,7 @@ export function start_visualizer(
 	const analyser = audioContext.createAnalyser()
 	const filter = audioContext.createBiquadFilter()
 	const timeBuffer = new Float32Array(BIT_DEPTH)
+	const raf = create_singular_request_animation_frame()
 
 	mediaElementSource.connect(filter)
 	filter.connect(analyser)
@@ -104,11 +106,11 @@ export function start_visualizer(
 		on_update({ stream, volume })
 
 		if (!destroyed) {
-			raf_id = requestAnimationFrame(measure)
+			raf_id = raf(measure)
 		}
 	}
 
-	let raf_id = requestAnimationFrame(measure)
+	let raf_id = raf(measure)
 
 	return {
 		destroy() {

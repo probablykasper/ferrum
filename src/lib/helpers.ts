@@ -122,3 +122,18 @@ export function getter_writable<T>(value: T): GetterWritable<T> {
 export function assert_unreachable(x: never) {
 	console.error('Unreachable reached', x)
 }
+
+/** A requestAnimationFrame instance that prevents multiple simultaneous calls */
+export function create_singular_request_animation_frame() {
+	let scheduled: number | undefined
+
+	return (callback: FrameRequestCallback): number => {
+		if (scheduled) return scheduled
+
+		scheduled = requestAnimationFrame((time) => {
+			scheduled = undefined
+			callback(time)
+		})
+		return scheduled
+	}
+}
