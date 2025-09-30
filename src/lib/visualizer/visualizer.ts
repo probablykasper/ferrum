@@ -44,6 +44,10 @@ export function start_visualizer(
 		let value = 0
 		const end = Math.max(volume_history_buffer.length - 1, 0)
 		const start = Math.max(end - total_samples, 0)
+		total_samples = end - start + 1
+		if (total_samples <= 0) {
+			return [0, 0]
+		}
 		let min = Infinity
 		for (let i = end; i >= start; i--) {
 			value += volume_history_buffer[i]
