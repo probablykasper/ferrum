@@ -23,7 +23,7 @@ export function start_visualizer(
 ) {
 	const analyser = audio_context.createAnalyser()
 	const filter = audio_context.createBiquadFilter()
-	const time_buffer = new Float32Array(BIT_DEPTH)
+	const current_rms_buffer = new Float32Array(BIT_DEPTH)
 	const raf = create_singular_request_animation_frame()
 
 	media_element_source.connect(filter)
@@ -38,52 +38,37 @@ export function start_visualizer(
 	let volume = 0
 
 	const def = visualizer_settings?.def || [2.5, 0.09]
-	const volume_buffer: number[] = []
-
-	// Pre-fill buffer with some baseline values to avoid initial instability
-	for (let i = 0; i < 60; i++) {
-		volume_buffer.push(0.1) // Small baseline value
-	}
+	const volume_history_buffer: number[] = []
 
 	function sample_volume(total_samples: number) {
 		let value = 0
-		const start = Math.max(volume_buffer.length - 1, 0)
-		const end = Math.max(start - total_samples, 0)
+		const end = Math.max(volume_history_buffer.length - 1, 0)
+		const start = Math.max(end - total_samples, 0)
 		let min = Infinity
-		for (let i = start; i >= end; i--) {
-			value += volume_buffer[i]
-			if (volume_buffer[i] < min) min = volume_buffer[i]
+		for (let i = end; i >= start; i--) {
+			value += volume_history_buffer[i]
+			if (volume_history_buffer[i] < min) min = volume_history_buffer[i]
 		}
 		return [value / total_samples, min]
 	}
 
 	function measure_volume(frame_rate: number) {
 		const raw_volume = get_raw_volume()
-		volume_buffer.push(raw_volume)
-
-		// Need minimum samples before doing complex calculations
-		const min_samples_needed = Math.max(2, (def[1] * 1000) / (1000 / frame_rate))
-		if (volume_buffer.length < min_samples_needed) {
-			return 0.01 // Small default value while buffer builds up
-		}
+		volume_history_buffer.push(raw_volume)
 
 		const [ref, min] = sample_volume((def[0] * 1000) / (1000 / frame_rate))
 		const [sample] = sample_volume((def[1] * 1000) / (1000 / frame_rate))
-
-		// Avoid division by zero or very small differences
-		const range = ref - min
-		if (range < 0.001) {
-			return 0.01 // Small default when no audio variance
-		}
-
 		const scaled = scaleLinear([min, ref], [0, 1])(sample)
 		const raw = Number(Math.pow(scaled, 1.5).toFixed(3))
-		return isNaN(raw) ? 0.1 : Math.max(0, raw / 2) // Ensure non-negative
+		if (isNaN(raw)) {
+			console.log('raw is NaN')
+		}
+		return isNaN(raw) ? 1 : raw / 2
 	}
 
 	function get_raw_volume() {
-		analyser.getFloatTimeDomainData(time_buffer)
-		return (Meyda.extract('rms', time_buffer) as number) || 0
+		analyser.getFloatTimeDomainData(current_rms_buffer)
+		return (Meyda.extract('rms', current_rms_buffer) as number) || 0
 	}
 
 	let destroyed = false
