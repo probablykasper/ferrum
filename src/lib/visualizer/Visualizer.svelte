@@ -127,7 +127,16 @@
 	let next_vis = visualisers[1]
 
 	let current_shader_index = 0
-	let next_shader_index: number | null = null
+	let transition: {
+		next_shader_index: number
+		pending_shader_index: number | null
+		auto: boolean
+		duration: number
+		start_time: number
+		animation_old: Animation
+		animation_new: Animation
+		cancelled?: boolean
+	} | null = null
 	let auto_transition_timeout: ReturnType<typeof setTimeout> | undefined
 
 	const visualizer = start_visualizer(audio_context, media_element_source, (info) => {
@@ -138,20 +147,51 @@
 		next_vis.toy?.set_volume(info.volume)
 	})
 
-	let pending_transition: number | null = null
-
-	async function transition_to_shader(new_shader_index: number, duration = 2000) {
-		if (next_shader_index !== null) {
-			pending_transition = new_shader_index
-			return
-		}
-		if (current_shader_index === new_shader_index) return
-
+	async function transition_to_shader(new_shader_index: number, auto: boolean) {
 		if (!main_vis.canvas || !next_vis.canvas) {
 			return console.error('Missing canvas')
 		}
 
-		next_shader_index = new_shader_index
+		if (transition) {
+			const auto_to_manual = !auto && transition.auto
+			const passed_half = Date.now() - transition.start_time > transition.duration * 0.5
+
+			if (auto_to_manual) {
+				// User wants to transition manually, but we're in a slow auto transition, so speed it up
+				transition.auto = false
+				transition.animation_new.updatePlaybackRate(4)
+				transition.animation_old.updatePlaybackRate(4)
+			}
+
+			if (new_shader_index === transition.next_shader_index) {
+				if (auto_to_manual && !passed_half) {
+					// Auto transition already started here, but it's not halfway done, so we just speed it up
+					transition.pending_shader_index = null
+					return
+				}
+			}
+
+			if (new_shader_index === current_shader_index) {
+				if (!transition.cancelled) {
+					transition.animation_new.reverse()
+					transition.animation_old.reverse()
+				}
+				transition.cancelled = true
+			}
+
+			// Schedule the shader for later
+			transition.pending_shader_index = new_shader_index
+			// ...unless we're already transitioning to it
+			if (transition.pending_shader_index === transition.next_shader_index) {
+				transition.pending_shader_index = null
+			}
+			return
+		}
+
+		if (new_shader_index === current_shader_index) {
+			return
+		}
+
 		clearTimeout(auto_transition_timeout)
 
 		// Start transition visualizer
@@ -173,6 +213,8 @@
 		next_vis.toy.set_buffer_a({ source: shaders[new_shader_index].shader })
 		next_vis.toy.play()
 
+		const duration = auto ? 2000 : 300
+
 		const animation_new = next_vis.canvas.animate(
 			{ opacity: [0, 1] },
 			{
@@ -190,36 +232,50 @@
 				fill: 'forwards',
 			},
 		)
+		transition = {
+			next_shader_index: new_shader_index,
+			pending_shader_index: null,
+			auto,
+			duration,
+			start_time: Date.now(),
+			animation_new,
+			animation_old,
+		}
 		await animation_new.finished
 		await animation_old.finished
 
-		await new Promise((resolve) => setTimeout(resolve, duration))
+		if (transition.cancelled) {
+			transition = null
+			next_vis.toy?.pause() // Keep the instance for later use
+			schedule_auto_transition()
+			return
+		}
 
-		next_vis.is_main = true
-		main_vis.is_main = false
 		// Swap
 		;[main_vis, next_vis] = [next_vis, main_vis]
+		main_vis.is_main = true
+		next_vis.is_main = false
 
 		next_vis.toy?.pause() // Keep the instance for later use
 
-		current_shader_index = new_shader_index
-		next_shader_index = null
+		current_shader_index = transition?.next_shader_index
 
-		schedule_auto_transition()
-
-		if (pending_transition !== null) {
-			const next_index = pending_transition
-			pending_transition = null
-			transition_to_shader(next_index)
+		if (transition.pending_shader_index !== null) {
+			const new_index = transition.pending_shader_index
+			transition = null
+			transition_to_shader(new_index, false)
+		} else {
+			transition = null
+			schedule_auto_transition()
 		}
 	}
 
 	function schedule_auto_transition() {
 		clearTimeout(auto_transition_timeout)
 		auto_transition_timeout = setTimeout(() => {
-			if (next_shader_index === null) {
+			if (!transition) {
 				const next_index = (current_shader_index + 1) % shaders.length
-				transition_to_shader(next_index)
+				transition_to_shader(next_index, true)
 			}
 		}, 10000)
 	}
@@ -237,7 +293,7 @@
 	}
 
 	function schedule_resize(vis: Vis) {
-		if (next_shader_index === null && !vis.is_main) {
+		if (!transition && !vis.is_main) {
 			vis.should_resize = true
 			return
 		}
@@ -274,13 +330,13 @@
 	}}
 	onkeydown={(e) => {
 		if (check_modifiers(e, {})) {
-			let shader_index = next_shader_index ?? current_shader_index
+			let shader_index = transition?.next_shader_index ?? current_shader_index
 			if (e.key === 'ArrowLeft') {
-				transition_to_shader((shader_index - 1 + shaders.length) % shaders.length, 500)
+				transition_to_shader((shader_index - 1 + shaders.length) % shaders.length, false)
 			} else if (e.key === 'ArrowRight') {
-				transition_to_shader((shader_index + 1) % shaders.length, 500)
+				transition_to_shader((shader_index + 1) % shaders.length, false)
 			} else if (/^[1-9]$/.test(e.key)) {
-				transition_to_shader(Math.min(parseInt(e.key) - 1, shaders.length - 1), 500)
+				transition_to_shader(Math.min(parseInt(e.key) - 1, shaders.length - 1), false)
 			} else {
 				show_player_temporarily()
 			}
