@@ -63,11 +63,14 @@ export function start_visualizer(
 		const [ref, min] = sample_volume((def[0] * 1000) / (1000 / frame_rate))
 		const [sample] = sample_volume((def[1] * 1000) / (1000 / frame_rate))
 		const scaled = scaleLinear([min, ref], [0, 1])(sample)
-		const raw = Number(Math.pow(scaled, 1.5).toFixed(3))
+		// Make sure we don't do pow with a negative number
+		const scaled_safe = Math.max(0, scaled)
+		const raw = Number(Math.pow(scaled_safe, 1.5).toFixed(3))
 		if (isNaN(raw)) {
-			console.log('raw is NaN')
+			console.error('raw is NaN')
+			return 1
 		}
-		return isNaN(raw) ? 1 : raw / 2
+		return raw
 	}
 
 	function get_raw_volume() {
