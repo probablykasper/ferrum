@@ -127,7 +127,7 @@
 	let next_vis = visualisers[1]
 
 	let current_shader_index = 0
-	let is_transitioning = false
+	let next_shader_index: number | null = null
 	let auto_transition_timeout: ReturnType<typeof setTimeout> | undefined
 
 	const visualizer = start_visualizer(audio_context, media_element_source, (info) => {
@@ -141,7 +141,7 @@
 	let pending_transition: number | null = null
 
 	async function transition_to_shader(new_shader_index: number, duration = 2000) {
-		if (is_transitioning) {
+		if (next_shader_index !== null) {
 			pending_transition = new_shader_index
 			return
 		}
@@ -151,7 +151,7 @@
 			return console.error('Missing canvas')
 		}
 
-		is_transitioning = true
+		next_shader_index = new_shader_index
 		clearTimeout(auto_transition_timeout)
 
 		// Start transition visualizer
@@ -203,7 +203,7 @@
 		next_vis.toy?.pause() // Keep the instance for later use
 
 		current_shader_index = new_shader_index
-		is_transitioning = false
+		next_shader_index = null
 
 		schedule_auto_transition()
 
@@ -217,7 +217,7 @@
 	function schedule_auto_transition() {
 		clearTimeout(auto_transition_timeout)
 		auto_transition_timeout = setTimeout(() => {
-			if (!is_transitioning) {
+			if (next_shader_index === null) {
 				const next_index = (current_shader_index + 1) % shaders.length
 				transition_to_shader(next_index)
 			}
@@ -237,7 +237,7 @@
 	}
 
 	function schedule_resize(vis: Vis) {
-		if (!is_transitioning && !vis.is_main) {
+		if (next_shader_index === null && !vis.is_main) {
 			vis.should_resize = true
 			return
 		}
@@ -274,12 +274,13 @@
 	}}
 	onkeydown={(e) => {
 		if (check_modifiers(e, {})) {
+			let shader_index = next_shader_index ?? current_shader_index
 			if (e.key === 'ArrowLeft') {
-				transition_to_shader((current_shader_index - 1 + shaders.length) % shaders.length, 500)
+				transition_to_shader((shader_index - 1 + shaders.length) % shaders.length, 500)
 			} else if (e.key === 'ArrowRight') {
-				transition_to_shader((current_shader_index + 1) % shaders.length, 500)
-			} else if (/^[0-9]$/.test(e.key)) {
-				transition_to_shader(Math.min(current_shader_index + 1, shaders.length - 1), 500)
+				transition_to_shader((shader_index + 1) % shaders.length, 500)
+			} else if (/^[1-9]$/.test(e.key)) {
+				transition_to_shader(Math.min(parseInt(e.key) - 1, shaders.length - 1), 500)
 			} else {
 				show_player_temporarily()
 			}
