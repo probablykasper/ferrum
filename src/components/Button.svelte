@@ -65,7 +65,7 @@
 		&:hover::before
 			background-color: hsl(220, 100%, 52%)
 			transform: scale(1.04, 1)
-		&:focus::before
+		&:focus-visible::before
 			box-shadow: 0px 0px 0px 3px hsla(220, 100%, 50%, 0.5)
 	button.secondary
 		&::before
@@ -74,7 +74,7 @@
 		&:hover::before
 			background-color: hsl(220, 20%, 31%)
 			transform: scale(1.04, 1)
-		&:focus::before
+		&:focus-visible::before
 			border-color: hsla(220, 30%, 50%, 1)
 			box-shadow: 0px 0px 0px 3px hsla(220, 30%, 50%, 0.5)
 	button.danger
@@ -84,7 +84,7 @@
 		&:hover::before
 			background-color: hsl(0, 100%, 45%)
 			transform: scale(1.04, 1)
-		&:focus::before
+		&:focus-visible::before
 			border-color: hsla(0, 100%, 70%, 1)
 			box-shadow: 0px 0px 0px 3px hsla(0, 100%, 47%, 0.5)
 </style>

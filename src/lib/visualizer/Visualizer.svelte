@@ -4,11 +4,20 @@
 	import { onDestroy } from 'svelte'
 	import { audio_context, media_element_source } from '$lib/player'
 	import Player from '$components/Player.svelte'
-	import { fly } from 'svelte/transition'
-	import { check_modifiers } from '$lib/helpers'
+	import { fade, fly } from 'svelte/transition'
+	import { check_modifiers, check_shortcut } from '$lib/helpers'
 	import { error_popup } from '$lib/error'
+	import Button from '$components/Button.svelte'
 
 	let { on_close }: { on_close: () => void } = $props()
+
+	let vis_epilepsy_warning_dismissed = $state(
+		localStorage.getItem('vis_epilepsy_warning_dismissed') === 'true',
+	)
+	function dismiss_vis_epilepsy_warning() {
+		vis_epilepsy_warning_dismissed = true
+		localStorage.setItem('vis_epilepsy_warning_dismissed', 'true')
+	}
 
 	const shaders = [
 		{
@@ -459,10 +468,48 @@
 				}}
 			></canvas>
 		{/each}
+		{#if !vis_epilepsy_warning_dismissed}
+			<!-- svelte-ignore a11y_click_events_have_key_events -->
+			<!-- svelte-ignore a11y_no_static_element_interactions -->
+			<div
+				class="fixed inset-0 z-10 flex flex-col items-center justify-center gap-4 bg-black text-center text-lg text-white"
+				onmousemove={show_player_temporarily}
+				out:fade={{ duration: 200 }}
+			>
+				<h1 class="text-3xl font-medium">⚠️ Epilepsy Warning ⚠️</h1>
+				<!-- tabindex+outline-none to prevent button autofocus -->
+				<div
+					class="flex outline-none"
+					tabindex="-1"
+					data-prevent-space-play
+					onkeydown={(e) => {
+						if (check_shortcut(e, ' ')) {
+							e.preventDefault()
+							on_close()
+						} else if (check_shortcut(e, 'Enter')) {
+							e.stopPropagation() // prevent player from revealing
+							dismiss_vis_epilepsy_warning()
+						}
+					}}
+				>
+					<Button
+						secondary
+						onclick={() => {
+							on_close()
+						}}>Go back</Button
+					>
+					<Button
+						onclick={() => {
+							dismiss_vis_epilepsy_warning()
+						}}>Continue</Button
+					>
+				</div>
+			</div>
+		{/if}
 		{#if show_player}
 			<!-- svelte-ignore a11y_no_static_element_interactions -->
 			<div
-				class="fixed bottom-0 z-10 flex w-full flex-col justify-end"
+				class="fixed bottom-0 z-20 flex w-full flex-col justify-end"
 				transition:fly={{ y: '100%', duration: 500 }}
 				onmouseenter={() => {
 					show_player = true

@@ -120,7 +120,8 @@
 		let el = e.target as HTMLAudioElement
 		const space_tags = ['INPUT', 'TEXTAREA', 'BUTTON', 'SELECT']
 		if (el && !space_tags.includes(el.tagName) && $modal_count === 0) {
-			if (e.key === ' ') {
+			const prevent_el = el.closest('[data-prevent-space-play]')
+			if (!prevent_el && e.key === ' ') {
 				e.preventDefault()
 				play_pause()
 			}
@@ -355,12 +356,6 @@
 		color: var(--text-color)
 		font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif
 		user-select: none
-	:global(h1), :global(h2), :global(h3)
-		font-weight: 400
-		margin: 0px
-	:global(h4), :global(h5), :global(h6)
-		font-weight: 600
-		margin: 0px
 	.dropzone, .drag-overlay
 		position: fixed
 		width: 100%
