@@ -144,6 +144,44 @@
 				}
 			`,
 		},
+		{
+			name: 'Zippy Zaps',
+			author: 'SnoopethDuckDuck',
+			shader: `
+				#define PI 3.14159265359
+				#define GLOW 0.5
+
+				vec2 stanh(vec2 a) {
+					return tanh(clamp(a, -40., 40.));
+				}
+
+				void mainImage(out vec4 fragColor, in vec2 fragCoord) {
+					vec2 v = iResolution.xy;
+					vec2 u = 0.2 * (fragCoord.xy * 2. - v) / v.y;
+
+					vec4 o = vec4(1, 2, 3, 0);
+					vec4 col = vec4(0.0);
+
+					for (float a = 0.5, t = iStream, i = 0.; i < 19.; i++) {
+						v = cos(t + 1. - 7. * u * pow(a += 0.03, i)) - 5. * u;
+						u += stanh(dot(u *= mat2(cos(i + 0.02 * t - vec4(0, 11, 33, 0))), u)
+								* cos(1e2 * u.yx + t)) / 2e2
+							+ 0.2 * a * u
+							+ cos(4. / exp(dot(o, o) / 1e2) + t) / 3e2;
+						t += 1.;
+						col += (1. + cos(o + t)) / length((1. + i * dot(v, v)) * sin(1.5 * u / (0.5 - dot(u, u)) - 9. * u.yx + t));
+					}
+
+					col = 25.6 / (min(col, 13.) + 164. / col) - dot(u, u) / 250.;
+
+					// Apply glow based on iVolume
+					col.rgb *= pow(iVolume + 0.1, GLOW);
+
+					fragColor = vec4(col.rgb, 1.0);
+				}
+
+			`,
+		},
 	]
 
 	const image_shader = `
