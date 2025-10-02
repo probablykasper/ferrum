@@ -6,6 +6,7 @@
 - Make macOS media key permission request non-intrusive
 - Improve error and crashing behaviour
 - 2x faster library loading at startup
+- Slightly faster scroll performance
 
 ## 0.19.9 - 2025 Jul 4
 - Fix column size not updating when resizing window

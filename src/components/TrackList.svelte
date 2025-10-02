@@ -635,6 +635,7 @@
 		.selected
 			background-color: hsla(var(--hue), 70%, 46%, 1)
 	.tracklist :global
+		contain: strict
 		display: flex
 		flex-direction: column
 		min-width: 0px
@@ -656,6 +657,7 @@
 			content: '▼'
 		$row-height: 24px
 		.row
+			contain: strict
 			width: 100%
 			height: $row-height
 			font-size: 12px

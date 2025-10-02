@@ -10,16 +10,21 @@ export function get_duration(dur: number) {
 	return mins + ':' + secs_text
 }
 
+let time_formatter: Intl.DateTimeFormat | undefined
+
 export function format_date(timestamp: number) {
 	const date = new Date(timestamp)
 	const month = date.getMonth() + 1
 	const month_text = (month < 10 ? '0' : '') + month
 	const day = date.getDate()
 	const day_text = (day < 10 ? '0' : '') + day
-	const clock = date.toLocaleTimeString(undefined, {
-		hour: '2-digit',
-		minute: '2-digit',
-	})
+	if (!time_formatter) {
+		time_formatter = new Intl.DateTimeFormat(undefined, {
+			hour: '2-digit',
+			minute: '2-digit',
+		})
+	}
+	const clock = time_formatter.format(date)
 	return date.getFullYear() + '/' + month_text + '/' + day_text + ' ' + clock
 }
 
