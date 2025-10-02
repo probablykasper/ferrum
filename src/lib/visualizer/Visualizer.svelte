@@ -306,7 +306,9 @@
 			schedule_resize(next_vis, true)
 		}
 		next_vis.toy.set_buffer_a({ source: shaders[new_shader_index].shader })
-		next_vis.toy.play()
+		if (!document.hidden) {
+			next_vis.toy.play()
+		}
 
 		const duration = auto ? 2000 : 300
 
@@ -411,6 +413,20 @@
 	on:resize={() => {
 		for (const vis of visualisers) {
 			schedule_resize(vis)
+		}
+	}}
+/>
+
+<svelte:document
+	on:visibilitychange={() => {
+		if (document.hidden) {
+			next_vis.toy?.pause()
+			main_vis.toy?.pause()
+		} else {
+			main_vis.toy?.play()
+			if (transition) {
+				next_vis.toy?.play()
+			}
 		}
 	}}
 />
