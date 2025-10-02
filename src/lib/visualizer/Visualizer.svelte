@@ -96,6 +96,54 @@
 				}
 			`,
 		},
+		{
+			name: 'Factory',
+			author: 'yozic',
+			shader: `
+				#define BALLS 15.
+				#define PI 3.14159265359
+				#define zoom 47.379
+				#define rotation 0.874
+				#define yOuter 0.626
+				#define yDivider 278.913
+				#define xOuter 0.626
+				#define xDivider 194.847
+				#define multiplier 706.071
+				#define radius 32.912
+				#define ballSize 2.178
+				#define contrast 2.529
+
+				mat2 rotate2d(float _angle){
+					return mat2(cos(_angle), -sin(_angle), sin(_angle), cos(_angle));
+				}
+
+				void mainImage (out vec4 fragColor, in vec2 fragCoord) {
+					vec2 uv = 2. * fragCoord/iResolution.xy - 1.;
+					uv.x *= iResolution.x / iResolution.y;
+					uv *= zoom;
+					fragColor = vec4(0.);
+					
+					uv = normalize(abs(uv) + sin(abs(uv) - iStream)) * length(uv);
+					uv *= rotate2d(rotation);
+					
+					for (float i = 0.; i < BALLS; i++) {
+						float dist = length(uv);
+						uv.y += yOuter * sin(uv.y/yDivider + iStream/5.) / 1. * sin(uv.x/1. - iStream/3.);
+						uv.x -= xOuter * sin(uv.x/xDivider - iStream/5.) / 1. * sin(uv.x/1.1 + iStream/1.);
+						
+						float t = i * PI / BALLS * (5. + 1.) + iStream/5000.;
+						float _multiplier = dist * multiplier * sin(uv.x);
+						vec2 p = vec2(radius * -2. * tan(t * multiplier), 2. * radius * sin(t * multiplier));
+						
+						vec3 col = cos(vec3(0, 1, -1) * PI * 2. / 3. + PI * (iStream / 20. + i / 5.)) * 0.5 + 0.5;
+						fragColor += vec4(pow(iVolume, 1.3) * ballSize / length(uv - p * 0.9) * col, contrast);
+					}
+					
+					fragColor.xyz = pow(fragColor.xyz, vec3(contrast));
+					fragColor.w = 1.0;
+				}
+			`,
+		},
 	]
 
 	const image_shader = `
