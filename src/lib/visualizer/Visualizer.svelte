@@ -208,7 +208,7 @@
 		}
 		if (next_vis.should_resize) {
 			next_vis.should_resize = false
-			schedule_resize(next_vis)
+			schedule_resize(next_vis, true)
 		}
 		next_vis.toy.set_buffer_a({ source: shaders[new_shader_index].shader })
 		next_vis.toy.play()
@@ -277,7 +277,7 @@
 				const next_index = (current_shader_index + 1) % shaders.length
 				transition_to_shader(next_index, true)
 			}
-		}, 10000)
+		}, 20000)
 	}
 
 	schedule_auto_transition()
@@ -292,8 +292,8 @@
 		}, 1000)
 	}
 
-	function schedule_resize(vis: Vis) {
-		if (!transition && !vis.is_main) {
+	function schedule_resize(vis: Vis, now?: boolean) {
+		if (!transition && !vis.is_main && !now) {
 			vis.should_resize = true
 			return
 		}
