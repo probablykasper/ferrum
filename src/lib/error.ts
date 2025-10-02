@@ -90,7 +90,7 @@ export function call_sync<T>(cb: (addon: typeof window.addon) => T): Result<T> {
 		}
 	})() as Result<T>
 	result.on_success = (cb) => {
-		if (result.data) {
+		if (result.error === null) {
 			cb(result.data)
 		}
 		return result
