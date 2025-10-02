@@ -223,6 +223,7 @@ pub fn delete_tracks_with_item_ids(item_ids: Vec<ItemId>, env: Env) -> Result<()
 	for track_id in &track_ids {
 		library.delete_track_and_file(track_id, &data.paths)?;
 	}
+	data.save()?;
 	return Ok(());
 }
 
