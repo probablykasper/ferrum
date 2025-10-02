@@ -173,7 +173,7 @@ export class VirtualGrid<I, R extends Record<string, unknown>> {
 			resize_only = false
 		}
 		for (let i = 0; i < this.columns.length; i++) {
-			if (new_columns[i].key !== this.columns[i].key) {
+			if (new_columns[i]?.key !== this.columns[i]?.key) {
 				resize_only = false
 				break
 			}
