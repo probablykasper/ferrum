@@ -2,6 +2,7 @@
 
 ## Next
 - Fix playlist dragging
+- Fix playlist description placeholder colour
 
 ## 0.20.0 - 2025 Oct 4
 - Add audio visualiser (thanks to help from @zachwinter)
