@@ -1,6 +1,6 @@
 <script lang="ts" context="module">
 	export const special_playlists_nav = [
-		{ id: 'root', name: 'Songs', kind: 'special', path: '/playlist/root' },
+		{ id: 'root', name: 'Songs', kind: 'special' },
 		// { id: 'root', name: 'Artists', kind: 'special', path: '/artists' },
 	]
 </script>
@@ -140,7 +140,7 @@
 			<div class="focuser" tabindex="0" on:focus={focuser}></div>
 			<div class="spacer"></div>
 			<SidebarItems
-				parent_path={null}
+				parent_id={null}
 				children={special_playlists_nav}
 				on_select_down={() => {
 					if ($track_lists_details_map.root.children && $track_lists_details_map.root.children[0]) {
@@ -150,11 +150,10 @@
 			/>
 			<div class="spacer"></div>
 			<SidebarItems
-				parent_path="/playlist/root"
-				children={($track_lists_details_map['root'].children || []).map((child_id) => ({
-					path: '/playlist/' + child_id,
-					...$track_lists_details_map[child_id],
-				}))}
+				parent_id="root"
+				children={($track_lists_details_map['root'].children || []).map(
+					(child_id) => $track_lists_details_map[child_id],
+				)}
 			/>
 		</nav>
 	</div>

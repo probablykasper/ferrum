@@ -38,11 +38,12 @@
 	import { check_shortcut } from '$lib/helpers'
 	import { navigate, url_pathname } from '$lib/router'
 	import { current_playlist_id } from './TrackList.svelte'
+	import { tracklist_actions } from '$lib/page'
 
 	export let show = true
-	export let parent_path: string | null
+	export let parent_id: string | null
 	export let prevent_drop = false
-	type Child = TrackListDetails & { path: string }
+	type Child = TrackListDetails
 	export let children: Child[]
 
 	export let level = 0
@@ -72,19 +73,19 @@
 	}
 	function select_up(i: number) {
 		const prev = children[i - 1] || null
-		if (i === 0 && parent_path) {
-			navigate(parent_path)
+		if (i === 0 && parent_id) {
+			navigate(`/playlist/${parent_id}`)
 		} else if (prev && has_showing_children(prev.id)) {
 			select_last(prev.id)
 		} else if (prev) {
-			navigate(prev.path)
+			navigate(`/playlist/${prev.id}`)
 		}
 	}
 	function select_down(i: number) {
 		if (has_showing_children(children[i].id)) {
 			select_first(children[i])
 		} else if (children[i + 1]) {
-			navigate(children[i + 1].path)
+			navigate(`/playlist/${children[i + 1].id}`)
 		} else {
 			on_select_down()
 		}
@@ -92,7 +93,7 @@
 
 	export function handle_key(e: KeyboardEvent) {
 		const index = children.findIndex((child) => {
-			return child.path === $url_pathname
+			return `/playlist/${child.id}` === $url_pathname
 		})
 		if (index < 0) {
 			return
@@ -110,8 +111,8 @@
 		} else if (check_shortcut(e, 'ArrowLeft')) {
 			if (selected_list.kind === 'folder' && $shown_folders.includes(selected_list.id)) {
 				hide_folder(selected_list.id)
-			} else if (parent_path) {
-				navigate(parent_path)
+			} else if (parent_id) {
+				navigate(`/playlist/${parent_id}`)
 			}
 		} else if (check_shortcut(e, 'ArrowRight') && selected_list.kind === 'folder') {
 			show_folder(selected_list.id)
@@ -120,7 +121,7 @@
 		}
 		e.preventDefault()
 	}
-	$: if (children.find((child) => child.path === $url_pathname)) {
+	$: if (children.find((child) => `/playlist/${child.id}` === $url_pathname)) {
 		const item_handle = getContext<Writable<SidebarItemHandle | null>>('itemHandle')
 		item_handle.set({ handleKey: handle_key })
 	}
@@ -130,12 +131,13 @@
 	let drag_playlist_onto_index = null as number | null
 
 	function on_drag_start(e: DragEvent, tracklist: TrackListDetails) {
-		if (e.dataTransfer && tracklist.kind !== 'special' && parent_path) {
+		if (e.dataTransfer && tracklist.kind !== 'special' && parent_id) {
+			e.dataTransfer.clearData()
 			e.dataTransfer.effectAllowed = 'move'
 			dragGhost.set_inner_text(tracklist.name)
 			dragged.playlist = {
 				id: tracklist.id,
-				from_folder: parent_path,
+				from_folder: parent_id,
 				level,
 			}
 			e.dataTransfer.setDragImage(dragGhost.drag_el, 0, 0)
@@ -144,7 +146,17 @@
 	}
 </script>
 
-<div class="sub" class:show>
+<!-- Don't propagate mousedown, to prevent dragging from breaking -->
+<!-- svelte-ignore a11y_no_static_element_interactions -->
+<div
+	class="sub"
+	class:show
+	on:mousedown|stopPropagation={() => {
+		requestAnimationFrame(() => {
+			tracklist_actions.focus()
+		})
+	}}
+>
 	{#each children as child_list, i}
 		{#if child_list.kind === 'folder'}
 			<a
@@ -152,7 +164,7 @@
 				tabindex="-1"
 				class="item rounded-r-[5px] outline-none"
 				style:padding-left={14 * level + 'px'}
-				class:active={child_list.path === $url_pathname}
+				class:active={`/playlist/${child_list.id}` === $url_pathname}
 				draggable="true"
 				on:dragstart={(e) => on_drag_start(e, child_list)}
 				class:show={$shown_folders.includes(child_list.id)}
@@ -175,17 +187,15 @@
 						drag_playlist_onto_index = null
 					}
 				}}
-				on:mousedown={() => navigate(child_list.path)}
+				on:mousedown={() => navigate(`/playlist/${child_list.id}`)}
 				on:contextmenu={() => tracklist_context_menu(child_list.id, true)}
 			>
-				<!-- svelte-ignore a11y-click-events-have-key-events -->
 				<!-- svelte-ignore a11y-interactive-supports-focus -->
 				<svg
 					class="arrow"
 					role="button"
 					aria-label="Arrow button"
-					on:mousedown|stopPropagation
-					on:click={() => {
+					on:mousedown|stopPropagation={() => {
 						if ($shown_folders.includes(child_list.id)) {
 							hide_folder(child_list.id)
 						} else {
@@ -224,16 +234,15 @@
 			</a>
 			<Self
 				show={$shown_folders.includes(child_list.id)}
-				parent_path={child_list.path}
-				children={child_list.children?.map((child_id) => ({
-					path: '/playlist/' + child_id,
-					...$track_lists_details_map[child_id],
-				})) || []}
+				parent_id={child_list.id}
+				children={($track_lists_details_map[child_list.id].children || []).map(
+					(child_id) => $track_lists_details_map[child_id],
+				)}
 				level={level + 1}
 				prevent_drop={prevent_drop || dragged.playlist?.id === child_list.id}
 				on_select_down={() => {
 					if (i < children.length - 1) {
-						navigate(children[i + 1].path)
+						navigate(`/playlist/${children[i + 1].id}`)
 					} else {
 						on_select_down()
 					}
@@ -249,8 +258,8 @@
 				style:padding-left={14 * level + 'px'}
 				draggable="true"
 				on:dragstart={(e) => on_drag_start(e, child_list)}
-				class:active={child_list.path === $url_pathname}
-				on:mousedown={() => navigate(child_list.path)}
+				class:active={`/playlist/${child_list.id}` === $url_pathname}
+				on:mousedown={() => navigate(`/playlist/${child_list.id}`)}
 				class:droppable={drag_track_onto_index === i}
 				class:droppable-above={drag_playlist_onto_index === i && drop_above}
 				class:droppable-below={drag_playlist_onto_index === i && !drop_above}
@@ -263,14 +272,14 @@
 						e.dataTransfer?.types[0] === 'ferrum.playlist' &&
 						dragged.playlist &&
 						!prevent_drop &&
-						parent_path !== null
+						parent_id !== null
 					) {
 						const rect = e.currentTarget.getBoundingClientRect()
 						drop_above = e.pageY < rect.bottom - rect.height / 2
 						move_playlist(
 							dragged.playlist.id,
 							dragged.playlist.from_folder,
-							parent_path,
+							parent_id,
 							drop_above ? i : i + 1,
 						)
 						drag_playlist_onto_index = null
@@ -312,8 +321,8 @@
 				tabindex="-1"
 				class="item rounded-r-[5px]"
 				style:padding-left={14 * level + 'px'}
-				on:mousedown={() => navigate(child_list.path)}
-				class:active={child_list.path === $url_pathname}
+				on:mousedown|preventDefault={() => navigate(`/playlist/${child_list.id}`)}
+				class:active={`/playlist/${child_list.id}` === $url_pathname}
 			>
 				<div class="arrow"></div>
 				<div class="text">
