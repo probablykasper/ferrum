@@ -10,7 +10,7 @@
 
 <br/>
 
-![Screenshot](assets/screenshot.png)
+https://github.com/user-attachments/assets/b73cdcf8-8abb-4d43-a5eb-582cad7e3075
 
 ## Features
 - Playlists & folders
