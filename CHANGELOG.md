@@ -1,6 +1,6 @@
 # Changelog
 
-## Next
+## 0.20.1 - 2026 Feb 11
 - Fix playlist dragging
 - Fix playlist description placeholder colour
 

@@ -52,6 +52,6 @@ Napi (the native Rust backend)
 ### Publish new version
 1. Run `npm run check`
 2. Update `CHANGELOG.md`
-3. Run `npm version --no-git-tag <version>` to bump the version number
+3. Run `npm version --no-git-tag-version <version>` to bump the version number
 4. Create a git tag in the format `v#.#.#`
 5. Add release notes to the generated GitHub release and publish it
