@@ -9,6 +9,7 @@ use anyhow::{Context, Result, bail};
 use linked_hash_map::{Entry, LinkedHashMap};
 use nanoid::nanoid;
 use serde::{Deserialize, Serialize};
+use specta::Type;
 use std::borrow::Cow;
 use std::collections::HashSet;
 use std::sync::RwLock;
@@ -285,7 +286,7 @@ pub type TrackLists = LinkedHashMap<TrackListID, TrackList>;
 /// (track id, start time, duration)
 pub type PlayTime = (TrackID, MsSinceUnixEpoch, i64);
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, Type)]
 #[cfg_attr(feature = "napi", napi(object))]
 pub struct Track {
 	pub size: i64,
@@ -376,7 +377,7 @@ impl Track {
 	}
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, Type)]
 #[cfg_attr(feature = "napi", napi(object))]
 pub struct CountObject {
 	pub count: i64,
