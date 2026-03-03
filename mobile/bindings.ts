@@ -5,6 +5,9 @@
 
 
 export const commands = {
+async errorPopup(msg: string) : Promise<void> {
+    await TAURI_INVOKE("error_popup", { msg });
+},
 async loadLibrary(libraryJson: string) : Promise<Result<Track[], string>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("load_library", { libraryJson }) };
