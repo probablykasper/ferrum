@@ -5,12 +5,22 @@ build = "build.rs"
 edition = "2024"
 exclude = ["artifacts.json"]
 
+[workspace]
+members = [
+    ".",
+    "mobile/src-tauri"
+]
+
 [lib]
 path = "src-native/lib.rs"
-crate-type = ["cdylib"]
+crate-type = ["cdylib", "rlib"] # rlib is for mobile
 
 [build-dependencies]
 napi-build = "2.2"
+
+[features]
+default = ["napi-rs"]
+napi-rs = ["napi", "napi-derive"]
 
 [dependencies]
 napi = { version = "3.3", features = [
@@ -19,8 +29,8 @@ napi = { version = "3.3", features = [
 	"tokio_rt",
 	"async",
 	"anyhow",
-] }
-napi-derive = "3.2"
+], optional = true }
+napi-derive = { version = "3.2", optional = true}
 serde = { version = "1.0", features = ["derive"] }
 lofty = "0.22"
 serde_json = "1.0"
