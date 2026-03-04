@@ -29,8 +29,17 @@ fn load_library(library_json: String) -> Result<Vec<Track>, String> {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+	#[cfg(target_os = "android")]
+	android_logger::init_once(
+		android_logger::Config::default()
+			.with_max_level(log::LevelFilter::Trace)
+			.with_tag("{{app.name}}"),
+	);
+
+	println!("-------------------- RUN");
 	let specta_builder = tauri_specta::Builder::<tauri::Wry>::new()
 		.commands(tauri_specta::collect_commands![error_popup, load_library]);
+	println!("-------------------- run");
 
 	#[cfg(all(debug_assertions, not(target_os = "android")))]
 	#[cfg(debug_assertions)]

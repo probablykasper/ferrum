@@ -5,7 +5,7 @@
 	"type": "module",
 	"scripts": {
 		"dev": "tauri dev",
-		"dev-android": "tauri android dev",
+		"dev-android": "cargo tauri android dev",
 		"dev:web": "vite dev",
 		"build": "tauri build",
 		"build:web": "vite build",
