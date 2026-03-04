@@ -1144,11 +1144,13 @@ dependencies = [
  "log",
  "serde",
  "serde_json",
+ "simd-json",
  "specta",
  "specta-typescript",
  "tauri",
  "tauri-build",
  "tauri-plugin-dialog",
+ "tauri-plugin-fs",
  "tauri-plugin-opener",
  "tauri-specta",
 ]
