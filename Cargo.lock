@@ -1127,7 +1127,6 @@ dependencies = [
  "serde_json",
  "simd-json",
  "specta",
- "tauri-plugin-dialog",
  "time",
  "tokio",
  "trash",
