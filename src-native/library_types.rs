@@ -385,7 +385,7 @@ pub struct CountObject {
 	pub toDate: MsSinceUnixEpoch,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, Type)]
 #[serde(tag = "type")]
 pub enum TrackList {
 	#[serde(rename = "playlist")]
@@ -450,7 +450,7 @@ pub fn get_track_ids_from_item_ids(playlist_item_ids: &[ItemId]) -> Vec<TrackID>
 // 	playlist_track_id_map[playlist_item_id as usize].clone()
 // }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, Type)]
 #[cfg_attr(feature = "napi", napi(object))]
 pub struct Playlist {
 	pub id: TrackListID,
@@ -502,7 +502,7 @@ where
 	track_ids.serialize(serializer)
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, Type)]
 #[cfg_attr(feature = "napi", napi(object))]
 pub struct Folder {
 	pub id: TrackListID,
@@ -526,7 +526,7 @@ pub struct Folder {
 	pub children: Vec<TrackListID>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, Type)]
 #[cfg_attr(feature = "napi", napi(object))]
 pub struct Special {
 	pub id: TrackListID,
@@ -535,7 +535,7 @@ pub struct Special {
 	pub children: Vec<TrackListID>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, Type)]
 #[non_exhaustive]
 #[cfg_attr(feature = "napi-rs", napi)]
 pub enum SpecialTrackListName {

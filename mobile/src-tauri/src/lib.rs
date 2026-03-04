@@ -1,8 +1,12 @@
 use anyhow::bail;
-use ferrum::library_types::VersionedLibrary;
-use ferrum::library_types::{Library, Track};
+use ferrum::library_types::{Library, Track, TrackList, TrackListID};
+use ferrum::library_types::{TrackID, VersionedLibrary};
+use serde::Serialize;
+use specta::Type;
+use std::collections::HashMap;
 use std::time::Instant;
 use tauri_plugin_dialog::{DialogExt, MessageDialogKind};
+use tauri_specta::Builder;
 
 #[tauri::command]
 #[specta::specta]
@@ -38,19 +42,24 @@ fn load_library_from_file(library_json: &str) -> anyhow::Result<Library> {
 	Ok(library)
 }
 
+#[derive(Serialize, Type)]
+pub struct LibraryTauri {
+	tracks: HashMap<TrackID, Track>,
+	track_lists: HashMap<TrackListID, TrackList>,
+}
+
 #[tauri::command]
 #[specta::specta]
-fn load_library(library_json: String) -> Result<Vec<Track>, String> {
-	println!("Loadeding... -------------- {library_json}");
+fn load_library(library_json: String) -> Result<LibraryTauri, String> {
 	let library = match load_library_from_file(&library_json) {
 		Ok(library) => library,
 		Err(err) => return Err(err.to_string()),
 	};
 
-	let tracks: Vec<_> = library.get_tracks().values().cloned().collect();
-	println!("Loaded {} tracks", tracks.len());
-	Ok(tracks)
-}
+	let library_tauri = LibraryTauri {
+		tracks: library.get_tracks().clone().into_iter().collect(),
+		track_lists: library.trackLists.into_iter().collect(),
+	};
 
 	Ok(library_tauri)
 }

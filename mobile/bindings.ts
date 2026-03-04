@@ -8,7 +8,7 @@ export const commands = {
 async errorPopup(msg: string) : Promise<void> {
     await TAURI_INVOKE("error_popup", { msg });
 },
-async loadLibrary(libraryJson: string) : Promise<Result<Track[], string>> {
+async loadLibrary(libraryJson: string) : Promise<Result<LibraryTauri, string>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("load_library", { libraryJson }) };
 } catch (e) {
@@ -29,6 +29,19 @@ async loadLibrary(libraryJson: string) : Promise<Result<Track[], string>> {
 /** user-defined types **/
 
 export type CountObject = { count: string; fromDate: string; toDate: string }
+export type Folder = { id: string; name: string; description?: string | null; liked: boolean; disliked: boolean; 
+/**
+ * For example "itunes"
+ */
+importedFrom?: string | null; 
+/**
+ * For example iTunes Persistent ID
+ */
+originalId?: string | null; dateImported?: string | null; dateCreated?: string | null; children: string[] }
+export type LibraryTauri = { tracks: Partial<{ [key in string]: Track }>; track_lists: Partial<{ [key in string]: TrackList }> }
+export type Playlist = { id: string; name: string; description?: string | null; liked: boolean; disliked: boolean; importedFrom?: string | null; originalId?: string | null; dateImported?: string | null; dateCreated?: string | null; tracks: number[] }
+export type Special = { id: string; name: SpecialTrackListName; dateCreated: string; children: string[] }
+export type SpecialTrackListName = "Root"
 export type Track = { size: string; duration: number; bitrate: number; sampleRate: number; file: string; dateModified: string; dateAdded: string; name: string; importedFrom?: string | null; 
 /**
  * Imported ID, like iTunes Persistent ID
@@ -38,6 +51,7 @@ originalId?: string | null; artist?: string; composer?: string | null; sortName?
  * -100 to 100
  */
 volume?: number | null }
+export type TrackList = ({ type: "playlist" } & Playlist) | ({ type: "folder" } & Folder) | ({ type: "special" } & Special)
 
 /** tauri-specta globals **/
 
