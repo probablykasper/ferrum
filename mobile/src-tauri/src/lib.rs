@@ -74,7 +74,10 @@ pub fn gen_types() -> Builder {
 		.export(
 			specta_typescript::Typescript::default()
 				.bigint(specta_typescript::BigIntExportBehavior::String),
-			"./bindings.ts",
+			std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+				.parent() // if this Rust file is inside src-tauri
+				.unwrap()
+				.join("bindings.ts"),
 		)
 		.expect("Failed to export typescript bindings");
 	specta_builder
