@@ -11,7 +11,8 @@
 		"build:web": "vite build",
 		"lint": "svelte-check --tsconfig ./tsconfig.json && eslint src && prettier --check src",
 		"format": "eslint --fix src && prettier --write src",
-		"tauri": "tauri"
+		"tauri": "tauri",
+		"gen-types": "cargo run -p ferrum_mobile --bin export_ts"
 	},
 	"license": "MIT",
 	"dependencies": {

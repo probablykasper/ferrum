@@ -52,15 +52,10 @@ fn load_library(library_json: String) -> Result<Vec<Track>, String> {
 	Ok(tracks)
 }
 
-#[cfg_attr(mobile, tauri::mobile_entry_point)]
-pub fn run() {
-	#[cfg(target_os = "android")]
-	android_logger::init_once(
-		android_logger::Config::default()
-			.with_max_level(log::LevelFilter::Trace)
-			.with_tag("{{app.name}}"),
-	);
+	Ok(library_tauri)
+}
 
+pub fn gen_types() -> Builder {
 	let specta_builder = tauri_specta::Builder::<tauri::Wry>::new()
 		.commands(tauri_specta::collect_commands![error_popup, load_library]);
 
@@ -70,9 +65,22 @@ pub fn run() {
 		.export(
 			specta_typescript::Typescript::default()
 				.bigint(specta_typescript::BigIntExportBehavior::String),
-			"../bindings.ts",
+			"./bindings.ts",
 		)
 		.expect("Failed to export typescript bindings");
+	specta_builder
+}
+
+#[cfg_attr(mobile, tauri::mobile_entry_point)]
+pub fn run() {
+	#[cfg(target_os = "android")]
+	android_logger::init_once(
+		android_logger::Config::default()
+			.with_max_level(log::LevelFilter::Trace)
+			.with_tag("{{app.name}}"),
+	);
+
+	let specta_builder = gen_types();
 
 	tauri::Builder::default()
 		.plugin(tauri_plugin_fs::init())
