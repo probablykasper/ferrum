@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 use std::fs;
 
 #[derive(Serialize, Deserialize, Debug)]
-#[napi(object)]
+#[cfg_attr(feature = "napi-rs", napi(object))]
 pub struct TrackMD {
 	pub name: String,
 	pub artist: String,

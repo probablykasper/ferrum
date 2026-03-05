@@ -203,15 +203,19 @@ pub fn remove_from_all_playlists(library: &mut Library, id: &TrackID) {
 }
 
 pub fn delete_file(path: &PathBuf) -> Result<()> {
-	#[allow(unused_mut)]
-	let mut trash_context = trash::TrashContext::new();
+	if cfg!(target_os = "android") {
+		bail!("Unsupported");
+	} else {
+		#[allow(unused_mut)]
+		let mut trash_context = trash::TrashContext::new();
 
-	#[cfg(target_os = "macos")]
-	trash_context.set_delete_method(trash::macos::DeleteMethod::NsFileManager);
+		#[cfg(target_os = "macos")]
+		trash_context.set_delete_method(trash::macos::DeleteMethod::NsFileManager);
 
-	trash_context
-		.delete(&path)
-		.with_context(|| format!("Failed moving file to trash: {}", path.to_string_lossy()))
+		trash_context
+			.delete(&path)
+			.with_context(|| format!("Failed moving file to trash: {}", path.to_string_lossy()))
+	}
 }
 
 #[napi(js_name = "delete_tracks_with_item_ids")]

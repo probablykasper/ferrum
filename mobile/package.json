@@ -1,0 +1,39 @@
+{
+	"name": "ferrum",
+	"version": "0.1.0",
+	"description": "",
+	"type": "module",
+	"scripts": {
+		"dev": "tauri dev",
+		"dev-android": "cargo tauri android dev",
+		"dev:web": "vite dev",
+		"build": "tauri build",
+		"build-android": "tauri android build",
+		"build:web": "vite build",
+		"lint": "svelte-check --tsconfig ./tsconfig.json && eslint src && prettier --check src",
+		"format": "eslint --fix src && prettier --write src",
+		"tauri": "tauri",
+		"gen-types": "cargo run -p ferrum_mobile --bin export_ts"
+	},
+	"license": "MIT",
+	"dependencies": {
+		"@tauri-apps/api": "^2",
+		"@tauri-apps/plugin-dialog": "^2.6.0",
+		"@tauri-apps/plugin-fs": "^2.4.5",
+		"@tauri-apps/plugin-opener": "^2",
+		"@tauri-apps/plugin-store": "^2.4.2"
+	},
+	"devDependencies": {
+		"@saurl/tauri-plugin-safe-area-insets-css-api": "^0.1.0",
+		"@sveltejs/adapter-static": "^3.0.6",
+		"@sveltejs/kit": "^2.9.0",
+		"@sveltejs/vite-plugin-svelte": "^5.0.0",
+		"@tailwindcss/vite": "^4.1.18",
+		"@tauri-apps/cli": "^2",
+		"svelte": "^5.0.0",
+		"svelte-check": "^4.0.0",
+		"tailwindcss": "^4.1.18",
+		"typescript": "~5.6.2",
+		"vite": "^6.0.3"
+	}
+}

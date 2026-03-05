@@ -52,6 +52,7 @@ fn init_cache_db(path: String) -> Result<()> {
 	Ok(())
 }
 
+#[cfg(feature = "napi-rs")]
 #[napi(js_name = "close_cache_db")]
 #[allow(dead_code)]
 pub async fn close_cache_db() -> napi::Result<()> {
@@ -135,6 +136,7 @@ fn write_to_cache(cache_db: &Database, path: &str, value: CacheEntry) -> Result<
 }
 
 /// Returns `None` if the file does not have an image
+#[cfg(feature = "napi-rs")]
 #[napi(js_name = "read_small_cover_async")]
 #[allow(dead_code)]
 pub async fn read_small_cover_async(
@@ -236,7 +238,7 @@ fn to_resized_image(image_bytes: Vec<u8>, max_size: u32) -> Result<Vec<u8>> {
 	Ok(img_bytes)
 }
 
-#[napi(js_name = "read_cover_async")]
+#[cfg_attr(feature = "napi-rs", napi(js_name = "read_cover_async"))]
 #[allow(dead_code)]
 pub async fn read_cover_async(file_path: String, index: u16) -> Result<Option<Buffer>> {
 	let file_path = PathBuf::from(file_path);

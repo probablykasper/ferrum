@@ -1,14 +1,21 @@
+#[cfg(feature = "napi-rs")]
 use crate::data::Data;
+#[cfg(feature = "napi-rs")]
 use crate::data_js::get_data;
 use crate::library_types::{Library, VersionedLibrary};
 use anyhow::{Context, Result, bail};
+#[cfg(feature = "napi-rs")]
 use napi::Env;
 use serde_json::{Value, json};
-use std::fs::{File, create_dir_all};
+use std::fs::File;
+#[cfg(feature = "napi-rs")]
+use std::fs::create_dir_all;
 use std::io::{ErrorKind, Read, Seek, SeekFrom};
+#[cfg(feature = "napi-rs")]
 use std::path::PathBuf;
 use std::time::Instant;
 
+#[cfg(feature = "napi-rs")]
 #[derive(Clone)]
 #[napi(object)]
 pub struct Paths {
@@ -22,6 +29,7 @@ pub struct Paths {
 	pub view_options_file: String,
 	pub logs_dir: String,
 }
+#[cfg(feature = "napi-rs")]
 impl Paths {
 	fn ensure_dirs_exists(&self) -> Result<()> {
 		create_dir_all(&self.library_dir)?;
@@ -36,15 +44,20 @@ impl Paths {
 	}
 }
 
+#[cfg(feature = "napi-rs")]
 pub fn load_library(paths: &Paths) -> Result<Library> {
-	let now = Instant::now();
-
 	paths
 		.ensure_dirs_exists()
 		.context("Error ensuring folder exists")?;
 	println!("Loading library at path: {}", paths.library_dir);
 
-	let mut library_file = match File::open(&paths.library_json) {
+	load_library_from_file(&paths.library_json)
+}
+
+pub fn load_library_from_file(library_json: &str) -> Result<Library> {
+	let now = Instant::now();
+
+	let mut library_file = match File::open(&library_json) {
 		Ok(file) => file,
 		Err(err) => match err.kind() {
 			ErrorKind::NotFound => return Ok(Library::new()),
@@ -117,6 +130,7 @@ pub enum TrackField {
 	Bool,
 }
 
+#[cfg(feature = "napi-rs")]
 #[napi(js_name = "get_default_sort_desc")]
 #[allow(dead_code)]
 pub fn get_default_sort_desc(field: String) -> Result<bool> {
@@ -175,6 +189,7 @@ pub fn get_track_field_type(field: &str) -> Result<TrackField> {
 	return Ok(field);
 }
 
+#[cfg(feature = "napi-rs")]
 #[napi(js_name = "get_genres")]
 #[allow(dead_code)]
 pub fn get_genres(env: Env) -> Vec<String> {
@@ -183,6 +198,7 @@ pub fn get_genres(env: Env) -> Vec<String> {
 	genres.clone()
 }
 
+#[cfg(feature = "napi-rs")]
 #[napi(js_name = "get_artists")]
 #[allow(dead_code)]
 pub fn get_artists(env: Env) -> Vec<String> {

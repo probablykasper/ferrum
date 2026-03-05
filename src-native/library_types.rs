@@ -1,12 +1,15 @@
 #![allow(non_snake_case)]
 
 use crate::get_now_timestamp;
+#[cfg(feature = "napi-rs")]
 use crate::library::Paths;
+#[cfg(feature = "napi-rs")]
 use crate::playlists::{delete_file, remove_from_all_playlists};
 use anyhow::{Context, Result, bail};
 use linked_hash_map::{Entry, LinkedHashMap};
 use nanoid::nanoid;
 use serde::{Deserialize, Serialize};
+use specta::Type;
 use std::borrow::Cow;
 use std::collections::HashSet;
 use std::sync::RwLock;
@@ -138,6 +141,7 @@ impl Library {
 		track_id_map.push(id.clone());
 		self.track_item_ids.insert(id, item_id);
 	}
+	#[cfg(feature = "napi-rs")]
 	pub fn delete_track_and_file(&mut self, id: &TrackID, paths: &Paths) -> Result<()> {
 		let file_path = {
 			let track = self.get_track(id)?;
@@ -282,8 +286,8 @@ pub type TrackLists = LinkedHashMap<TrackListID, TrackList>;
 /// (track id, start time, duration)
 pub type PlayTime = (TrackID, MsSinceUnixEpoch, i64);
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[napi(object)]
+#[derive(Serialize, Deserialize, Clone, Debug, Type)]
+#[cfg_attr(feature = "napi", napi(object))]
 pub struct Track {
 	pub size: i64,
 	pub duration: f64,
@@ -373,15 +377,15 @@ impl Track {
 	}
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[napi(object)]
+#[derive(Serialize, Deserialize, Clone, Debug, Type)]
+#[cfg_attr(feature = "napi", napi(object))]
 pub struct CountObject {
 	pub count: i64,
 	pub fromDate: MsSinceUnixEpoch,
 	pub toDate: MsSinceUnixEpoch,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, Type)]
 #[serde(tag = "type")]
 pub enum TrackList {
 	#[serde(rename = "playlist")]
@@ -446,8 +450,8 @@ pub fn get_track_ids_from_item_ids(playlist_item_ids: &[ItemId]) -> Vec<TrackID>
 // 	playlist_track_id_map[playlist_item_id as usize].clone()
 // }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[napi(object)]
+#[derive(Serialize, Deserialize, Clone, Debug, Type)]
+#[cfg_attr(feature = "napi", napi(object))]
 pub struct Playlist {
 	pub id: TrackListID,
 	pub name: String,
@@ -498,8 +502,8 @@ where
 	track_ids.serialize(serializer)
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[napi(object)]
+#[derive(Serialize, Deserialize, Clone, Debug, Type)]
+#[cfg_attr(feature = "napi", napi(object))]
 pub struct Folder {
 	pub id: TrackListID,
 	pub name: String,
@@ -522,8 +526,8 @@ pub struct Folder {
 	pub children: Vec<TrackListID>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[napi(object)]
+#[derive(Serialize, Deserialize, Clone, Debug, Type)]
+#[cfg_attr(feature = "napi", napi(object))]
 pub struct Special {
 	pub id: TrackListID,
 	pub name: SpecialTrackListName,
@@ -531,9 +535,9 @@ pub struct Special {
 	pub children: Vec<TrackListID>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, Type)]
 #[non_exhaustive]
-#[napi]
+#[cfg_attr(feature = "napi-rs", napi)]
 pub enum SpecialTrackListName {
 	Root,
 }
