@@ -1,6 +1,6 @@
 {
 	"$schema": "https://schema.tauri.app/config/2",
-	"productName": "ferrum",
+	"productName": "Ferrum",
 	"version": "0.1.0",
 	"identifier": "space.kasper.ferrum",
 	"build": {
@@ -12,7 +12,7 @@
 	"app": {
 		"windows": [
 			{
-				"title": "ferrum",
+				"title": "Ferrum",
 				"width": 800,
 				"height": 600
 			}
