@@ -163,24 +163,24 @@
   }
 </script>
 
-<div class="flex flex-col h-screen bg-neutral-950 text-neutral-200 text-sm overflow-hidden">
+<div class="flex flex-col h-screen bg-white dark:bg-neutral-950 text-neutral-800 dark:text-neutral-200 text-sm overflow-hidden">
 
   <!-- Header -->
-  <header class="flex items-center gap-2 px-4 py-3 border-b border-neutral-800 shrink-0">
+  <header class="flex items-center gap-2 px-4 py-3 border-b border-neutral-200 dark:border-neutral-800 shrink-0">
     {#if page.url.searchParams.has('id')}
       <button
         type="button"
         onclick={() => history.back()}
-        class="shrink-0 flex items-center justify-center w-8 h-8 text-xl rounded-lg text-neutral-400 hover:bg-neutral-800 hover:text-neutral-100 transition-colors"
+        class="shrink-0 flex items-center justify-center w-8 h-8 text-xl rounded-lg text-neutral-500 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors"
         aria-label="Back"
       >‹</button>
     {/if}
 
     <div class="flex-1 min-w-0">
       {#if view.kind === 'browser'}
-        <p class="font-semibold text-neutral-100 truncate leading-tight">{node_name(view.folder_id)}</p>
+        <p class="font-semibold text-neutral-900 dark:text-neutral-100 truncate leading-tight">{node_name(view.folder_id)}</p>
       {:else if view.kind === 'tracks'}
-        <p class="font-semibold text-neutral-100 truncate leading-tight">{node_name(view.playlist_id)}</p>
+        <p class="font-semibold text-neutral-900 dark:text-neutral-100 truncate leading-tight">{node_name(view.playlist_id)}</p>
       {/if}
 
     </div>
@@ -189,14 +189,14 @@
   </header>
 
   {#if error}
-    <div class="px-4 py-2.5 bg-red-950 border-b border-red-900 text-red-400 text-xs shrink-0">⚠ {error}</div>
+    <div class="px-4 py-2.5 bg-red-50 dark:bg-red-950 border-b border-red-200 dark:border-red-900 text-red-600 dark:text-red-400 text-xs shrink-0">⚠ {error}</div>
   {/if}
 
   <!-- ── Browser view ───────────────────────────────────────────────────── -->
   {#if view.kind === 'browser'}
     <div class="flex-1 overflow-y-auto">
       {#if current_children.length > 0}
-        <ul class="divide-y divide-neutral-900">
+        <ul class="divide-y divide-neutral-200 dark:divide-neutral-900">
           {#each current_children as child_id}
             {@const tl = get_tracklist(child_id)}
             {#if tl?.type === 'folder'}
@@ -204,7 +204,7 @@
                 <button
                   type="button"
                   onclick={() => open_folder(child_id)}
-                  class="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-neutral-800/50 active:bg-neutral-800 transition-colors text-left"
+                  class="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-neutral-100/50 dark:hover:bg-neutral-800/50 active:bg-neutral-100 dark:active:bg-neutral-800 transition-colors text-left"
                 >
                   <span class="shrink-0 w-7 text-center text-neutral-500 select-none">
                   <svg
@@ -220,12 +220,12 @@
 									>
                   </span>
                   <div class="flex-1 min-w-0">
-                    <p class="font-medium text-neutral-100 truncate">{tl.name}</p>
+                    <p class="font-medium text-neutral-900 dark:text-neutral-100 truncate">{tl.name}</p>
                     <p class="text-xs text-neutral-500 mt-0.5">
                       {tl.children.length} {tl.children.length === 1 ? 'item' : 'items'} · {count_tracks_in(child_id)} tracks
                     </p>
                   </div>
-                  <span class="text-neutral-700 text-lg select-none">›</span>
+                  <span class="text-neutral-400 dark:text-neutral-700 text-lg select-none">›</span>
                 </button>
               </li>
             {:else if tl?.type === 'playlist'}
@@ -233,7 +233,7 @@
                 <button
                   type="button"
                   onclick={() => open_playlist(child_id)}
-                  class="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-neutral-800/50 active:bg-neutral-800 transition-colors text-left"
+                  class="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-neutral-100/50 dark:hover:bg-neutral-800/50 active:bg-neutral-100 dark:active:bg-neutral-800 transition-colors text-left"
                 >
                   <span class="shrink-0 w-7 text-center text-neutral-500 select-none">
                  	<svg
@@ -249,25 +249,25 @@
 									>
                   </span>
                   <div class="flex-1 min-w-0">
-                    <p class="font-medium text-neutral-100 truncate">{tl.name}</p>
+                    <p class="font-medium text-neutral-900 dark:text-neutral-100 truncate">{tl.name}</p>
                     <p class="text-xs text-neutral-500 mt-0.5">
                       {tl.tracks.length} {tl.tracks.length === 1 ? 'track' : 'tracks'}{tl.liked ? ' · ♥' : ''}
                     </p>
                   </div>
-                  <span class="text-neutral-700 text-lg select-none">›</span>
+                  <span class="text-neutral-400 dark:text-neutral-700 text-lg select-none">›</span>
                 </button>
               </li>
             {/if}
           {/each}
         </ul>
       {:else}
-        <div class="flex items-center justify-center h-32 text-neutral-700 text-xs">This folder is empty</div>
+        <div class="flex items-center justify-center h-32 text-neutral-400 dark:text-neutral-700 text-xs">This folder is empty</div>
       {/if}
     </div>
 
   <!-- ── Tracks view ────────────────────────────────────────────────────── -->
   {:else if view.kind === 'tracks'}
-    <div class="shrink-0 border-b border-neutral-800">
+    <div class="shrink-0 border-b border-neutral-200 dark:border-neutral-800">
       <div class="flex items-center gap-1.5 px-4 py-2 overflow-x-auto no-scrollbar">
         <div class="relative shrink-0">
           <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-neutral-500 pointer-events-none text-xs select-none">⌕</span>
@@ -275,43 +275,43 @@
             type="search"
             placeholder="Search…"
             bind:value={search_query}
-            class="pl-7 pr-3 py-1.5 w-32 bg-neutral-800 border border-neutral-700 rounded-lg text-neutral-200 text-xs placeholder-neutral-600 outline-none focus:border-neutral-500 transition-colors"
+            class="pl-7 pr-3 py-1.5 w-32 bg-neutral-100 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-lg text-neutral-800 dark:text-neutral-200 text-xs placeholder-neutral-400 dark:placeholder-neutral-600 outline-none focus:border-neutral-400 dark:focus:border-neutral-500 transition-colors"
           />
         </div>
-        <div class="w-px h-4 bg-neutral-800 shrink-0 mx-0.5"></div>
+        <div class="w-px h-4 bg-neutral-100 dark:bg-neutral-800 shrink-0 mx-0.5"></div>
         <button type="button" onclick={() => toggle_sort('name')}
-          class="shrink-0 px-2.5 py-1 rounded text-xs border transition-colors {sort_key === 'name' ? 'bg-neutral-700 border-neutral-600 text-neutral-100' : 'border-neutral-700 text-neutral-500 hover:text-neutral-300'}">
+          class="shrink-0 px-2.5 py-1 rounded text-xs border transition-colors {sort_key === 'name' ? 'bg-neutral-200 dark:bg-neutral-700 border-neutral-400 dark:border-neutral-600 text-neutral-900 dark:text-neutral-100' : 'border-neutral-300 dark:border-neutral-700 text-neutral-500 hover:text-neutral-600 dark:hover:text-neutral-300'}">
           Name{sort_indicator('name')}
         </button>
         <button type="button" onclick={() => toggle_sort('artist')}
-          class="shrink-0 px-2.5 py-1 rounded text-xs border transition-colors {sort_key === 'artist' ? 'bg-neutral-700 border-neutral-600 text-neutral-100' : 'border-neutral-700 text-neutral-500 hover:text-neutral-300'}">
+          class="shrink-0 px-2.5 py-1 rounded text-xs border transition-colors {sort_key === 'artist' ? 'bg-neutral-200 dark:bg-neutral-700 border-neutral-400 dark:border-neutral-600 text-neutral-900 dark:text-neutral-100' : 'border-neutral-300 dark:border-neutral-700 text-neutral-500 hover:text-neutral-600 dark:hover:text-neutral-300'}">
           Artist{sort_indicator('artist')}
         </button>
         <button type="button" onclick={() => toggle_sort('dateAdded')}
-          class="shrink-0 px-2.5 py-1 rounded text-xs border transition-colors {sort_key === 'dateAdded' ? 'bg-neutral-700 border-neutral-600 text-neutral-100' : 'border-neutral-700 text-neutral-500 hover:text-neutral-300'}">
+          class="shrink-0 px-2.5 py-1 rounded text-xs border transition-colors {sort_key === 'dateAdded' ? 'bg-neutral-200 dark:bg-neutral-700 border-neutral-400 dark:border-neutral-600 text-neutral-900 dark:text-neutral-100' : 'border-neutral-300 dark:border-neutral-700 text-neutral-500 hover:text-neutral-600 dark:hover:text-neutral-300'}">
           Date{sort_indicator('dateAdded')}
         </button>
         <button type="button" onclick={() => toggle_sort('playCount')}
-          class="shrink-0 px-2.5 py-1 rounded text-xs border transition-colors {sort_key === 'playCount' ? 'bg-neutral-700 border-neutral-600 text-neutral-100' : 'border-neutral-700 text-neutral-500 hover:text-neutral-300'}">
+          class="shrink-0 px-2.5 py-1 rounded text-xs border transition-colors {sort_key === 'playCount' ? 'bg-neutral-200 dark:bg-neutral-700 border-neutral-400 dark:border-neutral-600 text-neutral-900 dark:text-neutral-100' : 'border-neutral-300 dark:border-neutral-700 text-neutral-500 hover:text-neutral-600 dark:hover:text-neutral-300'}">
           Plays{sort_indicator('playCount')}
         </button>
-        <span class="ml-auto shrink-0 text-xs text-neutral-600 tabular-nums pl-1">
+        <span class="ml-auto shrink-0 text-xs text-neutral-400 dark:text-neutral-600 tabular-nums pl-1">
           {filtered_tracks.length}/{playlist_tracks.length}
         </span>
       </div>
 
       <div class="flex items-center gap-1.5 px-4 pb-2 overflow-x-auto no-scrollbar">
         <button type="button" onclick={() => active_filter = { kind: 'all' }}
-          class="shrink-0 px-2.5 py-1 rounded-full text-xs border transition-colors {active_filter.kind === 'all' ? 'bg-neutral-200 border-neutral-200 text-neutral-900 font-semibold' : 'border-neutral-700 text-neutral-500 hover:text-neutral-300'}">
+          class="shrink-0 px-2.5 py-1 rounded-full text-xs border transition-colors {active_filter.kind === 'all' ? 'bg-neutral-200 border-neutral-200 text-neutral-900 font-semibold' : 'border-neutral-300 dark:border-neutral-700 text-neutral-500 hover:text-neutral-600 dark:hover:text-neutral-300'}">
           All
         </button>
         <button type="button" onclick={() => active_filter = { kind: 'liked' }}
-          class="shrink-0 px-2.5 py-1 rounded-full text-xs border transition-colors {active_filter.kind === 'liked' ? 'bg-rose-900 border-rose-700 text-rose-200 font-semibold' : 'border-neutral-700 text-neutral-500 hover:text-neutral-300'}">
+          class="shrink-0 px-2.5 py-1 rounded-full text-xs border transition-colors {active_filter.kind === 'liked' ? 'bg-rose-100 dark:bg-rose-900 border-rose-300 dark:border-rose-700 text-rose-700 dark:text-rose-200 font-semibold' : 'border-neutral-300 dark:border-neutral-700 text-neutral-500 hover:text-neutral-600 dark:hover:text-neutral-300'}">
           ♥ Liked
         </button>
         {#each genres as genre}
           <button type="button" onclick={() => active_filter = { kind: 'genre', value: genre }}
-            class="shrink-0 px-2.5 py-1 rounded-full text-xs border transition-colors {active_filter.kind === 'genre' && active_filter.value === genre ? 'bg-neutral-700 border-neutral-600 text-neutral-100 font-semibold' : 'border-neutral-700 text-neutral-500 hover:text-neutral-300'}">
+            class="shrink-0 px-2.5 py-1 rounded-full text-xs border transition-colors {active_filter.kind === 'genre' && active_filter.value === genre ? 'bg-neutral-200 dark:bg-neutral-700 border-neutral-400 dark:border-neutral-600 text-neutral-900 dark:text-neutral-100 font-semibold' : 'border-neutral-300 dark:border-neutral-700 text-neutral-500 hover:text-neutral-600 dark:hover:text-neutral-300'}">
             {genre}
           </button>
         {/each}
@@ -320,27 +320,27 @@
 
     <div class="flex-1 overflow-y-auto">
       {#if filtered_tracks.length > 0}
-        <ul class="divide-y divide-neutral-900">
+        <ul class="divide-y divide-neutral-200 dark:divide-neutral-900">
           {#each filtered_tracks as track}
             <li class="flex items-center gap-3 px-4 py-3 transition-colors">
               <div class="flex-1 min-w-0">
-                <p class="font-medium text-neutral-100 truncate">{track.name}</p>
+                <p class="font-medium text-neutral-900 dark:text-neutral-100 truncate">{track.name}</p>
                 <p class="text-xs text-neutral-500 truncate mt-0.5">
                   {track.artist ?? 'Unknown Artist'}
                   {#if track.albumName}
-                    <span class="text-neutral-700"> · </span>{track.albumName}
+                    <span class="text-neutral-400 dark:text-neutral-700"> · </span>{track.albumName}
                   {/if}
                 </p>
                 <div class="flex items-center gap-2 mt-1">
                   {#if track.genre}
-                    <span class="px-1.5 py-px text-xs rounded bg-neutral-800 text-neutral-500">{track.genre}</span>
+                    <span class="px-1.5 py-px text-xs rounded bg-neutral-100 dark:bg-neutral-800 text-neutral-500">{track.genre}</span>
                   {/if}
                   {#if track.year}
-                    <span class="text-xs text-neutral-700">{track.year}</span>
+                    <span class="text-xs text-neutral-400 dark:text-neutral-700">{track.year}</span>
                   {/if}
                 </div>
               </div>
-              <div class="shrink-0 flex flex-col items-end gap-1 text-xs text-neutral-600 tabular-nums">
+              <div class="shrink-0 flex flex-col items-end gap-1 text-xs text-neutral-400 dark:text-neutral-600 tabular-nums">
                 <span>{format_duration(track.duration)}</span>
                 {#if track.playCount}
                   <span>{track.playCount} plays</span>
@@ -353,7 +353,7 @@
           {/each}
         </ul>
       {:else}
-        <div class="flex flex-col items-center justify-center h-full gap-3 text-neutral-700 px-8 text-center">
+        <div class="flex flex-col items-center justify-center h-full gap-3 text-neutral-400 dark:text-neutral-700 px-8 text-center">
           <span class="text-4xl">⌕</span>
           <p class="text-xs">No tracks match your search or filter</p>
         </div>

@@ -1,4 +1,3 @@
-// utils.ts
 import { commands } from '../../bindings'
 
 export default new Proxy({} as typeof commands, {

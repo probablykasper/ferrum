@@ -37,7 +37,7 @@
   }
 </script>
 
-<div class="flex flex-col h-screen bg-neutral-950 text-neutral-200 text-sm overflow-hidden scheme-dark">
+<div class="flex flex-col h-screen bg-white dark:bg-neutral-950 text-neutral-800 dark:text-neutral-200 text-sm overflow-hidden scheme-light-dark">
   {#if error}
     <div class="px-4 py-2.5 bg-red-950 border-b border-red-900 text-red-400 text-xs shrink-0">⚠ {error}</div>
   {/if}
@@ -47,7 +47,7 @@
 	      type="button"
 	      onclick={open_library}
 	      disabled={loading}
-	      class="shrink-0 px-3 py-1.5 bg-neutral-100 text-neutral-900 rounded-lg font-semibold text-xs hover:bg-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+	      class="shrink-0 px-3 py-1.5 bg-neutral-900 text-neutral-100 dark:bg-neutral-100 dark:text-neutral-900 rounded-lg font-semibold text-xs hover:bg-neutral-700 dark:hover:bg-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
 	    >
 	      {loading ? 'Loading…' : 'Open'}
 	    </button>
@@ -57,10 +57,10 @@
   {#if library}
 	  <Library {library} {open_button} />
   {:else}
-    <div class="flex flex-col items-center justify-center flex-1 gap-4 text-neutral-700 px-8 text-center">
+    <div class="flex flex-col items-center justify-center flex-1 gap-4 text-neutral-400 dark:text-neutral-700 px-8 text-center">
       <span class="text-5xl">♪</span>
       <div>
-        <p class="font-medium text-neutral-500">No library loaded</p>
+        <p class="font-medium text-neutral-500 dark:text-neutral-500">No library loaded</p>
         <div class="mt-4">
 	        {@render open_button()}
         </div>
