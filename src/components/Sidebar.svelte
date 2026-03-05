@@ -62,7 +62,7 @@
 
 	let content_element: HTMLDivElement
 
-	$: $current_playlist_id, scroll_to_active()
+	$: ($current_playlist_id, scroll_to_active())
 	async function scroll_to_active() {
 		await tick()
 		const active = content_element?.querySelector('.active')

@@ -5,7 +5,7 @@
 	export let id: string
 
 	let track: Track
-	$: $tracks_updated, (track = get_track(id))
+	$: ($tracks_updated, (track = get_track(id)))
 
 	$: src =
 		'app://trackimg?path=' +

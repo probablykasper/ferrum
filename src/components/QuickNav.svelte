@@ -42,7 +42,7 @@
 	function clamp_index() {
 		selected_index = Math.max(0, Math.min(filtered_items.length - 1, selected_index))
 	}
-	$: list_items, clamp_index()
+	$: (list_items, clamp_index())
 	let list_items: HTMLElement[] = []
 
 	function handle_keydown(e: KeyboardEvent) {

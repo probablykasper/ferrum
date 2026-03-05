@@ -25,8 +25,10 @@ interface TypedIpcMainInvokeEvent<IpcEvents extends InputMap> extends ElectronIp
 	sender: TypedWebContents<IpcEvents>
 }
 
-interface TypedIpcMain<IpcEvents extends InputMap, IpcCommands extends InputMap>
-	extends ElectronIpcMain {
+interface TypedIpcMain<
+	IpcEvents extends InputMap,
+	IpcCommands extends InputMap,
+> extends ElectronIpcMain {
 	on<K extends keyof IpcEvents>(
 		channel: K,
 		listener: (event: IpcMainEvent, ...args: Parameters<IpcEvents[K]>) => void,
@@ -57,8 +59,10 @@ interface TypedIpcMain<IpcEvents extends InputMap, IpcCommands extends InputMap>
 	removeHandler<K extends keyof IpcCommands>(channel: K): void
 }
 
-interface TypedIpcRenderer<IpcEvents extends InputMap, IpcCommands extends InputMap>
-	extends ElectronIpcRenderer {
+interface TypedIpcRenderer<
+	IpcEvents extends InputMap,
+	IpcCommands extends InputMap,
+> extends ElectronIpcRenderer {
 	on<K extends keyof IpcEvents>(
 		channel: K,
 		listener: (event: IpcRendererEvent, ...args: Parameters<IpcEvents[K]>) => void,

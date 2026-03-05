@@ -33,7 +33,7 @@
 	$: visible_count_obj = { length: visible_count }
 
 	$: {
-		items, item_height, buffer
+		;(items, item_height, buffer)
 		if (scroll_container && main_element) refresh()
 	}
 
