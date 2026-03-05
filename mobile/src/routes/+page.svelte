@@ -37,7 +37,7 @@
   }
 </script>
 
-<div class="flex flex-col h-screen bg-neutral-950 text-neutral-200 text-sm overflow-hidden">
+<div class="flex flex-col h-screen bg-neutral-950 text-neutral-200 text-sm overflow-hidden scheme-dark">
   {#if error}
     <div class="px-4 py-2.5 bg-red-950 border-b border-red-900 text-red-400 text-xs shrink-0">⚠ {error}</div>
   {/if}

@@ -105,26 +105,32 @@
     }
   }
 
-  // ── Derived data ───────────────────────────────────────────────────────────
-
-  const all_tracks = $derived(
-    Object.values(library?.tracks ?? {}).filter((t): t is Track => t !== null)
-  );
+  // ── Derived / async data ──────────────────────────────────────────────────
 
   const current_children = $derived(
     view.kind === 'browser' ? get_children(view.folder_id) : []
   );
 
-  const playlist_tracks = $derived(
-    view.kind !== 'tracks'
-      ? []
-      : (get_playlist(view.playlist_id)?.tracks ?? [])
-          .map(item_id => all_tracks[item_id])
-          .filter((t): t is Track => t !== null)
-  );
+  // Playlist.tracks is typed as number[] in the bindings, but serialize_playlist_ids
+  // in Rust serializes them back to track ID strings over the wire.
+  const playlist_tracks = $derived.by(() => {
+    if (view.kind !== 'tracks') return [];
+    const playlist = get_playlist(view.playlist_id);
+    if (!playlist) {
+      console.error('[Library] no playlist found for id', view.playlist_id);
+      return [];
+    }
+    const track_ids = playlist.tracks as unknown as string[];
+    const resolved = track_ids.map(track_id => {
+      const track = library?.tracks?.[track_id];
+      if (track === undefined) console.error('[Library] no track for track_id', track_id);
+      return track;
+    }).filter((t): t is Track => t !== undefined);
+    return resolved;
+  });
 
   const genres = $derived(
-    [...new Set(playlist_tracks.map(t => t.genre).filter((g): g is string => g !== null))].sort()
+    [...new Set(playlist_tracks.map(t => t.genre).filter((g): g is string => g !== null && g !== undefined))].sort()
   );
 
   const filtered_tracks = $derived(
@@ -335,7 +341,7 @@
       {#if filtered_tracks.length > 0}
         <ul class="divide-y divide-neutral-900">
           {#each filtered_tracks as track}
-            <li class="flex items-center gap-3 px-4 py-3 hover:bg-neutral-800/50 active:bg-neutral-800 transition-colors">
+            <li class="flex items-center gap-3 px-4 py-3 transition-colors">
               <div class="flex-1 min-w-0">
                 <p class="font-medium text-neutral-100 truncate">{track.name}</p>
                 <p class="text-xs text-neutral-500 truncate mt-0.5">

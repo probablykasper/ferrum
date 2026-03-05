@@ -38,7 +38,7 @@ importedFrom?: string | null;
  * For example iTunes Persistent ID
  */
 originalId?: string | null; dateImported?: string | null; dateCreated?: string | null; children: string[] }
-export type LibraryTauri = { tracks: Partial<{ [key in string]: Track }>; track_lists: Partial<{ [key in string]: TrackList }> }
+export type LibraryTauri = { tracks: Partial<{ [key in string]: Track }>; track_item_ids: Partial<{ [key in string]: number }>; track_lists: Partial<{ [key in string]: TrackList }> }
 export type Playlist = { id: string; name: string; description?: string | null; liked: boolean; disliked: boolean; importedFrom?: string | null; originalId?: string | null; dateImported?: string | null; dateCreated?: string | null; tracks: number[] }
 export type Special = { id: string; name: SpecialTrackListName; dateCreated: string; children: string[] }
 export type SpecialTrackListName = "Root"

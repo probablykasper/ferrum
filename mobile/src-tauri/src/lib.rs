@@ -1,6 +1,6 @@
 use anyhow::bail;
+use ferrum::library_types::{ItemId, TrackID, VersionedLibrary};
 use ferrum::library_types::{Library, Track, TrackList, TrackListID};
-use ferrum::library_types::{TrackID, VersionedLibrary};
 use serde::Serialize;
 use specta::Type;
 use std::collections::HashMap;
@@ -45,6 +45,7 @@ fn load_library_from_file(library_json: &str) -> anyhow::Result<Library> {
 #[derive(Serialize, Type)]
 pub struct LibraryTauri {
 	tracks: HashMap<TrackID, Track>,
+	track_item_ids: HashMap<TrackID, ItemId>,
 	track_lists: HashMap<TrackListID, TrackList>,
 }
 
@@ -58,6 +59,7 @@ fn load_library(library_json: String) -> Result<LibraryTauri, String> {
 
 	let library_tauri = LibraryTauri {
 		tracks: library.get_tracks().clone().into_iter().collect(),
+		track_item_ids: library.get_track_item_ids().clone().into_iter().collect(),
 		track_lists: library.trackLists.into_iter().collect(),
 	};
 
