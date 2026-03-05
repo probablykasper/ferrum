@@ -4,20 +4,30 @@
   import type { LibraryTauri } from '../../bindings'
   import { readTextFile } from '@tauri-apps/plugin-fs'
 	import Library from './Library.svelte'
+	import { Store } from '@tauri-apps/plugin-store'
 
 
-  let library = $state<LibraryTauri | null>(null);
   let loading = $state(false);
   let error = $state('');
 
-  // ── Library loading ────────────────────────────────────────────────────────
+  const store = await Store.load('settings.json');
+  let library = $state<LibraryTauri | null>(null);
+
+  const saved_library_path = await store.get('library_path')
+  if (typeof saved_library_path === 'string') {
+	  load_library(saved_library_path)
+  }
 
   async function open_library() {
     const path = await open({
       filters: [{ name: 'JSON', extensions: ['json'] }],
     });
-    if (!path) return;
-
+    if (path) {
+	    load_library(path)
+    }
+  }
+  console.log(await store.entries())
+  async function load_library(path: string) {
     loading = true;
     library = null
     error = '';
@@ -26,6 +36,8 @@
       const result = await commands.loadLibrary(contents);
       if (result.status === 'ok') {
         library = result.data;
+        store.set('library_path', path)
+        store.save()
       } else {
         error = result.error;
       }

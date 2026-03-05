@@ -97,6 +97,7 @@ pub fn run() {
 	let specta_builder = gen_types();
 
 	tauri::Builder::default()
+		.plugin(tauri_plugin_store::Builder::new().build())
 		.plugin(tauri_plugin_fs::init())
 		.plugin(tauri_plugin_dialog::init())
 		.plugin(tauri_plugin_opener::init())
