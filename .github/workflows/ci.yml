@@ -39,3 +39,55 @@ jobs:
       - run: npm run build:web
       - run: npm run electron-builder -- ${{ matrix.arg }} --publish never
       - run: npm run generate-update-json
+  build_android:
+    runs-on: ubuntu-latest
+    name: Android ${{ matrix.name }}
+    strategy:
+      matrix:
+        include:
+          - { name: arm64, arch: aarch64, tauri_target: aarch64 }
+          - { name: x64, arch: x86_64, tauri_target: x86_64 }
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Rust setup
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Node.js setup
+        uses: actions/setup-node@v2
+        with:
+          node-version: 20
+
+      - name: JDK 17 Setup
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Android SDK Setup
+        uses: android-actions/setup-android@v3
+
+      - name: Android NDK Setup
+        uses: nttld/setup-ndk@v1
+        id: setup-ndk
+        with:
+          ndk-version: r26d
+          link-to-sdk: true
+
+      - name: Install Android targets
+        run: rustup target add ${{ matrix.arch }}-linux-android
+
+      - run: npm install
+        working-directory: mobile
+
+      - name: Build
+        # uploadWorkflowArtifacts and mobile are not released
+        uses: tauri-apps/tauri-action@a1b01e690374452a209dd44f6de089dda9003d3d
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          projectPath: mobile
+          uploadWorkflowArtifacts: true
+          mobile: android
+          args: --verbose --apk --split-per-abi --target ${{ matrix.tauri_target }}

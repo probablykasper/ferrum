@@ -17,6 +17,7 @@
 		"napi:dev": "napi build --output-dir ferrum-addon --dts addon.d.ts",
 		"build": "npm run napi && npm run build:web && electron-builder && npm run generate-update-json",
 		"build:web": "vite build",
+		"build-android": "cd mobile && cargo tauri android dev",
 		"electron-builder": "electron-builder",
 		"generate-update-json": "node ./generate-update-json.mjs",
 		"preview": "LOCAL_DATA=./src-native/appdata/local_data LIBRARY=./src-native/appdata/Library ./build/app/mac/Ferrum.app/Contents/MacOS/Ferrum",
