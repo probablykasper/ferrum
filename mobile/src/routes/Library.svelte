@@ -54,7 +54,8 @@
 		return get_folder(folder_id)?.children ?? []
 	}
 
-	function node_name(id: string): string {
+	function node_name(id: string, context?: 'browser' | 'tracks'): string {
+		if (id === 'root' && context === 'tracks') return 'All Songs'
 		const tl = get_tracklist(id)
 		if (!tl) return 'Unknown'
 		if (tl.type === 'special') return 'Library'
@@ -91,6 +92,10 @@
 	// in Rust serializes them back to track ID strings over the wire.
 	const playlist_tracks = $derived.by(() => {
 		if (view.kind !== 'tracks') return []
+		// Fake "All Songs" playlist — aggregate every track in the library
+		if (view.playlist_id === 'root') {
+			return Object.values(library?.tracks ?? {}) as Track[]
+		}
 		const playlist = get_playlist(view.playlist_id)
 		if (!playlist) {
 			console.error('[Library] no playlist found for id', view.playlist_id)
@@ -195,11 +200,11 @@
 		<div class="min-w-0 flex-1">
 			{#if view.kind === 'browser'}
 				<p class="truncate leading-tight font-semibold text-neutral-900 dark:text-neutral-100">
-					{node_name(view.folder_id)}
+					{node_name(view.folder_id, 'browser')}
 				</p>
 			{:else if view.kind === 'tracks'}
 				<p class="truncate leading-tight font-semibold text-neutral-900 dark:text-neutral-100">
-					{node_name(view.playlist_id)}
+					{node_name(view.playlist_id, 'tracks')}
 				</p>
 			{/if}
 		</div>
@@ -220,6 +225,39 @@
 		<div class="flex-1 overflow-y-auto">
 			{#if current_children.length > 0}
 				<ul class="divide-y divide-neutral-200 dark:divide-neutral-900">
+					{#if view.folder_id === 'root'}
+						<li>
+							<button
+								type="button"
+								onclick={() => open_playlist('root')}
+								class="flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors hover:bg-neutral-100/50 active:bg-neutral-100 dark:hover:bg-neutral-800/50 dark:active:bg-neutral-800"
+							>
+								<span class="w-7 shrink-0 text-center text-neutral-500 select-none">
+									<svg
+										style="transform: translateX(2px)"
+										xmlns="http://www.w3.org/2000/svg"
+										height="24px"
+										viewBox="0 0 24 24"
+										width="24px"
+										fill="currentColor"
+										><path
+											d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"
+										/></svg
+									>
+								</span>
+								<div class="min-w-0 flex-1">
+									<p class="truncate font-medium text-neutral-900 dark:text-neutral-100">
+										All Songs
+									</p>
+									<p class="mt-0.5 text-xs text-neutral-500">
+										{Object.keys(library?.tracks ?? {}).length}
+										{Object.keys(library?.tracks ?? {}).length === 1 ? 'track' : 'tracks'}
+									</p>
+								</div>
+								<span class="text-lg text-neutral-400 select-none dark:text-neutral-700">›</span>
+							</button>
+						</li>
+					{/if}
 					{#each current_children as child_id}
 						{@const tl = get_tracklist(child_id)}
 						{#if tl?.type === 'folder'}
