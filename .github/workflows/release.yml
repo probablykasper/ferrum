@@ -57,8 +57,8 @@ jobs:
     strategy:
       matrix:
         include:
-          - { name: arm64, target: aarch64-linux-android, args: --target aarch64 }
-          - { name: x64, target: x86_64-linux-android, args: --target x86_64 }
+          - { name: arm64, arch: aarch64, tauri_target: aarch64 }
+          - { name: x64, arch: x86_64, tauri_target: x86_64 }
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
