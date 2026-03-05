@@ -88,22 +88,28 @@ jobs:
           link-to-sdk: true
 
       - name: Install Android targets
-        run: rustup target add aarch64-linux-android x86_64-linux-android
+        run: rustup target add ${{ matrix.arch }}-linux-android
 
       - run: npm install
+        working-directory: mobile
 
-      - name: Build
-        env:
-          NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
+      - name: Android signing setup
+        working-directory: mobile/src-tauri/gen/android
         run: |
-          npm run tauri android build
+          echo "keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}" > keystore.properties
+          echo "password=${{ secrets.ANDROID_KEY_PASSWORD }}" >> keystore.properties
+          base64 -d <<< "${{ secrets.ANDROID_KEY_BASE64 }}" > $RUNNER_TEMP/keystore.jks
+          echo "storeFile=$RUNNER_TEMP/keystore.jks" >> keystore.properties
 
       - name: Build
-        uses: tauri-apps/tauri-action@v0
+        # uploadWorkflowArtifacts and mobile are not released
+        uses: tauri-apps/tauri-action@a1b01e690374452a209dd44f6de089dda9003d3d
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
+          projectPath: mobile
+          uploadWorkflowArtifacts: true
           mobile: android
           releaseName: ${{ github.ref_name }}
           releaseDraft: true
-          args: --verbose --debug --apk --split-per-abi ${{ matrix.args }}
+          args: --verbose --apk --split-per-abi --target ${{ matrix.tauri_target }}
