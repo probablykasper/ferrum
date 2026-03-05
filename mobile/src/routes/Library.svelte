@@ -1,14 +1,16 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte'
+  import { goto } from '$app/navigation'
+  import { page } from '$app/state'
   import type { Track, TrackList, Playlist, Folder, Special, LibraryTauri } from '../../bindings'
+	import { resolve } from '$app/paths'
 
   type sort_key_type = 'name' | 'artist' | 'dateAdded' | 'playCount';
   type sort_dir_type = 'asc' | 'desc';
   type active_filter_type = { kind: 'all' } | { kind: 'liked' } | { kind: 'genre'; value: string };
-  type breadcrumb_entry = { id: string; name: string };
   type view_type =
-    | { kind: 'browser'; folder_id: string; breadcrumb: breadcrumb_entry[] }
-    | { kind: 'tracks'; playlist_id: string; breadcrumb: breadcrumb_entry[] };
+    | { kind: 'browser'; folder_id: string }
+    | { kind: 'tracks'; playlist_id: string };
 
   const {
   	library,
@@ -18,11 +20,17 @@
 		open_button: Snippet<[]>,
 	}>();
   let error = $state('');
-  let view = $state<view_type>({ kind: 'browser', folder_id:'root', breadcrumb: [] });
   let search_query = $state('');
   let sort_key = $state<sort_key_type>('name');
   let sort_dir = $state<sort_dir_type>('asc');
   let active_filter = $state<active_filter_type>({ kind: 'all' });
+
+  // ── View derived from URL search params ────────────────────────────────────
+  const view = $derived<view_type>(
+    page.url.searchParams.get('view') === 'tracks'
+      ? { kind: 'tracks', playlist_id: page.url.searchParams.get('id') ?? 'root' }
+      : { kind: 'browser', folder_id: page.url.searchParams.get('id') ?? 'root' }
+  );
 
   // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -68,41 +76,16 @@
 
   // ── Navigation ─────────────────────────────────────────────────────────────
 
-  // We can only navigate into folders or playlists from a browser view,
-  // so prev.kind is always 'browser' here — no conditional needed.
   function open_folder(id: string) {
-    if (view.kind !== 'browser') return;
-    const new_crumb: breadcrumb_entry = { id: view.folder_id, name: node_name(view.folder_id) };
-    view = {
-      kind: 'browser',
-      folder_id: id,
-      breadcrumb: [...view.breadcrumb, new_crumb],
-    };
+    // eslint-disable-next-line svelte/no-navigation-without-resolve
+    goto(resolve('/') + `?view=browser&id=${id}`);
   }
 
   function open_playlist(id: string) {
-    if (view.kind !== 'browser') return;
-    const new_crumb: breadcrumb_entry = { id: view.folder_id, name: node_name(view.folder_id) };
-    view = {
-      kind: 'tracks',
-      playlist_id: id,
-      breadcrumb: [...view.breadcrumb, new_crumb],
-    };
     search_query = '';
     active_filter = { kind: 'all' };
-  }
-
-  function go_back() {
-    const crumb = view.breadcrumb;
-    if (crumb.length === 0) return;
-    const parent = crumb[crumb.length - 1];
-    const new_crumb = crumb.slice(0, -1);
-    const tl = get_tracklist(parent.id);
-    if (tl?.type === 'folder' || tl?.type === 'special') {
-      view = { kind: 'browser', folder_id: parent.id, breadcrumb: new_crumb };
-    } else if (tl?.type === 'playlist') {
-      view = { kind: 'tracks', playlist_id: parent.id, breadcrumb: new_crumb };
-    }
+    // eslint-disable-next-line svelte/no-navigation-without-resolve
+    goto(resolve('/') + `?view=tracks&id=${id}`);
   }
 
   // ── Derived / async data ──────────────────────────────────────────────────
@@ -184,10 +167,10 @@
 
   <!-- Header -->
   <header class="flex items-center gap-2 px-4 py-3 border-b border-neutral-800 shrink-0">
-    {#if view.breadcrumb.length > 0}
+    {#if page.url.searchParams.has('id')}
       <button
         type="button"
-        onclick={go_back}
+        onclick={() => history.back()}
         class="shrink-0 flex items-center justify-center w-8 h-8 text-xl rounded-lg text-neutral-400 hover:bg-neutral-800 hover:text-neutral-100 transition-colors"
         aria-label="Back"
       >‹</button>
@@ -199,9 +182,7 @@
       {:else if view.kind === 'tracks'}
         <p class="font-semibold text-neutral-100 truncate leading-tight">{node_name(view.playlist_id)}</p>
       {/if}
-      {#if view.breadcrumb.length > 0}
-        <p class="text-xs text-neutral-600 truncate">{view.breadcrumb.map(b => b.name).join(' › ')}</p>
-      {/if}
+
     </div>
 
     {@render open_button()}
