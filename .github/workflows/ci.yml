@@ -98,4 +98,4 @@ jobs:
           projectPath: mobile
           uploadWorkflowArtifacts: true
           mobile: android
-          args: --verbose --apk --split-per-abi --target ${{ matrix.tauri_target }}
+          args: --apk --split-per-abi --target ${{ matrix.tauri_target }}

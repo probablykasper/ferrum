@@ -8,7 +8,13 @@
 		"opener:default",
 		"dialog:default",
 		"fs:default",
+		{
+			"identifier": "fs:read-files",
+			"allow": ["**"]
+		},
 		"store:default",
-		"safe-area-insets-css:default"
+		"safe-area-insets-css:default",
+		"android-fs:default",
+		"os:default"
 	]
 }

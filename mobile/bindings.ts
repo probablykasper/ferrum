@@ -15,6 +15,14 @@ async loadLibrary(libraryJson: string) : Promise<Result<LibraryTauri, string>> {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
 }
+},
+async openFilePersistentAndroid() : Promise<Result<string | null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("open_file_persistent_android") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
 }
 }
 

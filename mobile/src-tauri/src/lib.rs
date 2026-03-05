@@ -21,6 +21,44 @@ fn error_popup(app_handle: tauri::AppHandle, msg: String) {
 		.show(|_| {});
 }
 
+// you shoud use async fn
+#[tauri::command]
+#[specta::specta]
+async fn open_file_persistent_android(app: tauri::AppHandle) -> Result<Option<String>, String> {
+	if cfg!(not(target_os = "android")) {
+		panic!("Persistent save dialog cannot be called on this platform");
+	}
+
+	use tauri_plugin_android_fs::AndroidFsExt;
+	let api = app.android_fs_async();
+
+	let selected_file = api
+		.file_picker()
+		.pick_file(
+			None,                  // Initial location
+			&["application/json"], // Target MIME types
+			false,                 // If true, only files on local device
+		)
+		.await;
+	let selected_file = match selected_file {
+		Ok(Some(file)) => file,
+		Ok(None) => return Ok(None),
+		Err(err) => return Err(format!("Error picking file: {err}")),
+	};
+
+	// Persist file access between restarts
+	match api
+		.file_picker()
+		.persist_uri_permission(&selected_file)
+		.await
+	{
+		Ok(_) => {}
+		Err(err) => return Err(format!("Error persisting URI: {err}")),
+	};
+
+	Ok(Some(selected_file.uri.to_string()))
+}
+
 fn load_library_from_file(library_json: &str) -> anyhow::Result<Library> {
 	let now = Instant::now();
 
@@ -67,11 +105,14 @@ fn load_library(library_json: String) -> Result<LibraryTauri, String> {
 }
 
 pub fn gen_types() -> Builder {
-	let specta_builder = tauri_specta::Builder::<tauri::Wry>::new()
-		.commands(tauri_specta::collect_commands![error_popup, load_library]);
+	let specta_builder =
+		tauri_specta::Builder::<tauri::Wry>::new().commands(tauri_specta::collect_commands![
+			error_popup,
+			load_library,
+			open_file_persistent_android
+		]);
 
 	#[cfg(all(debug_assertions, not(target_os = "android")))]
-	#[cfg(debug_assertions)]
 	specta_builder
 		.export(
 			specta_typescript::Typescript::default()
@@ -97,6 +138,8 @@ pub fn run() {
 	let specta_builder = gen_types();
 
 	tauri::Builder::default()
+		.plugin(tauri_plugin_os::init())
+		.plugin(tauri_plugin_android_fs::init())
 		.plugin(tauri_plugin_store::Builder::new().build())
 		.plugin(tauri_plugin_fs::init())
 		.plugin(tauri_plugin_dialog::init())

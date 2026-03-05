@@ -5,6 +5,7 @@
 	import { readTextFile } from '@tauri-apps/plugin-fs'
 	import Library from './Library.svelte'
 	import { Store } from '@tauri-apps/plugin-store'
+	import { platform } from '@tauri-apps/plugin-os'
 	import '@saurl/tauri-plugin-safe-area-insets-css-api'
 
 	let loading = $state(false)
@@ -19,9 +20,19 @@
 	}
 
 	async function open_library() {
-		const path = await open({
-			filters: [{ name: 'JSON', extensions: ['json'] }],
-		})
+		let path: string | null = null
+		if (platform() === 'android') {
+			const result = await commands.openFilePersistentAndroid()
+			if (result.status === 'ok') {
+				path = result.data
+			} else {
+				error = result.error
+			}
+		} else {
+			path = await open({
+				filters: [{ name: 'JSON', extensions: ['json'] }],
+			})
+		}
 		if (path) {
 			load_library(path)
 		}
@@ -41,7 +52,7 @@
 				error = result.error
 			}
 		} catch (e) {
-			error = e instanceof Error ? e.message : 'Failed to load library'
+			error = e instanceof Error ? e.message : 'Failed to load library. ' + String(e)
 		} finally {
 			loading = false
 		}

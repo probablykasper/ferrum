@@ -112,4 +112,4 @@ jobs:
           mobile: android
           releaseName: ${{ github.ref_name }}
           releaseDraft: true
-          args: --verbose --apk --split-per-abi --target ${{ matrix.tauri_target }}
+          args: --apk --split-per-abi --target ${{ matrix.tauri_target }}

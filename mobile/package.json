@@ -21,7 +21,9 @@
 		"@tauri-apps/plugin-dialog": "^2.6.0",
 		"@tauri-apps/plugin-fs": "^2.4.5",
 		"@tauri-apps/plugin-opener": "^2",
-		"@tauri-apps/plugin-store": "^2.4.2"
+		"@tauri-apps/plugin-os": "^2.3.2",
+		"@tauri-apps/plugin-store": "^2.4.2",
+		"tauri-plugin-android-fs-api": "^27.0.0"
 	},
 	"devDependencies": {
 		"@saurl/tauri-plugin-safe-area-insets-css-api": "^0.1.0",
