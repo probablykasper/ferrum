@@ -5,6 +5,7 @@
 	import { readTextFile } from '@tauri-apps/plugin-fs'
 	import Library from './Library.svelte'
 	import { Store } from '@tauri-apps/plugin-store'
+	import '@saurl/tauri-plugin-safe-area-insets-css-api'
 
 	let loading = $state(false)
 	let error = $state('')
@@ -25,7 +26,6 @@
 			load_library(path)
 		}
 	}
-	console.log(await store.entries())
 	async function load_library(path: string) {
 		loading = true
 		library = null
@@ -49,7 +49,10 @@
 </script>
 
 <div
-	class="flex h-screen flex-col overflow-hidden bg-white text-sm text-neutral-800 scheme-light-dark dark:bg-neutral-950 dark:text-neutral-200"
+	class="flex h-screen flex-col overflow-hidden bg-white text-sm text-neutral-800 scheme-light-dark dark:bg-neutral-950 dark:text-neutral-200 pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]"
+	style:padding-top='var(--safe-area-inset-top)'
+	style:padding-bottom='var(--safe-area-inset-bottom)'
+
 >
 	{#if error}
 		<div class="shrink-0 border-b border-red-900 bg-red-950 px-4 py-2.5 text-xs text-red-400">
