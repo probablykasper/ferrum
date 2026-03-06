@@ -108,8 +108,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           projectPath: mobile
-          uploadWorkflowArtifacts: true
           mobile: android
+          tagName: ${{ github.ref_name }}
           releaseName: ${{ github.ref_name }}
           releaseDraft: true
           args: --apk --split-per-abi --target ${{ matrix.tauri_target }}
