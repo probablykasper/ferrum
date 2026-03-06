@@ -3,8 +3,6 @@ on:
   push:
     branches:
       - '*'
-    tags-ignore:
-      - '*'
   workflow_dispatch:
 env:
   CARGO_TERM_COLOR: always
@@ -46,7 +44,7 @@ jobs:
       matrix:
         include:
           - { name: arm64, arch: aarch64, tauri_target: aarch64 }
-          - { name: x64, arch: x86_64, tauri_target: x86_64 }
+          # - { name: x64, arch: x86_64, tauri_target: x86_64 }
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -98,4 +96,4 @@ jobs:
           projectPath: mobile
           uploadWorkflowArtifacts: true
           mobile: android
-          args: --apk --split-per-abi --target ${{ matrix.tauri_target }}
+          args: --apk --split-per-abi --target ${{ matrix.tauri_target }} --config '{"version":"0.0.1"}'
