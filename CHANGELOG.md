@@ -1,6 +1,6 @@
 # Changelog
 
-## Next
+## 0.21.0 - 2026 Map 6
 - Add a basic Android app. It only lets you browse a Ferrum Library.json file. No playback or syncing yet.
 
 ## 0.20.1 - 2026 Feb 11
