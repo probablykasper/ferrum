@@ -1,33 +1,34 @@
 <script lang="ts">
-	import type { HTMLBaseAttributes } from 'svelte/elements'
+	import type { HTMLButtonAttributes } from 'svelte/elements'
 
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	interface $$Props extends HTMLBaseAttributes {
+	interface Props extends HTMLButtonAttributes {
 		secondary?: boolean
 		danger?: boolean
 		thin?: boolean
-		type?: 'button' | 'submit' | 'reset'
 	}
 
-	export let secondary = false
-	export let danger = false
-	export let thin = false
-	export let type: 'button' | 'submit' | 'reset' = 'button'
-	let normal = !danger && !secondary
-	$: normal = !danger && !secondary
+	let {
+		secondary = false,
+		danger = false,
+		thin = false,
+		type = 'button',
+		children,
+		...rest_props
+	}: Props = $props()
+
+	const normal = $derived(!danger && !secondary)
 </script>
 
 <button
-	on:click
-	on:mousedown
 	class:normal
 	class:secondary
 	class:danger
 	class:thin
 	{type}
-	{...$$restProps}
+	{...rest_props}
+	style:-webkit-app-region="no-drag"
 >
-	<slot />
+	{@render children?.()}
 </button>
 
 <style lang="sass">

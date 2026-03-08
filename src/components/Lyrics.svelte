@@ -1,5 +1,8 @@
 <script lang="ts">
 	import { fly } from 'svelte/transition'
+	import { ScrollAnimation } from '$lib/scroll'
+	import { seek } from '$lib/player'
+	import Button from './Button.svelte'
 
 	type LrcLine = {
 		time_sec: number
@@ -19,27 +22,30 @@
 	}
 
 	type Props = {
-		track_name?: string
-		artist_name?: string
-		album_name?: string
-		duration_sec?: number | null
-		current_time_sec?: number
+		track_name: string
+		artist_name: string
+		album_name: string
+		duration_sec: number | null
+		current_time_sec: number
 	}
 
 	const cache_by_key: Record<string, LrclibTrack | null> = {}
 
-	let {
-		track_name = '',
-		artist_name = '',
-		album_name = '',
-		duration_sec = null,
-		current_time_sec = 0,
-	}: Props = $props()
+	let { track_name, artist_name, album_name, duration_sec, current_time_sec }: Props = $props()
 
 	let loading = $state(false)
 	let error_message = $state('')
 	let lyrics_data = $state<LrclibTrack | null>(null)
 	let request_key = $state('')
+
+	let follow_paused = $state(false)
+	let paused_temporarily = $state(false)
+	let initial_scroll_done = $state(false)
+
+	let lines_element: HTMLElement | null = null
+	let line_elements = $state<Array<HTMLParagraphElement | null>>([])
+	const follow_scroll_animation = new ScrollAnimation()
+	const follow_scroll_duration_ms = 220
 
 	const query_key = $derived(make_key(track_name, artist_name, album_name, duration_sec))
 	const synced_lines = $derived(parse_synced_lyrics(lyrics_data?.synced_lyrics ?? ''))
@@ -50,6 +56,32 @@
 			.map((line) => line.trim())
 			.filter(Boolean),
 	)
+
+	$effect(() => {
+		query_key
+		follow_paused = false
+		line_elements = []
+		initial_scroll_done = false
+	})
+
+	$effect(() => {
+		if (follow_paused || paused_temporarily) return
+		if (!lines_element || active_line_index < 0 || synced_lines.length === 0) return
+		const active_el = line_elements[active_line_index]
+		if (!active_el) return
+		const target_top =
+			active_el.offsetTop - lines_element.clientHeight / 2 + active_el.clientHeight / 2
+		if (!initial_scroll_done) {
+			follow_scroll_animation.cancel()
+			lines_element.scrollTop = Math.max(
+				0,
+				Math.min(target_top, lines_element.scrollHeight - lines_element.clientHeight),
+			)
+			initial_scroll_done = true
+			return
+		}
+		follow_scroll_animation.smooth_scroll_to(lines_element, target_top, follow_scroll_duration_ms)
+	})
 
 	$effect(() => {
 		const key = query_key
@@ -78,6 +110,12 @@
 		const alb = normalize(album)
 		const d = typeof dur === 'number' && Number.isFinite(dur) ? Math.round(dur) : 0
 		return `${a}|${t}|${alb}|${d}`
+	}
+
+	function seek_to_lyric_time(time_sec: number) {
+		const selected_text = window.getSelection()?.toString().trim()
+		if (selected_text) return
+		seek(time_sec)
 	}
 
 	function encode_query(params: Record<string, string | number | undefined>) {
@@ -197,6 +235,20 @@
 		}
 		return answer
 	}
+
+	function pause_follow() {
+		follow_scroll_animation.cancel()
+		follow_paused = true
+	}
+
+	function start_temporary_pause() {
+		follow_scroll_animation.cancel()
+		paused_temporarily = true
+	}
+
+	function end_temporary_pause() {
+		paused_temporarily = false
+	}
 </script>
 
 <aside
@@ -207,14 +259,38 @@
 	<div
 		class="pointer-events-auto relative -mt-px flex w-[var(--right-sidebar-width)] flex-col border-l border-[var(--border-color)] bg-black"
 	>
-		<div class="sticky top-0 z-10 border-b border-white/10 bg-black/75 px-4 py-3 backdrop-blur-md">
+		<div
+			class="sticky top-0 z-10 flex justify-between border-b border-white/10 bg-black/75 px-4 py-3 backdrop-blur-md"
+		>
 			<h3 class="m-0 text-base font-semibold">Lyrics</h3>
-			{#if artist_name && track_name}
-				<div class="mt-1 truncate text-xs text-white/70">{artist_name} - {track_name}</div>
+			{#if follow_paused && synced_lines.length > 0}
+				<Button
+					class="rounded bg-white/10 px-2 py-1 text-xs text-white/80 hover:bg-white/15"
+					secondary
+					thin
+					onclick={() => (follow_paused = false)}
+				>
+					Resume follow
+				</Button>
 			{/if}
 		</div>
 
-		<div class="flex-1 overflow-y-auto px-4 py-3">
+		<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+		<div
+			class="flex-1 overflow-y-auto px-4 py-3 select-text"
+			role="region"
+			bind:this={lines_element}
+			onwheel={pause_follow}
+			onscroll={() => {
+				if (paused_temporarily) pause_follow()
+			}}
+			onmousedown={start_temporary_pause}
+			ontouchstart={start_temporary_pause}
+			ontouchend={end_temporary_pause}
+			ontouchcancel={end_temporary_pause}
+			onmouseup={end_temporary_pause}
+			onmouseleave={end_temporary_pause}
+		>
 			{#if !query_key}
 				<p class="m-0 text-sm text-white/70">Play a track to load lyrics.</p>
 			{:else if loading}
@@ -227,11 +303,19 @@
 				<div class="space-y-1">
 					{#each synced_lines as line, i}
 						<p
-							class={`m-0 py-1 text-[15px] leading-6 transition-colors duration-100 ${
+							bind:this={line_elements[i]}
+							class={`m-0 min-h-lh cursor-text py-1 text-[15px] transition-colors duration-100 ${
 								i === active_line_index ? 'font-medium text-white' : 'text-white/60'
 							}`}
 						>
-							{line.text || '♪'}
+							<span
+								role="none"
+								class="cursor-pointer py-1 leading-6"
+								class:hover:text-gray-300={i !== active_line_index}
+								onclick={() => seek_to_lyric_time(line.time_sec)}
+							>
+								{line.text || ''}
+							</span>
 						</p>
 					{/each}
 				</div>

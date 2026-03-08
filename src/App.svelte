@@ -282,8 +282,8 @@
 				track_name={$playing_track?.name || ''}
 				artist_name={$playing_track?.artist || ''}
 				album_name={$playing_track?.albumName || ''}
-				duration_sec={$time_record.duration || null}
-				current_time_sec={$time_record.elapsed || 0}
+				duration_sec={$time_record.duration}
+				current_time_sec={$time_record.elapsed}
 			/>
 		{/if}
 	</div>

@@ -15,7 +15,7 @@
 	import { ipc_listen, ipc_renderer } from '$lib/window'
 	import { check_shortcut } from '$lib/helpers'
 	import { fly } from 'svelte/transition'
-	import { cubicOut } from 'svelte/easing'
+	import { ScrollAnimation } from '$lib/scroll'
 	import VirtualListBlock, { scroll_container_keydown } from './VirtualListBlock.svelte'
 	import type { SelectedTracksAction } from '$electron/typed_ipc'
 	import {
@@ -109,37 +109,7 @@
 	onDestroy(ipc_listen('context.Remove from Queue', remove_from_queue))
 
 	let queue_element: HTMLElement
-	let indicator_scroll_anim: number | null = null
-	const indicator_scroll_duration_ms = 200
-	function smooth_scroll_to(top: number) {
-		const max_top = Math.max(0, queue_element.scrollHeight - queue_element.clientHeight)
-		const target_top = Math.max(0, Math.min(top, max_top))
-		if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-			queue_element.scrollTop = target_top
-			return
-		}
-		if (indicator_scroll_anim) {
-			cancelAnimationFrame(indicator_scroll_anim)
-		}
-		const start_top = queue_element.scrollTop
-		const start_ts = performance.now()
-		const frame = (now: number) => {
-			const p = Math.min(1, (now - start_ts) / indicator_scroll_duration_ms)
-			queue_element.scrollTop = start_top + (target_top - start_top) * cubicOut(p)
-			if (p < 1) {
-				indicator_scroll_anim = requestAnimationFrame(frame)
-			} else {
-				indicator_scroll_anim = null
-			}
-		}
-		indicator_scroll_anim = requestAnimationFrame(frame)
-	}
-	onDestroy(() => {
-		if (indicator_scroll_anim !== null) {
-			cancelAnimationFrame(indicator_scroll_anim)
-			indicator_scroll_anim = null
-		}
-	})
+	const indicator_scroll_anim = new ScrollAnimation()
 
 	function handle_action(action: SelectedTracksAction) {
 		const first_index = selection.find_first_index()
@@ -256,7 +226,8 @@
 								if (show) {
 									const old_top = queue_element.scrollTop + history_rows * entry_height
 									queue_element.scrollTop = old_top
-									smooth_scroll_to(old_top - entry_height * 5)
+									const top = old_top - entry_height * 5
+									indicator_scroll_anim.smooth_scroll_to(queue_element, top, 200)
 								} else {
 									queue_element.scrollTop = 0
 								}
