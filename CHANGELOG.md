@@ -1,6 +1,7 @@
 # Changelog
 
 ## Next
+- Add lyrics support
 - Add "Show in Playlist" context menu item
 - Remember queue on restart
 - Keep scroll position when opening play history

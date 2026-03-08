@@ -12,7 +12,8 @@
 		time_record,
 	} from '../lib/player'
 	import { get_duration } from '../lib/helpers'
-	import { queue_visible, toggle_queue_visibility, queue, shuffle, repeat } from '../lib/queue'
+	import { queue_visible, queue, shuffle, repeat } from '../lib/queue'
+	import { lyrics_state, toggle_lyrics_visibility } from '$lib/lyrics.svelte'
 	import { get_track, is_dev } from '$lib/data'
 	import { dragged } from '$lib/drag-drop'
 	import * as dragGhost from './DragGhost.svelte'
@@ -24,8 +25,27 @@
 	} from '$lib/menus'
 	import { ipc_renderer } from '$lib/window'
 	import { tracks_page_item_ids } from './TrackList.svelte'
+	import { onDestroy } from 'svelte'
 
 	export let on_toggle_visualizer: () => void
+
+	function toggle_queue() {
+		$queue_visible = !$queue_visible
+		lyrics_state.visible = false
+	}
+	$: ipc_renderer.invoke('update:Show Queue', $queue_visible)
+	ipc_renderer.on('Show Queue', toggle_queue)
+	onDestroy(() => {
+		ipc_renderer.removeListener('Show Queue', toggle_queue)
+	})
+
+	function toggle_lyrics() {
+		toggle_lyrics_visibility()
+	}
+	ipc_renderer.on('Show Lyrics', toggle_lyrics)
+	onDestroy(() => {
+		ipc_renderer.removeListener('Show Lyrics', toggle_lyrics)
+	})
 
 	async function playing_context_menu() {
 		const playing = queue.getCurrent()
@@ -308,10 +328,36 @@
 		<Slider class="mr-2 w-[110px]" bind:value={$volume} max={1} />
 		<button
 			type="button"
+			class="mr-2"
+			aria-label="Toggle lyrics"
+			tabindex="-1"
+			on:mousedown|preventDefault
+			on:click={toggle_lyrics}
+			class:on={lyrics_state.visible}
+		>
+			<svg
+				xmlns="http://www.w3.org/2000/svg"
+				class="parent-active-zoom lyrics-icon"
+				height="24px"
+				viewBox="0 0 24 24"
+				width="24px"
+				style="fill:none"
+				stroke="currentColor"
+				stroke-width="2"
+				stroke-linecap="round"
+				stroke-linejoin="round"
+			>
+				<path stroke="none" d="M0 0h24v24H0z" fill="none" />
+				<path d="M15 12.9a5 5 0 1 0 -3.902 -3.9" />
+				<path d="M15 12.9l-3.902 -3.899l-7.513 8.584a2 2 0 1 0 2.827 2.83l8.588 -7.515" />
+			</svg>
+		</button>
+		<button
+			type="button"
 			aria-label="Toggle queue"
 			tabindex="-1"
 			on:mousedown|preventDefault
-			on:click={toggle_queue_visibility}
+			on:click={toggle_queue}
 			class:on={$queue_visible}
 		>
 			<svg
@@ -412,6 +458,8 @@
 			font-family: 'Open Sans' // for monospace digits
 	.on svg
 		fill: var(--icon-highlight-color)
+	.on .lyrics-icon
+		stroke: var(--icon-highlight-color)
 	button.volume-icon
 		width: 24px
 		padding-right: 4px
@@ -420,4 +468,8 @@
 			translate: 4px
 		.low
 			translate: 2px
+	.lyrics-icon
+		width: 18px
+		height: 18px
+		stroke-width: 2.4
 </style>

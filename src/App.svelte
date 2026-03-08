@@ -5,12 +5,14 @@
 	import Player from './components/Player.svelte'
 	import Sidebar from './components/Sidebar.svelte'
 	import Queue from './components/Queue.svelte'
+	import Lyrics from './components/Lyrics.svelte'
 	import TrackInfo, { track_info_state } from './components/TrackInfo.svelte'
 	import PlaylistInfoModal from './components/PlaylistInfo.svelte'
 	import { queue_visible } from './lib/queue'
+	import { lyrics_state } from '$lib/lyrics.svelte'
 	import { ipc_listen, ipc_renderer } from '$lib/window'
 	import { delete_track_list, get_track_list, import_tracks, type PlaylistInfo } from '$lib/data'
-	import { play_pause } from './lib/player'
+	import { play_pause, playing_track, time_record } from './lib/player'
 	import DragGhost from './components/DragGhost.svelte'
 	import ItunesImport from './components/ItunesImport.svelte'
 	import { modal_count } from './components/Modal.svelte'
@@ -55,15 +57,6 @@
 	ipc_renderer.on('import', open_import_dialog)
 	onDestroy(() => {
 		ipc_renderer.removeListener('import', open_import_dialog)
-	})
-
-	function toggle_queue() {
-		$queue_visible = !$queue_visible
-	}
-	$: ipc_renderer.invoke('update:Show Queue', $queue_visible)
-	ipc_renderer.on('Show Queue', toggle_queue)
-	onDestroy(() => {
-		ipc_renderer.removeListener('Show Queue', toggle_queue)
 	})
 
 	function toggle_visualizer() {
@@ -284,6 +277,14 @@
 		</div>
 		{#if $queue_visible}
 			<Queue />
+		{:else if lyrics_state.visible}
+			<Lyrics
+				track_name={$playing_track?.name || ''}
+				artist_name={$playing_track?.artist || ''}
+				album_name={$playing_track?.albumName || ''}
+				duration_sec={$time_record.duration || null}
+				current_time_sec={$time_record.elapsed || 0}
+			/>
 		{/if}
 	</div>
 	<Player on_toggle_visualizer={toggle_visualizer} />

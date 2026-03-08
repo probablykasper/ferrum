@@ -122,6 +122,7 @@ type Events = {
 	volumeUp: () => void
 	volumeDown: () => void
 	'Show Queue': () => void
+	'Show Lyrics': () => void
 	'Toggle Visualizer': () => void
 	ToggleQuickNav: () => void
 	'Group Album Tracks': (checked: boolean) => void
@@ -190,6 +191,7 @@ type Commands = {
 	'update:Shuffle': (checked: boolean) => void
 	'update:Repeat': (checked: boolean) => void
 	'update:Show Queue': (checked: boolean) => void
+	'update:Show Lyrics': (checked: boolean) => void
 }
 
 export type IpcMain = TypedIpcMain<Events, Commands>

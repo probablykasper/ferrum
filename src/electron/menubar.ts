@@ -178,6 +178,15 @@ export function init_menu_bar(app: App, main_window: BrowserWindow) {
 					},
 				},
 				{
+					label: 'Show Lyrics',
+					id: 'Show Lyrics',
+					type: 'checkbox',
+					accelerator: 'CmdOrCtrl+L',
+					click() {
+						web_contents.send('Show Lyrics')
+					},
+				},
+				{
 					label: 'Toggle Visualizer',
 					type: 'checkbox',
 					accelerator: 'CmdOrCtrl+T',
@@ -348,6 +357,11 @@ export function init_menu_bar(app: App, main_window: BrowserWindow) {
 	ipc_main.handle('update:Show Queue', (_, checked) => {
 		const item = menu.getMenuItemById('Show Queue')
 		if (!item) return handle_missing('Show Queue')
+		item.checked = checked
+	})
+	ipc_main.handle('update:Show Lyrics', (_, checked) => {
+		const item = menu.getMenuItemById('Show Lyrics')
+		if (!item) return handle_missing('Show Lyrics')
 		item.checked = checked
 	})
 }
