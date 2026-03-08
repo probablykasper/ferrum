@@ -2,6 +2,7 @@
 
 ## Next
 - Remember queue on restart
+- Keep scroll position when opening play history
 - Android: Add track streaming search links for Spotify and YouTube Music
 
 ## 0.21.0 - 2026 Map 6
