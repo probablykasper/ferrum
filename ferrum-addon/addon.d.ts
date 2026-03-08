@@ -88,6 +88,8 @@ export interface KeyedTrack {
 
 export declare function load_data(isDev: boolean, localDataPath?: string | undefined | null, libraryPath?: string | undefined | null): void
 
+export declare function load_queue_state(filePath: string): QueueState | null
+
 export declare function load_tags(trackId: string): void
 
 export declare function load_view_options(): ViewOptions
@@ -107,6 +109,7 @@ export interface Paths {
   cacheDb: string
   localDataDir: string
   viewOptionsFile: string
+  queueFile: string
   logsDir: string
 }
 
@@ -125,6 +128,27 @@ export interface Playlist {
 
 export declare function playlist_filter_duplicates(playlistId: TrackID, ids: Array<string>): Array<TrackID>
 
+export interface QueueCurrentState {
+  item: QueueItemState
+  from_auto_queue: boolean
+}
+
+export interface QueueItemState {
+  qId: number
+  id: string
+  non_shuffle_pos?: number
+}
+
+export interface QueueState {
+  past: Array<QueueItemState>
+  current?: QueueCurrentState
+  user_queue: Array<QueueItemState>
+  auto_queue: Array<QueueItemState>
+  last_qid: number
+  shuffle: boolean
+  repeat: boolean
+}
+
 export declare function read_cover_async(filePath: string, index: number): Promise<Buffer | null>
 
 /** Returns `None` if the file does not have an image */
@@ -135,6 +159,8 @@ export declare function remove_from_playlist(playlistId: TrackID, itemIds: Array
 export declare function remove_image(index: number): void
 
 export declare function save(): void
+
+export declare function save_queue_state(queueState: QueueState, filePath: string): Promise<void>
 
 export declare function save_view_options(viewOptions: ViewOptions, filePath: string): Promise<void>
 

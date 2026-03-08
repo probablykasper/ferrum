@@ -1,6 +1,7 @@
 # Changelog
 
 ## Next
+- Remember queue on restart
 - Android: Add track streaming search links for Spotify and YouTube Music
 
 ## 0.21.0 - 2026 Map 6

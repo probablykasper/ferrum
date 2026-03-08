@@ -27,6 +27,7 @@ pub struct Paths {
 	pub cache_db: String,
 	pub local_data_dir: String,
 	pub view_options_file: String,
+	pub queue_file: String,
 	pub logs_dir: String,
 }
 #[cfg(feature = "napi-rs")]

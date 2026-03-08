@@ -9,7 +9,7 @@ import type {
 	TracksPageOptions,
 	ViewOptions,
 } from '../../ferrum-addon'
-import { queue } from './queue'
+import { init_queue_persistence, queue } from './queue'
 import { current_playlist_id } from '$components/TrackList.svelte'
 import { navigate } from './router'
 import { call_sync, get_error_message, strict_call } from './error'
@@ -25,6 +25,7 @@ export const ItunesImport = inner_addon.ItunesImport
 strict_call((addon) => addon.load_data(is_dev, local_data_path, library_path))
 
 export const paths = strict_call((addon) => addon.get_paths())
+init_queue_persistence(paths.queueFile)
 export function join_paths(...args: string[]) {
 	return args.join(paths.pathSeparator)
 }

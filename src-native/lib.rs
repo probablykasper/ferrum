@@ -32,6 +32,8 @@ mod page;
 #[cfg(feature = "napi-rs")]
 mod playlists;
 #[cfg(feature = "napi-rs")]
+mod queue_state;
+#[cfg(feature = "napi-rs")]
 mod sort;
 #[cfg(feature = "napi-rs")]
 mod tracks;

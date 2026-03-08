@@ -102,6 +102,7 @@ impl Data {
 			cache_db: path_to_string(cache_dir.join("Cache.redb")),
 			local_data_dir: path_to_string(&local_data_dir),
 			view_options_file: path_to_string(local_data_dir.join("view.json")),
+			queue_file: path_to_string(local_data_dir.join("queue.cbor")),
 			// This makes sure we can get the logs dir, which is important for crash logs
 			logs_dir: path_to_string(app_log_dir()?),
 		};

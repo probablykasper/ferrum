@@ -57,11 +57,6 @@ export const playing_id = derived(queue, () => {
 	const current_id = queue.getCurrent()?.id
 	return current_id
 })
-playing_id.subscribe((current_id) => {
-	if (current_id) {
-		cover_src.newFromTrackId(current_id)
-	}
-})
 let waiting_to_play = false
 const media_session = navigator.mediaSession
 
@@ -112,6 +107,11 @@ export const cover_src = (() => {
 		subscribe,
 	}
 })()
+playing_id.subscribe((current_id) => {
+	if (current_id) {
+		cover_src.newFromTrackId(current_id)
+	}
+})
 
 audio.onplay = update_time_details
 audio.onloadeddata = update_time_details

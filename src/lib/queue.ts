@@ -3,6 +3,7 @@ import { get, writable } from 'svelte/store'
 import { getter_writable } from './helpers'
 import { ipc_renderer } from './window'
 import { track_exists } from '$lib/data'
+import quit from './quit'
 
 export const queue_visible = writable(false)
 export function toggle_queue_visibility() {
@@ -57,6 +58,84 @@ export const queue = (() => {
 	}
 })()
 
+let queue_file_path = ''
+let queue_loaded = false
+const MAX_HISTORY = 1000
+const SAVE_DEBOUNCE_MS = 1000
+let pending_save_timeout: ReturnType<typeof setTimeout> | null = null
+
+function limit_history(past: QueueItem[]) {
+	if (past.length <= MAX_HISTORY) return past
+	return past.slice(past.length - MAX_HISTORY)
+}
+
+function save_queue_state_now() {
+	if (!queue_loaded) return
+	return window.addon
+		.save_queue_state(
+			{
+				past: queue.get().past,
+				current: queue.get().current ?? undefined,
+				user_queue: queue.get().user_queue,
+				auto_queue: queue.get().auto_queue,
+				last_qid,
+				shuffle: get(shuffle),
+				repeat: repeat.get(),
+			},
+			queue_file_path,
+		)
+		.catch(() => {})
+}
+function save_queue_state() {
+	if (!queue_loaded) return
+	if (pending_save_timeout) {
+		clearTimeout(pending_save_timeout)
+	}
+	pending_save_timeout = setTimeout(() => {
+		pending_save_timeout = null
+		save_queue_state_now()
+	}, SAVE_DEBOUNCE_MS)
+}
+
+quit.set_handler('queue-state', async () => {
+	if (pending_save_timeout) {
+		clearTimeout(pending_save_timeout)
+		pending_save_timeout = null
+	}
+	await save_queue_state_now()
+})
+
+export function init_queue_persistence(file_path: string) {
+	if (queue_loaded) return
+	queue_file_path = file_path
+
+	const saved = window.addon.load_queue_state(queue_file_path)
+	if (saved) {
+		const past = saved.past.filter((item) => track_exists(item.id))
+		const current = saved.current && track_exists(saved.current.item.id) ? saved.current : null
+		const user_queue = saved.user_queue.filter((item) => track_exists(item.id))
+		const auto_queue = saved.auto_queue.filter((item) => track_exists(item.id))
+		if (current) {
+			past.push(current.item)
+		}
+		const limited_past = limit_history(past)
+
+		last_qid = Math.max(
+			-1,
+			saved.last_qid,
+			...limited_past.map((item) => item.qId),
+			...user_queue.map((item) => item.qId),
+			...auto_queue.map((item) => item.qId),
+		)
+		repeat.set(saved.repeat)
+		shuffle.set(saved.shuffle)
+		queue.set({ past: limited_past, current: null, user_queue, auto_queue })
+	}
+
+	queue.subscribe(save_queue_state)
+	queue_loaded = true
+}
+
 /** Fisher-Yates shuffle */
 function shuffle_array<T>(array: Array<T>) {
 	let current_index = array.length,
@@ -103,6 +182,7 @@ function apply_shuffle(shuffle: boolean) {
 shuffle.subscribe(($shuffle) => {
 	apply_shuffle($shuffle)
 	ipc_renderer.invoke('update:Shuffle', $shuffle)
+	save_queue_state()
 })
 ipc_renderer.on('Shuffle', () => {
 	shuffle.update((value) => !value)
@@ -114,6 +194,7 @@ ipc_renderer.on('Repeat', () => {
 })
 repeat.subscribe(($repeat) => {
 	ipc_renderer.invoke('update:Repeat', $repeat)
+	save_queue_state()
 })
 
 export function get_current() {
@@ -250,6 +331,7 @@ export function next() {
 	const q = queue.get()
 	if (q.current) {
 		q.past.push(q.current.item)
+		q.past = limit_history(q.past)
 	}
 	if (q.user_queue.length) {
 		q.current = {
@@ -289,6 +371,7 @@ export function set_new_queue(new_ids: TrackID[], new_current_index: number) {
 	queue.update((q) => {
 		if (q.current) {
 			q.past.push(q.current.item)
+			q.past = limit_history(q.past)
 		}
 		q.current = current
 			? {
