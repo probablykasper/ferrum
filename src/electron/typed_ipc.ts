@@ -97,6 +97,7 @@ export type SelectedTracksAction =
 	| 'Play Next'
 	| 'Add to Queue'
 	| { action: 'Add to Playlist'; playlist_id: string }
+	| { action: 'Show in Playlist'; playlist_id: string }
 	| 'Get Info'
 	| 'reveal_track_file'
 	| 'Remove from Playlist'
@@ -141,9 +142,16 @@ type Events = {
 }
 
 export type ShowTrackMenuOptions = {
-	lists: { label: string; enabled: boolean; id: string }[]
+	lists: TrackMenuNode[]
+	show_in_playlists: TrackMenuNode[]
 	is_editable_playlist: boolean
 	queue: boolean
+}
+
+export type TrackMenuNode = {
+	label: string
+	enabled: boolean
+	id: string
 }
 
 type Commands = {

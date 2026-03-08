@@ -45,7 +45,11 @@
 	import Header from './Header.svelte'
 	import { writable } from 'svelte/store'
 	import { SvelteSelection } from '$lib/selection'
-	import { get_flattened_tracklists, handle_selected_tracks_action } from '$lib/menus'
+	import {
+		get_show_in_playlists_tree,
+		get_tracklists_tree,
+		handle_selected_tracks_action,
+	} from '$lib/menus'
 	import type { SelectedTracksAction } from '$electron/typed_ipc'
 	import { RefreshLevel, VirtualGrid, type Column } from '$lib/virtual-grid.svelte'
 
@@ -96,10 +100,12 @@
 			tracklist_actions.scroll_to_index?.(index)
 		},
 		async on_contextmenu() {
+			const selected_track_ids = get_track_ids(selection.items_as_array())
 			const action = await ipc_renderer.invoke('show_tracks_menu', {
 				is_editable_playlist: tracks_page.playlistKind === 'playlist',
 				queue: false,
-				lists: get_flattened_tracklists(),
+				lists: get_tracklists_tree(),
+				show_in_playlists: get_show_in_playlists_tree(selected_track_ids),
 			})
 			if (action !== null) {
 				handle_action(action)
@@ -503,6 +509,11 @@
 
 	onMount(() => {
 		tracklist_actions.scroll_to_index = virtual_grid.scroll_to_index.bind(virtual_grid)
+		tracklist_actions.go_to_index = (index) => {
+			virtual_grid.scroll_to_index(index)
+			selection.clear()
+			selection.add_index(index)
+		}
 	})
 </script>
 

@@ -18,7 +18,11 @@
 	import { cubicOut } from 'svelte/easing'
 	import VirtualListBlock, { scroll_container_keydown } from './VirtualListBlock.svelte'
 	import type { SelectedTracksAction } from '$electron/typed_ipc'
-	import { get_flattened_tracklists, handle_selected_tracks_action } from '$lib/menus'
+	import {
+		get_show_in_playlists_tree,
+		get_tracklists_tree,
+		handle_selected_tracks_action,
+	} from '$lib/menus'
 	import { SvelteSelection } from '$lib/selection'
 
 	let object_urls: string[] = []
@@ -71,10 +75,14 @@
 			autoplay_list.scroll_to_index(index, 40)
 		},
 		async on_contextmenu() {
+			const indexes = selection.get_selected_indexes()
+			const visible_track_ids = get_visible_track_ids()
+			const selected_visible_track_ids = indexes.map((i) => visible_track_ids[i])
 			const action = await ipc_renderer.invoke('show_tracks_menu', {
 				is_editable_playlist: false,
 				queue: true,
-				lists: get_flattened_tracklists(),
+				lists: get_tracklists_tree(),
+				show_in_playlists: get_show_in_playlists_tree(selected_visible_track_ids),
 			})
 			if (action !== null) {
 				handle_action(action)
@@ -82,6 +90,15 @@
 		},
 	})
 	$: selection.update_all_items(visible_qids)
+
+	function get_visible_track_ids() {
+		return [
+			...(show_history ? $queue.past : []),
+			...(show_history && $queue.current ? [$queue.current.item] : []),
+			...$queue.user_queue,
+			...$queue.auto_queue,
+		].map((item) => item.id)
+	}
 
 	function remove_from_queue() {
 		if (selection.items.size >= 1) {
@@ -127,12 +144,7 @@
 	function handle_action(action: SelectedTracksAction) {
 		const first_index = selection.find_first_index()
 		const indexes = selection.get_selected_indexes()
-		const visible_track_ids = [
-			...(show_history ? $queue.past : []),
-			...(show_history && $queue.current ? [$queue.current.item] : []),
-			...$queue.user_queue,
-			...$queue.auto_queue,
-		].map((item) => item.id)
+		const visible_track_ids = get_visible_track_ids()
 		const selected_visible_track_ids = indexes.map((i) => visible_track_ids[i])
 		handle_selected_tracks_action({
 			action,

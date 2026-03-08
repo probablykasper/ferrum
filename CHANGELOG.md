@@ -1,6 +1,7 @@
 # Changelog
 
 ## Next
+- Add "Show in Playlist" context menu item
 - Remember queue on restart
 - Keep scroll position when opening play history
 - Android: Add track streaming search links for Spotify and YouTube Music

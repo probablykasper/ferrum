@@ -64,6 +64,8 @@ export declare function get_track_list(id: string): TrackList
 
 export declare function get_track_lists_details(): Record<string, TrackListDetails>
 
+export declare function get_track_playlist_ids(trackId: TrackID): Array<TrackID>
+
 export declare function get_tracks_page(options: TracksPageOptions): TracksPage
 
 export declare function import_file(path: string, now: MsSinceUnixEpoch): void
@@ -123,7 +125,7 @@ export interface Playlist {
   originalId?: string
   dateImported?: MsSinceUnixEpoch
   dateCreated?: MsSinceUnixEpoch
-  tracks: Array<ItemId>
+  tracks: string[]
 }
 
 export declare function playlist_filter_duplicates(playlistId: TrackID, ids: Array<string>): Array<TrackID>

@@ -8,6 +8,7 @@ use crate::str_to_option;
 use anyhow::{Context, Result, bail};
 use linked_hash_map::LinkedHashMap;
 use napi::{Env, Unknown};
+use rayon::prelude::*;
 use std::collections::{HashMap, HashSet};
 use std::path::PathBuf;
 
@@ -170,6 +171,34 @@ pub fn filter_duplicates(playlist_id: TrackID, ids: Vec<String>, env: Env) -> Re
 	}
 	let track_ids: Vec<TrackID> = track_ids.into_iter().collect();
 	Ok(track_ids)
+}
+
+#[napi(js_name = "get_track_playlist_ids")]
+#[allow(dead_code)]
+pub fn get_track_playlist_ids(track_id: TrackID, env: Env) -> Result<Vec<TrackID>> {
+	let data: &Data = get_data(&env);
+	Ok(get_track_playlist_ids_in_library(&data.library, &track_id))
+}
+
+pub fn get_track_playlist_ids_in_library(library: &Library, track_id: &str) -> Vec<TrackID> {
+	let track_id_map = TRACK_ID_MAP.read().unwrap();
+	library
+		.trackLists
+		.iter()
+		.collect::<Vec<_>>()
+		.par_iter()
+		.filter_map(|(playlist_id, tracklist)| {
+			let TrackList::Playlist(playlist) = tracklist else {
+				return None;
+			};
+			for item_id in &playlist.tracks {
+				if track_id_map[*item_id as usize].as_str() == track_id {
+					return Some(playlist_id.to_string());
+				}
+			}
+			None
+		})
+		.collect()
 }
 
 #[napi(js_name = "remove_from_playlist")]

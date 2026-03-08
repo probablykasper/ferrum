@@ -90,6 +90,15 @@ ipc_main.handle('show_tracks_menu', (e, options) => {
 			},
 			{ type: 'separator' },
 			{
+				label: 'Show in Playlist',
+				submenu: options.show_in_playlists.map((item) => {
+					return {
+						...item,
+						click: () => resolve({ action: 'Show in Playlist', playlist_id: item.id }),
+					}
+				}),
+			},
+			{
 				label: (() => {
 					if (is.mac) return 'Reveal in Finder'
 					else if (is.windows) return 'Reveal in File Explorer'

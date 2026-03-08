@@ -17,7 +17,11 @@
 	import { dragged } from '$lib/drag-drop'
 	import * as dragGhost from './DragGhost.svelte'
 	import Slider from './Slider.svelte'
-	import { get_flattened_tracklists, handle_selected_tracks_action } from '$lib/menus'
+	import {
+		get_show_in_playlists_tree,
+		get_tracklists_tree,
+		handle_selected_tracks_action,
+	} from '$lib/menus'
 	import { ipc_renderer } from '$lib/window'
 	import { tracks_page_item_ids } from './TrackList.svelte'
 
@@ -29,7 +33,8 @@
 			const action = await ipc_renderer.invoke('show_tracks_menu', {
 				is_editable_playlist: false,
 				queue: false,
-				lists: get_flattened_tracklists(),
+				lists: get_tracklists_tree(),
+				show_in_playlists: get_show_in_playlists_tree([playing.id]),
 			})
 			if (action !== null) {
 				handle_selected_tracks_action({
