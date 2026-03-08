@@ -1,7 +1,9 @@
 [package]
 name = "ferrum_mobile"
+publish = false
 edition = "2024"
 default-run = "ferrum_mobile"
+version = "0.0.1" # overridden in ci build
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

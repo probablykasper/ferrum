@@ -15,6 +15,10 @@
 		"store:default",
 		"safe-area-insets-css:default",
 		"android-fs:default",
-		"os:default"
+		"os:default",
+		{
+			"identifier": "opener:allow-open-url",
+			"allow": [{ "url": "*" }]
+		}
 	]
 }

@@ -106,9 +106,7 @@ jobs:
 
       - name: Build
         # Unreleased v1 is used to be able to use uploadWorkflowArtifacts and mobile:
-        # uses: tauri-apps/tauri-action@a1b01e690374452a209dd44f6de089dda9003d3d
-        # v1 bugfix by Fabian to fix multiple releases being created:
-        uses: tauri-apps/tauri-action@ed2469ebf97aca60a033d455c4f2c28c65375fa3
+        uses: tauri-apps/tauri-action@850c373b94f35e16e4de61cbb9f6e4876af8c0b4
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:

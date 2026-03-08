@@ -1136,7 +1136,7 @@ dependencies = [
 
 [[package]]
 name = "ferrum_mobile"
-version = "0.0.0"
+version = "0.0.1"
 dependencies = [
  "android_logger",
  "anyhow",

@@ -21,7 +21,6 @@ fn error_popup(app_handle: tauri::AppHandle, msg: String) {
 		.show(|_| {});
 }
 
-// you shoud use async fn
 #[tauri::command]
 #[specta::specta]
 async fn open_file_persistent_android(app: tauri::AppHandle) -> Result<Option<String>, String> {

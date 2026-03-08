@@ -4,15 +4,18 @@
 	import { page } from '$app/state'
 	import type { Track, TrackList, Playlist, Folder, Special, LibraryTauri } from '../../bindings'
 	import { resolve } from '$app/paths'
+	import { openUrl } from '@tauri-apps/plugin-opener'
 
 	type sort_key_type = 'name' | 'artist' | 'dateAdded' | 'playCount'
 	type sort_dir_type = 'asc' | 'desc'
 	type active_filter_type = { kind: 'all' } | { kind: 'liked' } | { kind: 'genre'; value: string }
 	type view_type = { kind: 'browser'; folder_id: string } | { kind: 'tracks'; playlist_id: string }
+	type streaming_service_type = 'spotify' | 'youtube-music'
 
-	const { library, open_button } = $props<{
+	const { library, open_button, streaming_service } = $props<{
 		library: LibraryTauri | null
 		open_button: Snippet<[]>
+		streaming_service: streaming_service_type
 	}>()
 	let error = $state('')
 	let search_query = $state('')
@@ -178,6 +181,18 @@
 	function format_duration(seconds: number): string {
 		const s = Math.floor(seconds)
 		return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
+	}
+
+	function open_track(track: Track) {
+		const artist = track.artist?.trim() || 'Unknown Artist'
+		const title = track.name.trim()
+		const query = `${artist} - ${title}`
+		const encoded_query = encodeURIComponent(query)
+		if (streaming_service === 'youtube-music') {
+			openUrl(`vnd.youtube.music://search?q=${encoded_query}`)
+		} else if (streaming_service === 'spotify') {
+			openUrl(`open.spotify.com/search/${encoded_query}`)
+		}
 	}
 </script>
 
@@ -439,40 +454,50 @@
 			{#if filtered_tracks.length > 0}
 				<ul class="divide-y divide-neutral-200 dark:divide-neutral-900">
 					{#each filtered_tracks as track}
-						<li class="flex items-center gap-3 px-4 py-3 transition-colors">
-							<div class="min-w-0 flex-1">
-								<p class="truncate font-medium text-neutral-900 dark:text-neutral-100">
-									{track.name}
-								</p>
-								<p class="mt-0.5 truncate text-xs text-neutral-500">
-									{track.artist ?? 'Unknown Artist'}
-									{#if track.albumName}
-										<span class="text-neutral-400 dark:text-neutral-700"> · </span>{track.albumName}
+						<li>
+							<button
+								rel="noopener noreferrer"
+								class="focus-visible active flex items-center justify-between gap-3 px-4 py-3 focus-visible:bg-neutral-100"
+								onclick={() => open_track(track)}
+							>
+								<div>
+									<p class="truncate font-medium text-neutral-900 dark:text-neutral-100">
+										{track.name}
+									</p>
+									<p class="mt-0.5 truncate text-xs text-neutral-500">
+										{track.artist ?? 'Unknown Artist'}
+										{#if track.albumName}
+											<span class="text-neutral-400 dark:text-neutral-700">
+												·
+											</span>{track.albumName}
+										{/if}
+									</p>
+									<div class="mt-1 flex items-center gap-2">
+										{#if track.genre}
+											<span
+												class="rounded bg-neutral-100 px-1.5 py-px text-xs text-neutral-500 dark:bg-neutral-800"
+												>{track.genre}</span
+											>
+										{/if}
+										{#if track.year}
+											<span class="text-xs text-neutral-400 dark:text-neutral-700"
+												>{track.year}</span
+											>
+										{/if}
+									</div>
+								</div>
+								<div
+									class="flex shrink-0 flex-col items-end gap-1 text-xs text-neutral-400 tabular-nums dark:text-neutral-600"
+								>
+									<span>{format_duration(track.duration)}</span>
+									{#if track.playCount}
+										<span>{track.playCount} plays</span>
 									{/if}
-								</p>
-								<div class="mt-1 flex items-center gap-2">
-									{#if track.genre}
-										<span
-											class="rounded bg-neutral-100 px-1.5 py-px text-xs text-neutral-500 dark:bg-neutral-800"
-											>{track.genre}</span
-										>
-									{/if}
-									{#if track.year}
-										<span class="text-xs text-neutral-400 dark:text-neutral-700">{track.year}</span>
+									{#if track.liked}
+										<span class="text-rose-500">♥</span>
 									{/if}
 								</div>
-							</div>
-							<div
-								class="flex shrink-0 flex-col items-end gap-1 text-xs text-neutral-400 tabular-nums dark:text-neutral-600"
-							>
-								<span>{format_duration(track.duration)}</span>
-								{#if track.playCount}
-									<span>{track.playCount} plays</span>
-								{/if}
-								{#if track.liked}
-									<span class="text-rose-500">♥</span>
-								{/if}
-							</div>
+							</button>
 						</li>
 					{/each}
 				</ul>

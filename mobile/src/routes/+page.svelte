@@ -6,17 +6,34 @@
 	import Library from './Library.svelte'
 	import { Store } from '@tauri-apps/plugin-store'
 	import { platform } from '@tauri-apps/plugin-os'
-	import '@saurl/tauri-plugin-safe-area-insets-css-api'
+
+	const platform_value = platform()
+	if (platform_value === 'android' || platform_value === 'ios') {
+		await import('@saurl/tauri-plugin-safe-area-insets-css-api')
+	}
+
+	type StreamingService = 'spotify' | 'youtube-music'
 
 	let loading = $state(false)
 	let error = $state('')
+	let streaming_service = $state<StreamingService>('spotify')
 
 	const store = await Store.load('settings.json')
 	let library = $state<LibraryTauri | null>(null)
 
 	const saved_library_path = await store.get('library_path')
+	const saved_streaming_service = await store.get('streaming_service')
+	if (saved_streaming_service === 'spotify' || saved_streaming_service === 'youtube-music') {
+		streaming_service = saved_streaming_service
+	}
 	if (typeof saved_library_path === 'string') {
 		load_library(saved_library_path)
+	}
+
+	async function set_streaming_service(service: StreamingService) {
+		streaming_service = service
+		await store.set('streaming_service', service)
+		await store.save()
 	}
 
 	async function open_library() {
@@ -81,8 +98,28 @@
 		</button>
 	{/snippet}
 
+	<div class="shrink-0 border-b border-neutral-200 px-4 py-2.5 dark:border-neutral-800">
+		<div class="flex items-center gap-2">
+			<label for="streaming-service" class="text-xs text-neutral-500">Streaming</label>
+			<select
+				id="streaming-service"
+				class="rounded-md border border-neutral-300 bg-white px-2 py-1 text-xs text-neutral-700 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-200"
+				value={streaming_service}
+				onchange={(event) => {
+					const service = (event.currentTarget as HTMLSelectElement).value
+					if (service === 'spotify' || service === 'youtube-music') {
+						set_streaming_service(service)
+					}
+				}}
+			>
+				<option value="spotify">Spotify</option>
+				<option value="youtube-music">YouTube Music</option>
+			</select>
+		</div>
+	</div>
+
 	{#if library}
-		<Library {library} {open_button} />
+		<Library {library} {open_button} {streaming_service} />
 	{:else}
 		<div
 			class="flex flex-1 flex-col items-center justify-center gap-4 px-8 text-center text-neutral-400 dark:text-neutral-700"

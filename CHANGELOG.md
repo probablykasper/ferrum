@@ -1,5 +1,8 @@
 # Changelog
 
+## Next
+- Android: Add track streaming search links for Spotify and YouTube Music
+
 ## 0.21.0 - 2026 Map 6
 - Add a basic Android app. It only lets you browse a Ferrum Library.json file. No playback or syncing yet.
 
