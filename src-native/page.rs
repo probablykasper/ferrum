@@ -1,12 +1,17 @@
+#[cfg(feature = "napi-rs")]
 use crate::data::Data;
+#[cfg(feature = "napi-rs")]
 use crate::data_js::get_data;
 use crate::filter::filter;
-use crate::library_types::{ItemId, TrackList};
+use crate::library_types::{ItemId, Library, TrackList};
 use crate::sort::sort;
+#[cfg(feature = "napi-rs")]
 use napi::{Env, Result};
+use serde::{Deserialize, Serialize};
+use specta::Type;
 
-#[napi(object)]
-#[derive(Clone)]
+#[cfg_attr(feature = "napi", napi(object))]
+#[derive(Deserialize, Clone, Type)]
 pub struct TracksPageOptions {
 	pub playlist_id: String,
 	pub sort_key: String,
@@ -15,7 +20,8 @@ pub struct TracksPageOptions {
 	pub group_album_tracks: bool,
 }
 
-#[napi(object)]
+#[cfg_attr(feature = "napi", napi(object))]
+#[derive(Serialize, Type)]
 pub struct TracksPage {
 	pub playlist_kind: String,
 	pub playlist_name: String,
@@ -24,14 +30,22 @@ pub struct TracksPage {
 	pub item_ids: Vec<ItemId>,
 }
 
-#[napi(js_name = "get_tracks_page")]
+#[cfg(feature = "napi-rs")]
+#[cfg_attr(feature = "napi", napi(js_name = "get_tracks_page"))]
 #[allow(dead_code)]
 pub fn get_tracks_page(options: TracksPageOptions, env: Env) -> Result<TracksPage> {
 	let data: &mut Data = get_data(&env);
-	let tracklist = data.library.get_tracklist(&options.playlist_id)?;
-	let item_ids = sort(options.clone(), &data.library)?;
+	Ok(get_tracks_page_from_library(options, &data.library)?)
+}
+
+pub fn get_tracks_page_from_library(
+	options: TracksPageOptions,
+	library: &Library,
+) -> anyhow::Result<TracksPage> {
+	let tracklist = library.get_tracklist(&options.playlist_id)?;
+	let item_ids = sort(options.clone(), &library)?;
 	let tracklist_length = item_ids.len();
-	let item_ids = filter(item_ids, options.filter_query, &data.library);
+	let item_ids = filter(item_ids, options.filter_query, &library);
 	let track_page = match tracklist {
 		TrackList::Playlist(playlist) => TracksPage {
 			playlist_kind: tracklist.kind().to_string(),

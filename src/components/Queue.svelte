@@ -264,27 +264,27 @@
 						get_key={(item) => item.qId}
 						item_height={entry_height}
 						scroll_container={queue_element}
-						let:item
-						let:i={qi}
 					>
-						<!-- svelte-ignore a11y-click-events-have-key-events -->
-						<!-- svelte-ignore a11y-interactive-supports-focus -->
-						<div
-							class="row"
-							role="row"
-							class:selected={$selection.has(item.qId)}
-							on:mousedown={(e) => selection.handle_mousedown(e, qi)}
-							on:contextmenu={(e) => selection.handle_contextmenu(e, qi)}
-							on:click={(e) => selection.handle_click(e, qi)}
-							draggable="true"
-							on:dragstart={on_drag_start}
-							on:dragover={(e) => on_drag_over(e, qi)}
-							on:drop={drop_handler}
-							on:dragleave={drag_end_handler}
-							on:dragend={drag_end_handler}
-						>
-							<QueueItemComponent id={item.id} />
-						</div>
+						{#snippet children({ item, i: qi })}
+							<!-- svelte-ignore a11y-click-events-have-key-events -->
+							<!-- svelte-ignore a11y-interactive-supports-focus -->
+							<div
+								class="row"
+								role="row"
+								class:selected={$selection.has(item.qId)}
+								on:mousedown={(e) => selection.handle_mousedown(e, qi)}
+								on:contextmenu={(e) => selection.handle_contextmenu(e, qi)}
+								on:click={(e) => selection.handle_click(e, qi)}
+								draggable="true"
+								on:dragstart={on_drag_start}
+								on:dragover={(e) => on_drag_over(e, qi)}
+								on:drop={drop_handler}
+								on:dragleave={drag_end_handler}
+								on:dragend={drag_end_handler}
+							>
+								<QueueItemComponent id={item.id} />
+							</div>
+						{/snippet}
 					</VirtualListBlock>
 					{#if $queue.current}
 						{@const qi = current_index}
@@ -347,28 +347,28 @@
 					get_key={(item) => item.qId}
 					item_height={entry_height}
 					scroll_container={queue_element}
-					let:item
-					let:i
 				>
-					{@const qi = i + up_next_index}
-					<!-- svelte-ignore a11y-click-events-have-key-events -->
-					<!-- svelte-ignore a11y-interactive-supports-focus -->
-					<div
-						class="row"
-						role="row"
-						class:selected={$selection.has(item.qId)}
-						on:mousedown={(e) => selection.handle_mousedown(e, qi - first_visible_index)}
-						on:contextmenu={(e) => selection.handle_contextmenu(e, qi - first_visible_index)}
-						on:click={(e) => selection.handle_click(e, qi - first_visible_index)}
-						draggable="true"
-						on:dragstart={on_drag_start}
-						on:dragover={(e) => on_drag_over(e, qi)}
-						on:drop={drop_handler}
-						on:dragleave={drag_end_handler}
-						on:dragend={drag_end_handler}
-					>
-						<QueueItemComponent id={item.id} />
-					</div>
+					{#snippet children({ item, i })}
+						{@const qi = i + up_next_index}
+						<!-- svelte-ignore a11y-click-events-have-key-events -->
+						<!-- svelte-ignore a11y-interactive-supports-focus -->
+						<div
+							class="row"
+							role="row"
+							class:selected={$selection.has(item.qId)}
+							on:mousedown={(e) => selection.handle_mousedown(e, qi - first_visible_index)}
+							on:contextmenu={(e) => selection.handle_contextmenu(e, qi - first_visible_index)}
+							on:click={(e) => selection.handle_click(e, qi - first_visible_index)}
+							draggable="true"
+							on:dragstart={on_drag_start}
+							on:dragover={(e) => on_drag_over(e, qi)}
+							on:drop={drop_handler}
+							on:dragleave={drag_end_handler}
+							on:dragend={drag_end_handler}
+						>
+							<QueueItemComponent id={item.id} />
+						</div>
+					{/snippet}
 				</VirtualListBlock>
 			</div>
 		{/if}
@@ -388,28 +388,28 @@
 					get_key={(item) => item.qId}
 					item_height={entry_height}
 					scroll_container={queue_element}
-					let:item
-					let:i
 				>
-					{@const qi = i + autoplay_index}
-					<!-- svelte-ignore a11y-click-events-have-key-events -->
-					<!-- svelte-ignore a11y-interactive-supports-focus -->
-					<div
-						class="row"
-						role="row"
-						class:selected={$selection.has(item.qId)}
-						on:mousedown={(e) => selection.handle_mousedown(e, qi - first_visible_index)}
-						on:contextmenu={(e) => selection.handle_contextmenu(e, qi - first_visible_index)}
-						on:click={(e) => selection.handle_click(e, qi - first_visible_index)}
-						draggable="true"
-						on:dragstart={on_drag_start}
-						on:dragover={(e) => on_drag_over(e, qi)}
-						on:drop={drop_handler}
-						on:dragleave={drag_end_handler}
-						on:dragend={drag_end_handler}
-					>
-						<QueueItemComponent id={item.id} />
-					</div>
+					{#snippet children({ item, i })}
+						{@const qi = i + autoplay_index}
+						<!-- svelte-ignore a11y-click-events-have-key-events -->
+						<!-- svelte-ignore a11y-interactive-supports-focus -->
+						<div
+							class="row"
+							role="row"
+							class:selected={$selection.has(item.qId)}
+							on:mousedown={(e) => selection.handle_mousedown(e, qi - first_visible_index)}
+							on:contextmenu={(e) => selection.handle_contextmenu(e, qi - first_visible_index)}
+							on:click={(e) => selection.handle_click(e, qi - first_visible_index)}
+							draggable="true"
+							on:dragstart={on_drag_start}
+							on:dragover={(e) => on_drag_over(e, qi)}
+							on:drop={drop_handler}
+							on:dragleave={drag_end_handler}
+							on:dragend={drag_end_handler}
+						>
+							<QueueItemComponent id={item.id} />
+						</div>
+					{/snippet}
 				</VirtualListBlock>
 			</div>
 		{/if}

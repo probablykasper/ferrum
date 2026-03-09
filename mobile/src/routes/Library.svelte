@@ -2,15 +2,31 @@
 	import type { Snippet } from 'svelte'
 	import { goto } from '$app/navigation'
 	import { page } from '$app/state'
-	import type { Track, TrackList, Playlist, Folder, Special, LibraryTauri } from '../../bindings'
+	import {
+		type Track,
+		type TrackList,
+		type Folder,
+		type Special,
+		type LibraryTauri,
+		type TracksPageOptions,
+	} from '../../bindings'
 	import { resolve } from '$app/paths'
 	import { openUrl } from '@tauri-apps/plugin-opener'
+	import VirtualListBlock from '../../../src/components/VirtualListBlock.svelte'
+	import commands from '$lib/commands'
+	import { error as sk_error } from '@sveltejs/kit'
 
-	type sort_key_type = 'name' | 'artist' | 'dateAdded' | 'playCount'
-	type sort_dir_type = 'asc' | 'desc'
-	type active_filter_type = { kind: 'all' } | { kind: 'genre'; value: string }
 	type view_type = { kind: 'browser'; folder_id: string } | { kind: 'tracks'; playlist_id: string }
 	type streaming_service_type = 'spotify' | 'youtube-music'
+
+	async function get_track(item_id: number) {
+		const result = await commands.getTrackByItemId(item_id)
+		if (result.status === 'ok') {
+			return result.data
+		} else {
+			sk_error(500, result.error)
+		}
+	}
 
 	const { library, open_button, streaming_service } = $props<{
 		library: LibraryTauri | null
@@ -18,10 +34,13 @@
 		streaming_service: streaming_service_type
 	}>()
 	let error = $state('')
-	let search_query = $state('')
-	let sort_key = $state<sort_key_type>('dateAdded')
-	let sort_dir = $state<sort_dir_type>('desc')
-	let active_filter = $state<active_filter_type>({ kind: 'all' })
+	let tracks_page_options = $state<TracksPageOptions>({
+		playlist_id: 'root',
+		sort_key: 'dateAdded',
+		sort_desc: false,
+		filter_query: '',
+		group_album_tracks: false,
+	})
 
 	// ── View derived from URL search params ────────────────────────────────────
 	const view = $derived<view_type>(
@@ -29,6 +48,11 @@
 			? { kind: 'tracks', playlist_id: page.url.searchParams.get('id') ?? 'root' }
 			: { kind: 'browser', folder_id: page.url.searchParams.get('id') ?? 'root' },
 	)
+	$effect(() => {
+		if (view.kind === 'tracks') {
+			tracks_page_options.playlist_id = view.playlist_id
+		}
+	})
 
 	// ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -46,9 +70,12 @@
 		return tl?.type === 'folder' ? tl : null
 	}
 
-	function get_playlist(id: string): (Playlist & { type: 'playlist' }) | null {
-		const tl = get_tracklist(id)
-		return tl?.type === 'playlist' ? tl : null
+	async function get_tracks_page(options: TracksPageOptions) {
+		const result = await commands.getTracksPage(options)
+		if (result.status === 'error') {
+			sk_error(500, result.error)
+		}
+		return result.data
 	}
 
 	function get_children(folder_id: string): string[] {
@@ -81,8 +108,8 @@
 	}
 
 	function open_playlist(id: string) {
-		search_query = ''
-		active_filter = { kind: 'all' }
+		tracks_page_options.filter_query = ''
+		tracks_page_options.filter_query = ''
 		// eslint-disable-next-line svelte/no-navigation-without-resolve
 		goto(resolve('/') + `?view=tracks&id=${id}`)
 	}
@@ -91,90 +118,77 @@
 
 	const current_children = $derived(view.kind === 'browser' ? get_children(view.folder_id) : [])
 
-	// Playlist.tracks is typed as number[] in the bindings, but serialize_playlist_ids
-	// in Rust serializes them back to track ID strings over the wire.
-	const playlist_tracks = $derived.by(() => {
-		if (view.kind !== 'tracks') return []
-		// Fake "All Songs" playlist — aggregate every track in the library
-		if (view.playlist_id === 'root') {
-			return Object.values(library?.tracks ?? {}) as Track[]
-		}
-		const playlist = get_playlist(view.playlist_id)
-		if (!playlist) {
-			console.error('[Library] no playlist found for id', view.playlist_id)
-			return []
-		}
-		const track_ids = playlist.tracks as unknown as string[]
-		const resolved = track_ids
-			.map((track_id) => {
-				const track = library?.tracks?.[track_id]
-				if (track === undefined) console.error('[Library] no track for track_id', track_id)
-				return track
-			})
-			.filter((t): t is Track => t !== undefined)
-		return resolved
+	const tracks_page = $derived(
+		view.kind === 'tracks' ? await get_tracks_page(tracks_page_options) : null,
+	)
+	let item_ids: number[] = $state([])
+	$effect(() => {
+		item_ids = tracks_page?.item_ids ?? []
 	})
 
-	const genres = $derived(
-		[
-			...new Set(
-				playlist_tracks
-					.map((t) => t.genre)
-					.filter((g): g is string => g !== null && g !== undefined),
-			),
-		].sort(),
-	)
+	// const genres = $derived(
+	// 	[
+	// 		...new Set(
+	// 			playlist_tracks
+	// 				.map((t) => t.genre)
+	// 				.filter((g): g is string => g !== null && g !== undefined),
+	// 		),
+	// 	].sort(),
+	// )
 
-	const filtered_tracks = $derived(
-		playlist_tracks
-			.filter((t) => {
-				if (active_filter.kind === 'genre') return t.genre === active_filter.value
-				return true
-			})
-			.filter((t) => {
-				if (!search_query) return true
-				const q = search_query.toLowerCase()
-				return (
-					t.name.toLowerCase().includes(q) ||
-					(t.artist?.toLowerCase().includes(q) ?? false) ||
-					(t.albumName?.toLowerCase().includes(q) ?? false)
-				)
-			})
-			.sort((a, b) => {
-				let av: string | number
-				let bv: string | number
-				if (sort_key === 'name') {
-					av = a.name
-					bv = b.name
-				} else if (sort_key === 'artist') {
-					av = a.artist ?? ''
-					bv = b.artist ?? ''
-				} else if (sort_key === 'dateAdded') {
-					av = a.dateAdded
-					bv = b.dateAdded
-				} else {
-					av = a.playCount ?? 0
-					bv = b.playCount ?? 0
-				}
-				if (av < bv) return sort_dir === 'asc' ? -1 : 1
-				if (av > bv) return sort_dir === 'asc' ? 1 : -1
-				return 0
-			}),
-	)
+	// const filtered_tracks = $derived(
+	// 	playlist_tracks
+	// 		.filter((t) => {
+	// 			if (active_filter.kind === 'genre') return t.genre === active_filter.value
+	// 			return true
+	// 		})
+	// 		.filter((t) => {
+	// 			if (!search_query) return true
+	// 			const q = search_query.toLowerCase()
+	// 			return (
+	// 				t.name.toLowerCase().includes(q) ||
+	// 				(t.artist?.toLowerCase().includes(q) ?? false) ||
+	// 				(t.albumName?.toLowerCase().includes(q) ?? false)
+	// 			)
+	// 		})
+	// 		.sort((a, b) => {
+	// 			let av: string | number
+	// 			let bv: string | number
+	// 			if (sort_key === 'name') {
+	// 				av = a.name
+	// 				bv = b.name
+	// 			} else if (sort_key === 'artist') {
+	// 				av = a.artist ?? ''
+	// 				bv = b.artist ?? ''
+	// 			} else if (sort_key === 'dateAdded') {
+	// 				av = a.dateAdded
+	// 				bv = b.dateAdded
+	// 			} else {
+	// 				av = a.playCount ?? 0
+	// 				bv = b.playCount ?? 0
+	// 			}
+	// 			if (av < bv) return sort_dir === 'asc' ? -1 : 1
+	// 			if (av > bv) return sort_dir === 'asc' ? 1 : -1
+	// 			return 0
+	// 		}),
+	// )
+
+	let scroll_container: HTMLElement | undefined = $state()
 
 	// ── Formatting ─────────────────────────────────────────────────────────────
 
-	function toggle_sort(key: sort_key_type) {
-		if (sort_key === key) sort_dir = sort_dir === 'asc' ? 'desc' : 'asc'
-		else {
-			sort_key = key
-			sort_dir = 'asc'
+	function toggle_sort(key: string, default_desc = false) {
+		if (tracks_page_options.sort_key === key) {
+			tracks_page_options.sort_desc = !tracks_page_options.sort_desc
+		} else {
+			tracks_page_options.sort_key = key
+			tracks_page_options.sort_desc = default_desc
 		}
 	}
 
-	function sort_indicator(key: sort_key_type): string {
-		if (sort_key !== key) return ''
-		return sort_dir === 'asc' ? ' ↑' : ' ↓'
+	function sort_indicator(key: string): string {
+		if (tracks_page_options.sort_key !== key) return ''
+		return tracks_page_options.sort_desc === false ? ' ↑' : ' ↓'
 	}
 
 	function format_duration(seconds: number): string {
@@ -264,8 +278,8 @@
 										All Songs
 									</p>
 									<p class="mt-0.5 text-xs text-neutral-500">
-										{Object.keys(library?.tracks ?? {}).length}
-										{Object.keys(library?.tracks ?? {}).length === 1 ? 'track' : 'tracks'}
+										{library?.song_count ?? 0}
+										{(library?.song_count ?? 0) === 1 ? 'track' : 'tracks'}
 									</p>
 								</div>
 								<span class="text-lg text-neutral-400 select-none dark:text-neutral-700">›</span>
@@ -362,7 +376,7 @@
 					<input
 						type="search"
 						placeholder="Search…"
-						bind:value={search_query}
+						bind:value={tracks_page_options.filter_query}
 						class="w-32 rounded-lg border border-neutral-300 bg-neutral-100 py-1.5 pr-3 pl-7 text-xs text-neutral-800 placeholder-neutral-400 transition-colors outline-none focus:border-neutral-400 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200 dark:placeholder-neutral-600 dark:focus:border-neutral-500"
 					/>
 				</div>
@@ -370,7 +384,8 @@
 				<button
 					type="button"
 					onclick={() => toggle_sort('name')}
-					class="shrink-0 rounded border px-2.5 py-1 text-xs transition-colors {sort_key === 'name'
+					class="shrink-0 rounded border px-2.5 py-1 text-xs transition-colors {tracks_page_options.sort_key ===
+					'name'
 						? 'border-neutral-400 bg-neutral-200 text-neutral-900 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100'
 						: 'border-neutral-300 text-neutral-500 hover:text-neutral-600 dark:border-neutral-700 dark:hover:text-neutral-300'}"
 				>
@@ -379,7 +394,7 @@
 				<button
 					type="button"
 					onclick={() => toggle_sort('artist')}
-					class="shrink-0 rounded border px-2.5 py-1 text-xs transition-colors {sort_key ===
+					class="shrink-0 rounded border px-2.5 py-1 text-xs transition-colors {tracks_page_options.sort_key ===
 					'artist'
 						? 'border-neutral-400 bg-neutral-200 text-neutral-900 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100'
 						: 'border-neutral-300 text-neutral-500 hover:text-neutral-600 dark:border-neutral-700 dark:hover:text-neutral-300'}"
@@ -388,18 +403,18 @@
 				</button>
 				<button
 					type="button"
-					onclick={() => toggle_sort('dateAdded')}
-					class="shrink-0 rounded border px-2.5 py-1 text-xs transition-colors {sort_key ===
+					onclick={() => toggle_sort('dateAdded', true)}
+					class="shrink-0 rounded border px-2.5 py-1 text-xs transition-colors {tracks_page_options.sort_key ===
 					'dateAdded'
 						? 'border-neutral-400 bg-neutral-200 text-neutral-900 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100'
 						: 'border-neutral-300 text-neutral-500 hover:text-neutral-600 dark:border-neutral-700 dark:hover:text-neutral-300'}"
 				>
-					Date{sort_indicator('dateAdded')}
+					Date Added{sort_indicator('dateAdded')}
 				</button>
 				<button
 					type="button"
-					onclick={() => toggle_sort('playCount')}
-					class="shrink-0 rounded border px-2.5 py-1 text-xs transition-colors {sort_key ===
+					onclick={() => toggle_sort('playCount', true)}
+					class="shrink-0 rounded border px-2.5 py-1 text-xs transition-colors {tracks_page_options.sort_key ===
 					'playCount'
 						? 'border-neutral-400 bg-neutral-200 text-neutral-900 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100'
 						: 'border-neutral-300 text-neutral-500 hover:text-neutral-600 dark:border-neutral-700 dark:hover:text-neutral-300'}"
@@ -409,22 +424,22 @@
 				<span
 					class="ml-auto shrink-0 pl-1 text-xs text-neutral-400 tabular-nums dark:text-neutral-600"
 				>
-					{filtered_tracks.length}/{playlist_tracks.length}
+					{tracks_page?.item_ids.length}/{tracks_page?.playlist_length}
 				</span>
 			</div>
 
 			<div class="no-scrollbar flex items-center gap-1.5 overflow-x-auto px-4 pb-2">
-				<button
+				<!-- <button
 					type="button"
-					onclick={() => (active_filter = { kind: 'all' })}
-					class="shrink-0 rounded-full border px-2.5 py-1 text-xs transition-colors {active_filter.kind ===
-					'all'
+					onclick={() => (tracks_page_options.filter_query = '')}
+					class="shrink-0 rounded-full border px-2.5 py-1 text-xs transition-colors {tracks_page_options
+						.filter_query.kind === 'all'
 						? 'border-neutral-200 bg-neutral-200 font-semibold text-neutral-900'
 						: 'border-neutral-300 text-neutral-500 hover:text-neutral-600 dark:border-neutral-700 dark:hover:text-neutral-300'}"
 				>
 					All
-				</button>
-				{#each genres as genre}
+				</button> -->
+				<!-- {#each genres as genre}
 					<button
 						type="button"
 						onclick={() => (active_filter = { kind: 'genre', value: genre })}
@@ -435,57 +450,68 @@
 					>
 						{genre}
 					</button>
-				{/each}
+				{/each} -->
 			</div>
 		</div>
 
-		<div class="flex-1 overflow-y-auto">
-			{#if filtered_tracks.length > 0}
+		<div class="flex-1 overflow-y-auto" bind:this={scroll_container}>
+			{#if tracks_page && tracks_page.item_ids.length > 0}
 				<ul class="divide-y divide-neutral-200 dark:divide-neutral-900">
-					{#each filtered_tracks as track}
-						<li>
-							<button
-								type="button"
-								class="focus-visible active flex w-full items-center justify-between gap-3 px-4 py-3 focus-visible:bg-neutral-100"
-								onclick={() => open_track(track)}
-							>
-								<div class="grow text-left">
-									<p class="truncate font-medium text-neutral-900 dark:text-neutral-100">
-										{track.name}
-									</p>
-									<p class="mt-0.5 truncate text-xs text-neutral-500">
-										{track.artist ?? 'Unknown Artist'}
-										{#if track.albumName}
-											<span class="text-neutral-400 dark:text-neutral-700">
-												·
-											</span>{track.albumName}
-										{/if}
-									</p>
-									<div class="mt-1 flex items-center gap-2">
-										{#if track.genre}
-											<span
-												class="rounded bg-neutral-100 px-1.5 py-px text-xs text-neutral-500 dark:bg-neutral-800"
-												>{track.genre}</span
-											>
-										{/if}
-										{#if track.year}
-											<span class="text-xs text-neutral-400 dark:text-neutral-700"
-												>{track.year}</span
-											>
-										{/if}
-									</div>
-								</div>
-								<div
-									class="flex shrink-0 flex-col items-end gap-1 text-xs text-neutral-400 tabular-nums dark:text-neutral-600"
-								>
-									<span>{format_duration(track.duration)}</span>
-									{#if track.playCount}
-										<span>{track.playCount} plays</span>
-									{/if}
-								</div>
-							</button>
-						</li>
-					{/each}
+					<VirtualListBlock
+						buffer={10}
+						items={item_ids}
+						get_key={(item) => item}
+						item_height={84}
+						{scroll_container}
+					>
+						{#snippet children({ item })}
+							{#if item}
+								{@const track = await get_track(item)}
+								<li>
+									<button
+										type="button"
+										class="focus-visible active flex w-full items-center justify-between gap-3 px-4 py-3 focus-visible:bg-neutral-100"
+										onclick={() => open_track(track)}
+									>
+										<div class="grow text-left">
+											<p class="truncate font-medium text-neutral-900 dark:text-neutral-100">
+												{track.name}
+											</p>
+											<p class="mt-0.5 truncate text-xs text-neutral-500">
+												{track.artist ?? 'Unknown Artist'}
+												{#if track.albumName}
+													<span class="text-neutral-400 dark:text-neutral-700">
+														·
+													</span>{track.albumName}
+												{/if}
+											</p>
+											<div class="mt-1 flex items-center gap-2">
+												{#if track.genre}
+													<span
+														class="rounded bg-neutral-100 px-1.5 py-px text-xs text-neutral-500 dark:bg-neutral-800"
+														>{track.genre}</span
+													>
+												{/if}
+												{#if track.year}
+													<span class="text-xs text-neutral-400 dark:text-neutral-700"
+														>{track.year}</span
+													>
+												{/if}
+											</div>
+										</div>
+										<div
+											class="flex shrink-0 flex-col items-end gap-1 text-xs text-neutral-400 tabular-nums dark:text-neutral-600"
+										>
+											<span>{format_duration(track.duration)}</span>
+											{#if track.playCount}
+												<span>{track.playCount} plays</span>
+											{/if}
+										</div>
+									</button>
+								</li>
+							{/if}
+						{/snippet}
+					</VirtualListBlock>
 				</ul>
 			{:else}
 				<div

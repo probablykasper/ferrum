@@ -474,6 +474,7 @@ pub struct Playlist {
 		serialize_with = "serialize_playlist_ids"
 	)]
 	#[cfg_attr(feature = "napi", napi(ts_type = "string[]"))]
+	#[specta(type = Vec<String>)]
 	pub tracks: Vec<ItemId>,
 }
 impl Playlist {
@@ -537,7 +538,6 @@ pub struct Special {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, Type)]
-#[non_exhaustive]
 #[cfg_attr(feature = "napi-rs", napi)]
 pub enum SpecialTrackListName {
 	Root,

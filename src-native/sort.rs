@@ -1,11 +1,12 @@
-use crate::library::{TrackField, get_track_field_type};
+use crate::library::{TrackField, get_track_field_type, get_tracklist_item_ids};
 use crate::library_types::{ItemId, Library, TRACK_ID_MAP, Track};
 use crate::page::TracksPageOptions;
-use crate::playlists::get_tracklist_item_ids;
 use alphanumeric_sort::compare_str;
 use anyhow::{Context, Result};
 use std::cmp::Ordering;
 use std::time::Instant;
+
+pub type TracksPageOptionsX = TracksPageOptions;
 
 fn get_field_str<'a>(track: &'a Track, sort_key: &str) -> Option<&'a String> {
 	match sort_key {

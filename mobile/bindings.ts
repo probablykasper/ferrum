@@ -23,6 +23,22 @@ async openFilePersistentAndroid() : Promise<Result<string | null, string>> {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
 }
+},
+async getTrackByItemId(itemId: number) : Promise<Result<Track, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("get_track_by_item_id", { itemId }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async getTracksPage(options: TracksPageOptions) : Promise<Result<TracksPage, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("get_tracks_page", { options }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
 }
 }
 
@@ -46,8 +62,8 @@ importedFrom?: string | null;
  * For example iTunes Persistent ID
  */
 originalId?: string | null; dateImported?: string | null; dateCreated?: string | null; children: string[] }
-export type LibraryTauri = { tracks: Partial<{ [key in string]: Track }>; track_item_ids: Partial<{ [key in string]: number }>; track_lists: Partial<{ [key in string]: TrackList }> }
-export type Playlist = { id: string; name: string; description?: string | null; liked: boolean; disliked: boolean; importedFrom?: string | null; originalId?: string | null; dateImported?: string | null; dateCreated?: string | null; tracks: number[] }
+export type LibraryTauri = { track_lists: Partial<{ [key in string]: TrackList }>; song_count: string }
+export type Playlist = { id: string; name: string; description?: string | null; liked: boolean; disliked: boolean; importedFrom?: string | null; originalId?: string | null; dateImported?: string | null; dateCreated?: string | null; tracks: string[] }
 export type Special = { id: string; name: SpecialTrackListName; dateCreated: string; children: string[] }
 export type SpecialTrackListName = "Root"
 export type Track = { size: string; duration: number; bitrate: number; sampleRate: number; file: string; dateModified: string; dateAdded: string; name: string; importedFrom?: string | null; 
@@ -60,6 +76,8 @@ originalId?: string | null; artist?: string; composer?: string | null; sortName?
  */
 volume?: number | null }
 export type TrackList = ({ type: "playlist" } & Playlist) | ({ type: "folder" } & Folder) | ({ type: "special" } & Special)
+export type TracksPage = { playlist_kind: string; playlist_name: string; playlist_description: string | null; playlist_length: number; item_ids: number[] }
+export type TracksPageOptions = { playlist_id: string; sort_key: string; sort_desc: boolean; filter_query: string; group_album_tracks: boolean }
 
 /** tauri-specta globals **/
 

@@ -7,6 +7,7 @@
 - Keep scroll position when opening play history
 - Mobile: Add track streaming search links for Spotify and YouTube Music
 - Mobile: Fast playlist loading
+- Mobile: Add full-featured filtering like the desktop app has
 
 ## 0.21.0 - 2026 Map 6
 - Add a basic Android app. It only lets you browse a Ferrum Library.json file. No playback or syncing yet.

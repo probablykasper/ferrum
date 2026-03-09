@@ -1,10 +1,18 @@
+use anyhow::Result;
 use anyhow::bail;
-use ferrum::library_types::{ItemId, TrackID, VersionedLibrary};
+use ferrum::library_types::TRACK_ID_MAP;
+use ferrum::library_types::VersionedLibrary;
 use ferrum::library_types::{Library, Track, TrackList, TrackListID};
+use ferrum::page::TracksPage;
+use ferrum::page::TracksPageOptions;
+use ferrum::page::get_tracks_page_from_library;
 use serde::Serialize;
 use specta::Type;
 use std::collections::HashMap;
+use std::sync::Mutex;
 use std::time::Instant;
+use tauri::AppHandle;
+use tauri::Manager;
 use tauri_plugin_dialog::{DialogExt, MessageDialogKind};
 use tauri_specta::Builder;
 
@@ -23,7 +31,7 @@ fn error_popup(app_handle: tauri::AppHandle, msg: String) {
 
 #[tauri::command]
 #[specta::specta]
-async fn open_file_persistent_android(app: tauri::AppHandle) -> Result<Option<String>, String> {
+async fn open_file_persistent_android(app: AppHandle) -> Result<Option<String>, String> {
 	if cfg!(not(target_os = "android")) {
 		panic!("Persistent save dialog cannot be called on this platform");
 	}
@@ -79,26 +87,48 @@ fn load_library_from_file(library_json: &str) -> anyhow::Result<Library> {
 	Ok(library)
 }
 
-#[derive(Serialize, Type)]
-pub struct LibraryTauri {
-	tracks: HashMap<TrackID, Track>,
-	track_item_ids: HashMap<TrackID, ItemId>,
-	track_lists: HashMap<TrackListID, TrackList>,
+#[tauri::command]
+#[specta::specta]
+fn get_track_by_item_id(item_id: u32, app: AppHandle) -> Result<Track, String> {
+	let library_state = app.state::<Mutex<Library>>();
+	let library = library_state.lock().unwrap();
+	let id_map = TRACK_ID_MAP.read().unwrap();
+	let track_id = &id_map[item_id as usize];
+	let track = library.get_track(&track_id).expect("Could not get track");
+	Ok(track.clone())
 }
 
 #[tauri::command]
 #[specta::specta]
-fn load_library(library_json: String) -> Result<LibraryTauri, String> {
+fn get_tracks_page(options: TracksPageOptions, app: AppHandle) -> Result<TracksPage, String> {
+	let library_state = app.state::<Mutex<Library>>();
+	let library = library_state.lock().unwrap();
+	match get_tracks_page_from_library(options, &library) {
+		Ok(page) => Ok(page),
+		Err(err) => Err(err.to_string()),
+	}
+}
+
+#[derive(Serialize, Type)]
+pub struct LibraryTauri {
+	track_lists: HashMap<TrackListID, TrackList>,
+	song_count: usize,
+}
+
+#[tauri::command]
+#[specta::specta]
+fn load_library(library_json: String, app: AppHandle) -> Result<LibraryTauri, String> {
 	let library = match load_library_from_file(&library_json) {
 		Ok(library) => library,
 		Err(err) => return Err(err.to_string()),
 	};
 
 	let library_tauri = LibraryTauri {
-		tracks: library.get_tracks().clone().into_iter().collect(),
-		track_item_ids: library.get_track_item_ids().clone().into_iter().collect(),
-		track_lists: library.trackLists.into_iter().collect(),
+		track_lists: library.trackLists.clone().into_iter().collect(),
+		song_count: library.get_track_item_ids().len(),
 	};
+
+	app.manage(Mutex::new(library));
 
 	Ok(library_tauri)
 }
@@ -108,7 +138,9 @@ pub fn gen_types() -> Builder {
 		tauri_specta::Builder::<tauri::Wry>::new().commands(tauri_specta::collect_commands![
 			error_popup,
 			load_library,
-			open_file_persistent_android
+			open_file_persistent_android,
+			get_track_by_item_id,
+			get_tracks_page,
 		]);
 
 	#[cfg(all(debug_assertions, not(target_os = "android")))]

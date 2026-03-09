@@ -1,4 +1,4 @@
-<script lang="ts" context="module">
+<script lang="ts" module>
 	export function scroll_container_keydown(e: KeyboardEvent & { currentTarget: HTMLElement }) {
 		let prevent = true
 		if (e.key === 'Home') e.currentTarget.scrollTop = 0
@@ -11,45 +11,49 @@
 </script>
 
 <script lang="ts" generics="T">
-	import { onDestroy } from 'svelte'
+	import { onDestroy, type Snippet } from 'svelte'
 
-	export let items: T[]
-	export let item_height: number
-	/** Must be a positioned element, like `position: relative` */
-	export let scroll_container: HTMLElement
-	export let get_key: (item: T, i: number) => number | string
-	export let buffer = 3
-
-	$: height = items.length * item_height
-	$: buffer_height = buffer * item_height
-
-	let main_element: HTMLDivElement
-	let start_pixel = 0
-	let start_index = 0
-	let visible_count = 0
-
-	// Workaround for svelte not updating the indexes when the keys change
-	let visible_count_obj = { length: visible_count }
-	$: visible_count_obj = { length: visible_count }
-
-	$: {
-		;(items, item_height, buffer)
-		if (scroll_container && main_element) refresh()
+	type Props = {
+		items: T[]
+		item_height: number
+		/** Must be a positioned element, like `position: relative` */
+		scroll_container: HTMLElement
+		get_key: (item: T, i: number) => number | string
+		buffer?: number
+		children: Snippet<[{ item: T; i: number }]>
 	}
 
-	const resize_observer = new ResizeObserver(refresh)
-	$: observe(scroll_container)
-	function observe(scroll_container: HTMLElement | undefined) {
+	let { items, item_height, scroll_container, get_key, buffer = 3, children }: Props = $props()
+
+	const height = $derived(items.length * item_height)
+	const buffer_height = $derived(buffer * item_height)
+
+	let main_element: HTMLDivElement = $state()!
+	let start_pixel = $state(0)
+	let start_index = $state(0)
+	let visible_count = $state(0)
+
+	// Replaces the visible_count_obj workaround — $derived array forces key recalculation
+	const visible_indices = $derived.by(() => {
+		// Recompute synchronously when items changes, before refresh() fires
+		const max = items.length
+		const end = Math.min(start_index + visible_count, max)
+		return Array.from({ length: Math.max(0, end - start_index) }, (_, i) => i + start_index)
+	})
+	$effect(() => {
+		if (scroll_container && main_element) refresh()
+	})
+
+	$effect(() => {
+		const resize_observer = new ResizeObserver(refresh)
 		resize_observer.disconnect()
 		if (scroll_container) {
 			resize_observer.observe(scroll_container)
 		}
-	}
+	})
 
 	export function refresh() {
-		if (!main_element || !scroll_container) {
-			return
-		}
+		if (!main_element || !scroll_container) return
 
 		let element_top = main_element.offsetTop
 		let offset_parent = main_element.offsetParent
@@ -72,19 +76,11 @@
 
 		start_index = Math.floor(start_pixel / item_height)
 		visible_count = Math.ceil(end_pixel / item_height) - start_index
-		visible_count_obj = { length: visible_count }
 	}
 
-	$: apply_scroll_event_handler(scroll_container)
-
-	let scroll_event_element: HTMLElement | undefined = scroll_container
-	function apply_scroll_event_handler(container: HTMLElement | undefined) {
-		scroll_event_element?.removeEventListener('scroll', refresh)
-		scroll_event_element = container
-		scroll_event_element?.addEventListener('scroll', refresh)
-	}
-	onDestroy(() => {
-		scroll_event_element?.removeEventListener('scroll', refresh)
+	$effect(() => {
+		scroll_container?.addEventListener('scroll', refresh)
+		return () => scroll_container?.removeEventListener('scroll', refresh)
 	})
 
 	export function scroll_to_index(index: number, scroll_margin_bottom = 0) {
@@ -106,7 +102,7 @@
 	style:padding-top={start_index * item_height + 'px'}
 	style:height={items.length * item_height + 'px'}
 >
-	{#each visible_count_obj as _, i (get_key(items[i + start_index], i + start_index))}
-		<slot item={items[i + start_index]} i={i + start_index} />
+	{#each visible_indices as i (get_key(items[i], i))}
+		{@render children({ item: items[i], i })}
 	{/each}
 </div>

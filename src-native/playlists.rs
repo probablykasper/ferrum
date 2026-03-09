@@ -6,7 +6,6 @@ use crate::library_types::{
 };
 use crate::str_to_option;
 use anyhow::{Context, Result, bail};
-use linked_hash_map::LinkedHashMap;
 use napi::{Env, Unknown};
 use rayon::prelude::*;
 use std::collections::{HashMap, HashSet};
@@ -445,26 +444,4 @@ pub fn move_tracks(
 
 	playlist.tracks = start_items;
 	Ok(())
-}
-
-pub fn get_tracklist_item_ids(library: &Library, playlist_id: &str) -> Result<Vec<ItemId>> {
-	match library.get_tracklist(playlist_id)? {
-		TrackList::Playlist(playlist) => Ok(playlist.tracks.clone()),
-		TrackList::Folder(folder) => {
-			let mut ids: LinkedHashMap<ItemId, ()> = LinkedHashMap::new();
-			for child in &folder.children {
-				let child_ids = get_tracklist_item_ids(library, &child)?;
-				for child_id in child_ids {
-					ids.insert(child_id, ());
-				}
-			}
-			Ok(ids.into_iter().map(|(id, _)| id).collect())
-		}
-		TrackList::Special(special) => match special.name {
-			SpecialTrackListName::Root => {
-				let item_ids = library.get_track_item_ids().values().cloned().collect();
-				Ok(item_ids)
-			}
-		},
-	}
 }

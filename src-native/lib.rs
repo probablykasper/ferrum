@@ -21,20 +21,17 @@ extern crate napi_derive;
 mod data;
 #[cfg(feature = "napi-rs")]
 mod data_js;
-#[cfg(feature = "napi-rs")]
-mod filter;
+pub mod filter;
 #[cfg(feature = "napi-rs")]
 mod itunes_import;
 pub mod library;
 pub mod library_types;
+pub mod page;
 #[cfg(feature = "napi-rs")]
-mod page;
-#[cfg(feature = "napi-rs")]
-mod playlists;
+pub mod playlists;
 #[cfg(feature = "napi-rs")]
 mod queue_state;
-#[cfg(feature = "napi-rs")]
-mod sort;
+pub mod sort;
 #[cfg(feature = "napi-rs")]
 mod tracks;
 #[cfg(feature = "napi-rs")]
