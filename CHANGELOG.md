@@ -5,7 +5,8 @@
 - Add "Show in Playlist" context menu item
 - Remember queue on restart
 - Keep scroll position when opening play history
-- Android: Add track streaming search links for Spotify and YouTube Music
+- Mobile: Add track streaming search links for Spotify and YouTube Music
+- Mobile: Fast playlist loading
 
 ## 0.21.0 - 2026 Map 6
 - Add a basic Android app. It only lets you browse a Ferrum Library.json file. No playback or syncing yet.

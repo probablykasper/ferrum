@@ -8,7 +8,7 @@
 
 	type sort_key_type = 'name' | 'artist' | 'dateAdded' | 'playCount'
 	type sort_dir_type = 'asc' | 'desc'
-	type active_filter_type = { kind: 'all' } | { kind: 'liked' } | { kind: 'genre'; value: string }
+	type active_filter_type = { kind: 'all' } | { kind: 'genre'; value: string }
 	type view_type = { kind: 'browser'; folder_id: string } | { kind: 'tracks'; playlist_id: string }
 	type streaming_service_type = 'spotify' | 'youtube-music'
 
@@ -19,8 +19,8 @@
 	}>()
 	let error = $state('')
 	let search_query = $state('')
-	let sort_key = $state<sort_key_type>('name')
-	let sort_dir = $state<sort_dir_type>('asc')
+	let sort_key = $state<sort_key_type>('dateAdded')
+	let sort_dir = $state<sort_dir_type>('desc')
 	let active_filter = $state<active_filter_type>({ kind: 'all' })
 
 	// ── View derived from URL search params ────────────────────────────────────
@@ -128,7 +128,6 @@
 	const filtered_tracks = $derived(
 		playlist_tracks
 			.filter((t) => {
-				if (active_filter.kind === 'liked') return t.liked === true
 				if (active_filter.kind === 'genre') return t.genre === active_filter.value
 				return true
 			})
@@ -333,7 +332,7 @@
 										</p>
 										<p class="mt-0.5 text-xs text-neutral-500">
 											{tl.tracks.length}
-											{tl.tracks.length === 1 ? 'track' : 'tracks'}{tl.liked ? ' · ♥' : ''}
+											{tl.tracks.length === 1 ? 'track' : 'tracks'}
 										</p>
 									</div>
 									<span class="text-lg text-neutral-400 select-none dark:text-neutral-700">›</span>
@@ -425,16 +424,6 @@
 				>
 					All
 				</button>
-				<button
-					type="button"
-					onclick={() => (active_filter = { kind: 'liked' })}
-					class="shrink-0 rounded-full border px-2.5 py-1 text-xs transition-colors {active_filter.kind ===
-					'liked'
-						? 'border-rose-300 bg-rose-100 font-semibold text-rose-700 dark:border-rose-700 dark:bg-rose-900 dark:text-rose-200'
-						: 'border-neutral-300 text-neutral-500 hover:text-neutral-600 dark:border-neutral-700 dark:hover:text-neutral-300'}"
-				>
-					♥ Liked
-				</button>
 				{#each genres as genre}
 					<button
 						type="button"
@@ -456,11 +445,11 @@
 					{#each filtered_tracks as track}
 						<li>
 							<button
-								rel="noopener noreferrer"
-								class="focus-visible active flex items-center justify-between gap-3 px-4 py-3 focus-visible:bg-neutral-100"
+								type="button"
+								class="focus-visible active flex w-full items-center justify-between gap-3 px-4 py-3 focus-visible:bg-neutral-100"
 								onclick={() => open_track(track)}
 							>
-								<div>
+								<div class="grow text-left">
 									<p class="truncate font-medium text-neutral-900 dark:text-neutral-100">
 										{track.name}
 									</p>
@@ -492,9 +481,6 @@
 									<span>{format_duration(track.duration)}</span>
 									{#if track.playCount}
 										<span>{track.playCount} plays</span>
-									{/if}
-									{#if track.liked}
-										<span class="text-rose-500">♥</span>
 									{/if}
 								</div>
 							</button>
