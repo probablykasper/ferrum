@@ -61,13 +61,13 @@
 		<svelte:fragment slot="buttons">
 			<Button
 				secondary
-				on:click={() => {
+				onclick={() => {
 					skip_update(channel.version)
 					latest_update = null
 				}}>Skip This Version</Button
 			>
 			<div class="grow"></div>
-			<Button secondary on:click={() => (latest_update = null)}>Later</Button>
+			<Button secondary onclick={() => (latest_update = null)}>Later</Button>
 			<Button type="submit">Update</Button>
 		</svelte:fragment>
 	</Modal>

@@ -236,7 +236,7 @@
 								type="button"
 								secondary
 								thin
-								on:click={async () => {
+								onclick={async () => {
 									media_keys_result = null
 									media_keys_result = await ipc_renderer.invoke('init_media_keys', false)
 								}}>Retry</Button
@@ -245,7 +245,7 @@
 								type="button"
 								secondary
 								thin
-								on:click={() => {
+								onclick={() => {
 									media_keys_result = null
 								}}>Ignore</Button
 							>
@@ -257,7 +257,7 @@
 								type="button"
 								secondary
 								thin
-								on:click={async () => {
+								onclick={async () => {
 									media_keys_result = null
 									media_keys_result = await ipc_renderer.invoke('init_media_keys', true)
 								}}>Give permission</Button
@@ -266,7 +266,7 @@
 								type="button"
 								secondary
 								thin
-								on:click={() => {
+								onclick={() => {
 									media_keys_result = null
 								}}>Ignore</Button
 							>

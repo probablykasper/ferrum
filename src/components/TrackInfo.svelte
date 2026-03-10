@@ -509,8 +509,8 @@
 		<div class="spacer"></div>
 	</main>
 	<svelte:fragment slot="buttons">
-		<Button secondary on:click={cancel}>Cancel</Button>
-		<Button type="submit" on:click={() => save()}>Save</Button>
+		<Button secondary onclick={cancel}>Cancel</Button>
+		<Button type="submit" onclick={() => save()}>Save</Button>
 	</svelte:fragment>
 </Modal>
 

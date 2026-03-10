@@ -73,7 +73,7 @@
 				<li>View options</li>
 			</ul>
 			<div class="buttons">
-				<Button secondary on:click={cancel_handler}>Cancel</Button>
+				<Button secondary onclick={cancel_handler}>Cancel</Button>
 				<Button type="submit">Select File</Button>
 			</div>
 		{:else if stage === 'scanning'}
@@ -95,7 +95,7 @@
 				<li>Tracks: {stage.tracksCount}</li>
 			</ul>
 			<div class="buttons">
-				<Button secondary on:click={cancel_handler}>Cancel</Button>
+				<Button secondary onclick={cancel_handler}>Cancel</Button>
 				<Button type="submit">Continue</Button>
 			</div>
 		{/if}

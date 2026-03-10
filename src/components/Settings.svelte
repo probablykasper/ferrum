@@ -26,7 +26,7 @@
 		</label>
 	</div>
 	<svelte:fragment slot="buttons">
-		<Button secondary on:click={on_close}>Cancel</Button>
-		<Button type="submit" on:click={save}>Save</Button>
+		<Button secondary onclick={on_close}>Cancel</Button>
+		<Button type="submit" onclick={save}>Save</Button>
 	</svelte:fragment>
 </Modal>
