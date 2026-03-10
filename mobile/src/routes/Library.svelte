@@ -108,7 +108,8 @@
 	}
 
 	function open_playlist(id: string) {
-		tracks_page_options.filter_query = ''
+		tracks_page_options.sort_key = 'dateAdded'
+		tracks_page_options.sort_desc = false
 		tracks_page_options.filter_query = ''
 		// eslint-disable-next-line svelte/no-navigation-without-resolve
 		goto(resolve('/') + `?view=tracks&id=${id}`)
@@ -121,10 +122,6 @@
 	const tracks_page = $derived(
 		view.kind === 'tracks' ? await get_tracks_page(tracks_page_options) : null,
 	)
-	let item_ids: number[] = $state([])
-	$effect(() => {
-		item_ids = tracks_page?.item_ids ?? []
-	})
 
 	// const genres = $derived(
 	// 	[
@@ -459,7 +456,7 @@
 				<ul class="divide-y divide-neutral-200 dark:divide-neutral-900">
 					<VirtualListBlock
 						buffer={10}
-						items={item_ids}
+						items={tracks_page.item_ids}
 						get_key={(item) => item}
 						item_height={84}
 						{scroll_container}
