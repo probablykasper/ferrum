@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Snippet } from 'svelte'
+	import { untrack, type Snippet } from 'svelte'
 	import { goto } from '$app/navigation'
 	import { page } from '$app/state'
 	import {
@@ -51,6 +51,10 @@
 	$effect(() => {
 		if (view.kind === 'tracks') {
 			tracks_page_options.playlist_id = view.playlist_id
+			untrack(() => {
+				tracks_page_options.sort_key = 'dateAdded'
+				tracks_page_options.sort_desc = true
+			})
 		}
 	})
 
@@ -108,9 +112,6 @@
 	}
 
 	function open_playlist(id: string) {
-		tracks_page_options.sort_key = 'dateAdded'
-		tracks_page_options.sort_desc = false
-		tracks_page_options.filter_query = ''
 		// eslint-disable-next-line svelte/no-navigation-without-resolve
 		goto(resolve('/') + `?view=tracks&id=${id}`)
 	}
@@ -173,10 +174,13 @@
 	let scroll_container: HTMLElement | undefined = $state()
 	let sort_menu_open = $state(false)
 	const sort_options = [
+		{ key: 'dateAdded', label: 'Date Added', default_desc: true },
 		{ key: 'name', label: 'Name', default_desc: false },
 		{ key: 'artist', label: 'Artist', default_desc: false },
-		{ key: 'dateAdded', label: 'Date Added', default_desc: true },
 		{ key: 'playCount', label: 'Plays', default_desc: true },
+		{ key: 'genre', label: 'Genre', default_desc: false },
+		{ key: 'duration', label: 'Time', default_desc: true },
+		{ key: 'year', label: 'Year', default_desc: true },
 	] as const
 
 	// ── Formatting ─────────────────────────────────────────────────────────────
