@@ -171,6 +171,13 @@
 	// )
 
 	let scroll_container: HTMLElement | undefined = $state()
+	let sort_menu_open = $state(false)
+	const sort_options = [
+		{ key: 'name', label: 'Name', default_desc: false },
+		{ key: 'artist', label: 'Artist', default_desc: false },
+		{ key: 'dateAdded', label: 'Date Added', default_desc: true },
+		{ key: 'playCount', label: 'Plays', default_desc: true },
+	] as const
 
 	// ── Formatting ─────────────────────────────────────────────────────────────
 
@@ -186,6 +193,11 @@
 	function sort_indicator(key: string): string {
 		if (tracks_page_options.sort_key !== key) return ''
 		return tracks_page_options.sort_desc === false ? ' ↑' : ' ↓'
+	}
+
+	function sort_label(): string {
+		const current = sort_options.find((option) => option.key === tracks_page_options.sort_key)
+		return `${current?.label ?? 'Sort'}${sort_indicator(tracks_page_options.sort_key)}`
 	}
 
 	function format_duration(seconds: number): string {
@@ -209,7 +221,6 @@
 <div
 	class="flex h-screen flex-col overflow-hidden bg-white text-sm text-neutral-800 dark:bg-neutral-950 dark:text-neutral-200"
 >
-	<!-- Header -->
 	<header
 		class="flex shrink-0 items-center gap-2 border-b border-neutral-200 px-4 py-3 dark:border-neutral-800"
 	>
@@ -234,7 +245,43 @@
 			{/if}
 		</div>
 
-		{@render open_button()}
+		{#if view.kind === 'browser'}
+			{@render open_button()}
+		{:else}
+			<details
+				aria-label="Sort"
+				class="relative z-10 shrink-0 cursor-default select-none"
+				bind:open={sort_menu_open}
+			>
+				<summary
+					class="list-none rounded border border-neutral-300 px-2.5 py-1 text-xs text-neutral-500 transition-colors hover:text-neutral-600 dark:border-neutral-700 dark:hover:text-neutral-300"
+				>
+					{sort_label()}
+				</summary>
+				<div
+					class="absolute right-0 mt-2 w-40 rounded-lg border border-neutral-200 bg-white py-1 text-xs shadow-lg dark:border-neutral-800 dark:bg-neutral-900"
+				>
+					{#each sort_options as option}
+						<button
+							type="button"
+							onclick={() => {
+								toggle_sort(option.key, option.default_desc)
+								sort_menu_open = false
+							}}
+							class="flex w-full items-center justify-between px-3 py-2 text-left text-neutral-700 hover:bg-neutral-100 dark:text-neutral-200 dark:hover:bg-neutral-800 {tracks_page_options.sort_key ===
+							option.key
+								? 'font-semibold'
+								: ''}"
+						>
+							<span>{option.label}</span>
+							<span class="text-neutral-400 dark:text-neutral-600">
+								{sort_indicator(option.key)}
+							</span>
+						</button>
+					{/each}
+				</div>
+			</details>
+		{/if}
 	</header>
 
 	{#if error}
@@ -364,69 +411,26 @@
 		<!-- ── Tracks view ────────────────────────────────────────────────────── -->
 	{:else if view.kind === 'tracks'}
 		<div class="shrink-0 border-b border-neutral-200 dark:border-neutral-800">
-			<div class="no-scrollbar flex items-center gap-1.5 overflow-x-auto px-4 py-2">
-				<div class="relative shrink-0">
+			<div class="no-scrollbar flex w-full items-center gap-1.5 overflow-x-auto px-4 py-2">
+				<div class="relative flex grow">
 					<span
-						class="pointer-events-none absolute top-1/2 left-2.5 -translate-y-1/2 text-xs text-neutral-500 select-none"
+						class="pointer-events-none absolute top-1/2 left-2.5 -translate-y-1/2 text-xl text-neutral-500 select-none"
 						>⌕</span
 					>
 					<input
 						type="search"
 						placeholder="Search…"
 						bind:value={tracks_page_options.filter_query}
-						class="w-32 rounded-lg border border-neutral-300 bg-neutral-100 py-1.5 pr-3 pl-7 text-xs text-neutral-800 placeholder-neutral-400 transition-colors outline-none focus:border-neutral-400 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200 dark:placeholder-neutral-600 dark:focus:border-neutral-500"
+						class="w-full rounded-lg border border-neutral-300 bg-neutral-100 py-1.5 pr-3 pl-7 text-xs text-neutral-800 placeholder-neutral-400 transition-colors outline-none focus:border-neutral-400 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200 dark:placeholder-neutral-600 dark:focus:border-neutral-500"
 					/>
 				</div>
-				<div class="mx-0.5 h-4 w-px shrink-0 bg-neutral-100 dark:bg-neutral-800"></div>
-				<button
-					type="button"
-					onclick={() => toggle_sort('name')}
-					class="shrink-0 rounded border px-2.5 py-1 text-xs transition-colors {tracks_page_options.sort_key ===
-					'name'
-						? 'border-neutral-400 bg-neutral-200 text-neutral-900 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100'
-						: 'border-neutral-300 text-neutral-500 hover:text-neutral-600 dark:border-neutral-700 dark:hover:text-neutral-300'}"
-				>
-					Name{sort_indicator('name')}
-				</button>
-				<button
-					type="button"
-					onclick={() => toggle_sort('artist')}
-					class="shrink-0 rounded border px-2.5 py-1 text-xs transition-colors {tracks_page_options.sort_key ===
-					'artist'
-						? 'border-neutral-400 bg-neutral-200 text-neutral-900 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100'
-						: 'border-neutral-300 text-neutral-500 hover:text-neutral-600 dark:border-neutral-700 dark:hover:text-neutral-300'}"
-				>
-					Artist{sort_indicator('artist')}
-				</button>
-				<button
-					type="button"
-					onclick={() => toggle_sort('dateAdded', true)}
-					class="shrink-0 rounded border px-2.5 py-1 text-xs transition-colors {tracks_page_options.sort_key ===
-					'dateAdded'
-						? 'border-neutral-400 bg-neutral-200 text-neutral-900 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100'
-						: 'border-neutral-300 text-neutral-500 hover:text-neutral-600 dark:border-neutral-700 dark:hover:text-neutral-300'}"
-				>
-					Date Added{sort_indicator('dateAdded')}
-				</button>
-				<button
-					type="button"
-					onclick={() => toggle_sort('playCount', true)}
-					class="shrink-0 rounded border px-2.5 py-1 text-xs transition-colors {tracks_page_options.sort_key ===
-					'playCount'
-						? 'border-neutral-400 bg-neutral-200 text-neutral-900 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100'
-						: 'border-neutral-300 text-neutral-500 hover:text-neutral-600 dark:border-neutral-700 dark:hover:text-neutral-300'}"
-				>
-					Plays{sort_indicator('playCount')}
-				</button>
-				<span
-					class="ml-auto shrink-0 pl-1 text-xs text-neutral-400 tabular-nums dark:text-neutral-600"
-				>
+				<span class="shrink-0 pl-1 text-xs text-neutral-400 tabular-nums dark:text-neutral-600">
 					{tracks_page?.item_ids.length}/{tracks_page?.playlist_length}
 				</span>
 			</div>
 
-			<div class="no-scrollbar flex items-center gap-1.5 overflow-x-auto px-4 pb-2">
-				<!-- <button
+			<!-- <div class="no-scrollbar flex items-center gap-1.5 overflow-x-auto px-4 pb-2">
+				<button
 					type="button"
 					onclick={() => (tracks_page_options.filter_query = '')}
 					class="shrink-0 rounded-full border px-2.5 py-1 text-xs transition-colors {tracks_page_options
@@ -436,7 +440,7 @@
 				>
 					All
 				</button> -->
-				<!-- {#each genres as genre}
+			<!-- {#each genres as genre}
 					<button
 						type="button"
 						onclick={() => (active_filter = { kind: 'genre', value: genre })}
@@ -447,8 +451,8 @@
 					>
 						{genre}
 					</button>
-				{/each} -->
-			</div>
+				{/each}
+			</div> -->
 		</div>
 
 		<div class="flex-1 overflow-y-auto" bind:this={scroll_container}>
@@ -529,5 +533,8 @@
 	.no-scrollbar {
 		-ms-overflow-style: none;
 		scrollbar-width: none;
+	}
+	summary::-webkit-details-marker {
+		display: none;
 	}
 </style>
