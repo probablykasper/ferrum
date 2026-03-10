@@ -1,6 +1,6 @@
 # Changelog
 
-## Next
+## 1.0.0 - 2026 Mar 10
 - Add lyrics support
 - Add "Show in Playlist" context menu item
 - Remember queue on restart
