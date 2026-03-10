@@ -5,6 +5,7 @@
 - Add "Show in Playlist" context menu item
 - Remember queue on restart
 - Keep scroll position when opening play history
+- Make filtering case-insensitive
 - Mobile: Add track streaming search links for Spotify and YouTube Music
 - Mobile: Fast playlist loading
 - Mobile: Add full-featured filtering like the desktop app has

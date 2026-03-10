@@ -251,7 +251,7 @@ pub fn filter(mut item_ids: Vec<ItemId>, query: String, library: &Library) -> Ve
 	if query == "" {
 		return item_ids;
 	}
-	let mut query: String = query.nfc().collect();
+	let mut query: String = query.to_lowercase().nfc().collect();
 
 	let mut keywords = Vec::new();
 	while let Some(keyword) = Keyword::parse_next_keyword(&mut query) {
