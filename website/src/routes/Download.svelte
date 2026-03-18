@@ -18,7 +18,7 @@
 	const linux_rpm: Version = { os: 'Linux', arch: '.rpm', ending: 'linux-x86_64.rpm' }
 	const android_obtainium: Version = { os: 'Obtainium', arch: '', ending: '' }
 	const android_arm64: Version = { os: 'Android', arch: 'arm64', ending: '-android-arm64.apk' }
-	const android_x86_64: Version = { os: 'Android', arch: 'x86_64', ending: '-android-x86_64.apk' }
+	const android_x86_64: Version = { os: 'Android', arch: 'x64', ending: '-android-x86_64.apk' }
 
 	const desktop_versions: Version[] = [
 		macos_arm,
@@ -182,7 +182,7 @@
 	{/if}
 
 	<div
-		class="flex w-full max-w-xl items-stretch rounded-2xl border border-white/10 bg-white/[0.04]"
+		class="flex w-full max-w-xl flex-col items-stretch rounded-2xl border border-white/10 bg-white/[0.04] sm:flex-row"
 	>
 		<!-- ── Desktop ── -->
 		<div class="relative z-10 flex flex-1 flex-col gap-2.5 p-5">
@@ -201,7 +201,12 @@
 				>
 				Desktop
 			</div>
-			<p class="-mt-1 text-xs leading-snug text-white/0 select-none" aria-hidden="true">.</p>
+			<p
+				class="-mt-1 text-xs leading-snug text-white/0 select-none not-sm:hidden"
+				aria-hidden="true"
+			>
+				.
+			</p>
 
 			<ButtonPopup let:toggle let:isOpen let:close>
 				<div
@@ -255,14 +260,14 @@
 
 				<div
 					slot="popup"
-					class="dropdown absolute top-full right-0 left-0 overflow-hidden rounded-b-[10px] border border-t-0 border-white/20 bg-white/5 backdrop-blur-xl"
+					class="dropdown absolute top-full right-0 left-0 overflow-hidden rounded-b-[10px] border border-t-0 border-white/20 bg-white/5 backdrop-blur-md"
 					style="z-index: 9999;"
 					transition:scale={{ start: 0.95, opacity: 0, duration: 160 }}
 				>
 					{#each desktop_versions as version}
 						<button
 							type="button"
-							class="dropdown-item flex h-9 w-full cursor-pointer items-center gap-2 bg-transparent px-3.5 text-left text-[13.5px] text-white/80 transition-colors duration-100 outline-none hover:bg-white/[0.06] hover:text-white"
+							class="dropdown-item flex h-9 w-full cursor-pointer items-center gap-2 bg-transparent px-3.5 text-left text-[13.5px] text-white/80 outline-none hover:bg-white/5 hover:text-white"
 							on:click={() => {
 								close()
 								download(version)
@@ -292,7 +297,7 @@
 		</div>
 
 		<!-- vertical divider -->
-		<div class="my-3.5 w-px shrink-0 bg-white/[0.08]"></div>
+		<div class="shrink-0 bg-white/10 not-sm:mx-3.5 not-sm:h-px sm:my-3.5 sm:w-px"></div>
 
 		<!-- ── Android ── -->
 		<div class="relative z-[5] flex flex-1 flex-col gap-2.5 p-5">
@@ -316,7 +321,7 @@
 						href={obtainium_url}
 						target="_blank"
 						rel="noopener noreferrer"
-						class="flex h-full cursor-pointer items-center gap-1.5 pr-3.5 pl-3 whitespace-nowrap text-white/70 transition-colors duration-150 outline-none hover:text-white"
+						class="flex h-full grow cursor-pointer items-center gap-1.5 pr-3.5 pl-3 whitespace-nowrap text-white/70 transition-colors duration-150 outline-none hover:text-white"
 					>
 						<svg
 							width="14"
