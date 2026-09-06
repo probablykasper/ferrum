@@ -626,7 +626,9 @@ fn check(user_char: char, data_char: char) -> Eq {
 			'O' | 'o' | 'Ｏ' | 'ｏ' | 'Ò' | 'ò' | 'Ó' | 'ó' | 'Ô' | 'ô' | 'Õ' | 'õ' => {
 				true
 			}
-			'Ö' | 'ö' | 'Ø' | 'ø' | 'Ō' | 'ō' | 'Ŏ' | 'ŏ' | 'Ő' | 'ő' => true,
+			'Ö' | 'ö' | 'Ø' | 'ø' | 'Ō' | 'ō' | 'Ŏ' | 'ŏ' | 'Ő' | 'ő' | 'Ơ' | 'ơ' => {
+				true
+			}
 			_ => false,
 		},
 		'Ｏ' | 'ｏ' => one_of(&data_char, 'Ｏ', 'ｏ'),
@@ -639,6 +641,7 @@ fn check(user_char: char, data_char: char) -> Eq {
 		'Ō' | 'ō' => one_of(&data_char, 'Ō', 'ō'),
 		'Ŏ' | 'ŏ' => one_of(&data_char, 'Ŏ', 'ŏ'),
 		'Ő' | 'ő' => one_of(&data_char, 'Ő', 'ő'),
+		'Ơ' | 'ơ' => one_of(&data_char, 'Ơ', 'ơ'),
 
 		'P' | 'p' => match data_char {
 			'P' | 'p' | 'Ｐ' | 'ｐ' => true,
