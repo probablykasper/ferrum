@@ -3,6 +3,7 @@
 ## Next
 - Fix undo in the filter textbox not stopping at selection/cursor changes
 - Improve error messages
+- Add `O`, `o` fuzzy matching for `Ơ`, `ơ`
 
 ## 1.2.0 - 2026 Aug 31
 - Remove macOS 10.15 support
