@@ -1,3 +1,4 @@
+use crate::filter::TracksCache;
 use crate::library::{Paths, load_library_json, open_library};
 use crate::library_types::Library;
 use crate::tracks::Tag;
@@ -5,7 +6,7 @@ use anyhow::{Context, Result};
 use atomicwrites::{AllowOverwrite, AtomicFile};
 use dirs_next;
 use serde::Serialize;
-use sqlx::SqliteConnection;
+use sqlx::SqlitePool;
 use std::env;
 use std::io::Write;
 use std::path::{Path, PathBuf};
@@ -40,7 +41,8 @@ pub fn app_log_dir() -> Result<PathBuf> {
 pub struct Data {
 	pub paths: Paths,
 	pub library: Library,
-	pub db: SqliteConnection,
+	pub db: SqlitePool,
+	pub tracks_cache: Option<TracksCache>,
 	/// Current tag being edited
 	pub current_tag: Option<Tag>,
 }
@@ -129,6 +131,7 @@ impl Data {
 			paths,
 			library: loaded_library_json,
 			db: library_sqlite,
+			tracks_cache: None,
 			current_tag: None,
 		};
 		// if it fails, it was already set. the user might just have reloaded

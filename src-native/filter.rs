@@ -1,14 +1,11 @@
-use crate::{
-	data::Data,
-	library_types::{ItemId, Library, TRACK_ID_MAP},
-};
+use crate::db::TrackIDNew;
 use anyhow::{Context, Result};
 use rayon::prelude::*;
 use serde::Deserialize;
 use specta::Type;
-use sqlx::Connection;
-use std::str::Chars;
+use sqlx::SqlitePool;
 use std::time::Instant;
+use std::{collections::HashMap, str::Chars};
 use unicode_normalization::{Recompositions, UnicodeNormalization};
 
 fn match_at_start(mut text: Recompositions<Chars>, target: Chars) -> bool {
@@ -161,58 +158,60 @@ fn feat_artists_match(track_name: &str, target: &str) -> bool {
 	false
 }
 
-fn filter_term(ids: Vec<ItemId>, term: FilterTerm, library: &Library) -> Vec<ItemId> {
-	let id_map = TRACK_ID_MAP.read().unwrap();
+fn filter_term(ids: Vec<TrackIDNew>, term: FilterTerm, cache: &TracksCache) -> Vec<TrackIDNew> {
 	let filtered_tracks: Vec<_> = ids
 		.into_par_iter()
 		.with_min_len(2000)
-		.filter(|item_id| {
-			let track_id = &id_map[*item_id as usize];
-			let track = match library.get_track(track_id) {
+		.filter(|track_id| {
+			let track = match cache.get_track(track_id) {
 				Ok(track) => track,
 				Err(_) => panic!("Track ID {} not found", track_id),
 			};
 			if term.field.is_none() {
-				let is_match = find_match(&track.name, &term.literal)
+				let is_match = find_match(&track.title, &term.literal)
 					|| find_match(&track.artist, &term.literal)
-					|| find_match_opt(&track.albumName, &term.literal)
+					|| find_match_opt(&track.album_title, &term.literal)
 					|| find_match_opt(&track.comments, &term.literal)
 					|| find_match_opt(&track.genre, &&term.literal);
 				return is_match;
 			};
 			let is_match = match term.field.as_ref().unwrap() {
-				Field::Title => find_match(&track.name, &term.literal),
+				Field::Title => find_match(&track.title, &term.literal),
 				Field::Artist => {
 					find_match(&track.artist, &term.literal)
-						|| feat_artists_match(&track.name, &term.literal)
+						|| feat_artists_match(&track.title, &term.literal)
 				}
-				Field::Album => find_match_opt(&track.albumName, &term.literal),
-				Field::AlbumArtist => find_match_opt(&track.albumArtist, &term.literal),
+				Field::Album => find_match_opt(&track.album_title, &term.literal),
+				Field::AlbumArtist => find_match_opt(&track.album_artist, &term.literal),
 				Field::Comments => find_match_opt(&track.comments, &term.literal),
 				Field::Genre => find_match_opt(&track.genre, &term.literal),
 				Field::Composer => find_match_opt(&track.composer, &term.literal),
 				Field::Group => find_match_opt(&track.grouping, &term.literal),
 				Field::Year => {
-					track.year.map(|n| n.to_string()).unwrap_or("".to_string()) == term.literal
+					todo!();
+					// track.year.map(|n| n.to_string()).unwrap_or("".to_string()) == term.literal
 				}
 				Field::Plays => {
-					track
-						.plays
-						.as_ref()
-						.map(|n| n.len().to_string())
-						.unwrap_or("".to_string())
-						== term.literal
+					todo!();
+					// track
+					// 	.plays
+					// 	.as_ref()
+					// 	.map(|n| n.len().to_string())
+					// 	.unwrap_or("".to_string())
+					// 	== term.literal
 				}
 				Field::Skips => {
-					track
-						.skips
-						.as_ref()
-						.map(|n| n.len().to_string())
-						.unwrap_or("".to_string())
-						== term.literal
+					todo!();
+					// track
+					// 	.skips
+					// 	.as_ref()
+					// 	.map(|n| n.len().to_string())
+					// 	.unwrap_or("".to_string())
+					// 	== term.literal
 				}
 				Field::Bpm => {
-					track.bpm.map(|n| n.to_string()).unwrap_or("".to_string()) == term.literal
+					todo!();
+					// track.bpm.map(|n| n.to_string()).unwrap_or("".to_string()) == term.literal
 				}
 			};
 			is_match
@@ -270,9 +269,8 @@ impl FilterTerm {
 }
 
 #[derive(sqlx::FromRow)]
-struct QueuedTrack {
-	queue_id: i64,
-	track_id: i64,
+pub struct CachedTrack {
+	id: i64,
 	title: String,
 	artist: String,
 	album_title: Option<String>,
@@ -283,105 +281,131 @@ struct QueuedTrack {
 	grouping: Option<String>,
 }
 
-pub async fn insert_queued_track_ngrams() -> Result<()> {
-	let start_time = Instant::now();
+pub struct TracksCache {
+	cached_revision_n: i64,
+	tracks: HashMap<i64, CachedTrack>,
+}
+impl TracksCache {
+	pub fn get_track(&self, id: &i64) -> Result<&CachedTrack> {
+		self.tracks
+			.get(id)
+			.with_context(|| format!("Track with ID {id} not found in cache"))
+	}
+	pub async fn load_all(db: &SqlitePool) -> Result<Self> {
+		let mut tx = db.begin().await?;
 
-	let mut data = Data::get_async().await;
-	// todo: maybe use tx for x individual tracks at a time
-	let mut tx = data.db.begin().await?;
+		let max_revision_n: i64 =
+			sqlx::query_scalar("SELECT COALESCE(MAX(revision_n), 0) FROM track_updates")
+				.fetch_one(&mut *tx)
+				.await
+				.context("Failed to get latest revision_n")?;
 
-	// todo: bulk insert
+		let tracks: Vec<CachedTrack> = sqlx::query_as(
+			"
+			SELECT
+				id,
+				title,
+				artist,
+				album_title,
+				album_artist,
+				comments,
+				genre,
+				composer,
+				grouping
+			FROM tracks
+			",
+		)
+		.fetch_all(&mut *tx)
+		.await
+		.context("Failed to fetch all tracks")?;
 
-	// todo: add all fields
-	let tracks: Vec<QueuedTrack> = sqlx::query_as(
-		"
-		SELECT
-			q.id AS queue_id,
-			t.id AS track_id,
-			t.title,
-			t.artist,
-			t.album_title,
-			t.album_artist,
-			t.comments,
-			t.genre,
-			t.composer,
-			t.grouping
-		FROM search_queue q
-		JOIN tracks t ON t.id = q.track_id
-		ORDER BY q.id ASC
-		",
-	)
-	.fetch_all(&mut *tx)
-	.await
-	.context("Failed to fetch search_queue tracks")?;
+		tx.commit().await?;
 
-	let last_queue_id = match tracks.last() {
-		Some(track) => track.queue_id,
-		None => {
-			tx.commit().await?;
-			return Ok(());
-		}
-	};
+		let tracks: HashMap<i64, CachedTrack> =
+			tracks.into_iter().map(|track| (track.id, track)).collect();
 
-	for track in &tracks {
-		sqlx::query("DELETE FROM search_ngrams WHERE track_id = ?")
-			.bind(&track.track_id)
-			.execute(&mut *tx)
-			.await?;
-
-		let fields = [
-			(NgramField::Title, Some(track.title.as_str())),
-			(NgramField::Artist, Some(track.artist.as_str())),
-			(NgramField::Album, track.album_title.as_deref()),
-			(NgramField::AlbumArtist, track.album_artist.as_deref()),
-			(NgramField::Comments, track.comments.as_deref()),
-			(NgramField::Genre, track.genre.as_deref()),
-			(NgramField::Composer, track.composer.as_deref()),
-			(NgramField::Group, track.grouping.as_deref()),
-		];
-
-		for (field, text) in fields {
-			let Some(text) = text else {
-				continue;
-			};
-
-			// todo: add normalise ngrams too using .to_lowercase().nfc()
-
-			let chars: Vec<char> = text.to_lowercase().chars().collect();
-
-			for n in 1..=3 {
-				for window in chars.windows(n) {
-					// todo: deduplicate rows before inserting
-					let ngram: String = window.iter().collect();
-
-					sqlx::query(
-						"INSERT OR IGNORE INTO search_ngrams
-							(track_id, field, ngram, is_normalised)
-						VALUES (?, ?, ?, FALSE)",
-					)
-					.bind(&track.track_id)
-					.bind(field.as_id())
-					.bind(ngram)
-					.execute(&mut *tx)
-					.await?;
-				}
-			}
-		}
+		let cache = TracksCache {
+			cached_revision_n: max_revision_n,
+			tracks,
+		};
+		Ok(cache)
 	}
 
-	sqlx::query("DELETE FROM search_queue WHERE id <= ?")
-		.bind(last_queue_id)
-		.execute(&mut *tx)
-		.await?;
+	pub async fn refresh(&mut self, db: &SqlitePool) -> Result<()> {
+		let mut tx = db.begin().await?;
 
-	tx.commit().await?;
+		let (min_revision_n, max_revision_n): (i64, i64) = sqlx::query_as(
+			"
+		    SELECT COALESCE(MIN(revision_n), 0), COALESCE(MAX(revision_n), 0)
+		    FROM track_updates
+	    ",
+		)
+		.fetch_one(&mut *tx)
+		.await
+		.context("Failed to check track revision_n")?;
+		if self.cached_revision_n + 1 < min_revision_n {
+			// If track_update rows were deleted (the cache is too old), refresh everything
+			drop(tx);
+			let new_cache = Self::load_all(db).await?;
+			*self = new_cache;
+			return Ok(());
+		}
 
-	println!("Indexing took {}ms", start_time.elapsed().as_millis());
+		let deletions: Vec<i64> = sqlx::query_scalar(
+			"
+		    SELECT id
+		    FROM track_updates
+		    WHERE revision_n > ?
+					AND is_delete = true
+	    ",
+		)
+		.bind(self.cached_revision_n)
+		.fetch_all(&mut *tx)
+		.await
+		.context("Failed to check track deletions")?;
 
-	Ok(())
+		for deletion in deletions {
+			self.tracks.remove(&deletion);
+		}
+
+		let tracks: Vec<CachedTrack> = sqlx::query_as(
+			"
+			SELECT
+				u.id,
+				t.title,
+				t.artist,
+				t.album_title,
+				t.album_artist,
+				t.comments,
+				t.genre,
+				t.composer,
+				t.grouping
+			FROM track_updates u
+			LEFT JOIN tracks t ON t.id = u.id
+			WHERE u.revision_n > ?
+				AND u.is_delete = false
+		",
+		)
+		.bind(self.cached_revision_n)
+		.fetch_all(&mut *tx)
+		.await
+		.context("Failed to get track updates")?;
+
+		for track in tracks {
+			self.tracks.insert(track.id, track);
+		}
+		self.cached_revision_n = max_revision_n;
+
+		tx.commit().await?;
+		Ok(())
+	}
 }
 
-pub fn filter(mut item_ids: Vec<ItemId>, terms: Vec<FilterTerm>, library: &Library) -> Vec<ItemId> {
+pub fn filter(
+	mut ids: Vec<TrackIDNew>,
+	terms: Vec<FilterTerm>,
+	library: &TracksCache,
+) -> Vec<TrackIDNew> {
 	let now = Instant::now();
 	let terms: Vec<_> = terms
 		.into_iter()
@@ -392,14 +416,14 @@ pub fn filter(mut item_ids: Vec<ItemId>, terms: Vec<FilterTerm>, library: &Libra
 		})
 		.collect();
 	if terms.len() == 0 {
-		return item_ids;
+		return ids;
 	}
 
 	for term in terms {
-		item_ids = filter_term(item_ids, term, &library);
+		ids = filter_term(ids, term, &library);
 	}
 	println!("Filter: {}ms", now.elapsed().as_millis());
-	item_ids
+	ids
 }
 
 enum Eq {

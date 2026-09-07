@@ -5,7 +5,9 @@ use crate::migrate::migrate_to_sqlite;
 use anyhow::{Context, Result, bail};
 use linked_hash_map::LinkedHashMap;
 use serde_json::{Value, json};
-use sqlx::{ConnectOptions, SqliteConnection, sqlite::SqliteConnectOptions};
+use sqlx::SqlitePool;
+use sqlx::sqlite::SqliteConnectOptions;
+use sqlx::sqlite::SqlitePoolOptions;
 use std::fs::File;
 use std::io::{ErrorKind, Read, Seek, SeekFrom};
 use std::path::PathBuf;
@@ -98,7 +100,7 @@ fn parse_old_versionless_library_json(library_file: &mut File) -> Result<Version
 	Ok(versioned_library)
 }
 
-pub async fn open_library(paths: &Paths) -> Result<SqliteConnection> {
+pub async fn open_library(paths: &Paths) -> Result<SqlitePool> {
 	let now = Instant::now();
 
 	paths
@@ -112,21 +114,23 @@ pub async fn open_library(paths: &Paths) -> Result<SqliteConnection> {
 	if !exists {
 		migrate_to_sqlite(paths).await?;
 	}
-	let mut connection = SqliteConnectOptions::new()
+	let options = SqliteConnectOptions::new()
 		.filename(&paths.library_sqlite)
-		.foreign_keys(true)
-		.connect()
+		.foreign_keys(true);
+	let pool = SqlitePoolOptions::new()
+		.max_connections(5)
+		.connect_with(options)
 		.await
 		.context("Error connecting to library database")?;
 
 	sqlx::migrate!("./src-native/migrations")
-		.run(&mut connection)
+		.run(&pool)
 		.await
 		.map_err(|e| anyhow::anyhow!("{:?}", e))
 		.context("Could not run database migrations")?;
 
 	println!("Open library: {}ms", now.elapsed().as_millis());
-	Ok(connection)
+	Ok(pool)
 }
 
 pub enum TrackField {

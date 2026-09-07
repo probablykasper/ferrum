@@ -1,4 +1,4 @@
-pub type TrackID = String;
+pub type TrackIDNew = i64;
 pub type TrackListID = String;
 
 #[derive(Debug, Clone, Copy, PartialEq, sqlx::Type)]
@@ -15,6 +15,31 @@ impl ToString for TrackListKind {
 			TrackListKind::Playlist => "playlist".to_string(),
 			TrackListKind::Folder => "folder".to_string(),
 			TrackListKind::Special => "special".to_string(),
+		}
+	}
+}
+
+pub enum SpecialTrackListId {
+	Root,
+}
+impl SpecialTrackListId {
+	pub fn from_id(id: &str) -> Self {
+		match id {
+			"root" => Self::Root,
+			_ => panic!("Unknown special track list id: {}", id),
+		}
+	}
+}
+
+pub enum TrackListVariant {
+	Playlist,
+	Folder,
+	Root,
+}
+impl TrackListVariant {
+	pub fn from_special_track_list_id(id: SpecialTrackListId) -> Self {
+		match id {
+			SpecialTrackListId::Root => Self::Root,
 		}
 	}
 }
