@@ -114,13 +114,10 @@ pub async fn open_library(paths: &Paths) -> Result<SqliteConnection> {
 	}
 	let mut connection = SqliteConnectOptions::new()
 		.filename(&paths.library_sqlite)
+		.foreign_keys(true)
 		.connect()
 		.await
 		.context("Error connecting to library database")?;
-	sqlx::query("PRAGMA foreign_keys = ON")
-		.execute(&mut connection)
-		.await
-		.context("Failed to enable SQLite foreign keys")?;
 
 	sqlx::migrate!("./src-native/migrations")
 		.run(&mut connection)
