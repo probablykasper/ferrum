@@ -1,9 +1,7 @@
-use crate::library::Paths;
+use crate::library::{Paths, embedded_sql};
 use crate::migrate::old_library::{Library, TrackList, TrackLists, load_library_json};
 use anyhow::{Context, Result};
-use sqlx::{
-	ConnectOptions, Connection, Sqlite, migrate::MigrateDatabase, sqlite::SqliteConnectOptions,
-};
+use rusqlite::{Connection, OpenFlags, params};
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::time::Instant;
@@ -25,27 +23,23 @@ pub async fn migrate_to_sqlite(paths: &Paths) -> Result<()> {
 	let tmp_dir = TempDir::new().context("failed to create temp dir")?;
 	let tmp_db = tmp_dir.path().join("Library.sqlite");
 
-	Sqlite::create_database(&tmp_db.to_str().unwrap())
-		.await
-		.context("Could not create library database")?;
-	let mut connection = SqliteConnectOptions::new()
-		.filename(&tmp_db)
-		.connect()
-		.await
-		.context("Error connecting to created library database")?;
+	let mut db = Connection::open_with_flags(
+		&tmp_db,
+		OpenFlags::SQLITE_OPEN_CREATE | OpenFlags::SQLITE_OPEN_READ_WRITE,
+	)
+	.context("Could not create library database")?;
+	db.execute_batch("PRAGMA foreign_keys = ON;")
+		.context("Error enabling foreign keys")?;
 
-	sqlx::migrate!("./src-native/migrations")
-		.run_to(1, &mut connection)
-		.await
+	embedded_sql::migrations::runner()
+		.run(&mut db)
 		.context("Could not run database migrations")?;
 
-	insert_library_into_db(&library_json, &mut connection)
-		.await
+	insert_library_into_db(&library_json, &mut db)
 		.context("Could not insert Library.json into database")?;
 
-	connection
-		.close()
-		.await
+	db.close()
+		.map_err(|(_, e)| e)
 		.context("Could not save/close database")?;
 
 	std::fs::rename(&tmp_db, &paths.library_sqlite)
@@ -62,15 +56,10 @@ pub async fn migrate_to_sqlite(paths: &Paths) -> Result<()> {
 	Ok(())
 }
 
-async fn insert_library_into_db(
-	library: &Library,
-	conn: &mut sqlx::SqliteConnection,
-) -> anyhow::Result<()> {
-	let mut tx = conn.begin().await.context("Failed to begin transaction")?;
+fn insert_library_into_db(library: &Library, db: &mut Connection) -> anyhow::Result<()> {
+	let tx = db.transaction().context("Failed to begin transaction")?;
 	// Defer foreign key checks for track list parent_id
-	sqlx::query("PRAGMA defer_foreign_keys = ON;")
-		.execute(&mut *tx)
-		.await?;
+	tx.execute_batch("PRAGMA defer_foreign_keys = ON;")?;
 
 	let mut new_ids: HashMap<&str, u32> = HashMap::new();
 
@@ -78,7 +67,7 @@ async fn insert_library_into_db(
 		let track_id: u32 = i.try_into().unwrap();
 		let removed = new_ids.insert(text_id, track_id);
 		assert!(removed.is_none());
-		sqlx::query(
+		tx.execute(
 			"
 				INSERT INTO tracks (
 					id,
@@ -127,98 +116,96 @@ async fn insert_library_into_db(
 					?, ?, ?, ?, ?, ?, ?, ?, ?
 				)
 			",
+			params![
+				&track_id,
+				&text_id,
+				track.size,
+				track.duration,
+				track.bitrate,
+				track.sampleRate,
+				&track.file,
+				track.dateModified,
+				track.dateAdded,
+				&track.name,
+				&track.artist,
+				&track.importedFrom,
+				&track.originalId,
+				&track.composer,
+				&track.sortName,
+				&track.sortArtist,
+				&track.sortComposer,
+				&track.genre,
+				track.rating,
+				track.year,
+				track.bpm,
+				&track.comments,
+				&track.grouping,
+				track.liked,
+				track.disliked,
+				track.disabled,
+				track.compilation,
+				&track.albumName,
+				&track.albumArtist,
+				&track.sortAlbumName,
+				&track.sortAlbumArtist,
+				track.trackNum,
+				track.trackCount,
+				track.discNum,
+				track.discCount,
+				track.dateImported,
+				track.playCount.unwrap_or(0),
+				track.skipCount.unwrap_or(0),
+				track.volume,
+			],
 		)
-		.bind(&track_id)
-		.bind(&text_id)
-		.bind(track.size)
-		.bind(track.duration)
-		.bind(track.bitrate)
-		.bind(track.sampleRate)
-		.bind(&track.file)
-		.bind(track.dateModified)
-		.bind(track.dateAdded)
-		.bind(&track.name)
-		.bind(&track.artist)
-		.bind(&track.importedFrom)
-		.bind(&track.originalId)
-		.bind(&track.composer)
-		.bind(&track.sortName)
-		.bind(&track.sortArtist)
-		.bind(&track.sortComposer)
-		.bind(&track.genre)
-		.bind(track.rating)
-		.bind(track.year)
-		.bind(track.bpm)
-		.bind(&track.comments)
-		.bind(&track.grouping)
-		.bind(track.liked)
-		.bind(track.disliked)
-		.bind(track.disabled)
-		.bind(track.compilation)
-		.bind(&track.albumName)
-		.bind(&track.albumArtist)
-		.bind(&track.sortAlbumName)
-		.bind(&track.sortAlbumArtist)
-		.bind(track.trackNum)
-		.bind(track.trackCount)
-		.bind(track.discNum)
-		.bind(track.discCount)
-		.bind(track.dateImported)
-		.bind(track.playCount.unwrap_or(0))
-		.bind(track.skipCount.unwrap_or(0))
-		.bind(track.volume)
-		.execute(&mut *tx)
-		.await
 		.with_context(|| format!("Failed to insert track {track_id}"))?;
 
 		if let Some(plays) = &track.plays {
 			for &date in plays {
-				sqlx::query("INSERT INTO plays (date, track_id) VALUES (?, ?)")
-					.bind(date)
-					.bind(&track_id)
-					.execute(&mut *tx)
-					.await
-					.with_context(|| format!("Failed to insert plays with date {}", date))?;
+				tx.execute(
+					"INSERT INTO plays (date, track_id) VALUES (?, ?)",
+					params![date, &track_id],
+				)
+				.with_context(|| format!("Failed to insert plays with date {}", date))?;
 			}
 		}
 
 		if let Some(imported) = &track.playsImported {
 			for co in imported {
-				sqlx::query(
+				tx.execute(
 					"INSERT INTO plays_imported (date_range_from, date_range_to, count, track_id) VALUES (?, ?, ?, ?)",
-				)
-				.bind(co.fromDate)
-				.bind(co.toDate)
-				.bind(co.count)
-				.bind(&track_id)
-				.execute(&mut *tx)
-				.await
+				params![
+				co.fromDate,
+				co.toDate,
+				co.count,
+				&track_id,
+				])
+
 				.with_context(|| format!("Failed to insert plays_imported with fromDate {}", co.fromDate))?;
 			}
 		}
 
 		if let Some(skips) = &track.skips {
 			for &date in skips {
-				sqlx::query("INSERT INTO skips (date, track_id) VALUES (?, ?)")
-					.bind(date)
-					.bind(&track_id)
-					.execute(&mut *tx)
-					.await
-					.with_context(|| format!("Failed to insert skips with date {}", date))?;
+				tx.execute(
+					"INSERT INTO skips (date, track_id) VALUES (?, ?)",
+					params![date, &track_id],
+				)
+				.with_context(|| format!("Failed to insert skips with date {}", date))?;
 			}
 		}
 
 		if let Some(imported) = &track.skipsImported {
 			for co in imported {
-				sqlx::query(
+				tx.execute(
 					"INSERT INTO skips_imported (date_range_from, date_range_to, count, track_id) VALUES (?, ?, ?, ?)",
-				)
-				.bind(co.fromDate)
-				.bind(co.toDate)
-				.bind(co.count)
-				.bind(&track_id)
-				.execute(&mut *tx)
-				.await
+				params![
+				co.fromDate,
+				co.toDate,
+				co.count,
+				&track_id,
+				])
+
 				.with_context(|| format!("Failed to insert skips_imported with fromDate {}", co.fromDate))?;
 			}
 		}
@@ -232,90 +219,86 @@ async fn insert_library_into_db(
 		match tracklist {
 			TrackList::Special(special) => {
 				let name = special.name.get_name_str();
-				sqlx::query(
+				tx.execute(
 					"
 						INSERT INTO track_lists
 							(id, kind, name, description, created_at)
 						VALUES (?, ?, ?, ?, ?)
 					",
+					params![
+						&special.id,
+						"special",
+						special.name.get_name_str(),
+						"",
+						special.dateCreated,
+					],
 				)
-				.bind(&special.id)
-				.bind("special")
-				.bind(special.name.get_name_str())
-				.bind("")
-				.bind(special.dateCreated)
-				.execute(&mut *tx)
-				.await
 				.with_context(|| format!("Failed to insert special playlist {name}"))?;
 			}
 			TrackList::Folder(folder) => {
 				let (index, parent_id) = parent_map
 					.get(list_id.as_str())
 					.with_context(|| format!("Parent of folder {} not found", folder.name))?;
-				sqlx::query(
+				tx.execute(
 					"
 						INSERT INTO track_lists
 							(id, kind, parent_id, item_pos, name, description, liked, disliked,
 							imported_from, original_id, imported_at, created_at)
 						VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 					",
+					params![
+						&folder.id,
+						"folder",
+						parent_id,
+						index,
+						&folder.name,
+						folder.description.as_deref().unwrap_or(""),
+						folder.liked,
+						folder.disliked,
+						&folder.importedFrom,
+						&folder.originalId,
+						folder.dateImported,
+						folder.dateCreated,
+					],
 				)
-				.bind(&folder.id)
-				.bind("folder")
-				.bind(parent_id)
-				.bind(index)
-				.bind(&folder.name)
-				.bind(folder.description.as_deref().unwrap_or(""))
-				.bind(folder.liked)
-				.bind(folder.disliked)
-				.bind(&folder.importedFrom)
-				.bind(&folder.originalId)
-				.bind(folder.dateImported)
-				.bind(folder.dateCreated)
-				.execute(&mut *tx)
-				.await
 				.with_context(|| format!("Failed to insert playlist folder {}", folder.name))?;
 			}
 			TrackList::Playlist(playlist) => {
 				let (index, parent_id) = parent_map
 					.get(list_id.as_str())
 					.with_context(|| format!("Parent of playlist {} not found", playlist.name))?;
-				sqlx::query(
+				tx.execute(
 					"
 						INSERT INTO track_lists
 							(id, kind, parent_id, item_pos, name, description, liked, disliked,
 							imported_from, original_id, imported_at, created_at)
 						VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 					",
+					params![
+						&playlist.id,
+						"playlist",
+						parent_id,
+						index,
+						&playlist.name,
+						playlist.description.as_deref().unwrap_or(""),
+						playlist.liked,
+						playlist.disliked,
+						&playlist.importedFrom,
+						&playlist.originalId,
+						playlist.dateImported,
+						playlist.dateCreated,
+					],
 				)
-				.bind(&playlist.id)
-				.bind("playlist")
-				.bind(parent_id)
-				.bind(index)
-				.bind(&playlist.name)
-				.bind(playlist.description.as_deref().unwrap_or(""))
-				.bind(playlist.liked)
-				.bind(playlist.disliked)
-				.bind(&playlist.importedFrom)
-				.bind(&playlist.originalId)
-				.bind(playlist.dateImported)
-				.bind(playlist.dateCreated)
-				.execute(&mut *tx)
-				.await
 				.with_context(|| format!("Failed to insert playlist {}", playlist.name))?;
 
 				// playlist_tracks rows
 				for (i, text_id) in playlist.tracks.iter().enumerate() {
 					let track_id = new_ids.get(text_id.as_str()).unwrap();
 					let i: u32 = i.try_into().unwrap();
-					sqlx::query(
+					tx.execute(
 						"INSERT INTO playlist_tracks (track_list_id, track_id, item_pos) VALUES (?, ?, ?)",
+						params![&playlist.id, track_id, i],
 					)
-					.bind(&playlist.id)
-					.bind(track_id)
-					.bind(i)
-					.execute(&mut *tx)
-					.await
 					.with_context(|| {
 						format!(
 							"Failed to insert track {} in playlist {}",
@@ -327,7 +310,7 @@ async fn insert_library_into_db(
 		}
 	}
 
-	tx.commit().await.context("Failed to commit transaction")?;
+	tx.commit().context("Failed to commit transaction")?;
 	Ok(())
 }
 

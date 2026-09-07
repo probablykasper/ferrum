@@ -1,13 +1,24 @@
+use rusqlite::types::FromSql;
+
 pub type TrackIDNew = i64;
 pub type TrackListID = String;
 
-#[derive(Debug, Clone, Copy, PartialEq, sqlx::Type)]
-#[sqlx(type_name = "TEXT")]
-#[sqlx(rename_all = "lowercase")]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum TrackListKind {
 	Playlist,
 	Folder,
 	Special,
+}
+impl FromSql for TrackListKind {
+	fn column_result(value: rusqlite::types::ValueRef<'_>) -> rusqlite::types::FromSqlResult<Self> {
+		let kind = match value.as_str()? {
+			"playlist" => TrackListKind::Playlist,
+			"folder" => TrackListKind::Folder,
+			"special" => TrackListKind::Special,
+			_ => return Err(rusqlite::types::FromSqlError::InvalidType),
+		};
+		Ok(kind)
+	}
 }
 impl ToString for TrackListKind {
 	fn to_string(&self) -> String {
@@ -44,7 +55,7 @@ impl TrackListVariant {
 	}
 }
 
-// #[derive(sqlx::FromRow, Debug)]
+// #[derive(Debug)]
 // pub struct TrackList {
 // 	id: String,
 // 	kind: String,

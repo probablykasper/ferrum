@@ -5,8 +5,8 @@ use crate::tracks::Tag;
 use anyhow::{Context, Result};
 use atomicwrites::{AllowOverwrite, AtomicFile};
 use dirs_next;
+use rusqlite::Connection;
 use serde::Serialize;
-use sqlx::SqlitePool;
 use std::env;
 use std::io::Write;
 use std::path::{Path, PathBuf};
@@ -41,7 +41,7 @@ pub fn app_log_dir() -> Result<PathBuf> {
 pub struct Data {
 	pub paths: Paths,
 	pub library: Library,
-	pub db: SqlitePool,
+	pub db: Connection,
 	pub tracks_cache: Option<TracksCache>,
 	/// Current tag being edited
 	pub current_tag: Option<Tag>,

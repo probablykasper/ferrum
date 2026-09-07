@@ -1,9 +1,9 @@
 use crate::db::TrackIDNew;
 use anyhow::{Context, Result};
 use rayon::prelude::*;
+use rusqlite::Connection;
 use serde::Deserialize;
 use specta::Type;
-use sqlx::SqlitePool;
 use std::time::Instant;
 use std::{collections::HashMap, str::Chars};
 use unicode_normalization::{Recompositions, UnicodeNormalization};
@@ -268,7 +268,6 @@ impl FilterTerm {
 	}
 }
 
-#[derive(sqlx::FromRow)]
 pub struct CachedTrack {
 	id: i64,
 	title: String,
@@ -291,17 +290,17 @@ impl TracksCache {
 			.get(id)
 			.with_context(|| format!("Track with ID {id} not found in cache"))
 	}
-	pub async fn load_all(db: &SqlitePool) -> Result<Self> {
-		let mut tx = db.begin().await?;
+	pub fn load_all(db: &mut Connection) -> Result<Self> {
+		let tx = db.transaction().context("Failed to begin transaction")?;
 
-		let max_revision_n: i64 =
-			sqlx::query_scalar("SELECT COALESCE(MAX(revision_n), 0) FROM track_updates")
-				.fetch_one(&mut *tx)
-				.await
-				.context("Failed to get latest revision_n")?;
+		let max_revision_n: i64 = tx
+			.prepare_cached("SELECT COALESCE(MAX(revision_n), 0) FROM track_updates")?
+			.query_one([], |row| row.get(0))
+			.context("Failed to get latest revision_n")?;
 
-		let tracks: Vec<CachedTrack> = sqlx::query_as(
-			"
+		let tracks: Vec<CachedTrack> = tx
+			.prepare_cached(
+				"
 			SELECT
 				id,
 				title,
@@ -314,12 +313,24 @@ impl TracksCache {
 				grouping
 			FROM tracks
 			",
-		)
-		.fetch_all(&mut *tx)
-		.await
-		.context("Failed to fetch all tracks")?;
+			)?
+			.query_map([], |row| {
+				Ok(CachedTrack {
+					id: row.get(0)?,
+					title: row.get(1)?,
+					artist: row.get(2)?,
+					album_title: row.get(3)?,
+					album_artist: row.get(4)?,
+					comments: row.get(5)?,
+					genre: row.get(6)?,
+					composer: row.get(7)?,
+					grouping: row.get(8)?,
+				})
+			})?
+			.collect::<rusqlite::Result<_>>()
+			.context("Failed to fetch all tracks")?;
 
-		tx.commit().await?;
+		tx.commit()?;
 
 		let tracks: HashMap<i64, CachedTrack> =
 			tracks.into_iter().map(|track| (track.id, track)).collect();
@@ -331,45 +342,46 @@ impl TracksCache {
 		Ok(cache)
 	}
 
-	pub async fn refresh(&mut self, db: &SqlitePool) -> Result<()> {
-		let mut tx = db.begin().await?;
+	pub fn refresh(&mut self, db: &mut Connection) -> Result<()> {
+		let tx = db.transaction().context("Failed to begin transaction")?;
 
-		let (min_revision_n, max_revision_n): (i64, i64) = sqlx::query_as(
-			"
+		let (min_revision_n, max_revision_n): (i64, i64) = tx
+			.prepare_cached(
+				"
 		    SELECT COALESCE(MIN(revision_n), 0), COALESCE(MAX(revision_n), 0)
 		    FROM track_updates
 	    ",
-		)
-		.fetch_one(&mut *tx)
-		.await
-		.context("Failed to check track revision_n")?;
+			)?
+			.query_one([], |row| Ok((row.get(0)?, row.get(1)?)))
+			.context("Failed to check track revision_n")?;
 		if self.cached_revision_n + 1 < min_revision_n {
 			// If track_update rows were deleted (the cache is too old), refresh everything
 			drop(tx);
-			let new_cache = Self::load_all(db).await?;
+			let new_cache = Self::load_all(db)?;
 			*self = new_cache;
 			return Ok(());
 		}
 
-		let deletions: Vec<i64> = sqlx::query_scalar(
-			"
+		let deletions: Vec<i64> = tx
+			.prepare_cached(
+				"
 		    SELECT id
 		    FROM track_updates
 		    WHERE revision_n > ?
 					AND is_delete = true
 	    ",
-		)
-		.bind(self.cached_revision_n)
-		.fetch_all(&mut *tx)
-		.await
-		.context("Failed to check track deletions")?;
+			)?
+			.query_map([self.cached_revision_n], |row| row.get(0))?
+			.collect::<rusqlite::Result<_>>()
+			.context("Failed to check track deletions")?;
 
 		for deletion in deletions {
 			self.tracks.remove(&deletion);
 		}
 
-		let tracks: Vec<CachedTrack> = sqlx::query_as(
-			"
+		let tracks: Vec<CachedTrack> = tx
+			.prepare_cached(
+				"
 			SELECT
 				u.id,
 				t.title,
@@ -385,18 +397,29 @@ impl TracksCache {
 			WHERE u.revision_n > ?
 				AND u.is_delete = false
 		",
-		)
-		.bind(self.cached_revision_n)
-		.fetch_all(&mut *tx)
-		.await
-		.context("Failed to get track updates")?;
+			)?
+			.query_map([self.cached_revision_n], |row| {
+				Ok(CachedTrack {
+					id: row.get(0)?,
+					title: row.get(1)?,
+					artist: row.get(2)?,
+					album_title: row.get(3)?,
+					album_artist: row.get(4)?,
+					comments: row.get(5)?,
+					genre: row.get(6)?,
+					composer: row.get(7)?,
+					grouping: row.get(8)?,
+				})
+			})?
+			.collect::<rusqlite::Result<_>>()
+			.context("Failed to get track updates")?;
 
 		for track in tracks {
 			self.tracks.insert(track.id, track);
 		}
 		self.cached_revision_n = max_revision_n;
 
-		tx.commit().await?;
+		tx.commit()?;
 		Ok(())
 	}
 }
