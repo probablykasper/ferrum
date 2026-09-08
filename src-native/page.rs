@@ -1,5 +1,5 @@
 use crate::data::Data;
-use crate::db::{SpecialTrackListId, TrackListKind, TrackListVariant};
+use crate::db::{SpecialTrackListId, TrackIDNew, TrackListKind, TrackListVariant};
 use crate::filter::{FilterTerm, TracksCache, filter};
 use crate::library_types::{ItemId, new_item_ids_from_track_ids};
 use crate::sort::sort;
@@ -25,6 +25,7 @@ pub struct TracksPage {
 	pub playlist_name: String,
 	pub playlist_description: String,
 	pub playlist_length: u32,
+	pub track_ids: Vec<TrackIDNew>,
 	pub item_ids: Vec<ItemId>,
 }
 
@@ -153,6 +154,7 @@ pub fn get_tracks_page(options: TracksPageOptions) -> Result<TracksPage> {
 		playlist_name: track_list.name,
 		playlist_description: track_list.description,
 		playlist_length: track_ids.len().try_into().unwrap(),
+		track_ids,
 		item_ids,
 	})
 }

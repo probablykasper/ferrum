@@ -19,7 +19,7 @@ create table tracks (
 	filesize          INTEGER NOT NULL, -- i64
 	genre             TEXT NULL,
 	grouping          TEXT NULL,
-	imported_at       INTEGER NULL,
+	imported_at       INTEGER NULL, -- i64 ms since unix epoch
 	imported_from     TEXT NULL,
 	liked             BOOLEAN NULL,
 	modified_at       INTEGER NOT NULL, -- i64 ms since unix epoch

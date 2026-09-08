@@ -246,9 +246,10 @@
 		}
 	}
 
-	function get_item(item_id: ItemId) {
+	function get_item(track_id: TrackIDNew) {
 		try {
-			return get_track_by_item_id(item_id)
+			console.log(track_id, get_tracks_new([track_id]))
+			return get_tracks_new([track_id])[0]
 		} catch (_) {
 			return { id: null, track: null }
 		}
@@ -480,14 +481,14 @@
 	// svelte-ignore state_referenced_locally
 	const virtual_grid = VirtualGrid.create(tracks_page.itemIds, {
 		buffer: 20,
-		row_prepare(item_id, i) {
-			const { track, id } = get_item(item_id)
+		row_prepare(track_id, i) {
+			const { track, id } = get_item(track_id)
 			if (track === null) {
-				throw new Error(`Track with item_id ${item_id} not found`)
+				throw new Error(`Track with item_id ${track_id} not found`)
 			}
 			return {
 				...track,
-				item_id,
+				item_id: track_id,
 				track_id: id,
 				duration: track.duration ? get_duration(track.duration) : '',
 				dateAdded: format_date(track.dateAdded),

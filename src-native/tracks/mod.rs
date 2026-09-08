@@ -1,10 +1,15 @@
 use crate::data::Data;
+#[cfg(feature = "napi-rs")]
+use crate::db::TrackIDNew;
 use crate::get_now_timestamp;
 use crate::library::Paths;
-use crate::library_types::{ItemId, MsSinceUnixEpoch, TRACK_ID_MAP, Track, TrackID};
+use crate::library_types::{
+	ItemId, MsSinceUnixEpoch, PercentInteger, TRACK_ID_MAP, Track, TrackID,
+};
 use anyhow::{Context, Result, bail};
 #[cfg(feature = "napi")]
 use napi::bindgen_prelude::{ArrayBuffer, Buffer};
+use specta::Type;
 use std::fs;
 use std::path::Path;
 
@@ -18,10 +23,149 @@ pub use tag::Tag;
 #[cfg(feature = "napi-rs")]
 #[cfg_attr(feature = "napi", napi(js_name = "get_track"))]
 #[allow(dead_code)]
-pub fn get_track(id: String) -> Result<Track> {
+pub fn get_track_js(id: TrackIDNew) -> Result<TrackNew> {
+	get_track(id)
+}
+
+#[derive(Clone, Debug, Type)]
+#[cfg_attr(feature = "napi", napi(object))]
+pub struct TrackNew {
+	pub id: TrackIDNew,
+	pub text_id: String,
+	pub added_at: MsSinceUnixEpoch,
+	pub album_artist: Option<String>,
+	pub album_title: Option<String>,
+	pub artist: String,
+	pub bitrate: f64,
+	pub bpm: Option<f64>,
+	pub comments: Option<String>,
+	pub compilation: Option<bool>,
+	pub composer: Option<String>,
+	pub disabled: Option<bool>,
+	pub disc_count: Option<u32>,
+	pub disc_num: Option<u32>,
+	pub disliked: Option<bool>,
+	pub duration_s: f64,
+	pub file: String,
+	pub filesize: i64,
+	pub genre: Option<String>,
+	pub grouping: Option<String>,
+	pub imported_at: Option<MsSinceUnixEpoch>,
+	pub imported_from: Option<String>,
+	pub liked: Option<bool>,
+	pub modified_at: MsSinceUnixEpoch,
+	pub original_id: Option<String>,
+	pub play_count: u32,
+	pub rating_pct: Option<PercentInteger>,
+	pub sample_rate: f64,
+	pub skip_count: u32,
+	pub sort_album_artist: Option<String>,
+	pub sort_album_title: Option<String>,
+	pub sort_artist: Option<String>,
+	pub sort_composer: Option<String>,
+	pub sort_title: Option<String>,
+	pub title: String,
+	pub track_count: Option<u32>,
+	pub track_num: Option<u32>,
+	pub volume: Option<i8>,
+	pub year: Option<i64>,
+}
+
+pub fn get_track(id: TrackIDNew) -> Result<TrackNew> {
 	let data = Data::get_blocking();
-	let track = data.library.get_track(&id)?;
-	Ok(track.clone())
+	let sql = format!(
+		"SELECT
+			id,
+			text_id,
+			added_at,
+			album_artist,
+			album_title,
+			artist,
+			bitrate,
+			bpm,
+			comments,
+			compilation,
+			composer,
+			disabled,
+			disc_count,
+			disc_num,
+			disliked,
+			duration_s,
+			file,
+			filesize,
+			genre,
+			grouping,
+			imported_at,
+			imported_from,
+			liked,
+			modified_at,
+			original_id,
+			play_count,
+			rating_pct,
+			sample_rate,
+			skip_count,
+			sort_album_artist,
+			sort_album_title,
+			sort_artist,
+			sort_composer,
+			sort_title,
+			title,
+			track_count,
+			track_num,
+			volume,
+			year
+		FROM tracks
+		WHERE id = ?"
+	);
+	let track: TrackNew = data
+		.db
+		.prepare_cached(&sql)?
+		.query_one([id], |row| {
+			let track = TrackNew {
+				id: row.get(0)?,
+				text_id: row.get(1)?,
+				added_at: row.get(2)?,
+				album_artist: row.get(3)?,
+				album_title: row.get(4)?,
+				artist: row.get(5)?,
+				bitrate: row.get(6)?,
+				bpm: row.get(7)?,
+				comments: row.get(8)?,
+				compilation: row.get(9)?,
+				composer: row.get(10)?,
+				disabled: row.get(11)?,
+				disc_count: row.get(12)?,
+				disc_num: row.get(13)?,
+				disliked: row.get(14)?,
+				duration_s: row.get(15)?,
+				file: row.get(16)?,
+				filesize: row.get(17)?,
+				genre: row.get(18)?,
+				grouping: row.get(19)?,
+				imported_at: row.get(20)?,
+				imported_from: row.get(21)?,
+				liked: row.get(22)?,
+				modified_at: row.get(23)?,
+				original_id: row.get(24)?,
+				play_count: row.get(25)?,
+				rating_pct: row.get(26)?,
+				sample_rate: row.get(27)?,
+				skip_count: row.get(28)?,
+				sort_album_artist: row.get(29)?,
+				sort_album_title: row.get(30)?,
+				sort_artist: row.get(31)?,
+				sort_composer: row.get(32)?,
+				sort_title: row.get(33)?,
+				title: row.get(34)?,
+				track_count: row.get(35)?,
+				track_num: row.get(36)?,
+				volume: row.get(37)?,
+				year: row.get(38)?,
+			};
+			Ok(track)
+		})
+		.with_context(|| "Could not get track with ID {id}")?;
+	Ok(track)
 }
 
 #[cfg_attr(feature = "napi", napi(object))]

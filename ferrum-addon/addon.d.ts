@@ -86,6 +86,8 @@ export declare function get_track_lists_details(): Record<string, TrackListDetai
 
 export declare function get_track_playlist_ids(trackId: TrackID): Array<TrackID>
 
+export declare function get_tracks_new(ids: Array<TrackIDNew>): Array<TrackNew>
+
 export declare function get_tracks_page(options: TracksPageOptions): TracksPage
 
 export declare function import_file(path: string, now: MsSinceUnixEpoch): void
@@ -286,11 +288,54 @@ export interface TrackMd {
   comments: string
 }
 
+export interface TrackNew {
+  id: TrackIDNew
+  textId: string
+  addedAt: MsSinceUnixEpoch
+  albumArtist?: string
+  albumTitle?: string
+  artist: string
+  bitrate: number
+  bpm?: number
+  comments?: string
+  compilation?: boolean
+  composer?: string
+  disabled?: boolean
+  discCount?: number
+  discNum?: number
+  disliked?: boolean
+  durationS: number
+  file: string
+  filesize: number
+  genre?: string
+  grouping?: string
+  importedAt?: MsSinceUnixEpoch
+  importedFrom?: string
+  liked?: boolean
+  modifiedAt: MsSinceUnixEpoch
+  originalId?: string
+  playCount: number
+  ratingPct?: PercentInteger
+  sampleRate: number
+  skipCount: number
+  sortAlbumArtist?: string
+  sortAlbumTitle?: string
+  sortArtist?: string
+  sortComposer?: string
+  sortTitle?: string
+  title: string
+  trackCount?: number
+  trackNum?: number
+  volume?: number
+  year?: number
+}
+
 export interface TracksPage {
   playlistKind: string
   playlistName: string
   playlistDescription: string
   playlistLength: number
+  trackIds: Array<TrackIDNew>
   itemIds: Array<ItemId>
 }
 
