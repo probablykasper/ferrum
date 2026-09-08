@@ -1,43 +1,43 @@
 create table tracks (
 	id                INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
 	text_id           TEXT UNIQUE NOT NULL,
-	filesize          INTEGER NOT NULL, -- i64
-	duration_s        REAL NOT NULL, -- f64
-	bitrate           REAL NOT NULL, -- f64
-	sample_rate       REAL NOT NULL, -- f64
-	file              TEXT NOT NULL,
-	modified_at       INTEGER NOT NULL, -- i64 ms since unix epoch
 	added_at          INTEGER NOT NULL, -- i64 ms since unix epoch
-	title             TEXT NOT NULL,
+	album_artist      TEXT NULL,
+	album_title       TEXT NULL,
 	artist            TEXT NOT NULL,
-	imported_from     TEXT NULL,
-	original_id       TEXT NULL, -- Imported ID, like iTunes Persistent ID
-	composer          TEXT NULL,
-	sort_title        TEXT NULL,
-	sort_artist       TEXT NULL,
-	sort_composer     TEXT NULL,
-	genre             TEXT NULL,
-	rating_pct        INTEGER NULL, -- from 0 to 100
-	year              INTEGER NULL, -- i64
+	bitrate           REAL NOT NULL, -- f64
 	bpm               REAL NULL, -- f64
 	comments          TEXT NULL,
-	grouping          TEXT NULL,
-	liked             BOOLEAN NULL,
-	disliked          BOOLEAN NULL,
-	disabled          BOOLEAN NULL,
 	compilation       BOOLEAN NULL,
-	album_title       TEXT NULL,
-	album_artist      TEXT NULL,
-	sort_album_title  TEXT NULL,
-	sort_album_artist TEXT NULL,
-	track_num         INTEGER NULL, -- u32
-	track_count       INTEGER NULL, -- u32
-	disc_num          INTEGER NULL, -- u32
+	composer          TEXT NULL,
+	disabled          BOOLEAN NULL,
 	disc_count        INTEGER NULL, -- u32
+	disc_num          INTEGER NULL, -- u32
+	disliked          BOOLEAN NULL,
+	duration_s        REAL NOT NULL, -- f64
+	file              TEXT NOT NULL,
+	filesize          INTEGER NOT NULL, -- i64
+	genre             TEXT NULL,
+	grouping          TEXT NULL,
 	imported_at       INTEGER NULL,
+	imported_from     TEXT NULL,
+	liked             BOOLEAN NULL,
+	modified_at       INTEGER NOT NULL, -- i64 ms since unix epoch
+	original_id       TEXT NULL, -- Imported ID, like iTunes Persistent ID
 	play_count        INTEGER NOT NULL, -- u32
+	rating_pct        INTEGER NULL, -- from 0 to 100
+	sample_rate       REAL NOT NULL, -- f64
 	skip_count        INTEGER NOT NULL, -- u32
-	volume            INTEGER NULL -- from -100 to 100
+	sort_album_artist TEXT NULL,
+	sort_album_title  TEXT NULL,
+	sort_artist       TEXT NULL,
+	sort_composer     TEXT NULL,
+	sort_title        TEXT NULL,
+	title             TEXT NOT NULL,
+	track_count       INTEGER NULL, -- u32
+	track_num         INTEGER NULL, -- u32
+	volume            INTEGER NULL, -- from -100 to 100
+	year              INTEGER NULL -- i64
 );
 
 CREATE TABLE track_updates (

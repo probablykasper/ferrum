@@ -2,6 +2,7 @@ use crate::data::Data;
 use crate::db::{SpecialTrackListId, TrackListKind, TrackListVariant};
 use crate::filter::{FilterTerm, TracksCache, filter};
 use crate::library_types::{ItemId, new_item_ids_from_track_ids};
+use crate::sort::sort;
 use anyhow::{Context, Result};
 use rusqlite::params;
 use serde::{Deserialize, Serialize};
@@ -46,27 +47,6 @@ impl TrackListPage {
 	}
 }
 
-// returns (column_name, is_text)
-fn to_sql_sort_key(sort_key: &str) -> (&'static str, bool) {
-	match sort_key {
-		"albumName" => ("album_title", true),
-		"albumArtist" => ("album_artist", true),
-		"artist" => ("artist", true),
-		"bpm" => ("bpm", false),
-		"comments" => ("comments", true),
-		"composer" => ("composer", true),
-		"dateAdded" => ("added_at", false),
-		"duration" => ("duration_s", false),
-		"genre" => ("genre", true),
-		"grouping" => ("grouping", true),
-		"name" => ("title", true),
-		"playCount" => ("play_count", false),
-		"skipCount" => ("skip_count", false),
-		"year" => ("year", false),
-		sort_key => panic!("Invalid sort key {sort_key}"),
-	}
-}
-
 #[cfg(feature = "napi")]
 #[cfg_attr(feature = "napi", napi(js_name = "get_tracks_page"))]
 #[allow(dead_code)]
@@ -104,8 +84,8 @@ pub fn get_tracks_page(options: TracksPageOptions) -> Result<TracksPage> {
 	let track_list: TrackListPage = tx
 		.prepare_cached(
 			"SELECT kind, id, name, description
-		FROM track_lists
-		WHERE id = ?",
+			FROM track_lists
+			WHERE id = ?",
 		)?
 		.query_one(params![&options.playlist_id], |row| {
 			Ok(TrackListPage {
@@ -117,44 +97,7 @@ pub fn get_tracks_page(options: TracksPageOptions) -> Result<TracksPage> {
 		})
 		.context("Failed to get playlist")?;
 
-	println!("TL took {:?}", start_time.elapsed());
-
-	// let direction = match options.sort_desc {
-	// 	true => "DESC",
-	// 	false => "ASC",
-	// };
-	// let mut order_by_clauses = Vec::new();
-	// match options.sort_key.as_str() {
-	// 	"index" => match track_list.kind {
-	// 		TrackListKind::Playlist => {
-	// 			order_by_clauses.push(format!("playlist_tracks.item_pos {direction}"))
-	// 		}
-	// 		TrackListKind::Folder => todo!(),
-	// 		TrackListKind::Special => order_by_clauses.push(format!("tracks.added_at {direction}")),
-	// 	},
-	// 	sort_key => {
-	// 		// TEXT columns should have empty values sorted last
-	// 		let (sql_sort_key, is_text_col) = to_sql_sort_key(sort_key);
-	// 		if is_text_col {
-	// 			order_by_clauses.push(format!(
-	// 				"CASE WHEN tracks.{sql_sort_key} IS NULL OR tracks.{sql_sort_key} = '' \
-	//             THEN 1 ELSE 0 END ASC"
-	// 			));
-	// 		}
-	// 		match track_list.kind {
-	// 			TrackListKind::Playlist => {
-	// 				order_by_clauses.push(format!("tracks.{sql_sort_key} {direction}"));
-	// 				order_by_clauses.push("playlist_tracks.item_pos ASC".to_string());
-	// 			}
-	// 			TrackListKind::Folder => todo!(),
-	// 			TrackListKind::Special => {
-	// 				order_by_clauses.push(format!("tracks.{sql_sort_key} {direction}"));
-	// 				order_by_clauses.push("tracks.added_at ASC".to_string());
-	// 			}
-	// 		}
-	// 	}
-	// };
-	// let order_by = order_by_clauses.join(", ");
+	let t = std::time::Instant::now();
 
 	let track_ids = match track_list.variant() {
 		TrackListVariant::Playlist => {
@@ -175,8 +118,7 @@ pub fn get_tracks_page(options: TracksPageOptions) -> Result<TracksPage> {
 			let track_ids: Vec<i64> = tx
 				.prepare_cached(
 					"SELECT id
-					FROM tracks
-					ORDER BY added_at DESC",
+					FROM tracks",
 				)?
 				.query_map([], |row| row.get(0))?
 				.collect::<rusqlite::Result<_>>()
@@ -184,12 +126,13 @@ pub fn get_tracks_page(options: TracksPageOptions) -> Result<TracksPage> {
 			track_ids
 		}
 	};
-	println!("IDs took {:?}", start_time.elapsed());
+	println!("Getting IDs {:?}", t.elapsed());
 
+	let track_ids = sort(track_ids, &options, tracks_cache).context("Sorting failed")?;
 	let track_ids = filter(track_ids, options.filter_terms, tracks_cache);
 
 	println!(
-		"get_tracks_page took {:?}, {} results",
+		"get_tracks_page {:?}, {} results",
 		start_time.elapsed(),
 		track_ids.len()
 	);

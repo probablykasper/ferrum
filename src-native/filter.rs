@@ -1,4 +1,5 @@
 use crate::db::TrackIDNew;
+use crate::library::TrackField;
 use anyhow::{Context, Result};
 use rayon::prelude::*;
 use rusqlite::Connection;
@@ -269,15 +270,106 @@ impl FilterTerm {
 }
 
 pub struct CachedTrack {
-	id: i64,
-	title: String,
-	artist: String,
-	album_title: Option<String>,
-	album_artist: Option<String>,
-	composer: Option<String>,
-	comments: Option<String>,
-	genre: Option<String>,
-	grouping: Option<String>,
+	pub id: i64,
+	pub added_at: i64,
+	pub album_artist: Option<String>,
+	pub album_title: Option<String>,
+	pub artist: String,
+	pub bpm: Option<f64>,
+	pub comments: Option<String>,
+	pub composer: Option<String>,
+	pub disc_count: Option<u32>,
+	pub disc_num: Option<u32>,
+	pub duration_s: f64,
+	pub genre: Option<String>,
+	pub grouping: Option<String>,
+	pub play_count: u32,
+	pub skip_count: u32,
+	pub title: String,
+	pub track_count: Option<u32>,
+	pub track_num: Option<u32>,
+	pub year: Option<i64>,
+}
+impl CachedTrack {
+	pub fn has_album(&self) -> bool {
+		self.album_title.is_some() && self.album_artist.is_some()
+	}
+	pub fn is_same_album(&self, other: &CachedTrack) -> bool {
+		self.has_album()
+			&& self.album_title == other.album_title
+			&& self.album_artist == other.album_artist
+	}
+}
+
+#[derive(Debug, Clone, Copy)]
+pub enum SortKey {
+	AddedAt,
+	AlbumArtist,
+	AlbumTitle,
+	Artist,
+	Bpm,
+	Comments,
+	Composer,
+	DiscCount,
+	DiscNum,
+	Duration,
+	Genre,
+	Grouping,
+	PlayCount,
+	SkipCount,
+	Title,
+	TrackCount,
+	TrackNum,
+	Year,
+}
+impl SortKey {
+	/// returns (column_name, is_text)
+	pub fn from_col_view_key(sort_key: &str) -> Self {
+		match sort_key {
+			"dateAdded" => SortKey::AddedAt,       // is_text: false
+			"albumArtist" => SortKey::AlbumArtist, // is_text: true
+			"albumName" => SortKey::AlbumTitle,    // is_text: true
+			"artist" => SortKey::Artist,           // is_text: true
+			"bpm" => SortKey::Bpm,                 // is_text: false
+			"comments" => SortKey::Comments,       // is_text: true
+			"composer" => SortKey::Composer,       // is_text: true
+			"discCount" => SortKey::DiscCount,     // is_text: false
+			"discNum" => SortKey::DiscNum,         // is_text: false
+			"duration" => SortKey::Duration,       // is_text: false
+			"genre" => SortKey::Genre,             // is_text: true
+			"grouping" => SortKey::Grouping,       // is_text: true
+			"playCount" => SortKey::PlayCount,     // is_text: false
+			"skipCount" => SortKey::SkipCount,     // is_text: false
+			"name" => SortKey::Title,              // is_text: true
+			"trackCount" => SortKey::TrackCount,   // is_text: false
+			"trackNum" => SortKey::TrackNum,       // is_text: false
+			"year" => SortKey::Year,               // is_text: false
+			sort_key => panic!("Invalid sort key {sort_key}"),
+		}
+	}
+
+	pub fn field_type(&self) -> TrackField {
+		match self {
+			SortKey::AddedAt => TrackField::I64,
+			SortKey::AlbumArtist => TrackField::String,
+			SortKey::AlbumTitle => TrackField::String,
+			SortKey::Artist => TrackField::String,
+			SortKey::Bpm => TrackField::F64,
+			SortKey::Comments => TrackField::String,
+			SortKey::Composer => TrackField::String,
+			SortKey::DiscCount => TrackField::U32,
+			SortKey::DiscNum => TrackField::U32,
+			SortKey::Duration => TrackField::F64,
+			SortKey::Genre => TrackField::String,
+			SortKey::Grouping => TrackField::String,
+			SortKey::PlayCount => TrackField::U32,
+			SortKey::SkipCount => TrackField::U32,
+			SortKey::Title => TrackField::String,
+			SortKey::TrackCount => TrackField::U32,
+			SortKey::TrackNum => TrackField::U32,
+			SortKey::Year => TrackField::I64,
+		}
+	}
 }
 
 pub struct TracksCache {
@@ -300,31 +392,49 @@ impl TracksCache {
 
 		let tracks: Vec<CachedTrack> = tx
 			.prepare_cached(
-				"
-			SELECT
-				id,
-				title,
-				artist,
-				album_title,
-				album_artist,
-				comments,
-				genre,
-				composer,
-				grouping
-			FROM tracks
-			",
+				"SELECT
+					id,
+					added_at,
+					album_artist,
+					album_title,
+					artist,
+					bpm,
+					comments,
+					composer,
+					disc_count,
+					disc_num,
+					duration_s,
+					genre,
+					grouping,
+					play_count,
+					skip_count,
+					title,
+					track_count,
+					track_num,
+					year
+				FROM tracks",
 			)?
 			.query_map([], |row| {
 				Ok(CachedTrack {
 					id: row.get(0)?,
-					title: row.get(1)?,
-					artist: row.get(2)?,
+					added_at: row.get(1)?,
+					album_artist: row.get(2)?,
 					album_title: row.get(3)?,
-					album_artist: row.get(4)?,
-					comments: row.get(5)?,
-					genre: row.get(6)?,
+					artist: row.get(4)?,
+					bpm: row.get(5)?,
+					comments: row.get(6)?,
 					composer: row.get(7)?,
-					grouping: row.get(8)?,
+					disc_count: row.get(8)?,
+					disc_num: row.get(9)?,
+					duration_s: row.get(10)?,
+					genre: row.get(11)?,
+					grouping: row.get(12)?,
+					play_count: row.get(13)?,
+					skip_count: row.get(14)?,
+					title: row.get(15)?,
+					track_count: row.get(16)?,
+					track_num: row.get(17)?,
+					year: row.get(18)?,
 				})
 			})?
 			.collect::<rusqlite::Result<_>>()
@@ -384,14 +494,24 @@ impl TracksCache {
 				"
 			SELECT
 				u.id,
-				t.title,
-				t.artist,
-				t.album_title,
+				t.added_at,
 				t.album_artist,
+				t.album_title,
+				t.artist,
+				t.bpm,
 				t.comments,
-				t.genre,
 				t.composer,
-				t.grouping
+				t.disc_count,
+				t.disc_num,
+				t.duration_s,
+				t.genre,
+				t.grouping,
+				t.play_count,
+				t.skip_count,
+				t.title,
+				t.track_count,
+				t.track_num,
+				t.year
 			FROM track_updates u
 			LEFT JOIN tracks t ON t.id = u.id
 			WHERE u.revision_n > ?
@@ -401,14 +521,24 @@ impl TracksCache {
 			.query_map([self.cached_revision_n], |row| {
 				Ok(CachedTrack {
 					id: row.get(0)?,
-					title: row.get(1)?,
-					artist: row.get(2)?,
+					added_at: row.get(1)?,
+					album_artist: row.get(2)?,
 					album_title: row.get(3)?,
-					album_artist: row.get(4)?,
-					comments: row.get(5)?,
-					genre: row.get(6)?,
+					artist: row.get(4)?,
+					bpm: row.get(5)?,
+					comments: row.get(6)?,
 					composer: row.get(7)?,
-					grouping: row.get(8)?,
+					disc_count: row.get(8)?,
+					disc_num: row.get(9)?,
+					duration_s: row.get(10)?,
+					genre: row.get(11)?,
+					grouping: row.get(12)?,
+					play_count: row.get(13)?,
+					skip_count: row.get(14)?,
+					title: row.get(15)?,
+					track_count: row.get(16)?,
+					track_num: row.get(17)?,
+					year: row.get(18)?,
 				})
 			})?
 			.collect::<rusqlite::Result<_>>()

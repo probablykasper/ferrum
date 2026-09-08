@@ -366,16 +366,6 @@ pub struct Track {
 	#[serde(default, skip_serializing_if = "Option::is_none")]
 	pub volume: Option<i8>,
 }
-impl Track {
-	pub fn has_album(&self) -> bool {
-		self.albumName.is_some() && self.albumArtist.is_some()
-	}
-	pub fn is_same_album(&self, other: &Track) -> bool {
-		self.has_album()
-			&& self.albumName == other.albumName
-			&& self.albumArtist == other.albumArtist
-	}
-}
 
 #[derive(Serialize, Deserialize, Clone, Debug, Type)]
 #[cfg_attr(feature = "napi", napi(object))]

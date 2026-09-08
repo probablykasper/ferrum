@@ -1,113 +1,74 @@
-use crate::library::{TrackField, get_track_field_type, get_tracklist_item_ids};
-use crate::library_types::{ItemId, Library, TRACK_ID_MAP, Track};
+use crate::db::TrackIDNew;
+use crate::filter::{CachedTrack, SortKey, TracksCache};
+use crate::library::TrackField;
 use crate::page::TracksPageOptions;
 use alphanumeric_sort::compare_str;
-use anyhow::{Context, Result};
+use anyhow::Result;
 use std::cmp::Ordering;
 use std::time::Instant;
 
 pub type TracksPageOptionsX = TracksPageOptions;
 
-fn get_field_str<'a>(track: &'a Track, sort_key: &str) -> Option<&'a String> {
+fn get_field_str<'a>(track: &'a CachedTrack, sort_key: SortKey) -> Option<&'a String> {
 	match sort_key {
-		"file" => Some(&track.file),
-		"name" => Some(&track.name),
-		"importedFrom" => track.importedFrom.as_ref(),
-		"originalId" => track.originalId.as_ref(),
-		"artist" => Some(&track.artist),
-		"composer" => track.composer.as_ref(),
-		"sortName" => track.sortName.as_ref(),
-		"sortArtist" => track.sortArtist.as_ref(),
-		"sortComposer" => track.sortComposer.as_ref(),
-		"genre" => track.genre.as_ref(),
-		"comments" => track.comments.as_ref(),
-		"grouping" => track.grouping.as_ref(),
-		"albumName" => track.albumName.as_ref(),
-		"albumArtist" => track.albumArtist.as_ref(),
-		"sortAlbumName" => track.sortAlbumName.as_ref(),
-		"sortAlbumArtist" => track.sortAlbumArtist.as_ref(),
-		_ => panic!("Field type not found for {}", sort_key),
+		SortKey::AlbumArtist => track.album_artist.as_ref(),
+		SortKey::AlbumTitle => track.album_title.as_ref(),
+		SortKey::Artist => Some(&track.artist),
+		SortKey::Comments => track.comments.as_ref(),
+		SortKey::Composer => track.composer.as_ref(),
+		SortKey::Genre => track.genre.as_ref(),
+		SortKey::Grouping => track.grouping.as_ref(),
+		SortKey::Title => Some(&track.title),
+		_ => panic!("Field type not found for {:?}", sort_key),
 	}
 }
 
-fn get_field_f64(track: &Track, sort_key: &str) -> Option<f64> {
+fn get_field_f64(track: &CachedTrack, sort_key: SortKey) -> Option<f64> {
 	match sort_key {
-		"duration" => Some(track.duration),
-		"bitrate" => Some(track.bitrate),
-		"sampleRate" => Some(track.sampleRate),
-		"bpm" => track.bpm,
-		_ => panic!("Field type not found for {}", sort_key),
+		SortKey::Bpm => track.bpm,
+		SortKey::Duration => Some(track.duration_s),
+		_ => panic!("Field type not found for {:?}", sort_key),
 	}
 }
 
-fn get_field_i64(track: &Track, sort_key: &str) -> Option<i64> {
+fn get_field_i64(track: &CachedTrack, sort_key: SortKey) -> Option<i64> {
 	match sort_key {
-		"size" => Some(track.size),
-		"dateModified" => Some(track.dateModified),
-		"dateAdded" => Some(track.dateAdded),
-		"dateImported" => track.dateImported,
-		"year" => track.year,
-		_ => panic!("Field type not found for {}", sort_key),
+		SortKey::AddedAt => Some(track.added_at),
+		SortKey::Year => track.year,
+		_ => panic!("Field type not found for {:?}", sort_key),
 	}
 }
 
-fn get_field_u32(track: &Track, sort_key: &str) -> Option<u32> {
+fn get_field_u32(track: &CachedTrack, sort_key: SortKey) -> Option<u32> {
 	match sort_key {
-		"trackNum" => track.trackNum,
-		"trackCount" => track.trackCount,
-		"discNum" => track.discNum,
-		"discCount" => track.discCount,
-		"playCount" => track.playCount,
-		"skipCount" => track.skipCount,
-		_ => panic!("Field type not found for {}", sort_key),
-	}
-}
-
-fn get_field_i8(track: &Track, sort_key: &str) -> Option<i8> {
-	match sort_key {
-		"volume" => track.volume,
-		_ => panic!("Field type not found for {}", sort_key),
-	}
-}
-
-fn get_field_u8(track: &Track, sort_key: &str) -> Option<u8> {
-	match sort_key {
-		"rating" => track.rating,
-		_ => panic!("Field type not found for {}", sort_key),
-	}
-}
-
-fn get_field_bool(track: &Track, sort_key: &str) -> Option<bool> {
-	match sort_key {
-		"liked" => track.liked,
-		"disliked" => track.disliked,
-		"disabled" => track.disabled,
-		"compilation" => track.compilation,
-		_ => panic!("Field type not found for {}", sort_key),
+		SortKey::DiscCount => track.disc_count,
+		SortKey::DiscNum => track.disc_num,
+		SortKey::PlayCount => Some(track.play_count),
+		SortKey::SkipCount => Some(track.skip_count),
+		SortKey::TrackCount => track.track_count,
+		SortKey::TrackNum => track.track_num,
+		_ => panic!("Field type not found for {:?}", sort_key),
 	}
 }
 
 struct SortItem<'a> {
-	item_id: ItemId,
-	track: &'a Track,
+	item_id: TrackIDNew,
+	track: &'a CachedTrack,
 }
 
-pub fn sort(options: TracksPageOptions, library: &Library) -> Result<Vec<ItemId>> {
-	let now = Instant::now();
+pub fn sort(
+	ids: Vec<TrackIDNew>,
+	options: &TracksPageOptions,
+	library: &TracksCache,
+) -> Result<Vec<TrackIDNew>> {
+	let t = Instant::now();
 
-	let id_map = TRACK_ID_MAP.read().unwrap();
-	let tracks = library.get_tracks();
-
-	let items: Result<Vec<SortItem>> = get_tracklist_item_ids(library, &options.playlist_id)?
+	let items: Result<Vec<SortItem>> = ids
 		.into_iter()
-		.enumerate()
-		.map(|(i, id)| {
+		.map(|id| {
 			Ok(SortItem {
 				item_id: id,
-				track: tracks.get(&id_map[id as usize]).context(format!(
-					"Track {i} ({}) does not exist",
-					id_map[id as usize]
-				))?,
+				track: library.get_track(&id)?,
 			})
 		})
 		.collect();
@@ -120,19 +81,24 @@ pub fn sort(options: TracksPageOptions, library: &Library) -> Result<Vec<ItemId>
 		if !options.sort_desc {
 			items.reverse();
 		}
-		println!("Sort: {}ms", now.elapsed().as_millis());
+		println!("Sort: {}ms", t.elapsed().as_millis());
 		let item_ids = items.into_iter().map(|item| item.item_id).collect();
 		return Ok(item_ids);
 	}
 
-	let field = get_track_field_type(&options.sort_key)?;
+	let sort_key = SortKey::from_col_view_key(&options.sort_key);
 	let group_album_tracks = options.group_album_tracks
-		&& match options.sort_key.as_str() {
-			"dateAdded" | "albumName" | "comments" | "genre" | "year" | "artist" => true,
+		&& match sort_key {
+			SortKey::AddedAt
+			| SortKey::AlbumTitle
+			| SortKey::Comments
+			| SortKey::Genre
+			| SortKey::Year
+			| SortKey::Artist => true,
 			_ => false,
 		};
 	items.sort_by(|a, b| {
-		return compare_track_field(a.track, b.track, &options.sort_key, &field);
+		return compare_track_field(a.track, b.track, sort_key);
 	});
 
 	if options.sort_desc {
@@ -160,9 +126,9 @@ pub fn sort(options: TracksPageOptions, library: &Library) -> Result<Vec<ItemId>
 
 			// Sort album tracks by discNum, then trackNum
 			current_album_buffer.sort_by(|a, b| {
-				let mut order = compare_track_field(a.track, b.track, "discNum", &TrackField::U32);
+				let mut order = compare_track_field(a.track, b.track, SortKey::DiscNum);
 				if order == Ordering::Equal {
-					order = compare_track_field(a.track, b.track, "trackNum", &TrackField::U32);
+					order = compare_track_field(a.track, b.track, SortKey::TrackNum);
 				}
 				order
 			});
@@ -174,17 +140,17 @@ pub fn sort(options: TracksPageOptions, library: &Library) -> Result<Vec<ItemId>
 		items = post_grouped_items;
 	}
 
-	println!("Sort: {}ms", now.elapsed().as_millis());
+	println!("Sort: {}ms", t.elapsed().as_millis());
 	let item_ids = items.into_iter().map(|item| item.item_id).collect();
 	return Ok(item_ids);
 }
 
-pub fn compare_track_field(a: &Track, b: &Track, sort_key: &str, field: &TrackField) -> Ordering {
+pub fn compare_track_field(a: &CachedTrack, b: &CachedTrack, sort_key: SortKey) -> Ordering {
+	let field = sort_key.field_type();
 	match field {
 		TrackField::String => {
-			let empty_str = &"".to_string();
-			let str_a = get_field_str(a, sort_key).unwrap_or(empty_str);
-			let str_b = get_field_str(b, sort_key).unwrap_or(empty_str);
+			let str_a = get_field_str(a, sort_key).map(String::as_str).unwrap_or("");
+			let str_b = get_field_str(b, sort_key).map(String::as_str).unwrap_or("");
 			if str_a == "" && str_b == "" {
 				return Ordering::Equal;
 			}
@@ -213,21 +179,6 @@ pub fn compare_track_field(a: &Track, b: &Track, sort_key: &str, field: &TrackFi
 			let num_a = get_field_u32(a, sort_key).unwrap_or(0);
 			let num_b = get_field_u32(b, sort_key).unwrap_or(0);
 			return num_a.cmp(&num_b);
-		}
-		TrackField::I8 => {
-			let num_a = get_field_i8(a, sort_key).unwrap_or(0);
-			let num_b = get_field_i8(b, sort_key).unwrap_or(0);
-			return num_a.cmp(&num_b);
-		}
-		TrackField::U8 => {
-			let num_a = get_field_u8(a, sort_key).unwrap_or(0);
-			let num_b = get_field_u8(b, sort_key).unwrap_or(0);
-			return num_a.cmp(&num_b);
-		}
-		TrackField::Bool => {
-			let bool_a = get_field_bool(a, sort_key).unwrap_or(false); //? look into this
-			let bool_b = get_field_bool(b, sort_key).unwrap_or(false); //? look into this
-			return bool_a.cmp(&bool_b);
 		}
 	}
 }

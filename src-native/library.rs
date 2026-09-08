@@ -1,8 +1,10 @@
 #[cfg(feature = "napi")]
 use crate::data::Data;
+#[cfg(feature = "napi")]
+use crate::filter::SortKey;
 use crate::library_types::{ItemId, Library, SpecialTrackListName, TrackList, VersionedLibrary};
 use crate::migrate::migrate_to_sqlite;
-use anyhow::{Context, Result, bail};
+use anyhow::{Context, Result};
 use linked_hash_map::LinkedHashMap;
 use rusqlite::{Connection, OpenFlags};
 use serde_json::{Value, json};
@@ -136,9 +138,6 @@ pub enum TrackField {
 	F64,
 	I64,
 	U32,
-	I8,
-	U8,
-	Bool,
 }
 
 #[cfg(feature = "napi")]
@@ -148,56 +147,12 @@ pub fn get_default_sort_desc(field: String) -> Result<bool> {
 	if field == "index" {
 		return Ok(true);
 	}
-	let field = get_track_field_type(&field)?;
-	let desc = match field {
+	let field = SortKey::from_col_view_key(&field);
+	let desc = match field.field_type() {
 		TrackField::String => false,
 		_ => true,
 	};
 	Ok(desc)
-}
-
-pub fn get_track_field_type(field: &str) -> Result<TrackField> {
-	let field = match field {
-		"size" => TrackField::I64,
-		"duration" => TrackField::F64,
-		"bitrate" => TrackField::F64,
-		"sampleRate" => TrackField::F64,
-		"file" => TrackField::String,
-		"dateModified" => TrackField::I64,
-		"dateAdded" => TrackField::I64,
-		"name" => TrackField::String,
-		"importedFrom" => TrackField::String,
-		"originalId" => TrackField::String,
-		"artist" => TrackField::String,
-		"composer" => TrackField::String,
-		"sortName" => TrackField::String,
-		"sortArtist" => TrackField::String,
-		"sortComposer" => TrackField::String,
-		"genre" => TrackField::String,
-		"rating" => TrackField::U8,
-		"year" => TrackField::I64,
-		"bpm" => TrackField::F64,
-		"comments" => TrackField::String,
-		"grouping" => TrackField::String,
-		"liked" => TrackField::Bool,
-		"disliked" => TrackField::Bool,
-		"disabled" => TrackField::Bool,
-		"compilation" => TrackField::Bool,
-		"albumName" => TrackField::String,
-		"albumArtist" => TrackField::String,
-		"sortAlbumName" => TrackField::String,
-		"sortAlbumArtist" => TrackField::String,
-		"trackNum" => TrackField::U32,
-		"trackCount" => TrackField::U32,
-		"discNum" => TrackField::U32,
-		"discCount" => TrackField::U32,
-		"dateImported" => TrackField::I64,
-		"playCount" => TrackField::U32,
-		"skipCount" => TrackField::U32,
-		"volume" => TrackField::I8,
-		_ => bail!("Field type not found for {}", field),
-	};
-	return Ok(field);
 }
 
 #[cfg(feature = "napi")]
