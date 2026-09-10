@@ -1,8 +1,8 @@
 use anyhow::Result;
 use anyhow::bail;
 use ferrum::library_types::TRACK_ID_MAP;
-use ferrum::library_types::VersionedLibrary;
 use ferrum::library_types::{Library, Track, TrackList, TrackListID};
+use ferrum::migrate::{self, LibraryFile};
 use ferrum::page::TracksPage;
 use ferrum::page::TracksPageOptions;
 use ferrum::page::get_tracks_page_from_library;
@@ -71,7 +71,7 @@ fn load_library_from_file(library_json: &str) -> anyhow::Result<Library> {
 
 	let mut json_bytes = library_json.as_bytes().to_vec();
 
-	let versioned_library: VersionedLibrary = match simd_json::from_slice(&mut json_bytes) {
+	let versioned_library: LibraryFile = match simd_json::from_slice(&mut json_bytes) {
 		Ok(lib) => {
 			println!("Parsed library: {}ms", now.elapsed().as_millis());
 			lib
@@ -82,7 +82,8 @@ fn load_library_from_file(library_json: &str) -> anyhow::Result<Library> {
 	};
 	let now = Instant::now();
 
-	let library = versioned_library.upgrade().init_libary();
+	let latest_library = migrate::upgrade(versioned_library);
+	let library = Library::init_library(latest_library);
 	println!("Initialized library: {}ms", now.elapsed().as_millis());
 	Ok(library)
 }

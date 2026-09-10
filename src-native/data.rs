@@ -47,9 +47,9 @@ pub struct Data {
 pub static DATA: OnceLock<Mutex<Data>> = OnceLock::new();
 
 impl Data {
-	pub async fn get_async() -> MutexGuard<'static, Data> {
-		DATA.get().expect("No data initialised").lock().await
-	}
+	// pub async fn get_async() -> MutexGuard<'static, Data> {
+	// 	DATA.get().expect("No data initialised").lock().await
+	// }
 	pub fn get_blocking() -> MutexGuard<'static, Data> {
 		DATA.get().expect("No data initialised").blocking_lock()
 	}
@@ -59,7 +59,7 @@ impl Data {
 
 		let mut json = Vec::new();
 		let mut ser = serde_json::Serializer::with_formatter(&mut json, formatter);
-		self.library.versioned().serialize(&mut ser)?;
+		self.library.to_file().serialize(&mut ser)?;
 		println!("Stringify: {}ms", now.elapsed().as_millis());
 
 		now = Instant::now();

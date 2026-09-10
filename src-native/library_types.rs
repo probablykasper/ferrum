@@ -3,6 +3,7 @@
 use crate::get_now_timestamp;
 #[cfg(feature = "napi-rs")]
 use crate::library::Paths;
+use crate::migrate::LatestLibraryFile;
 #[cfg(feature = "napi-rs")]
 use crate::playlists::{delete_file, remove_from_all_playlists};
 use anyhow::{Context, Result, bail};
@@ -14,6 +15,15 @@ use std::borrow::Cow;
 use std::collections::HashSet;
 use std::sync::RwLock;
 use std::time::Instant;
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct LatestLibrary<'a> {
+	pub tracks: Cow<'a, LinkedHashMap<TrackID, Track>>,
+	pub trackLists: Cow<'a, TrackLists>,
+	pub v1PlayTime: Cow<'a, Vec<PlayTime>>,
+	pub playTime: Cow<'a, Vec<PlayTime>>,
+}
 
 #[derive(Clone, Debug)]
 pub struct Library {
@@ -31,8 +41,23 @@ pub struct Library {
 	pub genres: Option<Vec<String>>,
 }
 impl Library {
-	pub fn versioned(&'_ self) -> VersionedLibrary<'_> {
-		VersionedLibrary::V2(V2Library {
+	pub fn init_library(file: LatestLibrary) -> Library {
+		let mut library = Library {
+			tracks: LinkedHashMap::new(),
+			track_item_ids: LinkedHashMap::new(),
+			trackLists: file.trackLists.into_owned(),
+			v1PlayTime: file.v1PlayTime.into_owned(),
+			playTime: file.playTime.into_owned(),
+			artists: None,
+			genres: None,
+		};
+		for (id, track) in file.tracks.into_owned() {
+			library.insert_track(id, track);
+		}
+		library
+	}
+	pub fn to_file(&'_ self) -> LatestLibraryFile<'_> {
+		LatestLibraryFile::V2(LatestLibrary {
 			tracks: Cow::Borrowed(&self.tracks),
 			trackLists: Cow::Borrowed(&self.trackLists),
 			v1PlayTime: Cow::Borrowed(&self.v1PlayTime),
@@ -40,71 +65,6 @@ impl Library {
 		})
 	}
 }
-
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(tag = "version", deny_unknown_fields)]
-pub enum VersionedLibrary<'a> {
-	#[serde(rename = "1")]
-	V1(Cow<'a, V1Library>),
-	#[serde(rename = "2")]
-	V2(V2Library<'a>),
-}
-impl<'a> VersionedLibrary<'a> {
-	pub fn upgrade(self) -> V2Library<'a> {
-		match self {
-			VersionedLibrary::V1(v1) => v1.into_owned().upgrade(),
-			VersionedLibrary::V2(v2) => v2,
-		}
-	}
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(deny_unknown_fields)]
-pub struct V2Library<'a> {
-	pub tracks: Cow<'a, LinkedHashMap<TrackID, Track>>,
-	pub trackLists: Cow<'a, TrackLists>,
-	/// v1 playtime has two issues:
-	/// - some durations are double counted (or triple, etc.)
-	/// - timestamps aren't updated after pausing
-	pub v1PlayTime: Cow<'a, Vec<PlayTime>>,
-	pub playTime: Cow<'a, Vec<PlayTime>>,
-}
-impl<'a> V2Library<'a> {
-	pub fn init_libary(self) -> Library {
-		let mut library = Library {
-			tracks: LinkedHashMap::new(),
-			track_item_ids: LinkedHashMap::new(),
-			trackLists: self.trackLists.into_owned(),
-			v1PlayTime: self.v1PlayTime.into_owned(),
-			playTime: self.playTime.into_owned(),
-			artists: None,
-			genres: None,
-		};
-		for (id, track) in self.tracks.into_owned() {
-			library.insert_track(id, track);
-		}
-		library
-	}
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(deny_unknown_fields)]
-pub struct V1Library {
-	pub tracks: LinkedHashMap<TrackID, Track>,
-	pub trackLists: TrackLists,
-	pub playTime: Vec<PlayTime>,
-}
-impl V1Library {
-	pub fn upgrade<'a>(self) -> V2Library<'a> {
-		V2Library {
-			tracks: Cow::Owned(LinkedHashMap::new()),
-			trackLists: Cow::Owned(self.trackLists),
-			v1PlayTime: Cow::Owned(self.playTime),
-			playTime: Cow::Owned(Vec::new()),
-		}
-	}
-}
-
 impl Library {
 	pub fn new() -> Self {
 		let mut track_lists = LinkedHashMap::new();
